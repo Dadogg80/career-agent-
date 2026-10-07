@@ -44,6 +44,18 @@ class FinnImportTest {
             assertThrows(ImportFailure::class.java) { browser().parse(url, it) }
         }
     }
+    @Test fun `wrapped FINN title and emphasis are handled without losing source identity`() {
+        val root = mapper.readTree(response(body = "Søknadsfrist **11.10.2026**. Du må kunne Kotlin og PostgreSQL for å jobbe med disse backend-integrasjonene."))
+        val tool = root.path("choices").path(0).path("message").path("executed_tools").path(0) as com.fasterxml.jackson.databind.node.ObjectNode
+        val output = tool.path("output").asText().replace("| FINN.no", "|\nL2: FINN.no")
+        assertTrue(output.contains("\nL2: FINN.no"))
+        tool.put("output", output)
+        val job = browser().parse(url, mapper.writeValueAsString(root))
+        assertEquals("Backend engineer - Example", job.title)
+        assertTrue(job.text.contains("Søknadsfrist 11.10.2026"))
+        assertFalse(job.text.contains("**"))
+        assertEquals(url, job.sourceUrl)
+    }
     @Test fun `large browser excerpts fail without silent truncation`() {
         assertEquals("SOURCE_TOO_LARGE", assertThrows(ImportFailure::class.java) { browser().parse(url, response(body = "x".repeat(15001))) }.code)
     }
@@ -86,6 +98,13 @@ class FinnImportApiTest {
         `when`(browser.load(url)).thenReturn(ImportedJob(url, "Backend engineer", "Kotlin and PostgreSQL are required for the advertised role.", "2026-10-07T00:00:00Z", "GROQ_BROWSER_EXCERPT"))
         mvc.perform(post("/api/jobs/import").contentType("application/json").content(mapper().writeValueAsString(mapOf("url" to "$url?tracking=x"))))
             .andExpect(status().isOk).andExpect(jsonPath("$.sourceType").value("GROQ_BROWSER_EXCERPT"))
+    }
+    @Test fun `rate limit headers are returned without provider details`() {
+        val url = "https://www.finn.no/job/ad/123456789"
+        `when`(browser.load(url)).thenThrow(ImportFailure("SOURCE_RATE_LIMITED", 429, 16))
+        mvc.perform(post("/api/jobs/import").contentType("application/json").content(mapper().writeValueAsString(mapOf("url" to url))))
+            .andExpect(status().isTooManyRequests).andExpect(header().string("Retry-After", "16"))
+            .andExpect(jsonPath("$.code").value("SOURCE_RATE_LIMITED"))
     }
     private fun mapper() = jacksonObjectMapper()
 }

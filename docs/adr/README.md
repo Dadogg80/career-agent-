@@ -14,6 +14,7 @@ Status Accepted betyr vedtatt føring. Proposed betyr konkret forslag som kan re
 | [0008](0008-official-nav-url-import.md) | Accepted | Official NAV API, reviewed URL import and manual fallback |
 | [0009](0009-frontend-query-and-components.md) | Accepted | TanStack Query, shadcn/ui and responsive sourced workspace |
 | [0011](0011-opt-in-postgresql-foundation.md) | Accepted | Opt-in PostgreSQL, Flyway and tested identity/profile foundation |
+| [0012](0012-job-evidence-and-provider-backoff.md) | Accepted | Source format handling, partial evidence and Groq retry backoff |
 | [0010](0010-finn-browser-search.md) | Accepted | Bounded FINN import from exact-link Groq browser tool excerpts |
 
 Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert implementasjon av disse krever fortsatt design og autorisert implementasjonsstart.

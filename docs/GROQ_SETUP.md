@@ -43,3 +43,11 @@ GROQ_BROWSER_MAX_REQUESTS=10
 ```
 
 Counters reset when the backend restarts and include failures. Automatic retries and paid-plan fallback are disabled. Provider-side tool actions can exceed one per API attempt; local attempt limits do not guarantee zero billing on a paid account. Keep the existing pilot account on its free tier. Public link and provider-mediated page context pass through Groq/Exa; review snippets against the original, especially if they are partial or stale.
+
+## Calls, token limits and JSON failures
+
+A fresh FINN analysis uses two Groq API requests: browser source retrieval and structured extraction. Browser search can consume substantial input tokens through internal tool work. Account/organization model quotas are shared with Playground and Codex diagnostics. The current pilot's observed gpt-oss-20b limit is 8,000 TPM; provider limits can change, so no universal quota is hardcoded.
+
+The application honors a bounded Retry-After countdown and shares an observed cooldown across its Groq adapters. A manual retry reuses already fetched text for the same URL, so only the analysis request is repeated. It does not upgrade a plan, retry automatically or guarantee quota availability after the countdown. Missing retry hints default to 60 seconds. Cache/cooldown UI is transient; provider/server limits remain independent.
+
+json_validate_failed indicates model output failed the requested schema (for example, an invalid fact kind), distinct from a network failure. Allowed kinds are spelled out in the prompt and the sanitized UI code is AI_INVALID_RESULT. Unsupported source quotations are omitted with a visible count when other supported cards remain; invalid structures/bounds or wholly unsupported results still fail. No raw failed_generation is logged or shown.

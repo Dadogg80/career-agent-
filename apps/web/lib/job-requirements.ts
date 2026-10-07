@@ -11,9 +11,10 @@ export function isFact(value: unknown): value is JobFact {
     typeof f.quote === "string" && f.quote.trim().length > 0 && f.quote.length <= 1000;
 }
 
-export function isExtraction(value: unknown): value is { requirements: Requirement[]; facts: JobFact[] } {
+export function isExtraction(value: unknown): value is { requirements: Requirement[]; facts: JobFact[]; omittedItems?: number } {
   if (!value || typeof value !== "object" || !("requirements" in value) || !Array.isArray(value.requirements)) return false;
   if (!("facts" in value) || !Array.isArray(value.facts) || value.facts.length > 10 || !value.facts.every(isFact)) return false;
+  if ("omittedItems" in value && (typeof value.omittedItems !== "number" || !Number.isInteger(value.omittedItems) || value.omittedItems < 0 || value.omittedItems > 22)) return false;
   return value.requirements.length <= 12 && value.requirements.every((r: unknown) => {
     if (!r || typeof r !== "object") return false;
     return "label" in r && typeof r.label === "string" && r.label.length > 0 && r.label.length <= 200 &&

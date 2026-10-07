@@ -3,7 +3,7 @@ package com.careeragent.jobs.application
 import org.springframework.stereotype.Service
 import java.net.URI
 
-class ImportFailure(val code: String, val httpStatus: Int) : RuntimeException(code)
+class ImportFailure(val code: String, val httpStatus: Int, val retryAfterSeconds: Int? = null) : RuntimeException(code)
 data class ImportedJob(val sourceUrl: String, val title: String, val text: String, val retrievedAt: String, val sourceType: String = "NAV_API")
 
 interface VacancySource {

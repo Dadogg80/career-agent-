@@ -223,3 +223,9 @@ No candidate matching, private profile storage or company research is implied by
 ## Local interaction reliability
 
 As a pilot user, I can switch between Link and Paste text after the interface initializes, submit by button or Enter, and retain my link while loading, after success and after an error. Before JavaScript initializes, controls are disabled with visible feedback rather than permitting an accidental native form reload. Development works on localhost and 127.0.0.1; unrelated origins remain blocked.
+
+## Evidence failures and free-tier retries
+
+A valid FINN browser excerpt may have a wrapped site title; presentation emphasis is normalized before analysis. Valid independently cited cards remain visible if another suggestion lacks source evidence, with a visible omission notice. Entirely unsupported or malformed results still fail closed.
+
+After a provider token-rate rejection, show a bounded countdown and keep the URL/text. A manual retry for the same retrieved URL analyzes the current text without a new browser search. Different URLs fetch fresh content. No automatic retries are made; process call limits and exact-source checks remain. Switching input mode/reading/editing remain available while waiting.

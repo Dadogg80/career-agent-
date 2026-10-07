@@ -110,3 +110,28 @@ test("unhydrated controls cannot submit a native form and become usable after sc
   await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await expect(page.getByRole("textbox", { name: "Stillingsannonse", exact: true })).toBeVisible();
 });
+
+test("rate limited analysis reuses fetched text after countdown without another search", async ({ page }) => {
+  let imports = 0;
+  let analyses = 0;
+  await page.route("**/api/jobs/import", route => { imports++; return route.fulfill({ json: { sourceUrl: url, title: "Utvikler", text, retrievedAt: "2026-10-07T00:00:00Z" } }); });
+  await page.route("**/api/jobs/requirements", route => {
+    analyses++;
+    if (analyses === 1) return route.fulfill({ status: 429, headers: { "Retry-After": "2" }, json: { code: "AI_RATE_LIMITED", retryAfterSeconds: 2 } });
+    return route.fulfill({ json: { facts: [], requirements: [{ label: "Kotlin", kind: "REQUIRED", quote: "Du må ha erfaring med Kotlin og PostgreSQL." }] } });
+  });
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "Lenke til stillingsannonse" }).fill(url);
+  const submit = page.getByRole("button", { name: "Analyser lenke", exact: true });
+  await submit.click();
+  await expect(page.getByText(/Du kan prøve igjen om/)).toBeVisible();
+  await expect(submit).toBeDisabled();
+  await expect(page.getByText(/Annonsen er allerede hentet/)).toBeVisible();
+  await expect(submit).toBeEnabled({ timeout: 5000 });
+  expect(analyses).toBe(1);
+  await submit.click();
+  await expect(page.getByRole("heading", { name: "Kotlin", exact: true })).toBeVisible();
+  expect(imports).toBe(1);
+  expect(analyses).toBe(2);
+  await expect(page.getByRole("textbox", { name: "Lenke til stillingsannonse" })).toHaveValue(url);
+});
