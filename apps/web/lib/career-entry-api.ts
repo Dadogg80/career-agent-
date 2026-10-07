@@ -1,0 +1,13 @@
+import { claimId } from "./claims";
+import { validEntryContent,isEntry,isEntries } from "./career-entries";
+import { localRequest,privateBase,sessionHeaders,privateResponse,smallJson,mappedPrivateError } from "./private-api";
+export async function entryProxy(request:Request,operation:"list"|"create"|"edit"|"review"|"history"|"delete",id?:string) {
+ if(!localRequest(request)) return privateResponse({code:"ACCESS_DENIED"},undefined,403);
+ if(id !== undefined && !claimId.test(id)) return privateResponse({code:"ENTRY_INVALID"},undefined,400);
+ const headers=sessionHeaders(request);let body:string|undefined;
+ if(!["list","history"].includes(operation)) {
+  try {const v=await smallJson(request,20000) as Record<string,unknown>;const keys=Object.keys(v).sort().join(",");const expected=operation === "create" ? "content" : operation === "edit" ? "content,revision" : operation === "review" ? "decision,revision" : "revision";if(keys !== expected) throw new Error("Invalid input");if(operation !== "create" && (!Number.isSafeInteger(v.revision) || Number(v.revision) < 1)) throw new Error("Invalid revision");if(["create","edit"].includes(operation) && (!validEntryContent(v.content) || Object.keys(v.content).sort().join(",") !== "client,deliveryRole,description,endMonth,kind,ongoing,organization,sourceNote,startMonth,title")) throw new Error("Invalid content");if(operation === "review" && !["CONFIRM","REJECT"].includes(String(v.decision))) throw new Error("Invalid review");body=JSON.stringify(v);headers.set("Content-Type","application/json");}
+  catch{return privateResponse({code:"ENTRY_INVALID"},undefined,400);}
+ }
+ try {const suffix=operation === "review" ? "/review" : operation === "history" ? "/history" : "";const method=operation === "edit" ? "PUT" : operation === "delete" ? "DELETE" : ["create","review"].includes(operation) ? "POST" : "GET";const r=await fetch(`${privateBase()}/api/profile/me/entries${id ? `/${id}` : ""}${suffix}`,{method,headers,body,cache:"no-store",redirect:"manual",signal:AbortSignal.timeout(15000)});if(r.status === 204 && operation === "delete") return privateResponse(null,r);const v:unknown=await r.json();if(!r.ok) return privateResponse(mappedPrivateError(v),r,[400,401,403,404,409,503].includes(r.status) ? r.status : 503);if(!(operation === "list" || operation === "history" ? isEntries(v) : isEntry(v))) throw new Error("Invalid response");return privateResponse(v,r);}catch{return privateResponse({code:"ENTRY_UNAVAILABLE"});}
+}

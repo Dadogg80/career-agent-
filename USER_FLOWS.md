@@ -289,3 +289,53 @@ flowchart TD
   Change --> Stale[Mark previous assessment stale]
   Review --> CV[Next: approve a CV version]
 ```
+
+
+## Implemented local pilot entry and career history
+
+```mermaid
+flowchart TD
+    A[Public landing] --> B[Dedicated sign-in]
+    A --> G[Guest advertisement analysis]
+    B --> C{Local identity and persistence ready?}
+    C -->|No| D[Setup explanation and guest analysis]
+    C -->|Yes| E[Existing OIDC and PKCE]
+    E -->|Success| F[Owned workspace overview]
+    E -->|Failure| B
+    F --> H{Basic profile saved?}
+    H -->|No| I[Save basic profile]
+    H -->|Yes| J[Review actual counts and next action]
+    J --> K[Competencies and source documents]
+    J --> L[Saved advertisements and approved matching]
+    K --> M[Career entry draft: UNVERIFIED]
+    M --> N[Separate review of current revision]
+    N --> O[CONFIRMED or REJECTED]
+    O -->|Edit| M
+    F --> P[CSRF sign-out and clear private caches]
+    P --> B
+```
+
+The root page now explains the product; public analysis is `/jobs/analyze`. Configured anonymous visits to private work areas lead to `/login` before private components mount. Missing setup provides actionable guidance instead. The backend still enforces every private request. The overview makes no model call and cannot infer missing competencies from failed reads. CV versions/export and case tracking remain subsequent work.
+
+## Reviewed local pilot application flow
+
+```mermaid
+flowchart TD
+  A[Landing page] --> B[Dedicated sign-in]
+  B --> C[Workspace overview]
+  C --> D[Upload document and inspect local text]
+  D --> E[Preview excerpts and approve optional AI call]
+  E --> F[Source-backed proposals with company context]
+  F --> G[Save selected proposals as unverified]
+  G --> H[Review each point: confirm, reject or skip]
+  H --> I[Analyze and save a job]
+  I --> J[Optional approved personal matching]
+  J --> K[Select confirmed experience for CV draft]
+  K --> L[Preview and explicitly approve DOCX and PDF]
+  L --> M[Create application case]
+  M --> N[Submit externally yourself]
+  N --> O[Confirm exact CV, date and text in archive]
+  O --> P[Track interviews, notes and follow-up]
+```
+
+Provider failure keeps received advertisement/document text and any valid same-source result. Explicit headings and labelled practical fields can be organized locally, visibly labelled as such. All remaining text stays readable; missing facts are never invented.

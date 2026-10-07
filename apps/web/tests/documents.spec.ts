@@ -53,3 +53,14 @@ test("private document proxy rejects cross-origin and ownership injection and ne
   expect((await request.post(`/api/profile/me/documents/${id}/claims`, { data:{ skill:"Kotlin", statement:"Built APIs", context:"Synthetic", quote:"Kotlin", ownerId:id } })).status()).toBe(400);
   expect((await request.post("/api/profile/me/documents", { multipart:{ file:{ name:"synthetic.docx", mimeType:original.mediaType, buffer:Buffer.from("synthetic fixture") }, language:"nb" } })).status()).toBe(403);
 });
+
+test("Markdown competency evidence is readable, does not offer master-CV selection and retains employer context",async({page})=>{
+ const source="## Example AS\nBuilt APIs with Kotlin for customer X.";
+ const document={id,originalName:"project.md",mediaType:"text/markdown",byteSize:source.length,sha256:"a".repeat(64),language:"nb",isMaster:false,createdAt:"2026-10-07T00:00:00Z",textCharacters:source.length,extractionMethod:"TEXT"};
+ let uploaded=false;
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));await page.route("**/api/profile/me",r=>r.fulfill({json:{id,displayName:"Fictional Pilot",preferredLanguage:"nb",revision:1}}));await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[]}));
+ await page.route("**/api/profile/me/documents**",r=>{if(r.request().method()==="POST"){uploaded=true;return r.fulfill({json:document});}if(r.request().url().endsWith("/analysis"))return r.fulfill({json:{analysis:null}});return r.fulfill({json:r.request().url().endsWith(id)?{document,text:source}:uploaded?[document]:[]});});
+ await page.goto("/career/profile");await page.getByLabel("Dokumentfil",{exact:true}).setInputFiles({name:"project.md",mimeType:"text/markdown",buffer:Buffer.from(source)});await page.getByRole("button",{name:"Last opp dokument",exact:true}).click();
+ await expect(page.getByRole("article",{name:"project.md",exact:true})).toBeVisible();await expect(page.getByRole("button",{name:"Bruk som master-CV",exact:true})).toHaveCount(0);
+ await page.getByRole("button",{name:"Se tekst og legg til kompetanse",exact:true}).click();await expect(page.getByRole("textbox",{name:"Tekst som sendes til Groq",exact:true})).toHaveValue(source);
+});

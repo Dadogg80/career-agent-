@@ -36,6 +36,8 @@ class JdbcSavedJobRepository(private val jdbc: JdbcTemplate, private val mapper:
     @Transactional
     override fun delete(identity: VerifiedIdentity, id: UUID) {
         val owner = owner(identity, true); read(owner, id)
+        if (jdbc.queryForObject("SELECT COUNT(*) FROM cv_version WHERE owner_id=? AND job_id=?", Long::class.java, owner, id) != 0L) throw SavedJobFailure("SAVED_JOB_IN_USE", 409)
+        if(jdbc.queryForObject("SELECT COUNT(*) FROM application_case WHERE owner_id=? AND job_id=?",Long::class.java,owner,id) != 0L) throw SavedJobFailure("SAVED_JOB_IN_USE",409)
         jdbc.update("DELETE FROM saved_job WHERE owner_id = ? AND id = ?", owner, id)
     }
 }

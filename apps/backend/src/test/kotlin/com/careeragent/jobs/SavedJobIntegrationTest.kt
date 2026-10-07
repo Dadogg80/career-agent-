@@ -72,7 +72,8 @@ class SavedJobIntegrationTest {
  }
 
  private fun claim(user: String, confirmed: Boolean = true): String {
-  val r = mvc.perform(post("/api/profile/me/claims").with(caller(user)).with(csrf()).contentType("application/json").content("""{"skill":"Kotlin","statement":"Built APIs using Kotlin","context":"Fictional project","sourceNote":"User statement"}""")).andExpect(status().isOk).andReturn()
+  val statement=if(confirmed) "Built APIs using Kotlin" else "Proposed APIs using Kotlin"
+  val r = mvc.perform(post("/api/profile/me/claims").with(caller(user)).with(csrf()).contentType("application/json").content("""{"skill":"Kotlin","statement":"$statement","context":"Fictional project","sourceNote":"User statement"}""")).andExpect(status().isOk).andReturn()
   val id = json.readTree(r.response.contentAsString)["id"].asText()
   if (confirmed) mvc.perform(post("/api/profile/me/claims/$id/review").with(caller(user)).with(csrf()).contentType("application/json").content("""{"revision":1,"decision":"CONFIRM"}""")).andExpect(status().isOk)
   return id

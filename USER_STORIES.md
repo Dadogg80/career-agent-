@@ -288,3 +288,41 @@ As the pilot I can reread an already uploaded immutable original using the impro
 
 - US-035: As a signed-in candidate, save received advertisements and their analyses, search/reopen their exact snapshots, and explicitly delete one without another provider call. Ownership, CSRF, bounded evidence and source caveats must remain.
 - US-036: As a candidate, preview selected confirmed competencies and advertisement passages, approve sharing for each match, see explained requirement-level relevance/evidence/questions, and reopen stored assessments without another call. Undocumented skills remain unknown; changed evidence marks the assessment stale and cannot silently update it.
+
+
+## Local pilot entry and orientation
+
+### US-39 — Understand the product before entering (P0)
+
+As a jobseeker, I want a clear landing page and dedicated sign-in so I understand the product and do not need to discover authentication inside profile settings.
+
+- Landing describes actual features and provides sign-in and guest-analysis paths.
+- Public entry, error/setup explanations and workspace navigation support Norwegian and English.
+- Existing OIDC/PKCE returns to the overview; failure returns to sign-in. No new password store or arbitrary redirect target.
+- Anonymous private entry does not fetch private data or display a writable profile. Backend still enforces ownership and CSRF.
+- Shared sign-out clears private query/mutation caches and leaves the workspace.
+
+### US-40 — Know my next action (P0)
+
+As a jobseeker, I want an overview of my actual saved information and a useful next step so I can make progress without interpreting the application architecture.
+
+- Show confirmed/unreviewed competencies and saved advertisements from actual owned records.
+- Missing profile leads to profile creation; unreviewed content leads to review. Failed reads are unknown, not zero.
+- No automatic AI call, score, fake interview, discovery digest or submission status.
+- Persistent named navigation and an accessible mobile Sheet preserve working routes, keyboard focus and responsive reading.
+
+### US-41 — Record reviewed career history (P0)
+
+As a jobseeker, I want employment, projects, education and certificates with their own timeline so a future CV can reflect formal titles, actual work and clients accurately.
+
+- Separate organization, client, formal title and delivery role; optional dates stay unknown.
+- Save as UNVERIFIED, separately confirm/reject, reset confirmation on edit and retain revision history.
+- Require ownership, saved profile, CSRF and expected revisions. Deletion is explicit.
+- This first typed subset does not claim a complete relational career graph or CV export.
+
+## Local pilot additions
+
+- **US42 — Reviewed CV export:** choose current confirmed claim/history revisions, preview all selected content, approve a standard DOCX/PDF version and download the same immutable files later. Originals remain unchanged; stale drafts cannot approve.
+- **US43 — Exact application archive:** create/reopen a case for a saved job, choose its approved CV, explicitly record submitted date/text, track status/history and follow-up without sending anything externally. Foreign ownership, stale revisions and deletion of referenced materials are rejected.
+- **US44 — Useful source recovery:** read complete received sections and remaining text when Groq fails; local heading/field organization is labelled and does not invent missing information.
+- **US45 — Multi-source competency evidence:** import PDF/DOCX/TXT/Markdown, preview/approve bounded AI summaries, inspect each long-document part, consolidate exact repeated experience with all validated supporting sources, keep company/project contexts distinct and confirm experience separately.

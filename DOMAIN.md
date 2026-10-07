@@ -91,3 +91,13 @@ The competency dashboard counts distinct non-rejected labels and recorded statem
 ## Saved job and matching subset (ADR 0018)
 
 SavedJob stores an immutable user-owned received-source snapshot and structured analysis. Same content/analysis reuses an ID, changed source/analysis creates a new snapshot. No source identity/republication authenticity is implied. PersonalMatch records requirement-index judgments with attributed selected CONFIRMED claim snapshots/revisions. Missing evidence is unknown; invalid evidence cannot support a strong match. Changes to selected current claims make the latest result stale; model completion cannot overwrite with changed evidence. Matching is an assessment, never candidate truth or a confirmed gap.
+
+## Reviewed local career-entry subset
+
+The local pilot now implements owner-scoped CareerEntry records for employment, projects, education and certifications. Titles, organizations, optional clients/actual delivery roles and optional month values preserve role/context distinctions. This typed JSON-backed subset precedes a full normalized employment/client/project model. Separate review, revisions and source notes follow the claim principle; edits reset confirmation. See docs/CAREER_HISTORY.md. CV artifact creation remains separate.
+
+## Pilot CV and application records
+
+`CvVersion` is a draft/approved immutable content snapshot of current confirmed claim/history revisions, user-entered identity and optional owned saved job. Approved `CvArtifact` stores format, private object ID, size and SHA-256. Stale drafts cannot approve. `ApplicationCase` tracks a saved job, status/revision/history and an approved CV. Once a submission date is recorded, its CV/date/text are immutable. This is the user's archive, not external delivery proof.
+
+`ClaimEvidence` captures each owned document quotation plus statement/context at attachment time. Conservative equality in skill/statement/context reuses a claim without changing confirmation status. Different employers/projects remain separate; unknown contexts remain separated across documents. Document deletion removes the pointer but retains the quoted evidence snapshot.

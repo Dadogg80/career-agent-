@@ -39,6 +39,14 @@ object DocumentFixture {
 }
 class DocumentTextExtractorTest {
     private val extractor = DocumentTextExtractor()
+    @Test fun `UTF8 text and Markdown retain Norwegian company context and reject binary or invalid encodings`() {
+        val text="## Example AS\nÅse bygget API-er med Kotlin og PostgreSQL."
+        assertThat(extractor.extract(text.toByteArray(),"md")).isEqualTo(text)
+        assertThat(extractor.extract(("\uFEFF"+text).toByteArray(),"txt")).isEqualTo(text)
+        assertThatThrownBy { extractor.extract(byteArrayOf(0,1,2),"txt") }.isInstanceOf(DocumentFailure::class.java)
+        assertThatThrownBy { extractor.extract(byteArrayOf(0xc3.toByte(),0x28),"txt") }.isInstanceOf(DocumentFailure::class.java)
+        assertThatThrownBy { extractor.extract("x".repeat(60001).toByteArray(),"md") }.isInstanceOf(DocumentFailure::class.java)
+    }
     @Test fun `Word tables text boxes headers footers and line breaks retain source text`() {
         val main = """<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Built APIs</w:t><w:tab/><w:t>with Kotlin</w:t><w:br/><w:t>and PostgreSQL</w:t></w:r></w:p><w:tbl><w:tr><w:tc><w:p><w:r><w:t>Team collaboration</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:txbxContent><w:p><w:r><w:t>Azure course</w:t></w:r></w:p></w:txbxContent></w:body></w:document>"""
         fun part(text: String) = """<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>$text</w:t></w:r></w:p></w:hdr>"""

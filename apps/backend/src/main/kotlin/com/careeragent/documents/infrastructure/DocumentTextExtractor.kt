@@ -14,12 +14,17 @@ import javax.xml.stream.XMLStreamConstants
 @Component
 class DocumentTextExtractor {
     fun extract(bytes: ByteArray, extension: String): String = try {
-        val text = when (extension) { "docx" -> docx(bytes); "pdf" -> pdf(bytes); else -> throw DocumentFailure("DOCUMENT_TYPE", 400) }
+        val text = when (extension) { "docx" -> docx(bytes); "pdf" -> pdf(bytes); "txt", "md" -> plainText(bytes); else -> throw DocumentFailure("DOCUMENT_TYPE", 400) }
         if (text.length > 60000) throw DocumentFailure("DOCUMENT_TOO_LARGE", 413)
         text.replace("\u0000", "").trim()
     } catch (failure: DocumentFailure) { throw failure }
       catch (_: InvalidPasswordException) { throw DocumentFailure("DOCUMENT_ENCRYPTED", 400) }
       catch (_: Exception) { throw DocumentFailure("DOCUMENT_INVALID", 400) }
+    private fun plainText(bytes: ByteArray): String {
+        val decoded = Charsets.UTF_8.newDecoder().onMalformedInput(java.nio.charset.CodingErrorAction.REPORT).onUnmappableCharacter(java.nio.charset.CodingErrorAction.REPORT).decode(java.nio.ByteBuffer.wrap(bytes)).toString().removePrefix("\uFEFF")
+        if(decoded.any { it.isISOControl() && it !in "\n\r\t" }) throw DocumentFailure("DOCUMENT_INVALID",400)
+        return decoded
+    }
     private fun docx(bytes: ByteArray): String {
         val parts = sortedMapOf<String, ByteArray>(); var types = ""; var count = 0; var expanded = 0
         ZipInputStream(ByteArrayInputStream(bytes)).use { zip ->

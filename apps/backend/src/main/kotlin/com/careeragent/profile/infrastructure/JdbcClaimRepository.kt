@@ -38,13 +38,32 @@ class JdbcClaimRepository(private val jdbc: JdbcTemplate) : ClaimRepository {
         "SELECT * FROM competency_claim WHERE owner_id = ? ORDER BY created_at DESC, id LIMIT 100", mapper, owner(identity),
     )
 
+    private fun normalized(value: String) = java.text.Normalizer.normalize(value,java.text.Normalizer.Form.NFC).trim().replace(Regex("(?U)\\s+")," ").lowercase(java.util.Locale.ROOT)
+    private fun attach(owner: UUID,claim: UUID,content: ClaimContent) {
+        val document=content.sourceDocumentId ?: return
+        val quote=content.sourceQuote ?: return
+        val row=jdbc.query("SELECT original_name,extracted_text FROM career_document WHERE owner_id=? AND id=?",{r,_->r.getString(1) to r.getString(2)},owner,document).singleOrNull() ?: throw ClaimFailure("CLAIM_INVALID",400)
+        if(!row.second.contains(quote)) throw ClaimFailure("CLAIM_INVALID",400)
+        val hash=java.security.MessageDigest.getInstance("SHA-256").digest(quote.toByteArray()).joinToString("") { "%02x".format(it) }
+        val duplicate=jdbc.queryForObject("SELECT COUNT(*) FROM competency_evidence WHERE owner_id=? AND claim_id=? AND document_id=? AND quote_hash=?",Long::class.java,owner,claim,document,hash)!!>0
+        if(!duplicate && jdbc.queryForObject("SELECT COUNT(*) FROM competency_evidence WHERE owner_id=? AND claim_id=?",Long::class.java,owner,claim)!!>=100)throw ClaimFailure("CLAIM_EVIDENCE_LIMIT",409)
+        jdbc.update("INSERT INTO competency_evidence(id,claim_id,owner_id,document_id,original_name,quote,quote_hash,statement,context) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(claim_id,document_id,quote_hash) DO NOTHING",UUID.randomUUID(),claim,owner,document,row.first,quote,hash,content.statement,content.context)
+    }
+    @Transactional(readOnly=true) override fun evidence(identity: VerifiedIdentity,id: UUID): List<ClaimEvidence> {
+        val owner=owner(identity);current(owner,id)
+        return jdbc.query("SELECT * FROM competency_evidence WHERE owner_id=? AND claim_id=? ORDER BY recorded_at LIMIT 100",{r,_->ClaimEvidence(r.getObject("id",UUID::class.java),r.getObject("document_id",UUID::class.java),r.getString("original_name"),r.getString("quote"),r.getString("statement"),r.getString("context"),r.getObject("recorded_at",OffsetDateTime::class.java))},owner,id)
+    }
     @Transactional
     override fun create(identity: VerifiedIdentity, content: ClaimContent): CompetencyClaim {
         val owner = owner(identity, true)
+        val knownContext=normalized(content.context) !in setOf("kontekst ikke oppgitt","context not stated")
+        val existing=jdbc.query("SELECT * FROM competency_claim WHERE owner_id=?",mapper,owner).firstOrNull { normalized(it.skill)==normalized(content.skill) && normalized(it.statement)==normalized(content.statement) && normalized(it.context)==normalized(content.context) && (knownContext || it.sourceDocumentId==content.sourceDocumentId && it.sourceNote==content.sourceNote) }
+        if(existing!=null) { attach(owner,existing.id,content);return existing }
         if (jdbc.queryForObject("SELECT COUNT(*) FROM competency_claim WHERE owner_id = ?", Long::class.java, owner)!! >= 100) throw ClaimFailure("CLAIM_LIMIT", 409)
         val id = UUID.randomUUID()
         jdbc.update("""INSERT INTO competency_claim(id, owner_id, skill, statement, context, source_note, status, revision, source_document_id, source_quote)
             VALUES (?, ?, ?, ?, ?, ?, 'UNVERIFIED', 1, ?, ?)""", id, owner, content.skill, content.statement, content.context, content.sourceNote, content.sourceDocumentId, content.sourceQuote)
+        attach(owner,id,content)
         return current(owner, id).also { record(owner, it, ClaimAction.MANUAL_ENTRY) }
     }
 

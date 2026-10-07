@@ -116,3 +116,10 @@ test("unreadable PDF can be reread with local OCR while errors preserve original
   expect((await request.post(path, { data:{ ocr:true, text:"spoofed" } })).status()).toBe(400);
   expect((await request.post(path, { headers:{ Origin:"https://other.example" }, data:{ ocr:true } })).status()).toBe(403);
 });
+
+test("all supporting documents remain inspectable for one competency with their employer context",async({page})=>{
+ const competency={id,skill:"Kotlin",statement:"Built Kotlin APIs",context:"Example AS",sourceNote:"Document: original.md",sourceDocumentId:id,sourceQuote:"Built Kotlin APIs",status:"CONFIRMED",revision:2,createdAt:time,updatedAt:time};
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));await page.route("**/api/profile/me",r=>r.fulfill({json:{id,displayName:"Fictional Pilot",preferredLanguage:"nb",revision:1}}));await page.route("**/api/profile/me/documents",r=>r.fulfill({json:[]}));await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[competency]}));
+ await page.route(`**/api/profile/me/claims/${id}/evidence`,r=>r.fulfill({json:[{id,documentId:id,originalName:"original.md",statement:competency.statement,context:competency.context,quote:"Built Kotlin APIs",recordedAt:time},{id:second,documentId:null,originalName:"certificate.txt",statement:competency.statement,context:competency.context,quote:"Kotlin APIs at Example AS",recordedAt:time}]}));
+ await page.goto("/career/profile");const tile=page.getByRole("article",{name:"Kotlin",exact:true});await tile.locator("summary").click();await tile.getByRole("button",{name:"Se alle dokumentkilder",exact:true}).click();await expect(tile).toContainText("certificate.txt · originalen er slettet");await expect(tile.getByText("Kotlin APIs at Example AS",{exact:true})).toBeVisible();await expect(page.locator(".claim-tile")).toHaveCount(1);
+});

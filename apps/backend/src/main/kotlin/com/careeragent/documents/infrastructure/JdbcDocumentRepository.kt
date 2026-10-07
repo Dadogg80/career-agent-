@@ -35,7 +35,8 @@ class JdbcDocumentRepository(private val jdbc: JdbcTemplate) : DocumentRepositor
     }
     @Transactional
     override fun selectMaster(identity: VerifiedIdentity, id: UUID): CareerDocument {
-        val owner = owner(identity, true); document(owner, id)
+        val owner = owner(identity, true); val source = document(owner, id)
+        if(source.mediaType !in setOf("application/pdf","application/vnd.openxmlformats-officedocument.wordprocessingml.document")) throw DocumentFailure("DOCUMENT_TYPE",400)
         jdbc.update("UPDATE career_document SET is_master = FALSE WHERE owner_id = ? AND is_master", owner)
         jdbc.update("UPDATE career_document SET is_master = TRUE WHERE owner_id = ? AND id = ?", owner, id)
         return document(owner, id)

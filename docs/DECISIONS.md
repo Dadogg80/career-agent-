@@ -109,3 +109,13 @@ Accepted, explicit product-owner answer: use a controlled clean standard templat
 Accepted, explicit owner answers: personal job matching may send relevant CONFIRMED competency statements together with advertisement text to Groq only after a visible editable preview and approval for each analysis. Existing document-analysis consent does not authorize this future flow. Keep UNVERIFIED/INFERRED items separate, minimize shared personal details and preserve evidence/revisions in any future comparison. Matching remains unimplemented; define its owned endpoints and tests in a separate increment.
 
 Accepted: the first working pilot runs locally on the owner's Mac; online hosting follows later. No deployment, paid infrastructure or plan upgrade is authorized. Routine UI, testing and implementation decisions remain delegated. Backup/export and production provider/privacy decisions remain open before broader rollout.
+
+## 2026-10-07 — Reviewed history and product entry redesign
+
+Accepted delegated implementation: add a small reviewed typed career-entry model before standard CV export, distinguishing titles, delivery roles, organizations/clients and known versus unknown periods (ADR 0019). Reuse profile ownership/revisions and separate review; no AI auto-confirmation.
+
+Accepted explicit UX direction: the pilot needs a public landing page, dedicated sign-in and an intuitive consistent workspace, with freedom to improve functionality and usability. Use fixed existing OIDC callbacks to dashboard/sign-in, retain deliberate guest analysis, show actual overview data, and use the required shadcn/TanStack foundation (ADR 0020). CV and CRM remain the next working destinations; do not advertise unfinished routes. Keep changes local and unpublished as requested. Meaningful browser/backend checks and visual review precede completion claims.
+
+## Local pilot recovery, evidence and materials — 2026-10-08
+
+Accepted under the owner's autonomous pilot instruction: received source text takes priority over successful AI structuring; use labelled local fallback without extra provider calls. Extend evidence imports with bounded UTF-8 TXT/Markdown, conservatively deduplicate identical experience while preserving sources/company context, and expose long-document windows with approval per call. Standard CV export and manual application cases follow the owner's earlier template/local-hosting decisions. These features do not introduce paid services, automatically confirm competencies or submit applications. See ADRs 0021/0022.

@@ -9,16 +9,16 @@
 | Q-005 | Initial advertisement sources and permitted access? | Bounded local NAV/FINN adapters are implemented; reuse/discovery terms remain separate. | Resolved for pilot; production terms open |
 | Q-006 | Which local access model and later OIDC provider? | Sign-in, sessions and user isolation. | Resolved for local pilot: optional Keycloak + Spring OIDC/PKCE (ADR 0013); production provider still open |
 | Q-007 | Hvordan skal backup, sletting og retensjon fungere i lokal pilot? | Bevaring av arbeid og personvern. | Uavklart |
-| Q-008 | May personal matching send profile evidence to Groq? | Relevant CONFIRMED statements and advertisement text, with preview and approval per analysis. | Resolved 2026-10-07; matching not implemented |
+| Q-008 | May personal matching send profile evidence to Groq? | Relevant CONFIRMED statements and advertisement text, with preview and approval per analysis. | Resolved 2026-10-07; approved matching implemented locally |
 | Q-009 | First-pilot hosting? | Local Mac first; online hosting later, no paid services or deployment authorized. | Resolved 2026-10-07 |
 
 Ikke gjenta tidligere besvarte spørsmål om målgruppe, standardspråk, gratis pilot eller ønsket fremtidig kundetype. Oppdater denne filen når et spørsmål avklares og lenk til beslutningen.
 
 ## Current blockers and defaults
 
-No product decision blocks the local public-advertisement extraction experiment. The delegated defaults are pasted text, Groq, Norwegian-first UI, source quotations, bounded calls, and no persistence. See [ADR-0007](adr/0007-groq-advertisement-pilot.md).
+No unresolved product decision blocks the authorized local pilot. Broader SaaS rollout remains subject to the outstanding privacy, backup and identity decisions. The public-advertisement defaults remain Groq, Norwegian-first UI, source quotations and bounded calls. Authenticated local persistence is opt-in for profile/documents/saved jobs/CVs/applications. See [ADR-0007](adr/0007-groq-advertisement-pilot.md).
 
-Q-003 concerns the full MVP and does not block small agreed steps. Q-004 is resolved: a standard template precedes arbitrary imported-layout adaptation; export remains unimplemented. Q-005 is resolved for bounded NAV/FINN pilot adapters; source reuse/discovery terms remain open. Q-006 is resolved for local basic-profile sign-in (ADR 0013). Q-007 remains open before broader private-document use or an external pilot; the current branch adds local CV processing/source selection with optional private analysis only after reviewed-preview approval. These questions do not block public-text analysis.
+Q-003 concerns the full MVP and does not block small agreed steps. Q-004 is resolved: a standard template precedes arbitrary imported-layout adaptation; reviewed standard export is implemented locally. Q-005 is resolved for bounded NAV/FINN pilot adapters; source reuse/discovery terms remain open. Q-006 is resolved for local basic-profile sign-in (ADR 0013). Q-007 remains open before broader private-document use or an external pilot; the current branch adds local CV processing/source selection with optional private analysis only after reviewed-preview approval. These questions do not block public-text analysis.
 
 Docker recommendation: native frontend/backend, PostgreSQL in Compose when introduced. See [DOCKER_STRATEGY.md](DOCKER_STRATEGY.md). No paid services are assumed.
 

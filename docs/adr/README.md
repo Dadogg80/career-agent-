@@ -25,3 +25,8 @@ Status Accepted betyr vedtatt føring. Proposed betyr konkret forslag som kan re
 Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert implementasjon av disse krever fortsatt design og autorisert implementasjonsstart.
 
 - [0018: Owned job snapshots and approved personal matching](0018-owned-job-snapshots-and-personal-matching.md) — Accepted local pilot.
+- [0019: Reviewed typed career history](0019-reviewed-career-history.md) — Accepted local pilot.
+- [0020: Public entry and workspace orientation](0020-public-entry-and-workspace.md) — Accepted delegated UX decision.
+
+- [0021 Reviewed standard CVs and application materials](0021-reviewed-standard-cv-and-application-materials.md) — accepted local pilot.
+- [0022 Source-first recovery and document evidence](0022-source-first-recovery-and-document-evidence.md) — accepted local pilot.

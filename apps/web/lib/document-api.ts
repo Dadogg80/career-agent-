@@ -15,7 +15,7 @@ export async function documentProxy(request: Request, operation: Operation, id?:
       const form = await new Response(Buffer.concat(parts), { headers: { "Content-Type": request.headers.get("content-type")! } }).formData();
       if ([...form.keys()].sort().join(",") !== "file,language") throw new Error("Invalid fields");
       const file = form.get("file"); const language = form.get("language");
-      if (!(file instanceof File) || !["nb", "en"].includes(String(language)) || !/\.(docx|pdf)$/i.test(file.name)) throw new Error("Invalid file");
+      if (!(file instanceof File) || !["nb", "en"].includes(String(language)) || !/\.(docx|pdf|txt|md)$/i.test(file.name)) throw new Error("Invalid file");
       if (file.size === 0 || file.size > 5242880) return privateResponse({ code: "DOCUMENT_TOO_LARGE" }, undefined, 413);
       const upload = new FormData(); upload.append("file", file); upload.append("language", String(language)); body = upload;
     } catch { return privateResponse({ code: "DOCUMENT_INVALID" }, undefined, 400); }

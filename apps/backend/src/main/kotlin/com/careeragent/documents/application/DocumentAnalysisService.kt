@@ -66,7 +66,7 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
         try {
             if (used.get() >= maxRequests) throw AiFailure("AI_BUDGET_REACHED", 429)
             used.incrementAndGet()
-            val output = model.generateJson(prompt(locale) + "\nConsider all supplied documents together, preserving context and source attribution. Every item must identify the documentId whose quote supports it. Never combine conflicting or unrelated experience. A course or certificate is learning evidence, not production experience.", mapper.writeValueAsString(excerpts), schema(true))
+            val output = model.generateJson(prompt(locale) + "\nConsider all supplied documents together, preserving context and source attribution. Every item must identify the documentId whose quote supports it. Deduplicate repeated descriptions of the same contribution across documents, but keep separate employer or project contexts. Never combine conflicting or unrelated experience. A course or certificate is learning evidence, not production experience.", mapper.writeValueAsString(excerpts), schema(true))
             val sent = excerpts.associate { it.documentId to it.text }
             val parsed = parseSources(output, sent, sources.mapValues { it.value.text }, true, locale)
             val sourceDocuments = excerpts.map { AnalysisDocument(it.documentId, sources.getValue(it.documentId).document.originalName, it.text.length, sources.getValue(it.documentId).text.length) }
@@ -81,10 +81,10 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
                 Inspect the entire submitted text, including skill lists, employment, projects, responsibilities, courses and certificates.
                 Extract each explicitly named technology or skill separately when useful; do not stop after the first ten.
                 Prefer concrete contributions, but retain explicit skills even when only listed, labeling that limitation.
-                Keep statements concise (prefer under 180 characters), context under 100, and quotes under 240 to fit the output budget.
+                Keep statements concise (prefer under 180 characters), context including employer/client/project when explicitly named, and quotes under 240 to fit the output budget.
                 NEVER exceed 3 summary items or 20 suggestions. Return a compact valid response within the token budget.
                 Each summary text must be at most 500 characters. Each suggestion must contain a skill (120 characters),
-                a statement of what the candidate actually did (1000 characters) and project/employment context (500 characters).
+                a statement of what the candidate actually did (1000 characters) and employer/client/project context (500 characters). Preserve which company and project each contribution belongs to; distinguish employer from client. Do not assign a company to a skill merely because both appear somewhere in the document. If the association is unclear say so.
                 If context is absent write '${if (locale == "nb") "Kontekst ikke oppgitt" else "Context not stated"}'.
                 Each item needs a contiguous verbatim quote of up to 600 characters copied EXACTLY from the submitted text,
                 preserving whitespace and punctuation. The quote must support the entire statement. Do not join separate passages.
@@ -139,7 +139,11 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
                     val quote = value(item, "quote", 600); val id = document(item)
                     supported(quote, id)?.let { CompetencySuggestion(skill, statement, context, it, if (collection) id else null) }
                 }
-            }.distinctBy { listOf(it.skill.lowercase(), it.statement, it.context, it.quote, it.documentId) }
+            }.groupBy { suggestion ->
+                fun normalized(value: String)=java.text.Normalizer.normalize(value,java.text.Normalizer.Form.NFC).trim().replace(Regex("(?U)\\s+")," ").lowercase(java.util.Locale.ROOT)
+                val context=normalized(suggestion.context)
+                listOf(normalized(suggestion.skill),normalized(suggestion.statement),context,if(context in setOf("kontekst ikke oppgitt","context not stated"))suggestion.documentId?.toString().orEmpty() else "")
+            }.values.map { group -> val first=group.first();first.copy(additionalSources=group.drop(1).mapNotNull { item -> item.documentId?.let { CompetencySource(it,item.quote) } }.distinct()) }
             omitted += maxOf(0, summary.size - 3) + maxOf(0, proposals.size - 20)
             if (omitted > 0 && summary.isEmpty() && proposals.isEmpty()) throw AiFailure("AI_INVALID_RESULT", 502, reason = "NO_SUPPORTED_ITEMS")
             return Triple(summary.take(3), proposals.take(20), omitted)

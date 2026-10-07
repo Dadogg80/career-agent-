@@ -56,9 +56,9 @@ test("profile conflicts preserve the draft until explicitly loading the saved ve
 
 test("unconfigured identity shows honest availability without exposing a profile form", async ({ page }) => {
   await page.goto("/career/profile");
-  await expect(page.getByText("Profilinnlogging er ikke aktivert i dette miljøet ennå.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Ditt arbeidsområde krever innlogging", { exact: true })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Navn", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Logg inn", exact: true })).toHaveCount(0);
+  await expect(page.locator("main").getByRole("link", { name: "Logg inn", exact: true })).toHaveCount(0);
 });
 
 test("an expired save session offers sign-in and stops presenting a writable profile", async ({ page }) => {
@@ -70,7 +70,7 @@ test("an expired save session offers sign-in and stops presenting a writable pro
   await page.locator(".profile-settings > summary").click();
   await page.getByRole("button", { name: "Lagre profil", exact: true }).click();
   await expect(page.getByRole("alert").filter({ hasText: "Sesjonen er utløpt" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Logg inn", exact: true })).toHaveAttribute("href", "/api/auth/login");
+  await expect(page.getByRole("link", { name: "Logg inn", exact: true })).toHaveAttribute("href", "/login");
   await expect(page.getByRole("textbox", { name: "Navn", exact: true })).toHaveCount(0);
 });
 

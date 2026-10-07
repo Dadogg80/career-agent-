@@ -1,36 +1,47 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { BriefcaseBusiness, ArrowUpRight, Compass, ShieldCheck, CircleCheck, CircleAlert } from "lucide-react";
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ClipboardList, FileText, Bookmark, Compass, ShieldCheck, CircleCheck, CircleAlert, LayoutDashboard, UserRound, LogOut, Menu, ArrowRight } from "lucide-react";
 import { translations, type Locale } from "../lib/translations";
+import { useLocale } from "../lib/use-locale";
+import { useWorkspaceSession } from "../lib/workspace-session";
 import { JobAnalyzer } from "./job-analyzer";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
+import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "./ui/sheet";
+import { Brand, LanguagePicker } from "./site-header";
 import Link from "next/link";
 import { SavedJobsWorkspace } from "./saved-jobs-workspace";
 import { ProfileWorkspace } from "./profile-workspace";
+import { DashboardWorkspace } from "./dashboard-workspace";
+import { ApplicationWorkspace } from "./application-workspace";
+import { CvWorkspace } from "./cv-workspace";
+import { WorkspaceAccess } from "./workspace-access";
 
-export function Foundation({ view = "jobs" }: { view?: "jobs" | "profile" | "saved" }) {
-  const [locale, setLocale] = useState<Locale>("nb");
-  const t = translations[locale];
-  const connection = useQuery({ queryKey: ["system-status"], queryFn: async () => {
-    const response = await fetch("/api/status"); const value = await response.json();
-    if (!response.ok || value.status !== "UP") throw new Error("Unavailable"); return value;
-  } });
-  useEffect(() => { try { const saved = localStorage.getItem("career-agent.locale"); if (saved === "nb" || saved === "en") setLocale(saved); } catch {} }, []);
-  useEffect(() => { document.documentElement.lang = locale; }, [locale]);
-  function changeLocale(value: Locale) { setLocale(value); try { localStorage.setItem("career-agent.locale", value); } catch {} }
-  return <div className="app-shell">
-    <aside className="sidebar"><a className="brand" href="/"><span className="brand-mark"><BriefcaseBusiness size={20}/></span>Career Agent<span className="brand-dot">.</span></a>
-      <p className="nav-caption">{locale === "nb" ? "ARBEIDSOMRÅDE" : "WORKSPACE"}</p><Link className={view === "jobs" ? "nav-active" : "nav-link"} href="/"><Compass size={18}/>{locale === "nb" ? "Stillingsanalyse" : "Job analysis"}<ArrowUpRight size={15}/></Link>
-      <Link className={view === "profile" ? "nav-active" : "nav-link"} href="/career/profile">{locale === "nb" ? "Min profil" : "My profile"}</Link>
-      <Link className={view === "saved" ? "nav-active" : "nav-link"} href="/jobs/saved">{locale === "nb" ? "Mine stillinger" : "Saved jobs"}</Link>
-      <div className="sidebar-note"><ShieldCheck size={22}/><h2>{locale === "nb" ? "Din erfaring, korrekt fortalt." : "Your experience, accurately told."}</h2><p>{t.principle}</p></div><Badge variant="outline" className="pilot-badge">{locale === "nb" ? "Lokal pilot" : "Local pilot"}</Badge>
-    </aside>
-    <div className="main-shell"><header className="topbar"><nav aria-label={locale === "nb" ? "Arbeidsområde" : "Workspace"} className="topbar-nav"><Link href="/" aria-current={view === "jobs" ? "page" : undefined}>{locale === "nb" ? "Stillingsanalyse" : "Job analysis"}</Link><Link href="/career/profile" aria-current={view === "profile" ? "page" : undefined}>{locale === "nb" ? "Min profil" : "My profile"}</Link><Link href="/jobs/saved" aria-current={view === "saved" ? "page" : undefined}>{locale === "nb" ? "Mine stillinger" : "Saved jobs"}</Link></nav><label className="language-picker">{t.language}<select value={locale} onChange={(e) => changeLocale(e.target.value as Locale)}><option value="nb">Norsk</option><option value="en">English</option></select></label></header>
-      <main><div className="page-intro"><p className="eyebrow">{view === "profile" ? (locale === "nb" ? "DIN KARRIERE" : "YOUR CAREER") : (locale === "nb" ? "FRA ANNONSE TIL OVERSIKT" : "FROM ADVERTISEMENT TO CLARITY")}</p><h1>{view === "profile" ? (locale === "nb" ? "Bygg din kandidatprofil." : "Build your candidate profile.") : view === "saved" ? (locale === "nb" ? "Dine neste muligheter." : "Your next opportunities.") : t.title}</h1><p className="introduction">{view === "profile" ? (locale === "nb" ? "Lagre dine opplysninger og behold kontroll over din egen historie." : "Save your information and stay in control of your own story.") : view === "saved" ? (locale === "nb" ? "Behold annonsene, vurder dem i ro og ta neste steg." : "Keep advertisements, review them and take the next step.") : t.introduction}</p></div>{view === "profile" ? <ProfileWorkspace locale={locale}/> : view === "saved" ? <SavedJobsWorkspace locale={locale}/> : <JobAnalyzer locale={locale}/> }
-      <footer className="app-footer"><div className="connection-status">{connection.isError ? <CircleAlert size={15}/> : <CircleCheck size={15}/>}<span role="status">{t[connection.isFetching ? "loading" : connection.isError ? "offline" : "online"]}</span>{connection.isError && <Button variant="ghost" size="sm" onClick={() => void connection.refetch()}>{t.retry}</Button>}</div><span>{locale === "nb" ? "Bekreftede fakta. Dine valg." : "Confirmed facts. Your choices."}</span></footer>
-      </main>
-    </div>
-  </div>;
+type WorkspaceView = "jobs" | "profile" | "saved" | "dashboard" | "cv" | "applications";
+function Navigation({ view, locale, onNavigate }: { view: WorkspaceView; locale: Locale; onNavigate?: () => void }) {
+ const nb = locale === "nb";
+ const links = [
+  { view: "dashboard", href: "/dashboard", icon: LayoutDashboard, label: nb ? "Oversikt" : "Overview", hint: nb ? "Ditt neste steg" : "Your next step" },
+  { view: "jobs", href: "/jobs/analyze", icon: Compass, label: nb ? "Stillingsanalyse" : "Job analysis", hint: nb ? "Forstå en ny annonse" : "Understand a new job" },
+  { view: "saved", href: "/jobs/saved", icon: Bookmark, label: nb ? "Mine stillinger" : "Saved jobs", hint: nb ? "Muligheter du vil følge" : "Opportunities to follow" },
+  { view: "profile", href: "/career/profile", icon: UserRound, label: nb ? "Min profil" : "My profile", hint: nb ? "Kompetanse og dokumenter" : "Competencies and documents" },
+  { view: "cv", href: "/cv", icon: FileText, label: nb ? "Mine CV-er" : "My CVs", hint: nb ? "Gjennomgå og eksporter" : "Review and export" },
+  { view: "applications", href: "/applications", icon: ClipboardList, label: nb ? "Søknader" : "Applications", hint: nb ? "Status og neste oppfølging" : "Status and next follow-up" },
+ ];
+ return <nav className="workspace-navigation" aria-label={nb ? "Arbeidsområde" : "Workspace"}>{links.map(({ view: selected, href, icon: Icon, label, hint }) => <Link key={href} href={href} className={view === selected ? "nav-active" : "nav-link"} aria-current={view === selected ? "page" : undefined} onClick={onNavigate}><Icon size={19}/><span>{label}<small>{hint}</small></span></Link>)}</nav>;
+}
+export function Foundation({ view = "jobs" }: { view?: WorkspaceView }) {
+ const { locale, changeLocale } = useLocale(); const t = translations[locale]; const nb = locale === "nb"; const session = useWorkspaceSession(); const cache = useQueryClient(); const [menu, setMenu] = useState(false);
+ const connection = useQuery({ queryKey: ["system-status"], queryFn: async () => { const response = await fetch("/api/status"); const value = await response.json(); if (!response.ok || value.status !== "UP") throw new Error("Unavailable"); return value; } });
+ const logout = useMutation({ retry: false, mutationFn: async () => { const response = await fetch("/api/auth/logout", { method: "POST", headers: { "X-CSRF-TOKEN": session.data?.csrfToken ?? "" } }); if (response.status !== 204 && response.status !== 401) throw new Error("LOGOUT_FAILED"); }, onSuccess: async () => { await cache.cancelQueries({ predicate: query => String(query.queryKey[0]).startsWith("private-") }); cache.removeQueries({ predicate: query => String(query.queryKey[0]).startsWith("private-") }); cache.getMutationCache().clear(); window.location.assign("/login"); } });
+ const title = view === "applications" ? (nb ? "Dine søknader. Ditt neste steg." : "Your applications. Your next step.") : view === "cv" ? (nb ? "Din erfaring, klar til å sendes." : "Your experience, ready to send.") : view === "profile" ? (nb ? "Din erfaring. Tydelig dokumentert." : "Your experience. Clearly documented.") : view === "saved" ? (nb ? "Dine neste muligheter." : "Your next opportunities.") : view === "dashboard" ? (nb ? "Velkommen til ditt arbeidsområde." : "Welcome to your workspace.") : t.title;
+ const intro = view === "applications" ? (nb ? "Bevar materialene du sendte, følg status og planlegg oppfølging." : "Preserve what you submitted, track status and plan follow-up.") : view === "cv" ? (nb ? "Lag CV-versjoner fra bekreftet erfaring. Se gjennom innholdet og godkjenn før eksport." : "Create CV versions from confirmed experience. Review the content and approve before export.") : view === "profile" ? (nb ? "Samle kompetanse, karrierehistorikk og dokumenter. Du bestemmer hva som er bekreftet." : "Collect competencies, career history and documents. You decide what is confirmed.") : view === "saved" ? (nb ? "Behold interessante annonser. Se grunnlaget og vurder din erfaring mot kravene." : "Keep interesting jobs. Inspect their source and compare your experience with the requirements.") : view === "dashboard" ? (nb ? "Din jobbsøking, samlet på ett sted. Her finner du et naturlig neste steg." : "Your job search, in one place. Find a natural next step here.") : t.introduction;
+ const label = view === "applications" ? (nb ? "Søknader" : "Applications") : view === "cv" ? (nb ? "Mine CV-er" : "My CVs") : view === "dashboard" ? (nb ? "Oversikt" : "Overview") : view === "profile" ? (nb ? "Min profil" : "My profile") : view === "saved" ? (nb ? "Mine stillinger" : "Saved jobs") : (nb ? "Stillingsanalyse" : "Job analysis");
+ const content = view === "applications" ? <ApplicationWorkspace locale={locale}/> : view === "cv" ? <CvWorkspace locale={locale}/> : view === "profile" ? <ProfileWorkspace locale={locale}/> : view === "saved" ? <SavedJobsWorkspace locale={locale}/> : view === "dashboard" ? <DashboardWorkspace locale={locale}/> : <JobAnalyzer locale={locale}/>;
+ return <Sheet open={menu} onOpenChange={setMenu}><div className="app-shell redesigned-shell"><a href="#workspace-content" className="skip-link">{nb ? "Hopp til innhold" : "Skip to content"}</a><aside className="sidebar"><Brand href="/dashboard"/><p className="nav-caption">{nb ? "DITT ARBEIDSOMRÅDE" : "YOUR WORKSPACE"}</p><Navigation view={view} locale={locale}/><div className="sidebar-note"><ShieldCheck size={22}/><h2>{nb ? "Din historie, korrekt fortalt." : "Your story, accurately told."}</h2><p>{nb ? "AI foreslår. Du kontrollerer og bekrefter erfaringen din." : "AI suggests. You review and confirm your experience."}</p></div><Badge variant="outline" className="pilot-badge"><span className="live-dot"/>{nb ? "Lokal pilot" : "Local pilot"}</Badge><Link className="sidebar-home" href="/">{nb ? "Om Career Agent" : "About Career Agent"}<ArrowRight size={13}/></Link></aside>
+ <div className="main-shell"><header className="topbar workspace-topbar"><div className="workspace-location"><SheetTrigger asChild><Button variant="ghost" size="icon" className="mobile-menu-button" aria-label={nb ? "Åpne meny" : "Open menu"}><Menu size={21}/></Button></SheetTrigger><span>{nb ? "Arbeidsområde" : "Workspace"}</span><span aria-hidden="true">/</span><strong>{label}</strong></div><div className="workspace-account"><LanguagePicker locale={locale} onChange={changeLocale}/>{session.data?.authenticated ? <Button variant="ghost" size="sm" aria-label={nb ? "Logg ut av Career Agent" : "Sign out of Career Agent"} onClick={() => logout.mutate()} disabled={logout.isPending}><LogOut size={17}/><span>{nb ? "Logg ut" : "Sign out"}</span></Button> : <Button asChild size="sm" variant="outline"><Link href="/login">{nb ? "Logg inn" : "Sign in"}</Link></Button>}</div></header>
+ {logout.isError && <p role="alert" className="notice">{nb ? "Utloggingen kunne ikke fullføres. Prøv igjen." : "Sign-out could not be completed. Try again."}</p>}
+ <main id="workspace-content"><div className="page-intro"><p className="eyebrow">{view === "profile" ? (nb ? "DITT KANDIDATGRUNNLAG" : "YOUR CANDIDATE FOUNDATION") : view === "dashboard" ? (nb ? "ET STEG VIDERE" : "ONE STEP FORWARD") : (nb ? "FRA ANNONSE TIL OVERSIKT" : "FROM ADVERTISEMENT TO CLARITY")}</p><h1>{title}</h1><p className="introduction">{intro}</p></div>{view === "jobs" ? content : <WorkspaceAccess locale={locale}>{content}</WorkspaceAccess>}<footer className="app-footer"><div className="connection-status">{connection.isError ? <CircleAlert size={15}/> : <CircleCheck size={15}/>}<span role="status">{t[connection.isFetching ? "loading" : connection.isError ? "offline" : "online"]}</span>{connection.isError && <Button variant="ghost" size="sm" onClick={() => void connection.refetch()}>{t.retry}</Button>}</div><span>{nb ? "Bekreftede fakta. Dine valg." : "Confirmed facts. Your choices."}</span></footer></main></div>
+ <SheetContent side="left" className="mobile-navigation-sheet" closeLabel={nb ? "Lukk meny" : "Close menu"}><SheetHeader><SheetTitle>{nb ? "Ditt arbeidsområde" : "Your workspace"}</SheetTitle><SheetDescription>{nb ? "Velg hva du vil jobbe med." : "Choose what to work on."}</SheetDescription></SheetHeader><Brand href="/dashboard"/><Navigation view={view} locale={locale} onNavigate={() => setMenu(false)}/><Link href="/" onClick={() => setMenu(false)}>{nb ? "Om Career Agent" : "About Career Agent"}</Link></SheetContent></div></Sheet>;
 }

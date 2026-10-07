@@ -141,3 +141,13 @@ The owned reread command accepts an OCR boolean and reads existing immutable ori
 ## Owned job workflow (ADR 0018)
 
 The jobs module now has immutable SavedJob snapshots and a private PersonalMatch capability. ObjectProvider keeps public startup database independent. Private Next routes pass only validated session/CSRF and bounded JSON; server repositories resolve owner by verified issuer/subject. V6/V7 transactions protect snapshot limits/deduplication and in-flight claim revision checks. Matching uses AiModel with one approved call and no public-ad diagnostics, scores, events or independent agent memory. See docs/SAVED_JOBS.md and docs/MATCHING.md.
+
+## Entry and reviewed history increment
+
+Next.js separates public landing, dedicated sign-in, guest analysis and an authenticated workspace overview without introducing another router or identity provider. Frontend session guards prevent unnecessary private mounts; Spring ownership/CSRF remains authoritative. Fixed OIDC success/failure destinations are dashboard/sign-in. Shared sign-out clears private TanStack caches. The overview is a deterministic projection of owned profile/claims/saved jobs and makes no model call. ADR 0020 and docs/UX_DESIGN.md record the route/design contract.
+
+The profile module now owns typed reviewed career entries and revision history in PostgreSQL V8, using existing owner locking and expected revisions. This supplies a small truthful history model for later CV snapshots without a new broker, ORM or extraction agent. ADR 0019 records its boundaries.
+
+## Local pilot CV and application modules
+
+`cv` owns standard draft/artifact generation and approval. `applications` owns manual application cases and material references. Both use authenticated private proxies, PostgreSQL owner locks/revisions and owned foreign keys. Original document storage is reused for generated artifacts; failed deletion is journaled and retried by CSRF-protected POST. No new event broker/workflow engine is introduced. Advertisement text can be organized locally from explicit headings/labelled fields without an AI call. Document evidence is stored separately from deduplicated claim wording. See ADRs 0021/0022 and the feature guides for bounds and remaining production work.

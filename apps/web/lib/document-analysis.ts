@@ -1,5 +1,5 @@
 import { claimId } from "./claims";
-export type CompetencySuggestion = { skill: string; statement: string; context: string; quote: string; documentId?: string | null };
+export type CompetencySuggestion = { skill: string; statement: string; context: string; quote: string; documentId?: string | null; additionalSources?: {documentId:string;quote:string}[] };
 export type DocumentAnalysis = { id: string; locale: "nb" | "en"; provider: "Groq"; summary: { text: string; quote: string; documentId?: string | null }[]; suggestions: CompetencySuggestion[]; inputCharacters: number; sourceCharacters: number; partial: boolean; omittedItems: number; createdAt: string; documents: { documentId:string; originalName:string; inputCharacters:number; sourceCharacters:number }[] };
 export function isDocumentAnalysis(value: unknown): value is DocumentAnalysis {
   if (!value || typeof value !== "object") return false;
@@ -11,6 +11,6 @@ export function isDocumentAnalysis(value: unknown): value is DocumentAnalysis {
     && count(d.inputCharacters, 40, 12000) && count(d.sourceCharacters, 1, 1200000) && count(d.omittedItems, 0, 200)
     && Array.isArray(d.documents) && d.documents.length <= 20 && d.documents.every(item => item && typeof item.documentId === "string" && claimId.test(item.documentId) && text(item.originalName,120) && count(item.inputCharacters,1,12000) && count(item.sourceCharacters,1,60000))
     && Array.isArray(d.summary) && d.summary.length <= 3 && d.summary.every(item => item && text(item.text, 500) && text(item.quote, 600))
-    && Array.isArray(d.suggestions) && d.suggestions.length <= 20 && d.suggestions.every(item => item && text(item.skill, 120) && text(item.statement, 1000) && text(item.context, 500) && text(item.quote, 600))
+    && Array.isArray(d.suggestions) && d.suggestions.length <= 20 && d.suggestions.every(item => item && text(item.skill, 120) && text(item.statement, 1000) && text(item.context, 500) && text(item.quote, 600) && (item.additionalSources === undefined || Array.isArray(item.additionalSources) && item.additionalSources.length<=100 && item.additionalSources.every((source: {documentId:unknown;quote:unknown}) => typeof source.documentId === "string" && claimId.test(source.documentId) && text(source.quote,600) && Array.isArray(d.documents) && d.documents.some(doc=>doc.documentId === source.documentId))))
     && [...d.summary, ...d.suggestions].every(item => d.documents instanceof Array && (d.documents.length ? d.documents.some(source => source.documentId === item.documentId) : item.documentId == null));
 }

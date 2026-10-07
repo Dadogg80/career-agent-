@@ -10,7 +10,7 @@ test("saving an analysis retains its actual text and source without another AI c
  await page.route("**/api/auth/session", r => r.fulfill({ json: { authenticated: true, loginAvailable: true, profilesAvailable: true, csrfToken: "synthetic-csrf" } }));
  await page.route("**/api/jobs/requirements", r => { calls++; return r.fulfill({ json: extraction }); });
  await page.route("**/api/profile/me/jobs", r => { saves++; const input = r.request().postDataJSON(); expect(input).toEqual(content); expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf"); return r.fulfill({ json: job }); });
- await page.goto("/");
+ await page.goto("/jobs/analyze");
  await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
  await page.getByRole("textbox", { name: "Stillingsannonse", exact: true }).fill(text);
  await page.getByRole("button", { name: "Analyser", exact: true }).click();
@@ -26,7 +26,9 @@ test("saved snapshots can be searched reopened and explicitly deleted on mobile 
  let stored = [job]; let deletes = 0;
  await page.setViewportSize({ width: 390, height: 850 });
  await page.route("**/api/auth/session", r => r.fulfill({ json: { authenticated: true, loginAvailable: true, profilesAvailable: true, csrfToken: "synthetic-csrf" } }));
+ await page.route("**/api/profile/me/claims", r => r.fulfill({ json: [] }));
  await page.route("**/api/profile/me/jobs**", r => {
+  if (r.request().url().endsWith("/match")) return r.fulfill({ json: null });
   if (r.request().method() === "DELETE") { deletes++; expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf"); stored = []; return r.fulfill({ status: 204 }); }
   return r.fulfill({ json: stored });
  });

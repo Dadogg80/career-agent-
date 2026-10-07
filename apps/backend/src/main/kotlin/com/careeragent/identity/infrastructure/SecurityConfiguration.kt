@@ -28,7 +28,7 @@ class SecurityConfiguration {
         }
         http.authorizeHttpRequests { rules ->
             rules.requestMatchers("/actuator/health", "/api/system/status", "/api/auth/session", "/api/jobs/import", "/api/jobs/requirements", "/oauth2/authorization/career", "/login/oauth2/code/career").permitAll()
-                .requestMatchers("/api/profile/me", "/api/profile/me/jobs", "/api/profile/me/jobs/*", "/api/profile/me/jobs/*/match", "/api/auth/logout", "/api/profile/me/claims", "/api/profile/me/claims/*", "/api/profile/me/claims/*/review", "/api/profile/me/claims/*/history", "/api/profile/me/documents", "/api/profile/me/documents/*", "/api/profile/me/documents/*/original", "/api/profile/me/documents/*/master", "/api/profile/me/documents/*/claims", "/api/profile/me/documents/*/analysis", "/api/profile/me/documents/*/reread").authenticated()
+                .requestMatchers("/api/profile/me/applications", "/api/profile/me/applications/*", "/api/profile/me/cvs", "/api/profile/me/cvs/*", "/api/profile/me/cvs/*/approve", "/api/profile/me/cvs/*/download/*", "/api/profile/me", "/api/profile/me/entries", "/api/profile/me/entries/*", "/api/profile/me/entries/*/review", "/api/profile/me/entries/*/history", "/api/profile/me/jobs", "/api/profile/me/jobs/*", "/api/profile/me/jobs/*/match", "/api/auth/logout", "/api/profile/me/claims", "/api/profile/me/claims/*", "/api/profile/me/claims/*/review", "/api/profile/me/claims/*/history", "/api/profile/me/claims/*/evidence", "/api/profile/me/documents", "/api/profile/me/documents/*", "/api/profile/me/documents/*/original", "/api/profile/me/documents/*/master", "/api/profile/me/documents/*/claims", "/api/profile/me/documents/*/analysis", "/api/profile/me/documents/*/reread").authenticated()
                 .anyRequest().denyAll()
         }
         // These two endpoints process public ads and never access private user data.
@@ -43,8 +43,8 @@ class SecurityConfiguration {
             resolver.setAuthorizationRequestCustomizer(OAuth2AuthorizationRequestCustomizers.withPkce())
             http.oauth2Login { login ->
                 login.authorizationEndpoint { it.authorizationRequestResolver(resolver) }
-                login.successHandler { _, response, _ -> response.sendRedirect(frontendOrigin.trimEnd('/') + "/career/profile") }
-                login.failureHandler { _, response, _ -> response.sendRedirect(frontendOrigin.trimEnd('/') + "/career/profile?login=failed") }
+                login.successHandler { _, response, _ -> response.sendRedirect(frontendOrigin.trimEnd('/') + "/dashboard") }
+                login.failureHandler { _, response, _ -> response.sendRedirect(frontendOrigin.trimEnd('/') + "/login?login=failed") }
             }
         }
         http.logout { logout ->

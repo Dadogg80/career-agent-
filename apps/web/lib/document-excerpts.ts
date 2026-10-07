@@ -24,3 +24,12 @@ export function collectionExcerpts(documents: DocumentDetail[], budget = 12000):
   }
   return Object.fromEntries(readable.map(item => [item.document.id, spreadExcerpt(item.text, sizes.get(item.document.id) ?? 0)]));
 }
+
+/** Contiguous windows with a literal opening-context excerpt; no automatic AI calls. */
+export function documentWindows(text: string, budget = 12000): {label:string;text:string}[] {
+  if(text.length<=budget)return [{label:`1–${text.length}`,text}];
+  const context=text.slice(0,1000);const size=budget-context.length-separator.length;
+  const windows:{label:string;text:string}[]=[];
+  for(let start=0;start<text.length;start+=size){windows.push({label:`${start+1}–${Math.min(text.length,start+size)}`,text:start===0?text.slice(start,start+size):context+separator+text.slice(start,start+size)});}
+  return windows;
+}

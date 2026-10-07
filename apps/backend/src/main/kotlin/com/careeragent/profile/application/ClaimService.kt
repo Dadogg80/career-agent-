@@ -8,6 +8,7 @@ import java.util.UUID
 class ClaimFailure(val code: String, val status: Int) : RuntimeException(code)
 interface ClaimRepository {
     fun list(identity: VerifiedIdentity): List<CompetencyClaim>
+    fun evidence(identity: VerifiedIdentity, id: UUID): List<ClaimEvidence>
     fun create(identity: VerifiedIdentity, content: ClaimContent): CompetencyClaim
     fun edit(identity: VerifiedIdentity, id: UUID, content: ClaimContent, revision: Long): CompetencyClaim
     fun review(identity: VerifiedIdentity, id: UUID, decision: ReviewDecision, revision: Long): CompetencyClaim
@@ -18,6 +19,7 @@ interface ClaimRepository {
 @Service
 @Profile("persistence")
 class ClaimService(private val claims: ClaimRepository) {
+    fun evidence(identity: VerifiedIdentity, id: UUID) = claims.evidence(identity, id)
     fun list(identity: VerifiedIdentity) = claims.list(identity)
     fun create(identity: VerifiedIdentity, content: ClaimContent) = claims.create(identity, validated(content))
     fun edit(identity: VerifiedIdentity, id: UUID, content: ClaimContent, revision: Long): CompetencyClaim {

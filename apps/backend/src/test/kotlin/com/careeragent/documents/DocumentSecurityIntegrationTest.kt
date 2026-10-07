@@ -48,6 +48,33 @@ class DocumentSecurityIntegrationTest {
             .andExpect(status().isOk).andExpect(header().string("Cache-Control", "no-store")).andExpect(jsonPath("$.ownerId").doesNotExist()).andExpect(jsonPath("$.isMaster").value(false)).andReturn()
         return json.readTree(result.response.contentAsString)["id"].asText()
     }
+    @Test fun `combined analysis groups repeated company experience and saving attaches both evidence sources`() {
+        val user=profile();val first=upload(user,"cv.md","Example AS: Built APIs with Kotlin for internal services.".toByteArray());val second=upload(user,"project.txt","Example AS: Built APIs with Kotlin for internal services.".toByteArray())
+        val item=mapOf("skill" to "Kotlin","statement" to "Built APIs with Kotlin","context" to "Example AS","quote" to "Built APIs with Kotlin")
+        `when`(ai.generateJson(anyString(),anyString(),anyMap())).thenReturn(json.writeValueAsString(mapOf("summary" to emptyList<Any>(),"suggestions" to listOf(item+("documentId" to first),item+("documentId" to second)))))
+        val request=mapOf("locale" to "nb","consent" to true,"documents" to listOf(mapOf("documentId" to first,"text" to "Example AS: Built APIs with Kotlin for internal services."),mapOf("documentId" to second,"text" to "Example AS: Built APIs with Kotlin for internal services.")))
+        val response=mvc.perform(post("$path/analysis").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(request))).andExpect(status().isOk).andExpect(jsonPath("$.suggestions.length()").value(1)).andExpect(jsonPath("$.suggestions[0].additionalSources.length()").value(1)).andReturn()
+        val analysis=json.readTree(response.response.contentAsString)["id"].asText()
+        val claim=json.readTree(mvc.perform(post("$path/$first/claims").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(item+("analysisId" to analysis)))).andExpect(status().isOk).andExpect(jsonPath("$.status").value("UNVERIFIED")).andReturn().response.contentAsString)["id"].asText()
+        mvc.perform(get("/api/profile/me/claims/$claim/evidence").with(caller(user))).andExpect(jsonPath("$.length()").value(2))
+        mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$.length()").value(1))
+        verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap())
+    }
+    @Test fun `repeated evidence keeps one competency per employer and all owned sources without reconfirmation`() {
+        val user=profile();val other=profile();val first=upload(user,"project.md","Example AS: Built APIs with Kotlin".toByteArray());val second=upload(user,"certificate.txt","Example AS: Built APIs with Kotlin".toByteArray())
+        val input="""{"skill":"Kotlin","statement":"Built APIs with Kotlin","context":"Example AS","quote":"Built APIs with Kotlin"}"""
+        val claim=json.readTree(mvc.perform(post("$path/$first/claims").with(caller(user)).with(csrf()).contentType("application/json").content(input)).andExpect(status().isOk).andReturn().response.contentAsString)["id"].asText()
+        mvc.perform(post("/api/profile/me/claims/$claim/review").with(caller(user)).with(csrf()).contentType("application/json").content("""{"decision":"CONFIRM","revision":1}""")).andExpect(status().isOk)
+        mvc.perform(post("$path/$second/claims").with(caller(user)).with(csrf()).contentType("application/json").content(input)).andExpect(status().isOk).andExpect(jsonPath("$.id").value(claim)).andExpect(jsonPath("$.status").value("CONFIRMED")).andExpect(jsonPath("$.revision").value(2))
+        mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$.length()").value(1))
+        mvc.perform(get("/api/profile/me/claims/$claim/evidence").with(caller(user))).andExpect(jsonPath("$.length()").value(2)).andExpect(jsonPath("$[1].originalName").value("certificate.txt")).andExpect(jsonPath("$[1].context").value("Example AS"))
+        mvc.perform(get("/api/profile/me/claims/$claim/evidence").with(caller(other))).andExpect(status().isNotFound)
+        mvc.perform(post("$path/$second/master").with(caller(user)).with(csrf())).andExpect(status().isBadRequest)
+        mvc.perform(delete("$path/$second").with(caller(user)).with(csrf())).andExpect(status().isNoContent)
+        mvc.perform(get("/api/profile/me/claims/$claim/evidence").with(caller(user))).andExpect(jsonPath("$[1].documentId").isEmpty()).andExpect(jsonPath("$[1].quote").value("Built APIs with Kotlin"))
+        mvc.perform(post("/api/profile/me/claims").with(caller(user)).with(csrf()).contentType("application/json").content("""{"skill":"Kotlin","statement":"Built APIs with Kotlin","context":"Other employer","sourceNote":"Own statement"}""")).andExpect(status().isOk)
+        mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$.length()").value(2));verifyNoInteractions(ai)
+    }
     @Test fun `originals are private retained unchanged and selectable as master`() {
         val user = profile(); val bytes = DocumentFixture.docx("Built APIs with Kotlin"); val id = upload(user, bytes = bytes)
         mvc.perform(get("$path/$id").with(caller(user))).andExpect(status().isOk).andExpect(jsonPath("$.text").value("Built APIs with Kotlin"))
@@ -150,7 +177,7 @@ class DocumentSecurityIntegrationTest {
         mvc.perform(get("$path/$id/analysis").with(caller(user))).andExpect(jsonPath("$.analysis.id").value(analysisId))
         val claim = json.writeValueAsString(mapOf("skill" to "Kotlin", "statement" to "Built APIs", "context" to "Synthetic project", "quote" to "Built APIs with Kotlin", "analysisId" to analysisId))
         mvc.perform(post("$path/$id/claims").with(caller(user)).with(csrf()).contentType("application/json").content(claim)).andExpect(status().isOk)
-            .andExpect(jsonPath("$.status").value("UNVERIFIED")).andExpect(jsonPath("$.sourceNote").value("AI-assisted CV: synthetic.docx"))
+            .andExpect(jsonPath("$.status").value("UNVERIFIED")).andExpect(jsonPath("$.sourceNote").value("AI-assisted document: synthetic.docx"))
         verify(ai, times(2)).generateJson(anyString(), anyString(), anyMap())
         mvc.perform(delete("$path/$id").with(caller(user)).with(csrf())).andExpect(status().isNoContent)
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM document_analysis WHERE document_id = ?::uuid", Long::class.java, id)).isZero()

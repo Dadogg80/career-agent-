@@ -18,6 +18,7 @@ data class ClaimRevision(
     val recordedBy: String = "PROFILE_OWNER",
     val sourceDocumentId: UUID? = null, val sourceQuote: String? = null,
 )
+data class ClaimEvidence(val id: UUID, val documentId: UUID?, val originalName: String, val quote: String, val statement: String, val context: String, val recordedAt: OffsetDateTime)
 data class ClaimHistory(val items: List<ClaimRevision>, val total: Long)
 
 object ClaimPolicy {

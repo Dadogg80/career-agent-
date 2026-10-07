@@ -1,0 +1,10 @@
+import { claimId } from "./claims";
+import { isApplication,isApplications,isApplicationContent } from "./applications";
+import { localRequest,privateBase,privateResponse,sessionHeaders,smallJson,mappedPrivateError } from "./private-api";
+export async function applicationProxy(request:Request,operation:"list"|"create"|"update"|"delete",id?:string){
+ if(!localRequest(request))return privateResponse({code:"ACCESS_DENIED"},undefined,403);
+ if(id!==undefined&&!claimId.test(id))return privateResponse({code:"APPLICATION_INVALID"},undefined,400);
+ const headers=sessionHeaders(request);let body:string|undefined;
+ if(operation!=="list")try{const v=await smallJson(request,50000) as Record<string,unknown>;const keys=Object.keys(v).sort().join(",");if(keys!==(operation==="create"?"jobId":operation==="update"?"content,revision":"revision"))throw new Error("Invalid input");if(operation==="create"&&(typeof v.jobId!=="string"||!claimId.test(v.jobId)))throw new Error("Invalid job");if(operation!=="create"&&(!Number.isSafeInteger(v.revision)||Number(v.revision)<1))throw new Error("Invalid revision");if(operation==="update"&&(!isApplicationContent(v.content)||Object.keys(v.content).sort().join(",")!=="applicationText,appliedOn,contactEmail,contactName,contactPhone,cvVersionId,nextFollowUpOn,notes,status"))throw new Error("Invalid content");headers.set("Content-Type","application/json");body=JSON.stringify(v);}catch{return privateResponse({code:"APPLICATION_INVALID"},undefined,400);}
+ try{const r=await fetch(`${privateBase()}/api/profile/me/applications${id?`/${id}`:""}`,{method:operation==="create"?"POST":operation==="update"?"PUT":operation==="delete"?"DELETE":"GET",headers,body,cache:"no-store",redirect:"manual",signal:AbortSignal.timeout(15000)});if(r.status===204&&operation==="delete")return privateResponse(null,r);const v:unknown=await r.json();if(!r.ok)return privateResponse(mappedPrivateError(v),r,[400,401,403,404,409,503].includes(r.status)?r.status:503);if(!(operation==="list"?isApplications(v):isApplication(v)))throw new Error("Invalid case");return privateResponse(v,r);}catch{return privateResponse({code:"APPLICATION_UNAVAILABLE"});}
+}
