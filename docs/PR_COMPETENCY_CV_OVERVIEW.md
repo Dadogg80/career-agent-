@@ -1,34 +1,34 @@
-# PR handoff: advertisement overview, competencies and CV sources
+# PR handoff: advertisement overview and AI-assisted document competencies
 
 Base: `main`
 
 Head: `feat/competency-claims`
 
-Title: **Keep job advertisements visible and add reviewed CV competencies**
+Title: **Keep advertisements visible and add AI-assisted document competencies**
 
 ## Description
 
-When source retrieval succeeds but AI structuring fails, the previous UI left the result area empty. This change displays the received advertisement text, title and source link with an honest analysis-failure notice. A manual retry reuses the source instead of repeating browser search; invalid AI output still cannot become supported facts.
+When source retrieval succeeds but AI structuring fails, display the received advertisement text, title and source link instead of an empty result. Manual retry reuses the source; unsupported AI output still cannot become supported facts. Reorganize results into employer source text, collapsible role/applicant/offers, practical metadata and compact requirement cards with safe diagnostic reasons.
 
-Reorganize successful results into original-wording employer paragraphs on the left, collapsible role/applicant/offers on the right, practical location/contact/deadline metadata below, then the existing compact requirement cards. Add applicant/offer schema categories and safe diagnostic reasons for application validation failures even when Groq returned HTTP 200. Contact details use source evidence; unidentified details remain visibly unknown.
+Add owned competency statements with explicit review, revision conflicts, history and edit-to-unverified behavior. Add local DOCX/PDF upload, unchanged original downloads, master selection, text inspection and source-linked claims.
 
-Add owned competency statements with explicit confirmation/rejection, revision conflicts, edit-to-unverified behavior, history and deletion. Add authenticated local DOCX/PDF upload, original downloads, document language/master selection, extracted-text inspection and exact-source creation of UNVERIFIED claims. Reuse TanStack Query and shadcn/ui with Norwegian default and English support.
+Add optional Groq competency summaries from individual documents or the combined readable CVs, attestations and certificates. Users review editable excerpts and explicitly approve each provider submission. One bounded structured call produces privately stored summaries and suggestions with exact source quotes and document attribution. Selected suggestions populate editable claim drafts; explicit saving creates UNVERIFIED statements, never automatic confirmation. Failed reanalysis retains prior summaries; source upload/deletion invalidates combined results.
 
-Keep private CV/competency content out of public Groq endpoints and diagnostics. Apply issuer+subject ownership, CSRF, no-store responses, bounded parsing and PostgreSQL integrity constraints. Document storage is a local adapter for the free pilot. Document deletion retains existing claim quotes/history, as explained by the confirmation dialog.
-
-Update roadmap, architecture/domain/security, user flows/stories, ADRs 0014/0015 and local setup/test instructions. Saved jobs, personal matching and automatic private-AI discovery remain separate future deliveries.
+Keep public advertisement routes and diagnostics separate from private sources. Reuse the existing provider abstraction/key, TanStack Query and shadcn/ui with Norwegian default and English support. No new runtime service, frontend dependency, paid fallback, browser tool or automatic AI retry. Update architecture/domain/security, flows/stories, roadmap, setup guides and ADRs 0014–0016.
 
 ## Validation
 
-- 69 backend tests passed, zero failures/errors/skips, including real PostgreSQL/Testcontainers migrations, ownership, CSRF, revision concurrency and document parsing/source integrity.
+- 76 backend tests passed with no failures, errors or skips, including real PostgreSQL/Testcontainers ownership, CSRF, revisions, parsing, persisted analyses, collection source attribution and invalidation.
 - Production frontend build and TypeScript checks passed.
-- 38 production browser tests and 8 development-server tests passed. Browser AI success responses are mocked; responsive layout, failure fallback, source reuse and private proxy boundaries are exercised.
-- Actual synthetic Keycloak/browser/Next/Spring/PostgreSQL/local-files smoke test verified original upload/download, master selection, source-linked unverified-to-confirmed claims, history, reopening after backend restart and cleanup. Private Groq processing was disabled.
-- One live structured analysis of the previously retrieved reported public FINN source returned 10 requirements, 10 facts and zero omissions. This is not a separate fresh full URL-pipeline validation or a guarantee against future provider failures.
-- Synthetic desktop/mobile screenshots reviewed. No private documents, credentials or raw provider payloads committed. GitHub Actions execution is not independently verified.
+- 42 production browser tests and 8 development-server tests passed; browser AI success responses are mocked.
+- Actual synthetic Keycloak/browser/Next/Spring/PostgreSQL/local-files checks verified original retention, reviewed claims and persistence after restart in the earlier part of this branch.
+- An actual combined Groq call through authenticated Next/Spring using two synthetic uploaded documents returned HTTP 200, two summary points and four source-backed competency suggestions with zero omitted items. Reopening the stored analysis made no model call; synthetic documents/results were cleaned up. This single smoke check is not a comprehensive model-quality guarantee.
+- One earlier live structured analysis of the reported retrieved public FINN source succeeded. Synthetic mobile screenshots reviewed; private sources and provider payloads remain outside Git. GitHub Actions execution is not independently verified.
 
-## Pilot limitations and testing after merge
+## Limits and testing after merge
 
-CV import is local and user-assisted: no automatic AI claim discovery, OCR, matching, tailored document generation or arbitrary DOCX layout preservation. Filesystem/database operations compensate for ordinary errors but are not crash-atomic; reconciliation, backups and production privacy/storage controls remain outstanding before external rollout.
+A combined summary uses at most 20 selected documents and 12,000 submitted text characters in one call, up to three summary points and ten suggestions. Long files use editable excerpts and visibly partial coverage; unreadable scans are excluded. Quote membership establishes provenance, not semantic entailment. Confirmation remains human review. No OCR, exhaustive automatic chunking, adjacent-skill inference, personal matching or tailored CV generation.
 
-Stop both servers before updating and rebuilding the backend. Follow [RUNNING.md](RUNNING.md#update-and-restart-after-merging-this-branch) and [CV_IMPORT.md](CV_IMPORT.md). Existing passwords/provider keys and volumes should be retained. Flyway applies V2/V3 automatically. Test a URL analysis, then sign in under Min profil to upload a small CV, inspect its text, create and confirm a sourced competency, reload and reopen it.
+Private reviewed excerpts intentionally reach Groq under the existing account's terms/settings. This single local opt-in does not establish GDPR compliance, zero retention or external deployment readiness. Production provider/privacy controls, backup/export/deletion and storage crash reconciliation remain outstanding.
+
+Stop both servers before updating and rebuilding. Follow [RUNNING.md](RUNNING.md#update-and-restart-after-merging-this-branch) and [CV_IMPORT.md](CV_IMPORT.md). Retain existing passwords/keys, volumes and originals. Flyway applies V2–V4 automatically. Under Min profil upload documents, choose Oppsummer alle dokumentene med AI, review/approve excerpts, inspect source quotes and explicitly save/review a suggestion.

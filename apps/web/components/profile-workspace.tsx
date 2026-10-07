@@ -44,7 +44,7 @@ export function ProfileWorkspace({ locale }: { locale: Locale }) {
   const logout = useMutation({ mutationFn: async () => {
     const response = await fetch("/api/auth/logout", { method: "POST", headers: { "X-CSRF-TOKEN": session.data!.csrfToken } });
     if (response.status !== 204) await readJson(response);
-  }, onSuccess: () => { setName(""); cache.removeQueries({ queryKey: ["private-profile"] }); cache.removeQueries({ queryKey: ["private-session"] }); cache.removeQueries({ queryKey: ["private-claims"] }); cache.removeQueries({ queryKey: ["private-claim-history"] }); cache.removeQueries({ queryKey: ["private-documents"] }); cache.removeQueries({ queryKey: ["private-document-detail"] }); window.location.assign("/"); } });
+  }, onSuccess: () => { setName(""); cache.removeQueries({ queryKey: ["private-profile"] }); cache.removeQueries({ queryKey: ["private-session"] }); cache.removeQueries({ queryKey: ["private-claims"] }); cache.removeQueries({ queryKey: ["private-claim-history"] }); cache.removeQueries({ queryKey: ["private-documents"] }); cache.removeQueries({ queryKey: ["private-document-analysis"] }); cache.removeQueries({ queryKey: ["private-document-collection-text"] }); cache.removeQueries({ queryKey: ["private-document-detail"] }); window.location.assign("/"); } });
   function submit(event: FormEvent) { event.preventDefault(); if (!save.isPending && !logout.isPending) save.mutate(); }
   const error = session.error ?? profile.error ?? save.error ?? logout.error;
   const message = claimExpired ? t.errors.AUTH_REQUIRED : error ? t.errors[error.message as keyof typeof t.errors] ?? t.errors.PROFILE_UNAVAILABLE : undefined;

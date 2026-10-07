@@ -31,8 +31,9 @@ class DocumentsController(private val services: ObjectProvider<DocumentService>)
     @PostMapping("/{documentId}/master") fun master(@AuthenticationPrincipal principal: OidcUser?, @PathVariable documentId: String) = response(service().selectMaster(identity(principal), id(documentId)))
     @PostMapping("/{documentId}/claims", consumes = ["application/json"])
     fun claim(@AuthenticationPrincipal principal: OidcUser?, @PathVariable documentId: String, @RequestBody input: Map<String, Any?>): ResponseEntity<*> {
-        if (input.keys != setOf("skill", "statement", "context", "quote") || input.values.any { it !is String }) throw DocumentFailure("DOCUMENT_INVALID", 400)
-        return response(service().claim(identity(principal), id(documentId), input["skill"] as String, input["statement"] as String, input["context"] as String, input["quote"] as String))
+        val fields = setOf("skill", "statement", "context", "quote")
+        if (input.keys !in setOf(fields, fields + "analysisId") || input.values.any { it !is String }) throw DocumentFailure("DOCUMENT_INVALID", 400)
+        return response(service().claim(identity(principal), id(documentId), input["skill"] as String, input["statement"] as String, input["context"] as String, input["quote"] as String, (input["analysisId"] as String?)?.let(::id)))
     }
     @DeleteMapping("/{documentId}") fun delete(@AuthenticationPrincipal principal: OidcUser?, @PathVariable documentId: String): ResponseEntity<Void> { service().delete(identity(principal), id(documentId)); return ResponseEntity.noContent().header("Cache-Control", "no-store").build() }
     @ExceptionHandler(DocumentFailure::class) fun rejected(error: DocumentFailure) = ResponseEntity.status(error.status).header("Cache-Control", "no-store").body(mapOf("code" to error.code))

@@ -142,3 +142,7 @@ npm run dev -- --hostname 127.0.0.1
 Use the local application at `http://127.0.0.1:3000`. For Min profil/CV sign in as `pilot` using the password in your own ignored `.env.identity`. Public ad analysis works without sign-in. If changing default ports, configure both Next API base and backend public login origin consistently. The local private pilot is not an externally deployed SaaS.
 
 Stop the running Java process **before** rebuilding its JAR. Overwriting an archive used by a live Spring Boot classloader can produce class-loading failures; rebuild first, then start the new process.
+
+## Optional document AI summaries
+
+After updating/rebuilding this branch, use Min profil → CV og dokumenter → Oppsummer alle dokumentene med AI. Review all readable source excerpts and approve sending; do not send unnecessary private details. GROQ_API_KEY is reused server-side. The new V4 migration is automatic. No new dependency/service or account upgrade is needed. Individual analysis is available inside each document. See [CV_IMPORT.md](CV_IMPORT.md) for partial coverage, source inspection, UNVERIFIED review, persistence and failure behavior. Public advertisement diagnostics exclude this private content.

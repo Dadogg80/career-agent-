@@ -57,7 +57,7 @@ class GroqAiModel(
             ),
             "response_format" to mapOf(
                 "type" to "json_schema",
-                "json_schema" to mapOf("name" to "job_requirements", "strict" to true, "schema" to schema),
+                "json_schema" to mapOf("name" to "career_analysis", "strict" to true, "schema" to schema),
             ),
         )
         val request = HttpRequest.newBuilder(URI.create("https://api.groq.com/openai/v1/chat/completions"))

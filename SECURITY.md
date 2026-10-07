@@ -4,7 +4,7 @@ Status: Design requirements. The local pilot includes loopback backend binding, 
 
 ## Current AI pilot boundary
 
-- Only public advertisements or fictional text should be used. The UI explains that text is sent to Groq on Analyze.
+- Public advertisement endpoints accept public advertisements or fictional text only. Private document AI has a separate authenticated preview/approval boundary (ADR 0016), described below.
 - The Next.js extraction route accepts loopback hostnames and checks browser Origin against the incoming Host; it does not trust Next.js's internal canonical hostname as the browser origin.
 - Request size, source length, completion tokens, concurrent calls and attempts per backend process are limited. The process budget resets on restart and is not a billing guarantee.
 - Provider failures return allowlisted error codes, not keys, source documents or provider payloads.
@@ -58,7 +58,7 @@ Default process limits: 10 Browser Search attempts and 20 structured-analysis at
 
 ## Local persistence boundary
 
-Compose PostgreSQL is loopback-only with a required local password and a persistent volume. The basic profile endpoint requires a verified OIDC session and scopes every operation by issuer+subject. Real PostgreSQL authorization tests cover cross-identity isolation and stale revisions. The current branch supports bounded local document upload for the single pilot; it does not authorize private AI processing. Runtime/migration role separation, encrypted backups and production secret management are future deployment requirements.
+Compose PostgreSQL is loopback-only with a required local password and a persistent volume. The basic profile endpoint requires a verified OIDC session and scopes every operation by issuer+subject. Real PostgreSQL authorization tests cover cross-identity isolation and stale revisions. The current branch supports bounded local document upload for the single pilot; optional private document AI is now authorized for the local pilot through the reviewed-preview boundary below. Runtime/migration role separation, encrypted backups and production secret management are future deployment requirements.
 
 ## Evidence resilience
 
@@ -82,4 +82,12 @@ All private reads/writes/downloads use verified issuer+subject ownership. All pr
 
 CV text extraction stays local. Originals use generated UUID storage names and restrictive POSIX permissions; the filename never determines a path. Upload/multipart, expanded ZIP/XML, PDF pages and text have limits. External XML entities/DTDs are disabled. Embedded document content is not executed. Originals download as no-store/nosniff attachments, never inline HTML. There is no OCR, antivirus service or production processing sandbox in this local slice.
 
-Document deletion removes file/text/metadata but preserves user-created claims and their quote history, explicitly explained before deletion; delete claims separately. Account-wide export/deletion, backup retention, crash reconciliation and encrypted backups are unresolved before external use. A filesystem and PostgreSQL transaction cannot guarantee crash-atomic deletion. Public diagnostics only log allowlisted failure categories/counts/timings; private files, text, claims and cookies never enter diagnostic events or Groq calls. See [CV_IMPORT.md](docs/CV_IMPORT.md).
+Document deletion removes file/text/metadata but preserves user-created claims and their quote history, explicitly explained before deletion; delete claims separately. Account-wide export/deletion, backup retention, crash reconciliation and encrypted backups are unresolved before external use. A filesystem and PostgreSQL transaction cannot guarantee crash-atomic deletion. Public diagnostics only log allowlisted failure categories/counts/timings; private files, text, claims and cookies never enter advertisement diagnostic events. Optional reviewed document text reaches Groq only through the separate private analysis endpoints. See [CV_IMPORT.md](docs/CV_IMPORT.md).
+
+## Optional private document AI (implemented, ADR 0016)
+
+The product owner explicitly requested AI summaries/proposals from uploaded CVs and other competency documents before merge. Upload/text extraction remain local; reading saved analyses makes no model call. Single and combined analysis endpoints require verified ownership, CSRF and same-origin proxies, approved reviewed previews and bounded inputs. Only submitted text (plus opaque source IDs for combined analysis) is sent; original binaries, filenames, profile bodies and existing claims are not included. The preview instructs users to remove unnecessary personal details; this is user review, not guaranteed automatic PII redaction.
+
+Up to 12,000 characters across at most 20 selected documents, one call per attempt, one document analysis in flight and ten attempts per process by default (DOCUMENT_AI_MAX_REQUESTS). No paid fallback, tool use or automatic retry. Account-wide quota availability is not guaranteed. Excerpt checks retain only literal support in both the preview and the correct original document; all results remain suggestions requiring human review. Prompt rules reject adjacent-skill inference, embedded instructions and promotion of course/team evidence into personal production experience; these rules do not prove semantic model correctness.
+
+Persist only validated summary/proposals and source/coverage metadata, never raw provider output or full submitted previews. Every read/replacement is owned; document deletion cascades individual results and clears combined results, while existing explicitly saved claims/quotes follow the visible retention policy above. Provider deletion/retention cannot be guaranteed by local deletion. This single-pilot opt-in does not establish GDPR compliance or authorize external users; provider contracts/settings, transfers, account export/deletion and production retention remain open.

@@ -1,6 +1,6 @@
 # Local CV import and competency review
 
-Implemented local pilot scope: authenticated DOCX/PDF upload, original retention/download, text inspection, declared Norwegian/English document language, master-CV selection and user-created source-linked unverified claims. Use [IDENTITY_SETUP.md](IDENTITY_SETUP.md) first. Public advertisement analysis remains usable without these services.
+Implemented local pilot scope: authenticated DOCX/PDF upload, original retention/download, text inspection, declared Norwegian/English document language, master-CV selection and user-created source-linked unverified claims, plus optional AI summaries/proposals for single or multiple documents. Use [IDENTITY_SETUP.md](IDENTITY_SETUP.md) first. Public advertisement analysis remains usable without these services.
 
 ## Use the feature
 
@@ -11,7 +11,7 @@ Implemented local pilot scope: authenticated DOCX/PDF upload, original retention
 5. Give the competency a label, describe your own contribution and enter its project/employment context. Saving creates an **UNVERIFIED** claim with the document reference and exact quote.
 6. In the competency panel, inspect and explicitly confirm, reject or edit the statement. Confirmation applies to that revision. Editing resets the statement to UNVERIFIED and preserves previous content/status/source in history.
 
-This first import slice uses local text extraction and user selection. There is no automatic AI claim discovery, OCR, semantic matching, CV rewriting or PDF/DOCX generation. Private CV/competency material is not sent to Groq. An eventual private-AI feature needs a provider-data decision and explicit product controls; it must not silently inherit the public-ad flow.
+Upload and extraction remain local. Optional AI analysis now sends only reviewed text excerpts to Groq after a separate per-run approval (ADR 0016). No claims are saved or confirmed automatically. OCR, semantic matching, CV rewriting and PDF/DOCX generation remain future work. This single local pilot does not establish production provider/privacy compliance.
 
 ## Storage and limits
 
@@ -30,3 +30,14 @@ Manual claims are limited to 100/profile. The API returns the latest 20 revision
 ## Verify after merge
 
 Upload a small original DOCX/PDF, reload, download and compare the original, select a master, create a quoted unverified claim, confirm it, then edit and check that confirmation resets. Restart the backend, sign in again and reopen the stored document and claim. Do not delete Docker volumes or the storage directory during restart. No new API key or paid infrastructure is required.
+
+## AI summaries across CVs and competency documents
+
+1. Upload CVs, employment attestations, certificates or other competency evidence as DOCX/PDF.
+2. Choose **Oppsummer alle dokumentene med AI** for a combined overview. Alternatively open a document for its individual AI analysis.
+3. Review the editable text previews, remove unnecessary names/contact/private information, and select relevant passages. Original files remain unchanged. Initial previews share a total 12,000-character budget across readable documents; long collections are excerpts, not an exhaustive full reading. Scanned files with no text are explicitly excluded. Emptying an excerpt excludes that document.
+4. Approve sending the reviewed text and select **Oppsummer kompetansen med AI**. One structured Groq call returns up to three source-backed summary points and ten competency suggestions. It uses the existing server-only GROQ_API_KEY and no browser search or other profile data.
+5. Inspect each suggestion, source filename and exact quote. **Se gjennom dette forslaget** opens editable claim fields for the correct source document. Saving creates UNVERIFIED competence with an AI-assisted source note; confirm only through the separate review action. Course/certificate evidence must not be treated as production experience.
+6. The latest validated analysis is stored privately and can be reopened without another model call. Reanalysis replaces only this latest suggestion snapshot. Quota/invalid-result failures preserve previews and any previous summary; manual retry only. Uploading/deleting a document clears the combined summary so it can be regenerated against the changed collection.
+
+The local process budget defaults to ten document-analysis attempts across both modes (DOCUMENT_AI_MAX_REQUESTS); provider cooldown/quota still applies. No new service, subscription or key is required. Local deletion removes stored analysis but cannot guarantee provider-side deletion. No adjacent-skill inference or automatic background discovery is included.

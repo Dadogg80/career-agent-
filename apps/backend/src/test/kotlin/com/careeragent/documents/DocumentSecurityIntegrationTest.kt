@@ -2,6 +2,7 @@ package com.careeragent.documents
 
 import com.careeragent.ai.application.AiModel
 import org.mockito.Mockito.verifyNoInteractions
+import org.mockito.Mockito.*
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.assertj.core.api.Assertions.assertThat
@@ -92,6 +93,65 @@ class DocumentSecurityIntegrationTest {
             mvc.perform(multipart(path).file(MockMultipartFile("file", name, "application/octet-stream", bytes)).param("language", "nb").with(caller(user)).with(csrf())).andExpect(jsonPath("$.code").value(code))
         }
         mvc.perform(post("$path/$id/claims").with(caller(user)).with(csrf()).contentType("application/json").content("""{"skill":"Kotlin","statement":"Built APIs","context":"Synthetic","quote":"Built APIs with Kotlin","status":"CONFIRMED"}""")).andExpect(status().isBadRequest)
+    }
+    @Test fun `owned AI analysis persists without creating confirmed claims and failed replacement retains the previous result`() {
+        val text = "Built APIs with Kotlin for a synthetic project."
+        val user = profile(); val id = upload(user, bytes = DocumentFixture.docx(text))
+        mvc.perform(get("$path/$id/analysis").with(caller(user))).andExpect(status().isOk).andExpect(jsonPath("$.analysis").isEmpty)
+        verifyNoInteractions(ai)
+        val output = """{"summary":[{"text":"API development","quote":"Built APIs with Kotlin"}],"suggestions":[{"skill":"Kotlin","statement":"Built APIs","context":"Synthetic project","quote":"Built APIs with Kotlin"}]}"""
+        `when`(ai.generateJson(anyString(), anyString(), anyMap())).thenReturn(output)
+        val request = json.writeValueAsString(mapOf("text" to text, "locale" to "nb", "consent" to true))
+        val response = mvc.perform(post("$path/$id/analysis").with(caller(user)).with(csrf()).contentType("application/json").content(request)).andExpect(status().isOk)
+            .andExpect(header().string("Cache-Control", "no-store")).andExpect(jsonPath("$.suggestions[0].skill").value("Kotlin")).andReturn()
+        val analysisId = json.readTree(response.response.contentAsString)["id"].asText()
+        mvc.perform(get("$path/$id/analysis").with(caller(user))).andExpect(jsonPath("$.analysis.id").value(analysisId))
+        mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$").isEmpty)
+        `when`(ai.generateJson(anyString(), anyString(), anyMap())).thenReturn("not JSON")
+        mvc.perform(post("$path/$id/analysis").with(caller(user)).with(csrf()).contentType("application/json").content(request)).andExpect(status().isBadGateway).andExpect(jsonPath("$.reason").value("MALFORMED_JSON"))
+        mvc.perform(get("$path/$id/analysis").with(caller(user))).andExpect(jsonPath("$.analysis.id").value(analysisId))
+        val claim = json.writeValueAsString(mapOf("skill" to "Kotlin", "statement" to "Built APIs", "context" to "Synthetic project", "quote" to "Built APIs with Kotlin", "analysisId" to analysisId))
+        mvc.perform(post("$path/$id/claims").with(caller(user)).with(csrf()).contentType("application/json").content(claim)).andExpect(status().isOk)
+            .andExpect(jsonPath("$.status").value("UNVERIFIED")).andExpect(jsonPath("$.sourceNote").value("AI-assisted CV: synthetic.docx"))
+        verify(ai, times(2)).generateJson(anyString(), anyString(), anyMap())
+        mvc.perform(delete("$path/$id").with(caller(user)).with(csrf())).andExpect(status().isNoContent)
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM document_analysis WHERE document_id = ?::uuid", Long::class.java, id)).isZero()
+    }
+    @Test fun `multiple documents are analyzed in one call with correct source attribution and collection invalidation`() {
+        val user = profile(); val firstText = "Built APIs with Kotlin for a synthetic project."; val secondText = "Completed a PostgreSQL course with a synthetic certificate."
+        val first = upload(user, bytes = DocumentFixture.docx(firstText)); val second = upload(user, "course.docx", DocumentFixture.docx(secondText))
+        upload(user, "scan.pdf", DocumentFixture.pdf(""))
+        val output = json.writeValueAsString(mapOf("summary" to listOf(mapOf("text" to "Kotlin API experience", "quote" to "Built APIs with Kotlin", "documentId" to first)), "suggestions" to listOf(
+            mapOf("skill" to "PostgreSQL", "statement" to "Completed a PostgreSQL course", "context" to "Course", "quote" to "Completed a PostgreSQL course", "documentId" to second),
+            mapOf("skill" to "Invented source", "statement" to "Built APIs", "context" to "Wrong document", "quote" to "Built APIs with Kotlin", "documentId" to second))))
+        `when`(ai.generateJson(anyString(), anyString(), anyMap())).thenReturn(output)
+        val body = json.writeValueAsString(mapOf("documents" to listOf(mapOf("documentId" to first, "text" to firstText), mapOf("documentId" to second, "text" to secondText)), "locale" to "en", "consent" to true))
+        val result = mvc.perform(post("$path/analysis").with(caller(user)).with(csrf()).contentType("application/json").content(body)).andExpect(status().isOk)
+            .andExpect(jsonPath("$.documents.length()").value(2)).andExpect(jsonPath("$.partial").value(true)).andExpect(jsonPath("$.suggestions.length()").value(1)).andExpect(jsonPath("$.suggestions[0].documentId").value(second)).andExpect(jsonPath("$.omittedItems").value(1)).andReturn()
+        val analysisId = json.readTree(result.response.contentAsString)["id"].asText()
+        mvc.perform(get("$path/analysis").with(caller(user))).andExpect(jsonPath("$.analysis.id").value(analysisId))
+        verify(ai, times(1)).generateJson(anyString(), anyString(), anyMap())
+        val claim = json.writeValueAsString(mapOf("skill" to "PostgreSQL", "statement" to "Completed a course", "context" to "Course", "quote" to "Completed a PostgreSQL course", "analysisId" to analysisId))
+        mvc.perform(post("$path/$second/claims").with(caller(user)).with(csrf()).contentType("application/json").content(claim)).andExpect(status().isOk).andExpect(jsonPath("$.status").value("UNVERIFIED"))
+        val other = profile()
+        mvc.perform(get("$path/analysis").with(caller(other))).andExpect(jsonPath("$.analysis").isEmpty)
+        mvc.perform(post("$path/analysis").with(caller(other)).with(csrf()).contentType("application/json").content(body)).andExpect(status().isNotFound)
+        mvc.perform(delete("$path/$first").with(caller(user)).with(csrf())).andExpect(status().isNoContent)
+        mvc.perform(get("$path/analysis").with(caller(user))).andExpect(jsonPath("$.analysis").isEmpty)
+        mvc.perform(post("$path/$second/claims").with(caller(user)).with(csrf()).contentType("application/json").content(claim)).andExpect(status().isConflict)
+    }
+    @Test fun `private AI endpoints require ownership consent CSRF and bounded input before any provider call`() {
+        val user = profile(); val id = upload(user, bytes = DocumentFixture.docx("Built APIs with Kotlin for a synthetic project.")); val other = profile()
+        val body = """{"text":"Built APIs with Kotlin for a synthetic project.","locale":"nb","consent":true}"""
+        mvc.perform(get("$path/$id/analysis")).andExpect(status().isUnauthorized)
+        mvc.perform(post("$path/$id/analysis").with(caller(user)).contentType("application/json").content(body)).andExpect(status().isForbidden)
+        mvc.perform(post("$path/$id/analysis").with(caller(other)).with(csrf()).contentType("application/json").content(body)).andExpect(status().isNotFound)
+        for (invalid in listOf(body.replace("true", "false"), body.replace("\"nb\"", "\"unknown\""), body.dropLast(1) + ",\"ownerId\":\"spoofed\"}")) {
+            mvc.perform(post("$path/$id/analysis").with(caller(user)).with(csrf()).contentType("application/json").content(invalid)).andExpect(status().isBadRequest)
+        }
+        mvc.perform(post("$path/analysis").with(caller(user)).contentType("application/json").content("{}")).andExpect(status().isForbidden)
+        mvc.perform(get("$path/analysis")).andExpect(status().isUnauthorized)
+        verifyNoInteractions(ai)
     }
     companion object {
         val storage = Files.createTempDirectory("career-documents-test-")

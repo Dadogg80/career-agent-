@@ -65,3 +65,7 @@ If ports change, update matching issuer, backend public origin, redirect URI, fr
 Without the `identity,persistence` profiles, the profile page honestly reports sign-in/storage unavailable. This never falls back to trusting a browser user ID or anonymous private storage.
 
 For nondefault verification ports, set both Next server-side `CAREER_API_BASE_URL` (API proxy) and `BACKEND_PUBLIC_ORIGIN` (browser login redirect) to the matching backend origin. Setting only the API base can make data requests work while login still navigates to the default port.
+
+## Optional document AI summaries
+
+After updating/rebuilding this branch, use Min profil → CV og dokumenter → Oppsummer alle dokumentene med AI. Review all readable source excerpts and approve sending; do not send unnecessary private details. GROQ_API_KEY is reused server-side. The new V4 migration is automatic. No new dependency/service or account upgrade is needed. Individual analysis is available inside each document. See [CV_IMPORT.md](CV_IMPORT.md) for partial coverage, source inspection, UNVERIFIED review, persistence and failure behavior. Public advertisement diagnostics exclude this private content.

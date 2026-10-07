@@ -30,6 +30,7 @@ class JdbcDocumentRepository(private val jdbc: JdbcTemplate) : DocumentRepositor
         val owner = owner(identity, true)
         if (jdbc.queryForObject("SELECT COUNT(*) FROM career_document WHERE owner_id = ?", Long::class.java, owner)!! >= 20) throw DocumentFailure("DOCUMENT_LIMIT", 409)
         jdbc.update("INSERT INTO career_document(id, owner_id, original_name, media_type, byte_size, sha256, extracted_text, language) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", id, owner, name, mediaType, size, hash, text, language)
+        jdbc.update("DELETE FROM document_collection_analysis WHERE owner_id = ?", owner)
         return document(owner, id)
     }
     @Transactional
@@ -43,5 +44,6 @@ class JdbcDocumentRepository(private val jdbc: JdbcTemplate) : DocumentRepositor
     override fun delete(identity: VerifiedIdentity, id: UUID) {
         val owner = owner(identity, true); document(owner, id)
         jdbc.update("DELETE FROM career_document WHERE owner_id = ? AND id = ?", owner, id)
+        jdbc.update("DELETE FROM document_collection_analysis WHERE owner_id = ?", owner)
     }
 }

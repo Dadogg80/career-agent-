@@ -15,17 +15,18 @@ Status checked against remote main on 2026-10-07. Deliver small tested increment
 | Two-column original-wording ad overview / visible ad on AI failure | Implemented and locally verified on feat/competency-claims; user PR/merge pending |
 | Owned competency statements, explicit review and revision history | Implemented and locally verified on feat/competency-claims; user PR/merge pending |
 | Local DOCX/PDF original upload, text inspection, master selection and source-selected claims | Implemented and locally verified on feat/competency-claims; user PR/merge pending |
-| Automatic private-AI claim discovery, normalized employment/projects | Not implemented |
+| Opt-in single/combined document AI summaries and source-backed suggestions | Implemented and locally verified on feat/competency-claims; user PR/merge pending |
+| Adjacent-skill inference, normalized employment/projects | Not implemented |
 | Saved jobs, personal matching and CV recommendations | Not implemented |
 | Tailored CV artifact/version generation, CRM, discovery, interview/academy/analytics | Not implemented |
 
-The owner confirmed the current scope is the three deliveries already listed: ad overview, competency review and initial CV import. Saved jobs/matching are not added to this request. CV import is local and user-assisted; there is no private-AI call or automatic claim extraction. See docs/CV_IMPORT.md and the actual validation in docs/DEVELOPMENT_LOG.md.
+The owner confirmed the current scope is the three deliveries already listed: ad overview, competency review and initial CV import. Saved jobs/matching are not added to this request. The owner subsequently added AI competency summarization across uploaded documents before merge. Upload/extraction remain local; a separately approved Groq call creates stored source-backed suggestions, and an explicit user save creates UNVERIFIED claims. See docs/CV_IMPORT.md and the actual validation in docs/DEVELOPMENT_LOG.md.
 
 ## Current delivery completion criteria
 
 1. Display employer source paragraphs left, collapsible role/applicant/offers right, then practical metadata and existing requirement cards. Contact has a stable honest unknown slot. Received advertisement text remains visible when AI structuring fails, with manual source-reusing retry and safe diagnostic reasons.
 2. Sign in, save/reopen competencies, separately confirm/reject, reset confirmation on edit, inspect history and explicitly delete. Verify cross-identity isolation, CSRF and revision conflicts against PostgreSQL.
-3. Upload bounded DOCX/PDF, retain/download original, declare language/select master, inspect local text, create an UNVERIFIED claim from an exact source excerpt and then review it. Confirm storage and source history across reload/restart. No OCR or layout-preserving generation is implied.
+3. Upload bounded DOCX/PDF, retain/download original, declare language/select master, inspect local text, create an UNVERIFIED claim from an exact source excerpt and then review it. Confirm storage and source history across reload/restart. An optional owned single/combined AI analysis follows reviewed previews and per-run approval. Show partial coverage and exact document sources, persist suggestions, and never auto-confirm. No OCR or layout-preserving generation is implied.
 
 ## Next proposed deliveries after this branch
 

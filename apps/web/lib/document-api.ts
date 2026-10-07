@@ -23,7 +23,7 @@ export async function documentProxy(request: Request, operation: Operation, id?:
   if (operation === "claim") {
     try {
       const value = await smallJson(request, 16384) as Record<string, unknown>;
-      if (!value || Object.keys(value).sort().join(",") !== "context,quote,skill,statement" || !Object.entries({ skill:120, statement:1000, context:500, quote:1000 }).every(([key, max]) => typeof value[key] === "string" && value[key].trim().length > 0 && value[key].length <= max)) throw new Error("Invalid claim");
+      if (!value || !["context,quote,skill,statement", "analysisId,context,quote,skill,statement"].includes(Object.keys(value).sort().join(",")) || (value.analysisId !== undefined && (typeof value.analysisId !== "string" || !claimId.test(value.analysisId))) || !Object.entries({ skill:120, statement:1000, context:500, quote:1000 }).every(([key, max]) => typeof value[key] === "string" && value[key].trim().length > 0 && value[key].length <= max)) throw new Error("Invalid claim");
       headers.set("Content-Type", "application/json"); body = JSON.stringify(value);
     } catch { return privateResponse({ code: "DOCUMENT_INVALID" }, undefined, 400); }
   }

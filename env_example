@@ -5,3 +5,6 @@ DATABASE_PASSWORD=""
 
 # Optional local original-document path (relative to apps/backend by default).
 # DOCUMENT_STORAGE_PATH=local-data/documents
+
+# Optional per-process attempt cap shared by single/combined document AI.
+# DOCUMENT_AI_MAX_REQUESTS=10

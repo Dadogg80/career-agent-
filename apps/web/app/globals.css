@@ -123,3 +123,12 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 @media(max-width:760px) { .employer-overview-grid { grid-template-columns:minmax(0,1fr); gap:12px; } }
 .fallback-advertisement { max-height:560px; overflow:auto; padding-right:10px; }
 .document-panel { margin-top:24px; }.document-upload { display:flex; flex-wrap:wrap; gap:12px; align-items:end; margin-bottom:12px; }.document-upload>div:first-child { flex:1; min-width:200px; }.document-upload label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; }.document-upload input[type="file"] { padding:7px; height:auto; }.document-list { display:grid; gap:12px; margin-top:18px; }.document-tile { border:1px solid #dce2d9; border-radius:10px; padding:18px; }.document-tile h3 { font-size:15px; font-weight:650; overflow-wrap:anywhere; }.document-dialog { max-width:760px; }.document-dialog label { font-size:13px; font-weight:600; }.document-dialog textarea[readonly] { font-size:13px; line-height:1.7; background:#f6f8f3; }.document-upload select { border:1px solid #dce2d9; border-radius:8px; padding:9px; }
+.document-ai-panel { margin: 1rem 0; }
+.document-ai-consent { display: flex; align-items: flex-start; gap: .6rem; font-weight: 500; }
+.document-ai-consent input { width: 1rem; height: 1rem; flex-shrink: 0; margin-top: .2rem; accent-color: var(--primary); }
+.document-ai-result { display: grid; gap: 1rem; margin-top: 1rem; }
+.document-ai-result h4 { margin-bottom: .6rem; }
+.document-summary-item { padding: .6rem 0; border-bottom: 1px solid var(--border); }
+.document-suggestion-grid { display: grid; gap: .7rem; }
+.document-suggestion-grid .claim-heading { flex-wrap: wrap; }
+.document-ai-result blockquote { white-space: pre-wrap; overflow-wrap: anywhere; border-left: 2px solid var(--border); padding-left: .7rem; margin: .5rem 0; }

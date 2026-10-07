@@ -225,3 +225,24 @@ flowchart TD
 ```
 
 Contact always has a slot, with an honest not-identified state when analysis does not supply it. A failed analysis never replaces available source text with an empty result screen. No private profile/CV material is sent to Groq. Source selection creates a proposal, not confirmed truth. Permanent document deletion explains retained claim quotes; permanent claim deletion removes its history. Login/session expiry, revision conflicts, malformed/oversized files, encrypted PDFs and empty/scanned text have visible states. See docs/CV_IMPORT.md for the bounded import scope.
+
+## Implemented optional document AI flow (ADR 0016)
+
+```mermaid
+flowchart TD
+    A[Sign in and upload CVs or competency documents] --> B[Extract text locally and retain originals]
+    B --> C{Analyze one or all documents?}
+    C --> D[Review editable excerpts and visible coverage]
+    D --> E[Remove unnecessary private details and approve Groq submission]
+    E --> F[One owned bounded structured AI call]
+    F --> G{Schema and source quotes valid?}
+    G -->|No| H[Keep preview and previous summary; manual retry]
+    G -->|Yes| I[Store latest unverified summary and suggestions]
+    I --> J[Inspect source filename and exact quote]
+    J --> K[Choose suggestion; edit own contribution and context]
+    K --> L[Explicitly save UNVERIFIED source-linked claim]
+    L --> M[Separate confirmation or rejection]
+    I --> N[Reopen without a model call]
+```
+
+Unreadable scans are visibly excluded; long documents share a bounded excerpt budget. Reanalysis does not change saved claims. A source upload/deletion clears the combined summary. No original binaries, filenames or other profile content enter the provider prompt; private source previews are not advertisement diagnostics.

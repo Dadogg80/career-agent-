@@ -22,7 +22,8 @@ interface DocumentRepository {
 @Service
 @Profile("persistence")
 class DocumentService(private val repository: DocumentRepository, private val storage: DocumentStorage,
-    private val extractor: DocumentTextExtractor, private val claims: ClaimService) {
+    private val extractor: DocumentTextExtractor, private val claims: ClaimService,
+    private val analyses: DocumentAnalysisRepository) {
     private val permit = Semaphore(1)
     fun list(identity: VerifiedIdentity) = repository.list(identity)
     fun detail(identity: VerifiedIdentity, id: UUID) = repository.detail(identity, id)
@@ -53,9 +54,14 @@ class DocumentService(private val repository: DocumentRepository, private val st
         catch (error: Exception) { storage.put(id, original); throw error }
     }
     @Transactional
-    fun claim(identity: VerifiedIdentity, id: UUID, skill: String, statement: String, context: String, quote: String): CompetencyClaim {
+    fun claim(identity: VerifiedIdentity, id: UUID, skill: String, statement: String, context: String, quote: String, analysisId: UUID? = null): CompetencyClaim {
         val source = repository.detail(identity, id)
         if (quote.isBlank() || quote.length > 1000 || !source.text.contains(quote)) throw DocumentFailure("DOCUMENT_QUOTE_INVALID", 400)
-        return claims.create(identity, ClaimContent(skill, statement, context, "CV: ${source.document.originalName}", id, quote))
+        if (analysisId != null && analyses.load(identity, id)?.id != analysisId) {
+            val collection = analyses.loadCollection(identity)
+            if (collection?.id != analysisId || collection.documents.none { it.documentId == id }) throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT", 409)
+        }
+        val note = if (analysisId == null) "CV" else "AI-assisted CV"
+        return claims.create(identity, ClaimContent(skill, statement, context, "$note: ${source.document.originalName}", id, quote))
     }
 }

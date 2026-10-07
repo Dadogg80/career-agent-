@@ -53,3 +53,7 @@ PostgreSQL Compose and Flyway migrations are available behind the `persistence` 
 A fresh FINN analysis uses browser retrieval followed by structured extraction. These calls share the Groq account/model quota with Playground and other clients. The application shows a bounded provider cooldown. A manual retry for the same fetched URL reuses the current text instead of repeating browser search. Source-unsupported suggestions are omitted with a visible count; wholly unsupported or invalid results still fail. See ADR 0012 and docs/GROQ_SETUP.md.
 
 The frontend now shows retrieval → pause → analysis with honest loading statuses and a decorative animation. Development includes a hidden right-side shadcn Sheet, opened from the DEV edge tab, with status lights, received-source inspection and sanitized console events. Set `NEXT_PUBLIC_ANALYSIS_DELAY_SECONDS` in `apps/web/.env.local` to adjust the default 10-second FINN pause. This does not guarantee quota availability. See [debugging instructions](docs/DEBUGGING.md).
+
+## Document AI competency summaries
+
+The current branch adds opt-in Groq analysis of one document or all readable uploaded CVs/certificates together. Review editable excerpts, approve sending, inspect source-backed summaries/suggestions and explicitly save selected drafts as UNVERIFIED before separate confirmation. Nothing is sent during upload. Uses the existing backend GROQ_API_KEY, local identity/persistence and a bounded single provider call. See [CV_IMPORT.md](docs/CV_IMPORT.md) and [ADR 0016](docs/adr/0016-opt-in-document-ai-analysis.md).
