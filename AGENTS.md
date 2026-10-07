@@ -1,5 +1,12 @@
 # Arbeidsregler for Career Agent
 
+## GitHub and documentation language
+
+- Use English for all commit messages, PR titles and descriptions, issues, review comments, release notes, and branch names.
+- Write new technical documentation and code comments in English. When editing existing Norwegian documents, preserve their meaning and translate the affected section when practical.
+- The application remains Norwegian by default and supports English. Conversation with the user can remain Norwegian.
+- Every PR handoff must include an English title and a complete English description, with actual validation and limitations.
+
 ## Gjeldende fase
 
 Implementasjon er startet etter brukerens klarsignal. Første avgrensede endring er en norsk/engelsk startside og en Kotlin/Spring Boot-backend med testet forbindelse. Fortsett i små, sammenhengende endringer; ikke bygg hele systemet samtidig. Ingen betalte tjenester eller infrastrukturkostnader er autorisert.

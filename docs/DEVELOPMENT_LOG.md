@@ -56,3 +56,10 @@ Loggen beskriver faktisk arbeid, ikke planlagt funksjonalitet. Datoer følger br
 - Merget main inn i `feat/foundation`, bevart brukerfilen og løst add/add-konflikten i `.gitignore` ved å beholde `.env` og eksisterende ignoreringsregler.
 - Lagret secret-krav `GROQ_API_KEY` til `api.groq.com` i Codex-draft. Backend bekreftet lagring og at publisering kreves. Ingen secret-verdi finnes i kjøremiljøet ennå.
 - Dokumentert sikker konfigurasjon og brukerens ønskede PR-arbeidsflyt. PR-tittel og full beskrivelse finnes i PR_FOUNDATION.md.
+
+## 2026-10-07 — English GitHub communication
+
+- The user requires English for all GitHub communication, including commit messages and PR titles/descriptions.
+- Updated agent instructions, translated the Git workflow and pending foundation PR handoff, and added an English PR template.
+- Application localization remains Norwegian-first with English support. Existing commit history is unchanged; previous authored commit messages were already English.
+- Documentation-only change; no application behavior or test expectations changed. Checked local links, code fences, and staged whitespace.

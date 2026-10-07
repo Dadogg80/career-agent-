@@ -1,29 +1,29 @@
-# PR: Første grunnmur med norsk/engelsk frontend og Spring Boot
+# PR: Bilingual frontend and Spring Boot foundation
 
 Base: `main`
 
 Head: `feat/foundation`
 
-Status: Publisert branch, klar for PR. Dette dokumentet oppretter eller merger ingen PR.
+Status: Published branch, ready for a pull request. This document does not create or merge a PR.
 
-## Tittel
+## Title
 
-feat: legg til norsk/engelsk frontend og testet Spring Boot-grunnmur
+feat: add bilingual frontend and tested Spring Boot foundation
 
-## Beskrivelse
+## Description
 
-Prosjektet har hittil hatt produkt- og arkitekturdokumentasjon. Denne endringen legger til den første kjørbare grunnmuren: en Next.js-startside med norsk som standard, engelsk språkvalg som beholdes etter reload, og forbindelse til en Kotlin/Spring Boot-backend. Utilgjengelig tjeneste gir feilmelding og retry.
+Add the first runnable application foundation: a Next.js welcome page with Norwegian as the default, persistent English language selection, and a connection to a Kotlin/Spring Boot backend. An unavailable service displays an error and a retry action.
 
-Backend eksponerer systemstatus og en begrenset health-endpoint, med loopback-bind som standard. Frontend kaller backend gjennom en server-side route. Endringen inkluderer Gradle wrapper med checksum, npm-lockfile, CI-workflow, kjøreinstruksjoner og oppdatert utviklingsdokumentasjon.
+The backend exposes system status and a limited health endpoint, binding to loopback by default. The frontend accesses it through a server-side route. Includes a checksum-verified Gradle wrapper, npm lockfile, CI workflow, run instructions, and updated project documentation.
 
-Oppdatert main er merget inn i branchen. Brukerens `.env`-ignore og `env_example` er bevart; konflikt i `.gitignore` er løst uten endring i applikasjonskode.
+Sync the branch with current main while preserving the existing `.env` ignore rule and `env_example` file. Resolve the `.gitignore` conflict without changing application behavior. Document English as the language for GitHub communication.
 
-Validering i Codex:
+Validation completed in Codex:
 
-- 2 backend-integrasjonstester bestod; ingen skips eller feil.
-- 3 Playwright-tester bestod mot faktiske tjenester: norsk standard, engelsk med reload og recovery etter simulert feil.
-- Next.js-produksjonsbygg, TypeScript og frozen npm-installasjon bestod.
-- Gradle wrapper og JAR-checksum ble verifisert.
-- Runtime npm-audit rapporterte ingen kjente sårbarheter på kontrolltidspunktet.
+- 2 backend integration tests passed, with no failures or skips.
+- 3 Playwright tests passed against real services: Norwegian defaults, persistent English selection, and recovery after a simulated service failure.
+- Next.js production build, TypeScript checks, and frozen npm installation passed.
+- Gradle wrapper execution and the wrapper JAR checksum were verified.
+- Runtime npm audit reported no known vulnerabilities at the time of the check.
 
-GitHub Actions og kjøring på pilotens Mac er ikke verifisert. Database, auth, kandidatprofil og AI er ikke implementert. Groq-secret-kravet er lagret separat i Codex-miljøutkastet; ingen nøkkel er lagt i Git og ingen Groq-kall er utført. Ingen offentlig deploy eller betalt tjeneste er aktivert.
+GitHub Actions execution and local execution on the pilot's Mac have not been verified. Database, authentication, candidate profiles, and AI integration are not implemented. The Groq secret requirement is saved separately in the Codex environment draft; no key is committed and no Groq API calls have been made. No public deployment or paid service has been enabled.
