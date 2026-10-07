@@ -179,4 +179,23 @@ After a provider token-rate rejection, show a bounded countdown and keep the URL
 
 Submit URL → retrieval status → received-source success → FINN pause/countdown (or skipped for NAV) → analysis status → sourced overview and compact requirement cards. Stopping during the pause retains the source and cancels the scheduled analysis; same-URL continuation respects any remaining pause. There is no invented progress percentage or model call for the decorative animation.
 
-Development: expand the diagnostic panel → inspect labeled green/yellow/red/gray stage lights, HTTP status, elapsed time and counts → optionally expand the received source text. Console shows the same sanitized events under `[Career Agent]`; no source bodies or provider secrets are logged. Reload clears in-memory state. Diagnostics are hidden in production unless explicitly enabled before build. See docs/DEBUGGING.md.
+Development: open the DEV edge tab on the right to reveal the shadcn Sheet → inspect labeled green/yellow/red/gray stage lights, HTTP status, elapsed time and counts → optionally expand the received source text. Console shows the same sanitized events under `[Career Agent]`; no source bodies or provider secrets are logged. Reload clears in-memory state. Diagnostics are hidden in production unless explicitly enabled before build. See docs/DEBUGGING.md.
+
+## Implemented basic profile flow (US-28; current branch)
+
+```mermaid
+flowchart TD
+  Open[Open Min profil] --> Config{Identity + persistence available?}
+  Config -->|No| Disabled[Show unavailable; public analysis remains accessible]
+  Config -->|Yes| Login[Sign in through local Keycloak / PKCE]
+  Login -->|Rejected| Failed[Show mapped login failure]
+  Login -->|Verified session| Read[Load own profile or empty form]
+  Read --> Edit[Edit name + preferred language]
+  Edit --> Save[Explicit save with CSRF + revision]
+  Save -->|Success| Stored[Saved revision; reopen from PostgreSQL]
+  Save -->|Stale revision| Conflict[Keep draft; offer loading saved version]
+  Conflict -->|User chooses| Read
+  Stored --> Logout[Sign out of application; invalidate session]
+```
+
+The form supports Norwegian/English. Ownership is never selected by the browser. Unauthenticated/expired sessions cannot read or write a profile. App restart requires sign-in again, while saved data remains. Experience, skills, claims, CV and personal matching are not part of this flow. Setup is in docs/IDENTITY_SETUP.md. Proposed full MVP flows above remain future work.

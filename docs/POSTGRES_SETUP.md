@@ -1,6 +1,6 @@
 # Local PostgreSQL foundation
 
-Public job analysis still runs without Docker or PostgreSQL. This opt-in foundation is for upcoming profiles; login and profile screens are not implemented yet. Use only synthetic development data until authorization is ready.
+Public job analysis still runs without Docker or PostgreSQL. The optional basic-profile screen and OIDC ownership are now implemented. To enable them, follow [IDENTITY_SETUP.md](IDENTITY_SETUP.md); this guide alone enables the database, not sign-in. Experience/CV remain future work.
 
 ## Start PostgreSQL
 
@@ -29,7 +29,7 @@ A normal `java -jar ...` without the persistence profile still starts the public
 
 ## Tests and stopping
 
-`./gradlew test` now requires a running Docker daemon for two real PostgreSQL migration/integrity tests. They use a disposable Testcontainers database, not the Compose volume. Existing public endpoint tests remain database independent. CI runs them on Ubuntu with Docker. They verify migrations, constraints and cascade deletion, not login/authorization.
+`./gradlew test` now requires a running Docker daemon for two real PostgreSQL migration/integrity tests. They use a disposable Testcontainers database, not the Compose volume. Existing public endpoint tests remain database independent. CI runs them on Ubuntu with Docker. Migration tests verify constraints and cascade deletion; the added profile security suite verifies session access, issuer+subject ownership, CSRF, spoofed inputs and revision conflicts against a separate disposable database.
 
 From the repository root:
 

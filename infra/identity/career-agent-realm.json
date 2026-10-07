@@ -1,0 +1,28 @@
+{
+  "realm": "career-agent",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "loginWithEmailAllowed": false,
+  "bruteForceProtected": true,
+  "clients": [{
+    "clientId": "career-agent",
+    "protocol": "openid-connect",
+    "publicClient": true,
+    "standardFlowEnabled": true,
+    "directAccessGrantsEnabled": false,
+    "serviceAccountsEnabled": false,
+    "redirectUris": ["${BACKEND_PUBLIC_ORIGIN}/login/oauth2/code/career"],
+    "attributes": { "pkce.code.challenge.method": "S256" }
+  }],
+  "users": [{
+    "username": "pilot",
+    "enabled": true,
+    "firstName": "Local",
+    "lastName": "Pilot",
+    "email": "pilot@example.test",
+    "emailVerified": true,
+    "credentials": [{ "type": "password", "value": "${PILOT_LOGIN_PASSWORD}", "temporary": false }]
+  }]
+}

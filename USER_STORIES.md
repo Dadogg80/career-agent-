@@ -240,3 +240,21 @@ As the pilot user, I can see whether retrieval actually succeeded and how the re
 - Provide a collapsible development panel with labeled stage lights, mapped errors/HTTP status, timings, text length and requirement/fact/omission counts. Allow explicit inspection of the actual received source as escaped text.
 - Emit sanitized console events with a per-run ID. Never include advertisement bodies/titles/full URLs, contacts, raw provider payloads or secrets. Production diagnostics require explicit opt-in; no persistent debug storage.
 - Keep bounded reactive Retry-After handling and manual retry. A fixed pause must not be described as guaranteeing quota availability or as an automatic failure retry.
+
+## US-28 — Sign in and reopen my basic profile
+
+Implemented on the current branch, merge pending; this is a subset of the planned full candidate profile.
+
+As the local pilot, I want to sign in and save my name and preferred profile language so that a persistent, owned workspace exists before adding career evidence.
+
+Acceptance criteria:
+- Use local OIDC authorization code + PKCE; no anonymous/private-data fallback or browser-supplied owner ID.
+- Require a verified session for profile reads/writes and CSRF for save/logout. Isolate different subjects and the same subject under different issuers.
+- Save/reopen name and nb/en language with explicit revision checks; retain the draft on conflict until the user loads the saved version.
+- Show honest unavailable/login-failure/session-expiry states. Support Norwegian-first and English UI.
+- Keep private profile data and auth material out of AI calls, diagnostics and browser persistent storage.
+- Explicitly mark experience, competencies, CV and matching as future increments.
+
+## Diagnostics presentation update
+
+The diagnostic surface is a hidden, nonmodal right-side shadcn Sheet with a visible DEV edge tab. Preserve the existing event/source boundaries; support keyboard opening, translated close, Escape/focus restoration, narrow viewports and reduced motion. Opening the panel makes no new provider call.

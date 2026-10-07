@@ -4,7 +4,7 @@ import type { DiagnosticEvent } from "../lib/analysis-workflow";
 const url = "https://www.finn.no/job/ad/477265830";
 const source = "PRIVATE_SOURCE_MARKER. Du må ha erfaring med Kotlin og PostgreSQL.";
 
-test("collapsible diagnostics show actual source, stages and sanitized console events", async ({ page }) => {
+test("right-side diagnostics show actual source, stages and sanitized console events", async ({ page }) => {
   const logged: DiagnosticEvent[] = [];
   page.on("console", async message => {
     if (message.text().startsWith("[Career Agent]")) logged.push(await message.args()[1].jsonValue());
@@ -27,7 +27,7 @@ test("collapsible diagnostics show actual source, stages and sanitized console e
   await page.clock.install(); await page.clock.pauseAt(new Date(Date.now() + 1000));
   const panel = page.locator(".analysis-diagnostics");
   await expect(panel.locator(".diagnostic-body")).not.toBeVisible();
-  await page.getByText("Utviklerdiagnostikk", { exact: true }).click();
+  await page.getByRole("button", { name: "Utviklerdiagnostikk", exact: true }).click();
   await page.getByRole("textbox", { name: "Lenke til stillingsannonse" }).fill(url);
   await page.getByRole("button", { name: "Analyser lenke", exact: true }).click();
   await expect(panel.locator('[data-stage="source"]')).toHaveAttribute("data-state", "running");
@@ -51,8 +51,8 @@ test("collapsible diagnostics show actual source, stages and sanitized console e
   expect(JSON.stringify(logged)).not.toContain(url);
   expect(new Set(logged.map(event => event.runId)).size).toBe(1);
   await page.getByRole("combobox", { name: "Språk" }).selectOption("en");
-  await expect(page.getByText("Developer diagnostics", { exact: true })).toBeVisible();
-  await page.getByText("Developer diagnostics", { exact: true }).click();
+  await expect(page.getByRole("heading", { name: /Developer diagnostics/ })).toBeVisible();
+  await page.getByRole("button", { name: "Close diagnostics", exact: true }).click();
   await expect(panel.locator(".diagnostic-body")).not.toBeVisible();
 });
 
@@ -64,7 +64,7 @@ test("red diagnostic light retains HTTP error and cooldown without automatic ret
   });
   await page.goto("/");
   await page.clock.install(); await page.clock.pauseAt(new Date(Date.now() + 1000));
-  await page.getByText("Utviklerdiagnostikk", { exact: true }).click();
+  await page.getByRole("button", { name: "Utviklerdiagnostikk", exact: true }).click();
   await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await page.getByRole("textbox", { name: "Stillingsannonse", exact: true }).fill(source);
   await page.getByRole("button", { name: "Analyser", exact: true }).click();
@@ -75,4 +75,22 @@ test("red diagnostic light retains HTTP error and cooldown without automatic ret
   await page.clock.fastForward(16000);
   await expect(page.getByRole("button", { name: "Analyser", exact: true })).toBeEnabled();
   expect(calls).toBe(1);
+});
+
+test("diagnostic edge tab supports keyboard opening, Escape and a narrow viewport", async ({ page }) => {
+  await page.route("**/api/status", route => route.fulfill({ json: { status: "UP" } }));
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  const tab = page.getByRole("button", { name: "Utviklerdiagnostikk", exact: true });
+  await expect(tab).toBeVisible();
+  const bounds = await tab.boundingBox();
+  expect(bounds!.x + bounds!.width).toBe(390);
+  await tab.focus(); await page.keyboard.press("Enter");
+  const sheet = page.getByRole("dialog", { name: /Utviklerdiagnostikk/ });
+  await expect(sheet).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await expect(sheet).toHaveCSS("animation-name", "none");
+  await page.keyboard.press("Escape");
+  await expect(sheet).not.toBeVisible(); await expect(tab).toBeFocused();
 });

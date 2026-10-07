@@ -1,13 +1,13 @@
 # Kjør første utviklingsversjon
 
-Status: A redesigned shadcn/ui workspace, Norwegian/English selection, official NAV URL import, service status and Groq requirement extraction are implemented. Profiles, database, document processing and authentication are not implemented. This version must not be used for private candidate storage or as a public SaaS. See [TESTING_PILOT.md](TESTING_PILOT.md) for the complete AI test flow.
+Status: A redesigned shadcn/ui workspace, Norwegian/English selection, official NAV URL import, service status and Groq requirement extraction are implemented. Optional local OIDC sign-in and a saved basic name/language profile are implemented. Document processing, competencies, matching and public SaaS deployment remain future work. See [IDENTITY_SETUP.md](IDENTITY_SETUP.md) for the opt-in profile setup. See [TESTING_PILOT.md](TESTING_PILOT.md) for the complete AI test flow.
 
 ## Forutsetninger
 
 - JDK 21 for maskinens arkitektur (ARM64 på M1).
 - Node.js 24 og npm.
 - Nettverk til npm, Maven Central og Gradle-distribusjonen ved første installasjon.
-- System status needs no API key. Advertisement extraction needs `GROQ_API_KEY` on the backend. No database or Docker is required yet.
+- System status needs no API key. Advertisement extraction needs `GROQ_API_KEY` on the backend. Public-ad startup needs no database; the complete backend tests require Docker. Optional owned profiles require PostgreSQL and local identity setup.
 
 Oppsettskommandoene må kjøres på maskinen hvor applikasjonen skal brukes. Verktøy som er installert i Codex er ikke automatisk installert på Mac-en.
 
@@ -63,7 +63,7 @@ Noen cloud-miljøer injiserer HTTP(S)-proxy gjennom miljøvariabler. Java/Gradle
 
 ## Kjente grenser
 
-Ingen autentisering er implementert. Backend is therefore bound to loopback and supports only system status and the public-advertisement pilot. Innlogging og autorisasjon må implementeres før private data eller ekstern pilot.
+The backend remains loopback-only. Optional OIDC/owned-profile controls protect the basic name/language profile. Public deployment and private documents need additional deployment/privacy work; do not expose this local pilot publicly.
 
 CI-workflow er skrevet, men en lokal passering dokumenterer ikke at GitHub Actions har kjørt. Se utviklingsloggen for faktisk verifikasjon.
 
@@ -90,7 +90,7 @@ Both should report 21. These shell exports select the installed JDK; they do not
 
 ## PostgreSQL foundation update (2026-10-07)
 
-The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Profile login/API/UI and CV upload are not yet available. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.
+The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Optional local profile login/API/UI are now available for name/language only; see [IDENTITY_SETUP.md](IDENTITY_SETUP.md). Experience, competency claims and CV upload remain future increments. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.
 
 ## Local development interaction troubleshooting
 
@@ -102,4 +102,8 @@ Run `npm run test:dev` from apps/web to test both loopback hostnames against a r
 
 ## Staged loading and development diagnostics
 
-After pulling this frontend-only delivery, restart `npm run dev -- --hostname 127.0.0.1` from apps/web. No backend rebuild, Docker restart, new dependency or key is needed. The local UI includes a collapsed **Utviklerdiagnostikk** panel and sanitized Console events prefixed `[Career Agent]`. FINN retrieval now has a visible 10-second pause before analysis, configurable in apps/web/.env.local. See [DEBUGGING.md](DEBUGGING.md) for settings and inspection steps. Ten seconds does not guarantee shared Groq quota availability.
+For the earlier pacing delivery, restart `npm run dev -- --hostname 127.0.0.1` from apps/web. No backend rebuild, Docker restart, new dependency or key is needed. The local UI includes a right-side **Utviklerdiagnostikk** Sheet opened from the DEV tab and sanitized Console events prefixed `[Career Agent]`. FINN retrieval now has a visible 10-second pause before analysis, configurable in apps/web/.env.local. See [DEBUGGING.md](DEBUGGING.md) for settings and inspection steps. Ten seconds does not guarantee shared Groq quota availability.
+
+## Basic profile delivery
+
+This delivery changes backend security/dependencies and adds optional local identity configuration. Rebuild/restart the backend after merging; enable `persistence,identity` and the additional Compose file to test sign-in. Follow [IDENTITY_SETUP.md](IDENTITY_SETUP.md) rather than only the older public-ad commands above. Public job analysis can still use the default database-independent startup.

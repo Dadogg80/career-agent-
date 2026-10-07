@@ -69,4 +69,4 @@ BackgroundJob har tilstand, antall forsøk, lease og feilklassifisering. AiRun r
 
 ## Implemented storage foundation
 
-`app_user` contains an internal UUID and a unique `(oidc_issuer, oidc_subject)` binding. `career_profile` belongs to exactly one user and stores display name, nb/en language, revision and timestamps. Identity verification and profile API/UI remain unimplemented. Claims/evidence/project models remain planned rather than implied by these two tables.
+`app_user` contains an internal UUID and a unique `(oidc_issuer, oidc_subject)` binding. `career_profile` belongs to exactly one user and stores display name, nb/en language, revision and timestamps. OIDC verifies identity for the optional basic profile API/UI. Creation submits revision 0; the first saved revision is 1, and successful updates increment it. Stale revisions fail without changing stored content. The internal user binding is created transactionally on explicit save, not by accepting an email or browser owner ID. Claims/evidence/project models remain planned rather than implied by these two tables.

@@ -5,12 +5,14 @@ The local pilot must make URL retrieval, analysis and failures inspectable befor
 ## Inspect a run
 
 1. Start the frontend with `npm run dev` and open the local application.
-2. Expand **Utviklerdiagnostikk / Developer diagnostics** below the analysis workspace. It starts collapsed.
+2. Select the **DEV** tab protruding from the right edge to open **Utviklerdiagnostikk / Developer diagnostics** in a shadcn/ui Sheet. It starts hidden and does not block interaction with the workspace.
 3. Submit a supported public advertisement URL. Inspect the three lights: retrieval, pause and analysis.
 4. After retrieval, expand **Se teksten som faktisk ble hentet / See the text actually retrieved** to inspect the exact source context received by the frontend. This is not the provider's generated answer. FINN excerpts may be incomplete or stale.
 5. Open browser developer tools → Console and filter on `[Career Agent]`. The same sanitized events include a per-run ID, elapsed time, HTTP status/request duration, text length and result counts. Network shows the actual POST requests to `/api/jobs/import` and `/api/jobs/requirements`.
 
 Green means that stage completed and its response passed client validation. Yellow means active work or a deliberate pause. Red means a mapped error; inspect its HTTP status/error code and the visible error message. Gray means queued, skipped or stopped, with a text label. Colors never replace the labels. Green does not establish semantic correctness, completeness or freshness of AI/source content.
+
+Close the panel using its translated close button or Escape; keyboard focus returns to the edge tab. Closing hides the panel, while the current run remains in workspace memory. The panel fits narrow screens and respects reduced-motion preferences. The Sheet uses the existing Radix Dialog dependency; opening it makes no provider request.
 
 The panel and logs are enabled by default in development. Production builds hide them unless explicitly enabled with `NEXT_PUBLIC_JOB_DIAGNOSTICS=true` before building. Source previews are rendered as text, never HTML. Only the latest run is retained in component memory (bounded to 40 events); reload clears it. There is no exported diagnostic file or server log of advertisement bodies. Browser developer tools can retain their own console history independently.
 

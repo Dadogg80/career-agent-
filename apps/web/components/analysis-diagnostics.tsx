@@ -1,5 +1,6 @@
-import { Bug, ChevronDown } from "lucide-react";
-import { Card, CardContent } from "./ui/card";
+import { Bug } from "lucide-react";
+import { Button } from "./ui/button";
+import { Sheet, SheetTrigger, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "./ui/sheet";
 import { Badge } from "./ui/badge";
 import type { DiagnosticEvent, AnalysisStage } from "../lib/analysis-workflow";
 import type { ImportedJob } from "../lib/job-import";
@@ -7,14 +8,14 @@ import type { Locale } from "../lib/translations";
 
 const translations = {
   nb: {
-    title: "Utviklerdiagnostikk", empty: "Ingen analyse startet ennå.", source: "Innhenting", wait: "Pause", analysis: "Analyse",
+    title: "Utviklerdiagnostikk", tab: "DEV", close: "Lukk diagnostikk", empty: "Ingen analyse startet ennå.", source: "Innhenting", wait: "Pause", analysis: "Analyse",
     states: { running: "Pågår", success: "OK", error: "Feil", skipped: "Ikke nødvendig", cancelled: "Stoppet", idle: "Venter" },
     notice: "Hendelsene finnes også i Console med prefikset [Career Agent]. Loggene inneholder status og antall, ikke annonsetekst eller API-nøkler.",
     preview: "Se teksten som faktisk ble hentet", sourceNotice: "Dette er det mottatte kildegrunnlaget, som kan være ufullstendig. Det er ikke en ny AI-oppsummering.",
     delay: "Pause mellom FINN-kall", unit: "sekunder", characters: "tegn", counts: "Antall krav / opplysninger / utelatt", code: "Feilkode", run: "Kjøring", reused: "gjenbrukt",
   },
   en: {
-    title: "Developer diagnostics", empty: "No analysis has started yet.", source: "Retrieval", wait: "Pause", analysis: "Analysis",
+    title: "Developer diagnostics", tab: "DEV", close: "Close diagnostics", empty: "No analysis has started yet.", source: "Retrieval", wait: "Pause", analysis: "Analysis",
     states: { running: "Running", success: "OK", error: "Error", skipped: "Not needed", cancelled: "Stopped", idle: "Waiting" },
     notice: "Events also appear in Console with the [Career Agent] prefix. Logs contain status and counts, not advertisement text or API keys.",
     preview: "See the text actually retrieved", sourceNotice: "This is the received source context, which may be incomplete. It is not another AI summary.",
@@ -27,11 +28,12 @@ export function AnalysisDiagnostics({ events, imported, delay, locale }: {
 }) {
   const t = translations[locale];
   const stages: AnalysisStage[] = ["source", "wait", "analysis"];
-  return <Card className="analysis-diagnostics">
-    <CardContent><details>
-      <summary><span className="flex items-center gap-2"><Bug size={16} /><span>{t.title}</span><Badge variant="outline">DEV</Badge></span><ChevronDown size={16} /></summary>
+  return <Sheet modal={false}>
+    <SheetTrigger asChild><Button type="button" variant="outline" className="diagnostic-tab" aria-label={t.title}><Bug size={16} /><span>{t.tab}</span></Button></SheetTrigger>
+    <SheetContent side="right" className="analysis-diagnostics diagnostic-sheet" closeLabel={t.close} onInteractOutside={event => event.preventDefault()}>
+      <SheetHeader><SheetTitle className="flex items-center gap-2"><Bug size={18} />{t.title}<Badge variant="outline">DEV</Badge></SheetTitle><SheetDescription>{t.notice}</SheetDescription></SheetHeader>
       <div className="diagnostic-body">
-        <p className="hint">{t.notice}</p><p className="hint">{t.delay}: {delay} {t.unit}</p>
+        <p className="hint">{t.delay}: {delay} {t.unit}</p>
         <div className="diagnostic-lights">{stages.map(stage => {
           const latest = events.findLast(event => event.stage === stage);
           const state = latest?.state ?? "idle";
@@ -52,6 +54,6 @@ export function AnalysisDiagnostics({ events, imported, delay, locale }: {
         </>}
         {imported && <details className="diagnostic-source"><summary>{t.preview}</summary><p className="hint">{t.sourceNotice}</p><pre>{imported.text}</pre></details>}
       </div>
-    </details></CardContent>
-  </Card>;
+    </SheetContent>
+  </Sheet>;
 }

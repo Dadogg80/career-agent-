@@ -13,14 +13,16 @@ Status checked against remote main on 2026-10-07. Dates are not promised; delive
 | FINN import through Groq browser excerpts | Implemented and merged; source may be partial/stale |
 | TanStack Query and shadcn/ui workspace | Implemented and required by AGENTS.md |
 | Compact requirement tiles, category filters and detail dialogs | Implemented and merged |
-| PostgreSQL/Flyway profile schema | Implemented and merged (PR #8); private APIs remain pending |
+| PostgreSQL/Flyway profile schema | Implemented and merged (PR #8) |
 | FINN evidence repair and reactive quota cooldown | Implemented and merged (PR #10) |
-| Staged loading, FINN pacing and development diagnostics | Implemented on current branch; validation/merge status in development log |
-| Login, user-owned saved profiles/jobs API/UI | Not implemented |
+| Staged loading, FINN pacing and development diagnostics | Implemented and merged (PR #11) |
+| Hidden right-side diagnostics Sheet | Implemented on current branch; merge pending |
+| Local OIDC login and owned basic profile (name/language/revision) | Implemented and tested on current branch; merge pending |
+| Saved jobs and richer candidate profile | Not implemented |
 | Candidate claims/competence, CV/document upload, personal matching | Not implemented |
 | CV tailoring/export, application CRM, discovery and interview prep | Not implemented |
 
-The current pilot analyzes public advertisements. It does not know the candidate, save work across reloads, or produce a personal match assessment. Current requirement category explanations are deterministic UI guidance; detailed source context comes from the exact analyzed text, not an additional model call.
+The current pilot analyzes public advertisements. Optional local sign-in saves/reopens a basic name/language profile; advertisement results are still transient. The application has no candidate competencies or personal match assessment. Current requirement category explanations are deterministic UI guidance; detailed source context comes from the exact analyzed text, not an additional model call.
 
 ## Current delivery: direct analysis and useful job overview
 
@@ -32,9 +34,9 @@ Purpose: turn the public-text tool into a safe, persistent personal workspace.
 
 Small implementation sequence:
 1. PostgreSQL in local Docker Compose, schema migrations and integration-test setup — implemented and merged.
-2. Spring Security/OIDC session and server-side ownership/authorization; choose/configure the pilot login provider. Do not expose private data before these boundaries are verified.
+2. Spring Security/OIDC session, ownership and basic profile API/UI — implemented and tested on the current branch, merge pending. Optional local Keycloak is the free pilot provider; production identity remains a separate decision.
 3. User-owned profile, projects/experience and manually entered competency claims with UNVERIFIED/INFERRED/CONFIRMED/REJECTED status and evidence/confirmation history.
-4. Profile screen for editing, reviewing and reopening saved information; save user-owned job snapshots. Add sanitized request diagnostics/build information during this foundation work.
+4. Extend the existing basic profile screen with experience/competency review; then save user-owned job snapshots. Keep private data out of analysis diagnostics.
 
 Done when the pilot can log in, save/reopen a profile and competencies, and authorization tests prove another identity cannot access them. These are multiple coherent PRs, not one large commit.
 
@@ -75,4 +77,4 @@ Update stories/flows, decisions, development log and security guidance with each
 
 ## Analysis reliability update
 
-PR #10 merged wrapped FINN title parsing, visible partial-evidence omissions, provider JSON-error mapping, shared reactive rate-limit cooldowns and transient same-source manual retries. The current branch adds honest staged loading, configurable FINN pacing and development diagnostics. Login, saved private profiles and CV uploads remain the next product deliveries after the pilot analysis checkpoint; no persistent ad/profile cache or additional infrastructure is introduced. Validation/merge status is in docs/DEVELOPMENT_LOG.md.
+PR #10 merged wrapped FINN title parsing, visible partial-evidence omissions, provider JSON-error mapping, shared reactive rate-limit cooldowns and transient same-source manual retries. PR #11 added honest staged loading, configurable FINN pacing and development diagnostics. The current branch moves diagnostics into a right-side Sheet and introduces optional local sign-in/basic profile persistence. Next: manual experience/competency claims → CV/source import → personal matching. No persistent ad cache, private AI processing or paid infrastructure is introduced. Validation/merge status is in docs/DEVELOPMENT_LOG.md.

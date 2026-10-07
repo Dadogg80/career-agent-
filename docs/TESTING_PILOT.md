@@ -10,7 +10,7 @@ Status: Ready for a local pilot test after checking out `feat/job-requirements` 
 - Required/preferred/unclear categories, error handling, and retained text after a failed call.
 - A warning when the source changes after analysis.
 
-This is advertisement extraction, not candidate matching. There is no candidate profile, score, CV upload, persistent storage, or login yet. Use public advertisements or fictional data only. Text is sent to Groq when Analyze is selected; the application does not persist it. Provider processing has its own terms.
+This is advertisement extraction, not candidate matching. Optional local sign-in/basic name-language profiles are now available separately; there is no competency profile, score, CV upload or persisted advertisement yet. Use public advertisements or fictional data only. Text is sent to Groq when Analyze is selected; the application does not persist it. Provider processing has its own terms.
 
 ## Start on your Mac
 
@@ -99,7 +99,7 @@ After merging feat/compact-requirement-details, pull main and run npm ci in apps
 
 ## PostgreSQL foundation update (2026-10-07)
 
-The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Profile login/API/UI and CV upload are not yet available. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.
+The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Optional local profile login/API/UI are now available for name/language only; see [IDENTITY_SETUP.md](IDENTITY_SETUP.md). Experience, competency claims and CV upload remain future increments. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.
 
 ## Local development interaction troubleshooting
 
@@ -111,8 +111,12 @@ Run `npm run test:dev` from apps/web to test both loopback hostnames against a r
 
 ## Paced URL workflow checkpoint
 
-Before starting the profile/CV delivery, use the frontend development server and test a supported public URL. Expect retrieval status, then a 10-second countdown for FINN, then analysis status and the sourced overview/compact requirements. No manual excerpt screen is required.
+For the public-ad analysis checkpoint, use the frontend development server and test a supported public URL. Expect retrieval status, then a 10-second countdown for FINN, then analysis status and the sourced overview/compact requirements. No manual excerpt screen is required.
 
 Expand **Utviklerdiagnostikk** and inspect the received text, stage lights, HTTP status and result counts. In browser Console, filter `[Career Agent]` to see the same sanitized sequence. Source bodies/keys must not appear in console events. Try stopping during the pause and continuing the same link: the source must be reused, with no second browser search. Repeat in English and at a narrow viewport. Check source quotes and useful metadata against the original ad; a successful HTTP response alone is insufficient.
 
 The current fixed pause reduces rapid back-to-back calls but may still encounter account-level quota rejection. Inspect the reactive retry countdown and manually retry using the retained source. Settings and diagnostic boundaries are in [DEBUGGING.md](DEBUGGING.md). Do not run repeated live probes while assessing free-tier limits.
+
+## Owned basic profile checkpoint
+
+Follow [IDENTITY_SETUP.md](IDENTITY_SETUP.md) to start optional local sign-in. Verify saving and reopening name/language, a revision conflict across two tabs, logout and Norwegian/English presentation. This scope does not include CV/experience or provider processing of private candidate material. Open the DEV edge tab to inspect public-ad diagnostics separately; profile bodies are not part of that panel.
