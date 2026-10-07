@@ -1,0 +1,15 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          career:
+            provider: career
+            client-id: ${OIDC_CLIENT_ID:career-agent}
+            client-authentication-method: none
+            authorization-grant-type: authorization_code
+            redirect-uri: ${OIDC_REDIRECT_URI:http://127.0.0.1:8080/login/oauth2/code/career}
+            scope: openid,profile
+        provider:
+          career:
+            issuer-uri: ${OIDC_ISSUER_URI}

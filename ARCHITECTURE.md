@@ -87,7 +87,7 @@ Next.js remains the routing and backend proxy layer. TanStack Query handles serv
 
 ## FINN provider-mediated source adapter
 
-`JobImporter` routes validated FINN links to `AdvertisementBrowser`, implemented by `GroqAdvertisementBrowser`. The adapter enables only the documented built-in `browser_search` tool; structured outputs are intentionally absent from this request. The existing structured RequirementExtractor runs only after user review. Parse source text exclusively from exact-link `browser.open` executed_tools output, discard generated content/reasoning, and return `sourceType=GROQ_BROWSER_EXCERPT`. NAV records return `NAV_API`.
+`JobImporter` routes validated FINN links to `AdvertisementBrowser`, implemented by `GroqAdvertisementBrowser`. The adapter enables only the documented built-in `browser_search` tool; structured outputs are intentionally absent from this request. The existing structured RequirementExtractor follows retrieval from the same Analyze link action, with the configured FINN pause. Source inspection remains optional. Parse source text exclusively from exact-link `browser.open` executed_tools output, discard generated content/reasoning, and return `sourceType=GROQ_BROWSER_EXCERPT`. NAV records return `NAV_API`.
 
 The backend communicates only with Groq's fixed HTTPS endpoint. It does not fetch FINN or other provider-returned URLs itself. Local host/path controls do not govern Groq/Exa's internal browsing. Provider access is not a blanket FINN reuse license; production terms assessment remains necessary. See ADR-0010.
 
@@ -97,4 +97,22 @@ RequirementResults is a client presentation component with category filter state
 
 ## Opt-in storage foundation
 
-The `persistence` Spring profile enables JDBC/PostgreSQL and Flyway. Default public-ad analysis excludes database auto-configuration and retains its previous startup behavior. Local Compose is pinned to an official PostgreSQL 17 image digest. Initial identity/profile tables model unique OIDC issuer/subject bindings, profile ownership, language and revision; no private endpoints are exposed yet. Foreign keys do not replace authorization. See ADR 0011 and docs/POSTGRES_SETUP.md.
+The `persistence` Spring profile enables JDBC/PostgreSQL and Flyway. Default public-ad analysis excludes database auto-configuration and retains its previous startup behavior. Local Compose is pinned to an official PostgreSQL 17 image digest. Initial identity/profile tables model unique OIDC issuer/subject bindings, profile ownership, language and revision. An optional OIDC session now protects the owned basic-profile API; experience/claims/documents remain future increments. Foreign keys do not replace authorization. See ADR 0011 and docs/POSTGRES_SETUP.md.
+
+## Implemented local identity and profile boundary
+
+```mermaid
+flowchart LR
+  Browser[Browser: Norwegian / English] --> Web[Next.js: TanStack Query + shadcn/ui]
+  Web -->|Selected session cookie + CSRF| Backend[Spring Security + profile API]
+  Browser -->|Code + PKCE S256| IdP[Optional local Keycloak]
+  Backend -->|OIDC discovery / token validation| IdP
+  Backend --> Service[ProfileService validation]
+  Service --> Port[ProfileRepository port]
+  Port --> JDBC[Transactional JDBC adapter]
+  JDBC --> PG[(PostgreSQL)]
+```
+
+The `identity` profile enables OIDC login; `persistence` enables the repository. Private routes resolve `(issuer, subject)` exclusively from the verified principal, never a caller-supplied owner. One profile per owner is enforced in PostgreSQL and scoped in every repository query. Writes serialize on the identity binding and compare the submitted revision. Only name/language are stored in this increment. Fixed Next proxies enforce local/same-origin requests, bounded JSON and no-store responses. HTTP session/CSRF state is held by Spring, not localStorage. Public ad analysis remains independent and never receives profile data. See ADR 0013 and docs/IDENTITY_SETUP.md.
+
+Development advertisement diagnostics use a nonmodal shadcn Sheet opened from the fixed right DEV tab. The workspace owns current-run state; opening/closing the panel does not restart analysis or make provider calls.

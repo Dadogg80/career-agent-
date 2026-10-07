@@ -50,4 +50,8 @@ Velg og pin støttede verktøyversjoner før oppsettet implementeres. Opprett kj
 
 ## PostgreSQL foundation update (2026-10-07)
 
-The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Profile login/API/UI and CV upload are not yet available. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.
+The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Optional local profile login/API/UI are now available for name/language only; see [IDENTITY_SETUP.md](IDENTITY_SETUP.md). Experience, competency claims and CV upload remain future increments. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.
+
+## Optional local identity
+
+Use [IDENTITY_SETUP.md](IDENTITY_SETUP.md) for the additional free Keycloak container and native app startup. It is needed only for owned basic profiles. Keep this optional on the M1: public analysis does not require the identity container. Private document/AI workflows remain future work.

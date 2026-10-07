@@ -1,0 +1,27 @@
+# Optional local development IdP. Never deploy start-dev or this fixture realm publicly.
+services:
+  identity:
+    image: quay.io/keycloak/keycloak:26.8@sha256:b0f60d489d51c5d113390bdf5461d4c06e6051be026c05549f2e1e10ec352bcc
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: local-admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Run the local identity configuration helper first}
+      PILOT_LOGIN_PASSWORD: ${PILOT_LOGIN_PASSWORD:?Run the local identity configuration helper first}
+      BACKEND_PUBLIC_ORIGIN: ${BACKEND_PUBLIC_ORIGIN:-http://127.0.0.1:8080}
+      KC_HOSTNAME: http://127.0.0.1:${IDENTITY_PORT:-8081}
+      KC_HEALTH_ENABLED: "true"
+      JAVA_OPTS_KC_HEAP: "-Xms128m -Xmx512m"
+    ports:
+      - "127.0.0.1:${IDENTITY_PORT:-8081}:8080"
+    volumes:
+      - career_identity:/opt/keycloak/data
+      - ./infra/identity/career-agent-realm.json:/opt/keycloak/data/import/career-agent-realm.json:ro
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9000; printf 'GET /health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3; head -1 <&3 | grep -q '200'"]
+      interval: 5s
+      timeout: 3s
+      start_period: 40s
+      retries: 20
+    restart: unless-stopped
+volumes:
+  career_identity:

@@ -1,6 +1,6 @@
 # Sikkerhet og personvern — foreløpige krav
 
-Status: Design requirements. The local pilot includes loopback backend binding, limited health responses, and bounded public-advertisement extraction. Authentication, private-data persistence and the remaining controls below are not implemented. This is not a GDPR compliance claim.
+Status: Design requirements. The local pilot includes loopback backend binding, limited health responses, and bounded public-advertisement extraction. Optional local OIDC/PKCE sign-in and owned basic-profile persistence are implemented; production deployment, document privacy and several controls below remain requirements. This is not a GDPR compliance claim.
 
 ## Current AI pilot boundary
 
@@ -44,7 +44,7 @@ Innloggingsmodell for lokal pilot, AI-provider, lagringssted, backup og retensjo
 
 User input is parsed as an HTTPS Arbeidsplassen advertisement UUID. Backend requests only fixed paths on `pam-stilling-feed.nav.no`; it never requests the submitted URL, API-returned URLs or arbitrary company links. Redirects are rejected, resolved local/private addresses are blocked, connections and body reads have deadlines, JSON content type is required, downloads are capped at 1 MB and normalized text at 15,000 characters. The trusted platform HTTPS proxy may resolve the upstream independently; this is a host allowlist design, not a general DNS-pinned crawler.
 
-One import may execute at a time. The Next.js import proxy enforces local Host/same-Origin behavior and a 10 KB body cap. Backend still binds loopback. No authentication has been added; do not expose this pilot publicly.
+One import may execute at a time. The Next.js import proxy enforces local Host/same-Origin behavior and a 10 KB body cap. Backend still binds loopback. Public advertisement endpoints remain unauthenticated and separated from private profile data; do not expose this local pilot publicly.
 
 The public NAV experiment token is obtained server-side for each import, never sent to the browser or stored in Git. An optional `NAV_API_TOKEN` is server-only. Source HTML descriptions are parsed to plain text, never rendered as HTML; scripts/styles/navigation/forms are removed. Contact lists are excluded from normalized text. Public descriptions can still contain personal details: review and remove unnecessary information before sending to Groq. No advertisement persistence or logging of source bodies is introduced. Registered consumer access and update/removal compliance are required before persistent discovery/republication.
 
@@ -58,8 +58,19 @@ Default process limits: 10 Browser Search attempts and 20 structured-analysis at
 
 ## Local persistence boundary
 
-Compose PostgreSQL is loopback-only with a required local password and a persistent volume. No profile endpoint exposes stored data. The next slice must verify OIDC identity and ownership before any private read/write or CV import is enabled. DB integrity tests do not establish authorization. Use synthetic data for this foundation. Runtime/migration role separation, encrypted backups and production secret management are future deployment requirements.
+Compose PostgreSQL is loopback-only with a required local password and a persistent volume. The basic profile endpoint requires a verified OIDC session and scopes every operation by issuer+subject. Real PostgreSQL authorization tests cover cross-identity isolation and stale revisions. This does not authorize document upload or private AI processing. Runtime/migration role separation, encrypted backups and production secret management are future deployment requirements.
 
 ## Evidence resilience
 
 Exact FINN URL/tool proof is retained when handling wrapped provider titles. Source emphasis normalization and Unicode whitespace matching do not authorize invented words. Only independently quoted suggestions survive; omission counts are visible. All-unsupported/malformed outputs fail. The React-session source is transient and reused only for the same canonical URL. Sanitized rejection logs contain codes/status/counts, not personal content, credentials, raw model output or provider messages.
+
+## Local identity/profile controls (implemented, ADR 0013)
+
+- Spring Security authorization code + PKCE S256; fixed issuer/client and loopback callback/success/failure destinations. No password authentication implemented by the application and no generated default Spring password.
+- `CAREER_SESSION` is HttpOnly, SameSite=Lax, cookie-only and expires after 30 minutes of inactivity. Local loopback HTTP uses non-Secure cookies; any future HTTPS deployment must enable Secure and reassess topology. Sessions are not durable across backend restarts.
+- Private GET/PUT use `/api/profile/me`; ownership comes only from the verified token issuer+subject. Extra owner fields, unverified headers/Bearer strings and arbitrary private resource paths do not confer access. Language/name/revision are validated; optimistic conflict checks prevent silent overwrite.
+- Spring CSRF protects profile PUT and logout POST. Next proxies enforce loopback/same-origin, a 4 KiB write-body limit, selected cookie/CSRF forwarding and no-store responses. No OAuth token is returned to browser JavaScript. The session response exposes a CSRF token and availability booleans, not identity claims.
+- Local Keycloak `start-dev` and its single synthetic pilot realm are optional, loopback-only development tools. Passwords are generated into an ignored mode-0600 file, never printed. App sign-out does not terminate provider SSO.
+- Profile bodies, session cookies, tokens and raw auth errors are excluded from console/server diagnostics. The developer Sheet continues to inspect public ads only. No profile data is sent to Groq.
+
+Before external users or CV imports: choose production identity/HTTPS configuration, resolve deletion/export/retention and backup policy, assess document storage and AI-provider processing, and review request/session abuse limits. These are concrete remaining work, not claims of implemented compliance. The current optional profile stores name/language only.

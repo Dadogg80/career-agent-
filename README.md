@@ -2,7 +2,7 @@
 
 AI-støttet jobbsøking med etterprøvbar kandidatkunnskap, kompetanseavklaring og brukerens kontroll over søknadsmaterialet.
 
-The application now has a Norwegian/English interface and official NAV API URL import, a redesigned shadcn/ui workspace, and Groq-backed advertisement extraction. Candidate profiles, matching, authentication and persistent storage are not implemented yet. See the [pilot test guide](docs/TESTING_PILOT.md) and [run instructions](docs/RUNNING.md).
+The application now has a Norwegian/English interface and official NAV API URL import, a redesigned shadcn/ui workspace, and Groq-backed advertisement extraction. Optional local OIDC sign-in and an owned, saved basic profile (name/language) are now implemented; competencies, CV upload, saved jobs and matching remain pending. See [local identity setup](docs/IDENTITY_SETUP.md). See the [pilot test guide](docs/TESTING_PILOT.md) and [run instructions](docs/RUNNING.md).
 
 Supported links are individual `https://arbeidsplassen.nav.no/stillinger/stilling/<uuid>` advertisements available in NAV’s API. FINN links in the form `https://www.finn.no/job/ad/<id>` are supported separately through Groq Browser Search. FINN imports are labeled Groq/Exa source excerpts, which may be incomplete or stale. Selecting Analyze link retrieves and analyzes in one action, with a configurable 10-second pause between FINN calls; source evidence and the original link remain available for inspection. FINN import uses the existing backend GROQ_API_KEY and a separate bounded search quota; other unsupported sources retain the Paste text alternative.
 
@@ -42,14 +42,14 @@ Arkitektur- og domenedokumentene er foreløpige design. ADR-indeksen og beslutni
 
 ### Direct job analysis
 
-Select **Analyser lenke / Analyze link** to retrieve and analyze a supported public URL in one action. The result includes useful sourced overview facts and compact requirement tiles. Open fact evidence or requirement details as needed; full source text remains expandable. Missing metadata is omitted, and browser excerpts remain explicitly labeled as potentially partial/stale. Private profile/CV features are not yet available.
+Select **Analyser lenke / Analyze link** to retrieve and analyze a supported public URL in one action. The result includes useful sourced overview facts and compact requirement tiles. Open fact evidence or requirement details as needed; full source text remains expandable. Missing metadata is omitted, and browser excerpts remain explicitly labeled as potentially partial/stale. Experience/competency and CV features are not yet available. The basic profile is separate from public-ad analysis.
 
 ### Optional persistence foundation
 
-PostgreSQL Compose and Flyway migrations are available behind the `persistence` Spring profile. See [local PostgreSQL setup](docs/POSTGRES_SETUP.md). The backend test suite now requires Docker for real migration/integrity tests. Public advertisement startup remains database independent; profile login/API/UI are still pending.
+PostgreSQL Compose and Flyway migrations are available behind the `persistence` Spring profile. See [local PostgreSQL setup](docs/POSTGRES_SETUP.md). The backend test suite now requires Docker for real migration/integrity tests. Public advertisement startup remains database independent. Optional profile login/API/UI require both `persistence,identity`; see [identity setup](docs/IDENTITY_SETUP.md).
 
 ### Rate limits and retries
 
 A fresh FINN analysis uses browser retrieval followed by structured extraction. These calls share the Groq account/model quota with Playground and other clients. The application shows a bounded provider cooldown. A manual retry for the same fetched URL reuses the current text instead of repeating browser search. Source-unsupported suggestions are omitted with a visible count; wholly unsupported or invalid results still fail. See ADR 0012 and docs/GROQ_SETUP.md.
 
-The frontend now shows retrieval → pause → analysis with honest loading statuses and a decorative animation. Development includes a collapsed diagnostic panel with status lights, received-source inspection and sanitized console events. Set `NEXT_PUBLIC_ANALYSIS_DELAY_SECONDS` in `apps/web/.env.local` to adjust the default 10-second FINN pause. This does not guarantee quota availability. See [debugging instructions](docs/DEBUGGING.md).
+The frontend now shows retrieval → pause → analysis with honest loading statuses and a decorative animation. Development includes a hidden right-side shadcn Sheet, opened from the DEV edge tab, with status lights, received-source inspection and sanitized console events. Set `NEXT_PUBLIC_ANALYSIS_DELAY_SECONDS` in `apps/web/.env.local` to adjust the default 10-second FINN pause. This does not guarantee quota availability. See [debugging instructions](docs/DEBUGGING.md).

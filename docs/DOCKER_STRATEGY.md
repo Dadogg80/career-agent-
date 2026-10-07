@@ -25,3 +25,7 @@ Benefits: repeatable service setup, isolated dependencies, straightforward clean
 Costs: Linux VM overhead on macOS, image/cache disk usage, file-watching quirks, additional networking/debugging, and architecture compatibility. Containers do not guarantee security or backup; persistent data must have its own backup and access policy.
 
 Keep any local Ollama experiment native on macOS for Metal support. Never bake API keys into image layers or Compose files committed to Git. Pass secrets at runtime.
+
+## Optional identity container (implemented local pilot)
+
+`compose.identity.yaml` adds pinned local Keycloak to the existing PostgreSQL Compose project. This is a legitimate local dependency for testing OIDC/PKCE and owned profiles without a paid service; it is optional for public analysis. Backend/frontend remain native. Keycloak uses a 512 MB Java heap limit plus overhead and a separate named volume. Development HTTP/start-dev configuration must never be deployed publicly. See [IDENTITY_SETUP.md](IDENTITY_SETUP.md) for generated ignored credentials, startup, persistence and non-destructive stopping.

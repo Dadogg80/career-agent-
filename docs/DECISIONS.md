@@ -37,7 +37,7 @@ Confirmed records explicit user requirements; recommendations record design prop
 
 ## Formelle arkitekturbeslutninger senere
 
-The [ADR index](adr/README.md) is the authoritative list of accepted/proposed architecture records. Identity and private-data processing still require concrete decisions before private profile storage.
+The [ADR index](adr/README.md) is the authoritative list of accepted/proposed architecture records. ADR 0013 records local identity/basic profile ownership. Production identity and private-document processing still require separate decisions.
 
 Arbeidsmåten er `main` med korte arbeidsbranches, uten permanent `development`, valgt under den delegerte instruksjonen om å fortsette. Se [Git-arbeidsflyten](GIT_WORKFLOW.md). Branch protection er ikke konfigurert.
 
@@ -78,3 +78,9 @@ Accepted: preserve exact source proof while handling wrapped FINN titles, normal
 Accepted, explicit product-owner priority: finish a working, observable URL → analysis → usable result loop before the next profile/CV milestone. Use a truthful staged loader and decorative document/cards animation, a default configurable 10-second pause after FINN retrieval, stop/resume without refetching, and collapsible development diagnostics with sanitized console events. NAV/pasted text normally skip this inter-Groq pause. Source bodies can be explicitly inspected in the UI but never added to logs.
 
 The delay is a browser-side UX/pacing policy, not account-wide rate-limit enforcement or a token availability forecast. Keep existing reactive provider cooldowns, manual retry and backend bounds. No new queue, provider calls, paid upgrades, dependencies or persisted diagnostic data. Production hides diagnostics unless explicitly opted in at build time. See DEBUGGING.md.
+
+## 2026-10-07 — Right-side diagnostics and owned basic profiles
+
+D-019 (Accepted, explicit UI requirement): move development diagnostics into the official shadcn Sheet, opened by a right-edge DEV tab. Keep it nonmodal so analysis remains usable while inspecting progress. Reuse the existing Radix dependency; no extra AI calls or diagnostic persistence.
+
+D-020 (Accepted, delegated local-pilot decision): use optional local Keycloak with Spring Security OIDC/PKCE before storing career evidence. This provides real authentication without a paid provider or custom password service. Implement owned name/language/revision first, with CSRF, same-origin proxies and PostgreSQL isolation/conflict tests. No private data goes to Groq. Production IdP, HTTPS and private-document/privacy policy remain separate work. See ADR 0013 and IDENTITY_SETUP.md.
