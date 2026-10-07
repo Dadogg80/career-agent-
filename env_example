@@ -1,1 +1,4 @@
-GROQCLOUD_API_KEY=""
+# Copy to apps/backend/.env; this file contains names/examples only.
+GROQ_API_KEY=""
+# Optional, needed only for Compose and the persistence Spring profile.
+DATABASE_PASSWORD=""

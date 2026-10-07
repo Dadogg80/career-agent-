@@ -1,0 +1,12 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://127.0.0.1:5432/career_agent}
+    username: ${DATABASE_USER:career_agent}
+    password: ${DATABASE_PASSWORD}
+    hikari:
+      maximum-pool-size: 5
+      connection-timeout: 5000
+  flyway:
+    enabled: true
+    clean-disabled: true
+    validate-on-migrate: true

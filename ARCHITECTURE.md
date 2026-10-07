@@ -94,3 +94,7 @@ The backend communicates only with Groq's fixed HTTPS endpoint. It does not fetc
 ## Requirement result presentation
 
 RequirementResults is a client presentation component with category filter state. Each tile uses the official shadcn Dialog/Radix focus handling. Source context is deterministically taken from the exact analyzed snapshot with normalized whitespace and explicit clipping marks; it does not invoke AI. Generic category guidance explains the classification, without inventing role facts or candidate evidence. The backend extraction contract is unchanged.
+
+## Opt-in storage foundation
+
+The `persistence` Spring profile enables JDBC/PostgreSQL and Flyway. Default public-ad analysis excludes database auto-configuration and retains its previous startup behavior. Local Compose is pinned to an official PostgreSQL 17 image digest. Initial identity/profile tables model unique OIDC issuer/subject bindings, profile ownership, language and revision; no private endpoints are exposed yet. Foreign keys do not replace authorization. See ADR 0011 and docs/POSTGRES_SETUP.md.

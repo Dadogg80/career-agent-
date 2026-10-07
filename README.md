@@ -42,3 +42,7 @@ Arkitektur- og domenedokumentene er foreløpige design. ADR-indeksen og beslutni
 ### Direct job analysis
 
 Select **Analyser lenke / Analyze link** to retrieve and analyze a supported public URL in one action. The result includes useful sourced overview facts and compact requirement tiles. Open fact evidence or requirement details as needed; full source text remains expandable. Missing metadata is omitted, and browser excerpts remain explicitly labeled as potentially partial/stale. Private profile/CV features are not yet available.
+
+### Optional persistence foundation
+
+PostgreSQL Compose and Flyway migrations are available behind the `persistence` Spring profile. See [local PostgreSQL setup](docs/POSTGRES_SETUP.md). The backend test suite now requires Docker for real migration/integrity tests. Public advertisement startup remains database independent; profile login/API/UI are still pending.

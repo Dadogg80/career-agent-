@@ -3,6 +3,7 @@ node_modules/
 .next/
 build/
 .gradle/
+.kotlin/
 test-results/
 playwright-report/
 *.tsbuildinfo

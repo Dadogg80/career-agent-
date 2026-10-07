@@ -50,14 +50,14 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
     <section className="workspace" aria-labelledby="analyzer-title">
       <div className="workspace-heading"><div><h2 id="analyzer-title">{t.title}</h2><p>{t.description}</p></div><Badge variant="outline">{locale === "nb" ? "Kildebasert AI" : "Sourced AI"}</Badge></div>
       <div className={`analysis-grid ${result ? "has-result" : ""}`}>
-        <Card className="input-card"><CardHeader><p className="step-label">{t.inputStep}</p>
+        <Card className={`input-card ${result && mode === "url" ? "completed-input" : ""}`}><CardHeader><p className="step-label">{t.inputStep}</p>
           <div className="mode-picker" aria-label={locale === "nb" ? "Inndatametode" : "Input method"}>
             <Button variant={mode === "url" ? "default" : "ghost"} onClick={() => changeMode("url")} disabled={pending} aria-pressed={mode === "url"}><Link2 />{t.urlMode}</Button>
             <Button variant={mode === "text" ? "default" : "ghost"} onClick={() => changeMode("text")} disabled={pending} aria-pressed={mode === "text"}><FileText />{t.textMode}</Button>
           </div></CardHeader><CardContent>
           {mode === "url" && <form onSubmit={(e) => { e.preventDefault(); if (!pending) { extraction.reset(); setResult(null); setImported(null); importing.mutate({ url, locale }); } }} className="import-form">
             <label htmlFor="job-url">{t.urlLabel}</label><Input id="job-url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.finn.no/job/ad/…" maxLength={2048} required disabled={pending} />
-            <p className="hint">{t.sourceHelp}</p><Button disabled={pending} type="submit">{importing.isPending ? <LoaderCircle className="animate-spin" /> : <Link2 />}{pending ? (importing.isPending ? t.fetching : t.pending) : t.fetch}</Button>
+            <p className="hint">{t.sourceHelp}</p><Button disabled={pending} type="submit">{pending ? <LoaderCircle className="animate-spin" /> : <Link2 />}{pending ? (importing.isPending ? t.fetching : t.pending) : t.fetch}</Button>
           </form>}
           {(mode === "text") && <form onSubmit={analyze} className="text-form">
             {imported && <div className="source-meta"><h3>{imported.title}</h3>{imported.sourceType === "GROQ_BROWSER_EXCERPT" && <p className="notice">{t.browserSource}</p>}<a href={imported.sourceUrl} target="_blank" rel="noopener noreferrer">{t.sourceLink}<ArrowUpRight size={14}/></a><p>{t.retrieved}: {new Date(imported.retrievedAt).toLocaleString(locale === "nb" ? "nb-NO" : "en-US")}</p>{text !== imported.text && <p>{t.sourceEdited}</p>}</div>}

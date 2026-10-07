@@ -1,6 +1,6 @@
 # Docker strategy
 
-Status: Recommended development/deployment approach. No project Dockerfiles or Compose configuration have been implemented yet.
+Status: PostgreSQL Compose is implemented; backend/frontend still run natively. No application Dockerfiles are implemented. See [POSTGRES_SETUP.md](POSTGRES_SETUP.md).
 
 ## Initial development on Apple M1 / 16 GB
 

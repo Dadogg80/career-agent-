@@ -119,3 +119,9 @@ Consolidated ROADMAP.md into actual status and the next three recommended delive
 Implemented one-action retrieval/analysis, source-backed variable overview cards in Norwegian/English, and published NAV metadata in normalized source text. Added invalid-fact/evidence checks and browser flow tests. Raised the bounded completion limit from 2,200 to 3,500 tokens to accommodate facts plus requirements; existing call quotas remain. Local validation results are recorded below after execution. Private profiles remain pending.
 
 Validation: 37 backend tests passed; frontend production build/type check passed; 19 Playwright tests passed against the real local frontend/backend with mocked AI success responses and real validation/configuration errors. No live model quality or GitHub Actions claim. Result layout uses the full content width after analysis.
+
+## 2026-10-07 — PostgreSQL foundation
+
+Added opt-in persistence configuration, pinned PostgreSQL Compose, Flyway identity/profile migration and Testcontainers migration/integrity tests. No profile API/UI or private AI processing added. Testing exposed a Testcontainers tag-plus-digest parsing incompatibility; test image uses digest-only naming for the same official artifact. Validation results follow after execution.
+
+Validation completed: 39 backend tests passed (including two real PostgreSQL tests, no skips), 19 Playwright tests passed, production frontend build/type check passed, Compose started a healthy PostgreSQL 17.11 instance and accepted a SQL request. Temporary Compose resources were removed after validation. One synthetic live Groq request succeeded with 2 requirements and 7 sourced facts after selecting the managed environment's CA trust store. Initial live attempts failed because the temporary JVM lacked the proxy CA trust; no verification bypass was used. No real advertisement/contact data was committed. No GitHub CI result is claimed.

@@ -64,3 +64,7 @@ Selecting **Analyze link** retrieves the public advertisement and immediately an
 The overview contains up to ten useful, variable facts: employer description, role/responsibilities, deadline, location/work model, contacts, benefits, salary or application process when explicitly present. Every fact carries a verbatim source quote. Missing data is omitted with an explicit notice rather than guessed. Quote membership validation establishes provenance, not semantic correctness of the AI's paraphrase. Browser excerpts can still be partial/stale; this limitation and the original link remain visible. Full source text is expandable, not a required intermediate screen. Requirement tiles/details remain unchanged.
 
 No candidate matching, private profile storage or company research is implied by this overview. All extracted facts are AI suggestions from the advertisement. Existing source quotes and optional source review remain available; older mandatory review instructions do not apply to this flow.
+
+## 2026-10-07 — Opt-in PostgreSQL foundation
+
+Accepted: implement local PostgreSQL Compose, Flyway migrations and real migration tests as the next profile prerequisite. Preserve public-ad startup without a database. Use JDBC first; no need for JPA before domain repositories exist. Initial identity/profile schema establishes integrity, not authorization. OIDC/owner enforcement and profile UI follow separately. See ADR 0011.

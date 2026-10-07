@@ -60,3 +60,10 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 .analysis-grid.has-result { grid-template-columns:minmax(0,1fr); }.has-result .job-facts,.has-result .compact-requirements { grid-template-columns:repeat(3,minmax(0,1fr)); }
 @media(max-width:1100px) { .has-result .job-facts,.has-result .compact-requirements { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:480px) { .has-result .job-facts,.has-result .compact-requirements { grid-template-columns:1fr; } }
+
+@media(min-width:851px) {
+  .completed-input { display:grid; grid-template-columns:240px minmax(0,1fr); padding:18px; gap:24px; align-items:center; }
+  .completed-input [data-slot="card-header"],.completed-input [data-slot="card-content"] { padding:0; }.completed-input .step-label,.completed-input .privacy-note,.completed-input .import-form>.hint { display:none; }
+  .completed-input .mode-picker button { padding:9px; font-size:12px; }.completed-input .import-form { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; }
+  .completed-input .import-form label { grid-column:1/-1; margin:0; }.completed-input .import-form button { margin:0; }
+}

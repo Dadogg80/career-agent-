@@ -9,7 +9,7 @@
 
 ## Gjeldende fase
 
-Implementation is authorized in small coherent increments. The foundation is merged; the current slice adds bounded FINN import through Groq Browser Search alongside official NAV API import. Browser excerpts must never be presented as verified complete original advertisements. Private profiles, authentication and persistence are still pending. Do not build the full system at once. No paid services, plan upgrades or infrastructure costs are authorized.
+Implementation is authorized in small coherent increments. The foundation is merged; current slices include direct URL analysis, sourced overview facts, and an opt-in PostgreSQL/Flyway foundation alongside bounded FINN and NAV import. Browser excerpts must never be presented as verified complete original advertisements. Private profiles, authentication and persistence are still pending. Do not build the full system at once. No paid services, plan upgrades or infrastructure costs are authorized.
 
 ## Produktføringer
 

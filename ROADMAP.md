@@ -13,7 +13,8 @@ Status checked against remote main on 2026-10-07. Dates are not promised; delive
 | FINN import through Groq browser excerpts | Implemented and merged; source may be partial/stale |
 | TanStack Query and shadcn/ui workspace | Implemented and required by AGENTS.md |
 | Compact requirement tiles, category filters and detail dialogs | Implemented and merged |
-| PostgreSQL, login, user-owned saved profiles/jobs | Not implemented |
+| PostgreSQL/Flyway profile schema | Implemented on current branch; validation/merge status in development log |
+| Login, user-owned saved profiles/jobs API/UI | Not implemented |
 | Candidate claims/competence, CV/document upload, personal matching | Not implemented |
 | CV tailoring/export, application CRM, discovery and interview prep | Not implemented |
 
@@ -28,7 +29,7 @@ A URL now starts retrieval and analysis from one action. Add sourced overview ca
 Purpose: turn the public-text tool into a safe, persistent personal workspace.
 
 Small implementation sequence:
-1. PostgreSQL in local Docker Compose, schema migrations and integration-test setup.
+1. PostgreSQL in local Docker Compose, schema migrations and integration-test setup — implemented on current branch.
 2. Spring Security/OIDC session and server-side ownership/authorization; choose/configure the pilot login provider. Do not expose private data before these boundaries are verified.
 3. User-owned profile, projects/experience and manually entered competency claims with UNVERIFIED/INFERRED/CONFIRMED/REJECTED status and evidence/confirmation history.
 4. Profile screen for editing, reviewing and reopening saved information; save user-owned job snapshots. Add sanitized request diagnostics/build information during this foundation work.

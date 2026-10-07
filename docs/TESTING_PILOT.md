@@ -96,3 +96,7 @@ Browser Search uses the existing backend key and supported model. Adding `GROQ_B
 ## Compact requirements
 
 After merging feat/compact-requirement-details, pull main and run npm ci in apps/web (the shadcn Dialog dependency is new), then restart the frontend. Backend behavior is unchanged. Analyze an advertisement; filter required/preferred/unclear items, open a tile, inspect original quote and surrounding context, and close using Escape or the translated close button. Repeat in English and on a narrow screen. Editing source should still mark the old result stale. No profile/CV capability is introduced by this UI delivery.
+
+## PostgreSQL foundation update (2026-10-07)
+
+The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Profile login/API/UI and CV upload are not yet available. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.
