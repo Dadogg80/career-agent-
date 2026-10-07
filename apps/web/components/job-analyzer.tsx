@@ -9,6 +9,7 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
+import { SaveJob } from "./save-job";
 import { JobOverview } from "./job-overview";
 import { RequirementResults } from "./requirement-results";
 import { isExtraction, type Requirement, type JobFact } from "../lib/job-requirements";
@@ -214,7 +215,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
             {outdated && <Alert variant="destructive" role="alert"><AlertDescription>{t.outdated}</AlertDescription></Alert>}
             {result.locale !== locale && <p className="hint">{t.otherLanguage}</p>}
             {result.analysisFailed && <p className="notice" role="status">{locale === "nb" ? "Annonsen er tilgjengelig nedenfor. Automatisk strukturering feilet; krav og praktiske opplysninger er ikke ferdig sortert. Du kan lese kildeutdraget nå og prøve analysen igjen." : "The advertisement is available below. Automatic structuring failed; requirements and practical details have not been sorted. Read the source excerpt now or retry the analysis."}</p>}
-            <JobOverview facts={result.facts} locale={locale} sourceLocale={result.locale} fallbackText={result.analysisFailed ? result.source : undefined} />
+            <SaveJob key={resultRevision} disabled={outdated || pending} content={{ title: result.imported?.title.slice(0, 200) ?? (locale === "nb" ? "Stillingsannonse" : "Job advertisement"), text: result.source, locale: result.locale, sourceUrl: result.imported?.sourceUrl ?? null, sourceType: result.imported?.sourceType ?? (result.imported ? "NAV_API" : "PASTED_TEXT"), retrievedAt: result.imported?.retrievedAt ?? null, requirements: result.requirements, facts: result.facts, omittedItems: result.omittedItems }}/><JobOverview facts={result.facts} locale={locale} sourceLocale={result.locale} fallbackText={result.analysisFailed ? result.source : undefined} />
             {!result.analysisFailed && <RequirementResults key={resultRevision} requirements={result.requirements} source={result.source} locale={locale} resultLocale={result.locale} browserExcerpt={result.imported?.sourceType === "GROQ_BROWSER_EXCERPT"} outdated={outdated} />}
             <details className="source-evidence"><summary>{t.evidence}</summary><p className="hint">{t.sourceTitle}</p>{result.imported && <p><a href={result.imported.sourceUrl} target="_blank" rel="noopener noreferrer">{t.sourceLink}</a> · {t.retrieved}: {new Date(result.imported.retrievedAt).toLocaleString(locale === "nb" ? "nb-NO" : "en-US")}</p>}<pre>{result.source}</pre></details>
           </section>}

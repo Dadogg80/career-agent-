@@ -272,3 +272,20 @@ flowchart TD
 ```
 
 Regular uploads do not invoke OCR or AI. OCR is optional and cannot promise complete reading of mixed text/image layouts. Distributed excerpts include later passages but remain limited; source selection and another approved call can target missing sections. Whitespace changes never authorize changed words. Saved claims remain separate from replaceable AI suggestion snapshots.
+
+## Local job library and personal matching
+
+```mermaid
+flowchart TD
+  Analysis[Received advertisement and analysis] --> Save[Sign in and save snapshot]
+  Save --> Library[Search and reopen saved jobs]
+  Library --> Preview[Select confirmed evidence and source excerpt]
+  Preview --> Approve{Approve this Groq analysis}
+  Approve -->|Yes| Match[One bounded requirement comparison]
+  Approve -->|No| Library
+  Match --> Review[Inspect reason, quotes and clarification]
+  Match -->|Failure| Retain[Keep previous result and manual retry]
+  Review --> Change[Profile evidence changes]
+  Change --> Stale[Mark previous assessment stale]
+  Review --> CV[Next: approve a CV version]
+```

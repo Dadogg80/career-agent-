@@ -283,3 +283,8 @@ As the pilot I can see active skill-label, confirmed-statement and pending-revie
 ## US-34 — Recover missing document text and understand AI coverage
 
 As the pilot I can reread an already uploaded immutable original using the improved Word/PDF reader. For textless PDF pages I can explicitly request local OCR, with clear installation/language/size/timeout errors. OCR makes no AI call and needs review before AI approval. Changed extraction clears stale analyses while preserving original files and existing claim history; in-flight stale AI saves fail. Long previews use distributed passages with fair redistribution; I can focus a document or select beginning/middle/end and inspect the limited coverage. A single approved analysis can provide up to twenty proposals; it never creates confirmed skills automatically. Unsupported layouts/scans and excerpts remain visible limitations.
+
+## Authorized local-pilot continuation
+
+- US-035: As a signed-in candidate, save received advertisements and their analyses, search/reopen their exact snapshots, and explicitly delete one without another provider call. Ownership, CSRF, bounded evidence and source caveats must remain.
+- US-036: As a candidate, preview selected confirmed competencies and advertisement passages, approve sharing for each match, see explained requirement-level relevance/evidence/questions, and reopen stored assessments without another call. Undocumented skills remain unknown; changed evidence marks the assessment stale and cannot silently update it.

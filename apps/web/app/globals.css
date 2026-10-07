@@ -195,3 +195,28 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 
 .document-review-header { position:sticky; top:-30px; z-index:20; background:#f6f8f3; padding-top:24px; padding-bottom:16px; border-bottom:1px solid #dce3d6; }.document-workspace-sheet>button.absolute { position:fixed; right:20px; top:20px; z-index:60; background:#f6f8f3; }
 @media(max-width:760px) { .document-review-header { top:-22px; padding-top:18px; }.document-workspace-sheet>button.absolute { top:16px; right:16px; } }
+
+.save-job-action { display:flex; align-items:center; gap:1rem; margin:1rem 0; flex-wrap:wrap; font-size:.85rem; }
+.saved-job-workspace { display:grid; gap:1.2rem; }
+.saved-job-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+.saved-job-grid h3 { font-size:1.15rem; line-height:1.4; overflow-wrap:anywhere; }
+.saved-job-facts { display:grid; gap:.4rem; font-size:.85rem; margin-bottom:1rem; }
+.saved-job-sheet { display:block; }
+.saved-job-sheet > * { margin-bottom:1.25rem; }
+@media(max-width:700px) { .saved-job-grid { grid-template-columns:1fr; } .topbar-nav { flex-wrap:wrap; gap:.65rem; } .topbar { gap:.65rem; } }
+
+.personal-match-panel { margin:1.2rem 0; }
+.match-preview,.match-result { display:grid; gap:1rem; margin-top:1rem; }
+.match-claims { max-height:340px; overflow:auto; display:grid; gap:.65rem; padding:.25rem; }
+.match-claim { display:flex; gap:.75rem; align-items:start; border:1px solid var(--border); border-radius:.7rem; padding:.85rem; font-size:.85rem; }
+.match-claim input { margin-top:.25rem; flex-shrink:0; }
+.match-claim span span,.match-claim small { display:block; margin-top:.3rem; line-height:1.55; }
+.match-claim small { color:var(--muted-foreground); }
+.match-assessments { display:grid; gap:.75rem; }
+.match-assessment { border:1px solid var(--border); border-radius:.8rem; padding:1rem; background:var(--background); }
+.match-assessment summary { display:flex; flex-wrap:wrap; align-items:center; gap:.65rem; cursor:pointer; font-size:.9rem; }
+.match-assessment summary::after { content:"+"; margin-left:auto; }
+.match-assessment[open] summary::after { content:"−"; }
+.match-assessment p,.match-assessment blockquote { margin-top:.8rem; line-height:1.6; font-size:.85rem; }
+.match-assessment blockquote { border-left:2px solid var(--border); padding-left:.75rem; color:var(--muted-foreground); }
+.match-proof { margin-top:1rem; padding:.75rem; border-radius:.6rem; background:var(--secondary); }

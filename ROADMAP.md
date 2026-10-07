@@ -18,7 +18,9 @@ Status checked against remote main on 2026-10-07. Deliver small tested increment
 | Opt-in single/combined document AI summaries and source-backed suggestions | Implemented and merged, PR #14 |
 | Competency search/status dashboard, wider document review Sheet, improved source coverage and local rereading/OCR | Implemented and locally validated on feat/competency-workspace; not pushed/merged |
 | Adjacent-skill inference, normalized employment/projects | Not implemented |
-| Saved jobs, personal matching and CV recommendations | Not implemented |
+| Owned saved job snapshots and searchable library | Implemented on current local branch; backend/build and 49 browser tests verified |
+| Approved personal requirement-to-claim matching | Implemented on current local branch; 93 backend and 51 browser tests verified |
+| CV recommendations and controlled export | Next implementation increment |
 | Tailored CV artifact/version generation, CRM, discovery, interview/academy/analytics | Not implemented |
 
 The previous delivery scope was the three deliveries already listed: ad overview, competency review and initial CV import. Saved jobs/matching were excluded from that earlier delivery; the latest instruction authorizes progressing through the local pilot workflow without pushing yet. The owner subsequently added AI competency summarization across uploaded documents before merge. Upload/extraction remain local; a separately approved Groq call creates stored source-backed suggestions, and an explicit user save creates UNVERIFIED claims. See docs/CV_IMPORT.md and the actual validation in docs/DEVELOPMENT_LOG.md.

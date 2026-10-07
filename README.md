@@ -61,3 +61,7 @@ Merged PR #14 added opt-in Groq analysis of one document or all readable uploade
 ## Improved competency workspace
 
 Search recorded competencies by skill/project/source and filter their review status. Documents display extracted-text counts. Review documents and source-backed AI proposals in a wide right-side shadcn Sheet. Long-document previews redistribute the 12,000-character budget across start/middle/end passages; one opt-in call can return up to twenty proposals, with no automatic confirmation. Use **Les originalen på nytt** for existing files, or optional **Les skannet PDF med OCR** after installing Tesseract locally. See [CV_IMPORT.md](docs/CV_IMPORT.md) for Mac setup, extraction limits and source coverage limitations.
+
+## Local job library and matching (unpublished branch)
+
+The current branch adds owned saved advertisement snapshots and a searchable library, plus approved personal matching against selected CONFIRMED statements. Save/reopen makes no AI call. Each match shows exact preview/revision references and requires approval before one private Groq request. Changed evidence marks the result stale; undocumented skills remain unknown. See [Saved jobs](docs/SAVED_JOBS.md), [Matching](docs/MATCHING.md) and [Roadmap](ROADMAP.md). The owner requested continued local-pilot implementation without pushing yet.

@@ -23,3 +23,5 @@ Status Accepted betyr vedtatt føring. Proposed betyr konkret forslag som kan re
 | [0010](0010-finn-browser-search.md) | Accepted | Bounded FINN import from exact-link Groq browser tool excerpts |
 
 Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert implementasjon av disse krever fortsatt design og autorisert implementasjonsstart.
+
+- [0018: Owned job snapshots and approved personal matching](0018-owned-job-snapshots-and-personal-matching.md) — Accepted local pilot.
