@@ -11,7 +11,9 @@ test("renders cited requirements and marks edited source as outdated", async ({ 
   await page.getByRole("button", { name: "Analyser", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Kotlin", exact: true })).toBeVisible();
   await expect(page.getByRole("listitem").getByText("Må-krav", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Se detaljer: Kotlin", exact: true }).click();
   await expect(page.locator("blockquote")).toHaveText("Du må ha erfaring med Kotlin.");
+  await page.keyboard.press("Escape");
   await page.getByRole("textbox", { name: "Stillingsannonse" }).fill(source + " Ny tekst.");
   await expect(page.getByRole("region", { name: "Analyser en stillingsannonse" }).getByRole("alert")).toContainText("Annonsen er endret");
 });

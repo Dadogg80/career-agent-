@@ -9,6 +9,7 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
+import { RequirementResults } from "./requirement-results";
 import { isExtraction, type Requirement } from "../lib/job-requirements";
 import { isImportedJob, type ImportedJob } from "../lib/job-import";
 import { jobTranslations } from "../lib/job-translations";
@@ -27,13 +28,14 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
   const [imported, setImported] = useState<ImportedJob | null>(null);
+  const [resultRevision, setResultRevision] = useState(0);
   const [result, setResult] = useState<{ requirements: Requirement[]; source: string; locale: Locale; imported: ImportedJob | null } | null>(null);
   const extraction = useMutation({ mutationFn: async (input: { text: string; locale: Locale; imported: ImportedJob | null }) => {
     if (input.text.trim().length < 40) throw new Error("INVALID_INPUT");
     const value = await post("/api/jobs/requirements", { text: input.text, locale: input.locale });
     if (!isExtraction(value)) throw new Error("AI_INVALID_RESULT");
     return { requirements: value.requirements, source: input.text, locale: input.locale, imported: input.imported };
-  }, onSuccess: setResult });
+  }, onSuccess: (value) => { setResult(value); setResultRevision(revision => revision + 1); } });
   const importing = useMutation({ mutationFn: async () => {
     const value = await post("/api/jobs/import", { url });
     if (!isImportedJob(value)) throw new Error("SOURCE_INVALID");
@@ -75,8 +77,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
             <h3 id="results-title">{result.imported?.title ?? t.results}</h3><p className="hint">{t.review}</p>{result.imported?.sourceType === "GROQ_BROWSER_EXCERPT" && <p className="notice">{t.browserSource}</p>}
             {outdated && <Alert variant="destructive" role="alert"><AlertDescription>{t.outdated}</AlertDescription></Alert>}
             {result.locale !== locale && <p className="hint">{t.otherLanguage}</p>}
-            <div className="result-counts">{(["REQUIRED", "PREFERRED", "UNCLEAR"] as const).map((kind) => <div key={kind}><strong>{result.requirements.filter(r => r.kind === kind).length}</strong><span>{t.kinds[kind]}</span></div>)}</div>
-            {result.requirements.length === 0 ? <Card><CardContent>{t.empty}</CardContent></Card> : <ul className="requirements">{result.requirements.map((r, i) => <li key={i}><Card><CardContent><Badge className={`kind-${r.kind.toLowerCase()}`} variant="secondary">{t.kinds[r.kind]}</Badge><h4>{r.label}</h4><blockquote>{r.quote}</blockquote></CardContent></Card></li>)}</ul>}
+            <RequirementResults key={resultRevision} requirements={result.requirements} source={result.source} locale={locale} resultLocale={result.locale} browserExcerpt={result.imported?.sourceType === "GROQ_BROWSER_EXCERPT"} outdated={outdated} />
             <details className="source-evidence"><summary>{t.evidence}</summary><p className="hint">{t.sourceTitle}</p><pre>{result.source}</pre></details>
           </section>}
         </div>

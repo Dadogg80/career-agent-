@@ -92,3 +92,7 @@ NAV’s public token is used automatically for experimentation. A NAV_API_TOKEN 
 6. If the provider cannot retrieve the exact page, is rate limited, or reaches the local 10-attempt cap, the URL stays available and pasted text remains an alternative. Successful test-day access does not guarantee future source availability.
 
 Browser Search uses the existing backend key and supported model. Adding `GROQ_BROWSER_SEARCH_ENABLED=false` to the backend environment disables it. Search and analysis use independent process limits. A counter is not a provider billing control; keep the existing account on its free tier.
+
+## Compact requirements
+
+After merging feat/compact-requirement-details, pull main and run npm ci in apps/web (the shadcn Dialog dependency is new), then restart the frontend. Backend behavior is unchanged. Analyze an advertisement; filter required/preferred/unclear items, open a tile, inspect original quote and surrounding context, and close using Escape or the translated close button. Repeat in English and on a narrow screen. Editing source should still mark the old result stale. No profile/CV capability is introduced by this UI delivery.
