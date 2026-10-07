@@ -113,3 +113,24 @@ Generering eller nedlasting betyr ikke innsending. Hvis brukeren endrer dokument
 ## Fremtidig flyt, utenfor MVP
 
 Automatisk discovery fører inn i «Legg til stilling». Browser-assistent kan senere erstatte den manuelle portalhandlingen, men må vise endelig innhold og dokumenter før eksplisitt godkjenning av innsending. Intervju og oppfølging bygger på søknadssaken og det faktisk sendte materialet.
+
+## Implemented pilot flow: URL review and requirement extraction
+
+```mermaid
+flowchart TD
+    A[Open job analysis: Norwegian or English] --> B{Input method}
+    B -->|Arbeidsplassen URL| C[Validate URL and request official NAV API]
+    C -->|Active supported advertisement| D[Show title, source link, retrieval time and editable text]
+    C -->|Unsupported, absent, inactive or unavailable| E[Keep URL and offer Paste text]
+    E --> F[Paste advertisement text]
+    B -->|Paste text| F
+    D --> G[User reviews text]
+    F --> G
+    G --> H[User selects Analyze]
+    H --> I[Bounded Groq extraction]
+    I --> J[Show required, preferred and unclear requirements with quotes]
+    J --> K[Inspect source evidence]
+    J -->|Edit source text| L[Mark result outdated]
+```
+
+The pilot does not save input or results across reload. URL import makes no AI call. A fetched page is never automatically sent to Groq; the user reviews normalized text first. API-returned application links are not fetched. The current interface does not offer automated submission or personal match scores.

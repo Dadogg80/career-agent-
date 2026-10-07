@@ -175,3 +175,18 @@ Som jobbsøker vil jeg fortsette der jeg slapp, slik at feil eller lukket nettle
 | US-22 | Som kandidat vil jeg delegere avgrenset tilgang til en veileder. | Organisasjonsmodell og eksplisitt samtykket tilgang. |
 
 P2-stories trenger detaljerte akseptansekriterier før implementasjon.
+
+## Implemented slice: US-17 source import and readable analysis
+
+As a jobseeker, I can import an individual Arbeidsplassen advertisement available through NAV’s official API, review its text and request cited requirement extraction.
+
+Acceptance criteria implemented:
+- URL input is the default, with a Paste text alternative.
+- Only supported HTTPS advertisement paths are accepted; tracking parameters are removed from the displayed canonical source.
+- Active API records return plain text, title, source link and retrieval timestamp; inactive/missing records fail safely.
+- Import does not invoke AI. Analysis requires an explicit button press.
+- Unsupported and unavailable sources retain the URL and explain the manual alternative in Norwegian/English.
+- Responsive input/results columns, requirement counts and quotation cards make the result scannable.
+- Editing the source marks the existing analysis outdated. Source evidence reflects the text actually analyzed.
+
+Remaining: FINN URL access, richer overview metadata/responsibilities/summary, saved jobs and immutable persisted snapshots.

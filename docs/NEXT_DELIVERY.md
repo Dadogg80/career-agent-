@@ -1,6 +1,6 @@
 # Next delivery: URL-based job overview
 
-Status: Proposed implementation plan following the user's priority change. The existing Groq advertisement-extraction feature is merged into main. URL fetching and the overview described here are not implemented.
+Status: URL ingestion and the redesigned workspace are implemented on `feat/job-url-import`; merge is pending. Richer summaries, responsibilities and sourced metadata remain planned.
 
 ## Product goal
 
@@ -45,4 +45,6 @@ The first URL delivery may operate without persistence, like the existing public
 
 ## Unresolved before URL implementation
 
-Technical feasibility and permitted access for the first source. Obtain one or two representative public advertisements when practical; they help verification but do not block shared ingestion/validation design. No account credentials are required for public fetching.
+The first source is NAV’s official vacancy API, using its public experiment token or an optional server-only NAV_API_TOKEN. Website scraping is excluded. FINN ads are absent from this API. Production consumer registration and feed update/deletion compliance must precede saved listings. See ADR-0008.
+
+Groq Playground Browser Search was suggested by the user as a potential FINN integration. API/model availability, free-plan tool quotas/pricing, source retrieval and evidence validation remain unverified. Documentation access from this cloud environment returned HTTP errors; no search calls or paid features were enabled.

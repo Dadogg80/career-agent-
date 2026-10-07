@@ -4,8 +4,8 @@ export const translations = {
   nb: {
     language: "Språk",
     stage: "Første utviklingsversjon",
-    title: "Din erfaring. Dine muligheter.",
-    introduction: "Career Agent skal hjelpe deg å forstå stillinger, synliggjøre faktisk erfaring og holde oversikt over søknadene dine.",
+    title: "Forstå din neste mulighet.",
+    introduction: "Få en ryddig oversikt over stillingen før du bestemmer deg for å søke. Ett krav om gangen, med kilden synlig.",
     nextTitle: "Vi bygger grunnlaget",
     nextDescription: "Du kan prøve annonseanalysen nå. Kandidatprofil, matching og søknadsmateriale kommer i senere steg.",
     connection: "Tilkobling til tjenesten",
@@ -18,8 +18,8 @@ export const translations = {
   en: {
     language: "Language",
     stage: "First development version",
-    title: "Your experience. Your opportunities.",
-    introduction: "Career Agent will help you understand jobs, highlight real experience and keep track of your applications.",
+    title: "Understand your next opportunity.",
+    introduction: "Get a clear view of the role before deciding to apply. One requirement at a time, with the source in view.",
     nextTitle: "Building the foundation",
     nextDescription: "You can try advertisement analysis now. Candidate profiles, matching and application material are coming next.",
     connection: "Service connection",

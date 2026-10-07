@@ -38,3 +38,11 @@ Markdown og Git skal inneholde produktbeslutninger og utviklingsinformasjon, ikk
 ## Åpent
 
 Innloggingsmodell for lokal pilot, AI-provider, lagringssted, backup og retensjon må avklares. EU/EØS-lagring alene avgjør ikke lovlighet eller overføringsspørsmål.
+
+## Official NAV source adapter — local pilot
+
+User input is parsed as an HTTPS Arbeidsplassen advertisement UUID. Backend requests only fixed paths on `pam-stilling-feed.nav.no`; it never requests the submitted URL, API-returned URLs or arbitrary company links. Redirects are rejected, resolved local/private addresses are blocked, connections and body reads have deadlines, JSON content type is required, downloads are capped at 1 MB and normalized text at 15,000 characters. The trusted platform HTTPS proxy may resolve the upstream independently; this is a host allowlist design, not a general DNS-pinned crawler.
+
+One import may execute at a time. The Next.js import proxy enforces local Host/same-Origin behavior and a 10 KB body cap. Backend still binds loopback. No authentication has been added; do not expose this pilot publicly.
+
+The public NAV experiment token is obtained server-side for each import, never sent to the browser or stored in Git. An optional `NAV_API_TOKEN` is server-only. Source HTML descriptions are parsed to plain text, never rendered as HTML; scripts/styles/navigation/forms are removed. Contact lists are excluded from normalized text. Public descriptions can still contain personal details: review and remove unnecessary information before sending to Groq. No advertisement persistence or logging of source bodies is introduced. Registered consumer access and update/removal compliance are required before persistent discovery/republication.
