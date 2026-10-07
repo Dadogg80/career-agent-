@@ -1,5 +1,7 @@
 export const jobTranslations = {
   nb: {
+    starting: "Klargjør grensesnittet …",
+    javascriptRequired: "Aktiver JavaScript og last siden på nytt for å analysere annonser.",
     urlMode: "Bruk lenke",
     textMode: "Lim inn tekst",
     urlLabel: "Lenke til stillingsannonse",
@@ -67,6 +69,8 @@ export const jobTranslations = {
     },
   },
   en: {
+    starting: "Preparing the interface …",
+    javascriptRequired: "Enable JavaScript and reload the page to analyze advertisements.",
     urlMode: "Use a link",
     textMode: "Paste text",
     urlLabel: "Job advertisement link",

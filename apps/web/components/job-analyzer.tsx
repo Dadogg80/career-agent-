@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, ArrowUpRight, FileText, Link2, Search, ShieldCheck, LoaderCircle } from "lucide-react";
 import { Button } from "./ui/button";
@@ -24,6 +24,8 @@ async function post(path: string, input: unknown) {
 
 export function JobAnalyzer({ locale }: { locale: Locale }) {
   const t = jobTranslations[locale];
+  const [ready, setReady] = useState(false);
+  useEffect(() => { setReady(true); }, []);
   const [mode, setMode] = useState<"url" | "text">("url");
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
@@ -42,8 +44,9 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
     return { job: value, locale: input.locale };
   }, onSuccess: ({ job, locale: resultLocale }) => { setImported(job); setText(job.text); extraction.mutate({ text: job.text, locale: resultLocale, imported: job }); } });
   const pending = extraction.isPending || importing.isPending;
+  const blocked = !ready || pending;
   const error = importing.error?.message ?? extraction.error?.message;
-  function analyze(e: FormEvent) { e.preventDefault(); if (!pending) { importing.reset(); setResult(null); extraction.mutate({ text, locale, imported }); } }
+  function analyze(e: FormEvent) { e.preventDefault(); if (!blocked) { importing.reset(); setResult(null); extraction.mutate({ text, locale, imported }); } }
   function changeMode(value: "url" | "text") { setMode(value); importing.reset(); extraction.reset(); }
   const outdated = result !== null && result.source !== text;
   return (
@@ -52,20 +55,22 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
       <div className={`analysis-grid ${result ? "has-result" : ""}`}>
         <Card className={`input-card ${result && mode === "url" ? "completed-input" : ""}`}><CardHeader><p className="step-label">{t.inputStep}</p>
           <div className="mode-picker" aria-label={locale === "nb" ? "Inndatametode" : "Input method"}>
-            <Button variant={mode === "url" ? "default" : "ghost"} onClick={() => changeMode("url")} disabled={pending} aria-pressed={mode === "url"}><Link2 />{t.urlMode}</Button>
-            <Button variant={mode === "text" ? "default" : "ghost"} onClick={() => changeMode("text")} disabled={pending} aria-pressed={mode === "text"}><FileText />{t.textMode}</Button>
+            <Button type="button" variant={mode === "url" ? "default" : "ghost"} onClick={() => changeMode("url")} disabled={blocked} aria-pressed={mode === "url"}><Link2 />{t.urlMode}</Button>
+            <Button type="button" variant={mode === "text" ? "default" : "ghost"} onClick={() => changeMode("text")} disabled={blocked} aria-pressed={mode === "text"}><FileText />{t.textMode}</Button>
           </div></CardHeader><CardContent>
-          {mode === "url" && <form onSubmit={(e) => { e.preventDefault(); if (!pending) { extraction.reset(); setResult(null); setImported(null); importing.mutate({ url, locale }); } }} className="import-form">
-            <label htmlFor="job-url">{t.urlLabel}</label><Input id="job-url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.finn.no/job/ad/…" maxLength={2048} required disabled={pending} />
-            <p className="hint">{t.sourceHelp}</p><Button disabled={pending} type="submit">{pending ? <LoaderCircle className="animate-spin" /> : <Link2 />}{pending ? (importing.isPending ? t.fetching : t.pending) : t.fetch}</Button>
+          {mode === "url" && <form onSubmit={(e) => { e.preventDefault(); if (!blocked) { extraction.reset(); setResult(null); setImported(null); importing.mutate({ url, locale }); } }} className="import-form">
+            <label htmlFor="job-url">{t.urlLabel}</label><Input id="job-url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.finn.no/job/ad/…" maxLength={2048} required disabled={blocked} />
+            <p className="hint">{t.sourceHelp}</p><Button disabled={blocked} type="submit">{pending ? <LoaderCircle className="animate-spin" /> : <Link2 />}{pending ? (importing.isPending ? t.fetching : t.pending) : t.fetch}</Button>
           </form>}
           {(mode === "text") && <form onSubmit={analyze} className="text-form">
             {imported && <div className="source-meta"><h3>{imported.title}</h3>{imported.sourceType === "GROQ_BROWSER_EXCERPT" && <p className="notice">{t.browserSource}</p>}<a href={imported.sourceUrl} target="_blank" rel="noopener noreferrer">{t.sourceLink}<ArrowUpRight size={14}/></a><p>{t.retrieved}: {new Date(imported.retrievedAt).toLocaleString(locale === "nb" ? "nb-NO" : "en-US")}</p>{text !== imported.text && <p>{t.sourceEdited}</p>}</div>}
             <label htmlFor="job-text">{t.input}</label>{imported && <p className="hint">{t.reviewSource}</p>}
-            <Textarea id="job-text" value={text} onChange={(e) => setText(e.target.value)} maxLength={15000} rows={10} disabled={pending} required />
+            <Textarea id="job-text" value={text} onChange={(e) => setText(e.target.value)} maxLength={15000} rows={10} disabled={blocked} required />
             <p className="hint character-count">{text.length.toLocaleString(locale === "nb" ? "nb-NO" : "en-US")} / 15 000 · {t.minimum}</p>
-            <Button className="analyze-button" type="submit" disabled={pending}>{extraction.isPending ? <LoaderCircle className="animate-spin" /> : <Search />}{extraction.isPending ? t.pending : t.submit}<ArrowRight /></Button>
+            <Button className="analyze-button" type="submit" disabled={blocked}>{extraction.isPending ? <LoaderCircle className="animate-spin" /> : <Search />}{extraction.isPending ? t.pending : t.submit}<ArrowRight /></Button>
           </form>}
+          {!ready && <p role="status" className="hint">{t.starting}</p>}
+          <noscript><p className="notice">{t.javascriptRequired}</p></noscript>
           {error && <Alert variant="destructive" role="alert" className="feedback"><AlertDescription>{t.errors[error as keyof typeof t.errors] ?? t.errors.AI_UNAVAILABLE}</AlertDescription></Alert>}
           {pending && <p role="status" className="hint">{importing.isPending ? t.fetching : t.pending}</p>}
           <div className="privacy-note"><ShieldCheck size={18}/><p>{t.privacy}</p></div>
