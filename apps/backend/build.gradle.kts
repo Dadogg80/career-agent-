@@ -27,6 +27,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.apache.pdfbox:pdfbox:3.0.8") {
+        exclude(group = "commons-logging", module = "commons-logging")
+    }
     implementation("org.jsoup:jsoup:1.23.2")
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
     implementation("org.flywaydb:flyway-core")

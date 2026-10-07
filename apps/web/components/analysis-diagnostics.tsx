@@ -12,14 +12,14 @@ const translations = {
     states: { running: "Pågår", success: "OK", error: "Feil", skipped: "Ikke nødvendig", cancelled: "Stoppet", idle: "Venter" },
     notice: "Hendelsene finnes også i Console med prefikset [Career Agent]. Loggene inneholder status og antall, ikke annonsetekst eller API-nøkler.",
     preview: "Se teksten som faktisk ble hentet", sourceNotice: "Dette er det mottatte kildegrunnlaget, som kan være ufullstendig. Det er ikke en ny AI-oppsummering.",
-    delay: "Pause mellom FINN-kall", unit: "sekunder", characters: "tegn", counts: "Antall krav / opplysninger / utelatt", code: "Feilkode", run: "Kjøring", reused: "gjenbrukt",
+    delay: "Pause mellom FINN-kall", unit: "sekunder", characters: "tegn", counts: "Antall krav / opplysninger / utelatt", reason: "Avvisningsårsak", code: "Feilkode", run: "Kjøring", reused: "gjenbrukt",
   },
   en: {
     title: "Developer diagnostics", tab: "DEV", close: "Close diagnostics", empty: "No analysis has started yet.", source: "Retrieval", wait: "Pause", analysis: "Analysis",
     states: { running: "Running", success: "OK", error: "Error", skipped: "Not needed", cancelled: "Stopped", idle: "Waiting" },
     notice: "Events also appear in Console with the [Career Agent] prefix. Logs contain status and counts, not advertisement text or API keys.",
     preview: "See the text actually retrieved", sourceNotice: "This is the received source context, which may be incomplete. It is not another AI summary.",
-    delay: "Pause between FINN calls", unit: "seconds", characters: "characters", counts: "Requirements / facts / omitted", code: "Error code", run: "Run", reused: "reused",
+    delay: "Pause between FINN calls", unit: "seconds", characters: "characters", counts: "Requirements / facts / omitted", reason: "Rejection reason", code: "Error code", run: "Run", reused: "reused",
   },
 };
 
@@ -48,6 +48,7 @@ export function AnalysisDiagnostics({ events, imported, delay, locale }: {
               {event.details.characters !== undefined && <p>{event.details.characters} {t.characters} · {event.details.sourceType}{event.details.reused && ` · ${t.reused}`}</p>}
               {event.details.seconds !== undefined && <p>{event.details.seconds} {t.unit}</p>}
               {event.details.requirements !== undefined && <p>{t.counts}: {event.details.requirements} / {event.details.facts} / {event.details.omittedItems}</p>}
+              {event.details.reason && <p>{t.reason}: <code>{event.details.reason}</code></p>}
               {event.details.code && <p>{t.code}: <code>{event.details.code}</code></p>}
             </div>
           </li>)}</ol>

@@ -28,7 +28,7 @@ class SecurityConfiguration {
         }
         http.authorizeHttpRequests { rules ->
             rules.requestMatchers("/actuator/health", "/api/system/status", "/api/auth/session", "/api/jobs/import", "/api/jobs/requirements", "/oauth2/authorization/career", "/login/oauth2/code/career").permitAll()
-                .requestMatchers("/api/profile/me", "/api/auth/logout").authenticated()
+                .requestMatchers("/api/profile/me", "/api/auth/logout", "/api/profile/me/claims", "/api/profile/me/claims/*", "/api/profile/me/claims/*/review", "/api/profile/me/claims/*/history", "/api/profile/me/documents", "/api/profile/me/documents/*", "/api/profile/me/documents/*/original", "/api/profile/me/documents/*/master", "/api/profile/me/documents/*/claims").authenticated()
                 .anyRequest().denyAll()
         }
         // These two endpoints process public ads and never access private user data.

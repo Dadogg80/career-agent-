@@ -1,5 +1,10 @@
 import { expect, test } from "@playwright/test";
 
+test.beforeEach(async ({ page }) => {
+  await page.route("**/api/profile/me/documents", route => route.fulfill({ json: [] }));
+  await page.route("**/api/profile/me/claims", route => route.fulfill({ json: [] }));
+});
+
 const id = "12345678-1234-1234-1234-123456789abc";
 test("profile save uses the session CSRF token, reopens persisted data and supports English", async ({ page }) => {
   let stored: { id: string; displayName: string; preferredLanguage: string; revision: number } | null = null;

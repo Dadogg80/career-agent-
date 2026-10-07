@@ -25,20 +25,20 @@ export function privateResponse(body: unknown, upstream?: Response, status = ups
   }
   return status === 204 ? new Response(null, { status, headers }) : Response.json(body, { status, headers });
 }
-export async function smallJson(request: Request): Promise<unknown> {
+export async function smallJson(request: Request, maxBytes = 4096): Promise<unknown> {
   if (!request.headers.get("content-type")?.startsWith("application/json")) throw new Error("Invalid body");
   const reader = request.body?.getReader(); if (!reader) throw new Error("Invalid body");
   const parts: Uint8Array[] = []; let bytes = 0;
   while (true) {
     const part = await reader.read(); if (part.done) break;
     bytes += part.value.byteLength;
-    if (bytes > 4096) { await reader.cancel(); throw new Error("Invalid body"); }
+    if (bytes > maxBytes) { await reader.cancel(); throw new Error("Invalid body"); }
     parts.push(part.value);
   }
   return JSON.parse(Buffer.concat(parts).toString("utf8"));
 }
 export function mappedPrivateError(body: unknown): { code: string } {
-  const allowed = ["AUTH_REQUIRED", "ACCESS_DENIED", "PROFILE_INVALID", "PROFILE_CONFLICT", "PROFILE_NOT_CREATED", "PROFILE_DISABLED"];
+  const allowed = ["AUTH_REQUIRED", "ACCESS_DENIED", "PROFILE_INVALID", "PROFILE_CONFLICT", "PROFILE_NOT_CREATED", "PROFILE_DISABLED", "CLAIM_INVALID", "CLAIM_CONFLICT", "CLAIM_NOT_FOUND", "CLAIM_LIMIT", "CLAIM_REVIEW_INVALID", "DOCUMENT_INVALID", "DOCUMENT_TYPE", "DOCUMENT_TOO_LARGE", "DOCUMENT_ENCRYPTED", "DOCUMENT_NOT_FOUND", "DOCUMENT_LIMIT", "DOCUMENT_BUSY", "DOCUMENT_QUOTE_INVALID"];
   const code = body && typeof body === "object" && "code" in body && allowed.includes(String(body.code)) ? String(body.code) : "PROFILE_UNAVAILABLE";
   return { code };
 }

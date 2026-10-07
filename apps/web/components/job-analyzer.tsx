@@ -9,6 +9,7 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
+import { JobOverview } from "./job-overview";
 import { RequirementResults } from "./requirement-results";
 import { isExtraction, type Requirement, type JobFact } from "../lib/job-requirements";
 import { isImportedJob, type ImportedJob } from "../lib/job-import";
@@ -16,10 +17,10 @@ import { jobTranslations } from "../lib/job-translations";
 import type { Locale } from "../lib/translations";
 import { AnalysisProgress } from "./analysis-progress";
 import { AnalysisDiagnostics } from "./analysis-diagnostics";
-import { analysisDelaySeconds, diagnosticsEnabled, waitForAnalysis, type AnalysisPhase, type AnalysisStage, type DiagnosticEvent } from "../lib/analysis-workflow";
+import { safeAnalysisReason, type AnalysisFailureReason, analysisDelaySeconds, diagnosticsEnabled, waitForAnalysis, type AnalysisPhase, type AnalysisStage, type DiagnosticEvent } from "../lib/analysis-workflow";
 
 class RequestFailure extends Error {
-  constructor(code: string, readonly retryAfterSeconds?: number, readonly httpStatus?: number, readonly durationMs?: number) { super(code); }
+  constructor(code: string, readonly retryAfterSeconds?: number, readonly httpStatus?: number, readonly durationMs?: number, readonly reason?: AnalysisFailureReason) { super(code); }
 }
 
 async function post(path: string, input: unknown, signal?: AbortSignal) {
@@ -34,7 +35,7 @@ async function post(path: string, input: unknown, signal?: AbortSignal) {
     const retryAfter = Number(value?.retryAfterSeconds ?? response.headers.get("retry-after"));
     const code = typeof value?.code === "string" && Object.hasOwn(jobTranslations.nb.errors, value.code) ? value.code : "AI_UNAVAILABLE";
     const providerRateLimit = ["AI_RATE_LIMITED", "SOURCE_RATE_LIMITED"].includes(code);
-    throw new RequestFailure(code, response.status === 429 && providerRateLimit ? Math.min(300, Math.max(1, Math.ceil(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : 60))) : undefined, response.status, durationMs);
+    throw new RequestFailure(code, response.status === 429 && providerRateLimit ? Math.min(300, Math.max(1, Math.ceil(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : 60))) : undefined, response.status, durationMs, safeAnalysisReason(value?.reason));
   }
   return { value: value as unknown, httpStatus: response.status, durationMs };
 }
@@ -89,7 +90,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
     running.current = false; setPhase("error");
     record(stage, "error", {
       code: Object.hasOwn(t.errors, error.message) ? error.message : stage === "source" ? "SOURCE_UNAVAILABLE" : "AI_UNAVAILABLE",
-      ...(error instanceof RequestFailure ? { httpStatus: error.httpStatus, durationMs: error.durationMs, seconds: error.retryAfterSeconds } : {}),
+      ...(error instanceof RequestFailure ? { httpStatus: error.httpStatus, durationMs: error.durationMs, seconds: error.retryAfterSeconds, reason: error.reason } : {}),
     });
     if (error instanceof RequestFailure && error.retryAfterSeconds) {
       setRetryIn(error.retryAfterSeconds);
@@ -101,14 +102,20 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
   const [text, setText] = useState("");
   const [imported, setImported] = useState<ImportedJob | null>(null);
   const [resultRevision, setResultRevision] = useState(0);
-  const [result, setResult] = useState<{ requirements: Requirement[]; facts: JobFact[]; omittedItems: number; source: string; locale: Locale; imported: ImportedJob | null } | null>(null);
+  const [result, setResult] = useState<{ requirements: Requirement[]; facts: JobFact[]; omittedItems: number; source: string; locale: Locale; imported: ImportedJob | null; analysisFailed?: boolean } | null>(null);
   const extraction = useMutation({ mutationFn: async (input: { text: string; locale: Locale; imported: ImportedJob | null }) => {
     if (input.text.trim().length < 40) throw new Error("INVALID_INPUT");
     setPhase("analysis"); record("analysis", "running", { endpoint: "/api/jobs/requirements", characters: input.text.length });
     const response = await post("/api/jobs/requirements", { text: input.text, locale: input.locale }, controller.current?.signal);
     if (!isExtraction(response.value)) throw new RequestFailure("AI_INVALID_RESULT", undefined, response.httpStatus, response.durationMs);
     return { requirements: response.value.requirements, facts: response.value.facts, omittedItems: response.value.omittedItems ?? 0, source: input.text, locale: input.locale, imported: input.imported, httpStatus: response.httpStatus, durationMs: response.durationMs };
-  }, onError: error => failed(error, "analysis"), onSuccess: ({ httpStatus, durationMs, ...value }) => {
+  }, onError: (error, input) => {
+    failed(error, "analysis");
+    if (mounted.current && !controller.current?.signal.aborted && input.text.trim()) {
+      setResult({ requirements: [], facts: [], omittedItems: 0, source: input.text, locale: input.locale, imported: input.imported, analysisFailed: true });
+      setResultRevision(revision => revision + 1);
+    }
+  }, onSuccess: ({ httpStatus, durationMs, ...value }) => {
     if (!mounted.current) return;
     running.current = false; setPhase("done");
     record("analysis", "success", { endpoint: "/api/jobs/requirements", httpStatus, durationMs, requirements: value.requirements.length, facts: value.facts.length, omittedItems: value.omittedItems });
@@ -174,7 +181,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
     <section className="workspace" aria-labelledby="analyzer-title">
       <div className="workspace-heading"><div><h2 id="analyzer-title">{t.title}</h2><p>{t.description}</p></div><Badge variant="outline">{locale === "nb" ? "Kildebasert AI" : "Sourced AI"}</Badge></div>
       <div className={`analysis-grid ${result ? "has-result" : ""}`}>
-        <Card className={`input-card ${result && mode === "url" ? "completed-input" : ""}`}><CardHeader><p className="step-label">{t.inputStep}</p>
+        <Card className={`input-card ${result && !result.analysisFailed && mode === "url" ? "completed-input" : ""}`}><CardHeader><p className="step-label">{t.inputStep}</p>
           <div className="mode-picker" aria-label={locale === "nb" ? "Inndatametode" : "Input method"}>
             <Button type="button" variant={mode === "url" ? "default" : "ghost"} onClick={() => changeMode("url")} disabled={!ready || pending} aria-pressed={mode === "url"}><Link2 />{t.urlMode}</Button>
             <Button type="button" variant={mode === "text" ? "default" : "ghost"} onClick={() => changeMode("text")} disabled={!ready || pending} aria-pressed={mode === "text"}><FileText />{t.textMode}</Button>
@@ -206,14 +213,9 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
             {result.omittedItems > 0 && <p className="notice" role="status">{t.partialEvidence} ({result.omittedItems})</p>}
             {outdated && <Alert variant="destructive" role="alert"><AlertDescription>{t.outdated}</AlertDescription></Alert>}
             {result.locale !== locale && <p className="hint">{t.otherLanguage}</p>}
-            <section aria-labelledby="overview-title" className="job-overview"><h4 id="overview-title">{t.overview}</h4>
-              {result.facts.length === 0 && <p className="hint">{t.noFacts}</p>}
-              <div className="job-facts">{result.facts.map((fact, index) => <Card key={index}><CardContent>
-                <p className="fact-label">{fact.label}</p><p className="fact-value">{fact.value}</p>
-                <details><summary>{t.originalQuote}</summary><blockquote>{fact.quote}</blockquote></details>
-              </CardContent></Card>)}</div><p className="hint">{t.missingFacts}</p>
-            </section>
-            <RequirementResults key={resultRevision} requirements={result.requirements} source={result.source} locale={locale} resultLocale={result.locale} browserExcerpt={result.imported?.sourceType === "GROQ_BROWSER_EXCERPT"} outdated={outdated} />
+            {result.analysisFailed && <p className="notice" role="status">{locale === "nb" ? "Annonsen er tilgjengelig nedenfor. Automatisk strukturering feilet; krav og praktiske opplysninger er ikke ferdig sortert. Du kan lese kildeutdraget nå og prøve analysen igjen." : "The advertisement is available below. Automatic structuring failed; requirements and practical details have not been sorted. Read the source excerpt now or retry the analysis."}</p>}
+            <JobOverview facts={result.facts} locale={locale} sourceLocale={result.locale} fallbackText={result.analysisFailed ? result.source : undefined} />
+            {!result.analysisFailed && <RequirementResults key={resultRevision} requirements={result.requirements} source={result.source} locale={locale} resultLocale={result.locale} browserExcerpt={result.imported?.sourceType === "GROQ_BROWSER_EXCERPT"} outdated={outdated} />}
             <details className="source-evidence"><summary>{t.evidence}</summary><p className="hint">{t.sourceTitle}</p>{result.imported && <p><a href={result.imported.sourceUrl} target="_blank" rel="noopener noreferrer">{t.sourceLink}</a> · {t.retrieved}: {new Date(result.imported.retrievedAt).toLocaleString(locale === "nb" ? "nb-NO" : "en-US")}</p>}<pre>{result.source}</pre></details>
           </section>}
         </div>

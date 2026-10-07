@@ -1,0 +1,88 @@
+"use client";
+import { useRef, useState, type FormEvent } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Upload, FileText, Download, Star, Trash2 } from "lucide-react";
+import { Card, CardContent, CardHeader } from "./ui/card";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
+import { Badge } from "./ui/badge";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
+import { isDocument, isDocumentList, isDocumentDetail, type CareerDocument } from "../lib/documents";
+import { isClaim } from "../lib/claims";
+import type { Locale } from "../lib/translations";
+const copy = {
+  nb: {
+    title: "CV og dokumenter", intro: "Last opp original CV som DOCX eller PDF. Originalen beholdes, og teksten behandles lokalt uten å sendes til AI.", file: "CV-fil", language: "Dokumentspråk", upload: "Last opp CV", busy: "Behandler …", loading: "Henter dokumenter …", empty: "Ingen CV lastet opp ennå.", open: "Se tekst og legg til kompetanse", download: "Last ned original", master: "Bruk som master-CV", masterLabel: "Master-CV", remove: "Slett", close: "Lukk", cancel: "Avbryt", text: "Tekst hentet fra dokumentet", select: "Marker et kort utdrag i teksten og trykk Bruk valgt tekst. Kontroller at uttrekket stemmer med originalfilen.", selected: "Bruk valgt tekst", quote: "Valgt kildesitat", skill: "Kompetanse", statement: "Hva gjorde du selv?", context: "Prosjekt eller arbeidsforhold", save: "Lagre som ubekreftet kompetanse", review: "Opplysningen krever egen bekreftelse i kompetansedelen etter lagring.", noText: "Ingen lesbar tekst funnet. Dette kan være en skannet PDF. OCR støttes ikke ennå; originalen kan fortsatt lastes ned.", deleteTitle: "Slett original CV?", deleteHint: "Originalfilen og dokumentteksten slettes. Kompetansepunkter og historikk som du har opprettet beholdes, inkludert kildesitat. Slett disse separat hvis du vil fjerne dem.", deleteAction: "Slett dokumentet permanent", uploaded: "CV-en er lagret. Åpne teksten for å hente kompetanse fra den.", saved: "Kompetansen er lagret som ubekreftet. Gå til kompetansedelen nedenfor for å vurdere den.", masterSaved: "Master-CV er valgt. Dette endrer ikke originalfilen.", deleted: "Dokumentet er slettet.", refresh: "Hent dokumenter på nytt", limits: "DOCX/PDF · maks 5 MB og 20 dokumenter. Uttrekket gjenskaper ikke layouten. Tilpasset CV og eksport kommer senere.",
+    errors: { DOCUMENT_UNAVAILABLE: "Dokumenttjenesten er utilgjengelig. Prøv igjen.", PROFILE_UNAVAILABLE: "Tjenesten er utilgjengelig. Prøv igjen.", DOCUMENT_TYPE: "Velg en DOCX- eller PDF-fil.", DOCUMENT_INVALID: "Dokumentet kunne ikke leses. Kontroller filtype og innhold.", DOCUMENT_TOO_LARGE: "Dokumentet overskrider grensene: 5 MB, 100 PDF-sider eller 60 000 teksttegn.", DOCUMENT_ENCRYPTED: "Passordbeskyttet PDF støttes ikke. Bruk en ubeskyttet kopi.", DOCUMENT_QUOTE_INVALID: "Velg et sitat som finnes nøyaktig i den hentede teksten, maks 1000 tegn.", DOCUMENT_NOT_FOUND: "Dokumentet finnes ikke eller er utilgjengelig.", DOCUMENT_LIMIT: "Pilotgrensen på 20 dokumenter er nådd.", DOCUMENT_BUSY: "Et dokument behandles allerede. Prøv igjen etterpå.", CLAIM_INVALID: "Kontroller kompetanse og kontekst.", CLAIM_LIMIT: "Pilotgrensen på 100 kompetansepunkter er nådd.", ACCESS_DENIED: "Endringen ble avvist. Last siden på nytt.", AUTH_REQUIRED: "Sesjonen er utløpt. Logg inn igjen.", PROFILE_NOT_CREATED: "Lagre basisprofilen først.", PROFILE_DISABLED: "Profillagring er ikke aktivert." },
+  },
+  en: {
+    title: "CV and documents", intro: "Upload your original CV as DOCX or PDF. The original is retained and text is processed locally without sending it to AI.", file: "CV file", language: "Document language", upload: "Upload CV", busy: "Processing …", loading: "Loading documents …", empty: "No CV uploaded yet.", open: "Read text and add competency", download: "Download original", master: "Use as master CV", masterLabel: "Master CV", remove: "Delete", close: "Close", cancel: "Cancel", text: "Text extracted from the document", select: "Select a short excerpt in the text and press Use selected text. Check the extraction against your original file.", selected: "Use selected text", quote: "Selected source quote", skill: "Competency", statement: "What did you personally do?", context: "Project or employment", save: "Save as unverified competency", review: "The statement needs a separate confirmation in the competency section after saving.", noText: "No readable text found. This may be a scanned PDF. OCR is not supported yet; the original can still be downloaded.", deleteTitle: "Delete the original CV?", deleteHint: "The original file and document text will be deleted. Competencies and history you created are retained, including source quotes. Delete these separately if you want to remove them.", deleteAction: "Permanently delete document", uploaded: "CV saved. Open its text to record competencies from it.", saved: "Competency saved as unverified. Review it in the competency section below.", masterSaved: "Master CV selected. This does not change the original file.", deleted: "Document deleted.", refresh: "Reload documents", limits: "DOCX/PDF · max 5 MB and 20 documents. Extraction does not recreate the layout. Tailored CVs and export follow later.",
+    errors: { DOCUMENT_UNAVAILABLE: "The document service is unavailable. Try again.", PROFILE_UNAVAILABLE: "The service is unavailable. Try again.", DOCUMENT_TYPE: "Choose a DOCX or PDF file.", DOCUMENT_INVALID: "The document could not be read. Check the file type and content.", DOCUMENT_TOO_LARGE: "The document exceeds the limits: 5 MB, 100 PDF pages or 60,000 text characters.", DOCUMENT_ENCRYPTED: "Password-protected PDFs are not supported. Use an unprotected copy.", DOCUMENT_QUOTE_INVALID: "Select a quote found exactly in the extracted text, up to 1000 characters.", DOCUMENT_NOT_FOUND: "The document does not exist or is unavailable.", DOCUMENT_LIMIT: "The pilot limit of 20 documents has been reached.", DOCUMENT_BUSY: "Another document is being processed. Try again afterwards.", CLAIM_INVALID: "Check the competency and context.", CLAIM_LIMIT: "The pilot limit of 100 competency statements has been reached.", ACCESS_DENIED: "The change was rejected. Reload the page.", AUTH_REQUIRED: "Your session expired. Sign in again.", PROFILE_NOT_CREATED: "Save the basic profile first.", PROFILE_DISABLED: "Profile storage is not enabled." },
+  },
+};
+type SourceDraft = { skill: string; statement: string; context: string; quote: string };
+type Command = { kind: "upload"; file: File; language: Locale } | { kind: "master" | "delete"; document: CareerDocument } | { kind: "claim"; document: CareerDocument; content: SourceDraft };
+const blank: SourceDraft = { skill: "", statement: "", context: "", quote: "" };
+export function DocumentPanel({ locale, csrfToken, onAuthRequired }: { locale: Locale; csrfToken: string; onAuthRequired: () => void }) {
+  const t = copy[locale]; const cache = useQueryClient(); const source = useRef<HTMLTextAreaElement>(null); const fileField = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null); const [language, setLanguage] = useState<Locale>(locale);
+  const [modal, setModal] = useState<{ kind: "read" | "delete"; document: CareerDocument } | null>(null);
+  const [draft, setDraft] = useState<SourceDraft>(blank); const [notice, setNotice] = useState<"uploaded" | "saved" | "masterSaved" | "deleted" | null>(null);
+  async function json(response: Response) { if (response.status === 401) onAuthRequired(); const value = await response.json(); if (!response.ok) throw new Error(typeof value?.code === "string" ? value.code : "DOCUMENT_UNAVAILABLE"); return value as unknown; }
+  const list = useQuery({ queryKey: ["private-documents"], gcTime:0, refetchOnReconnect:false, queryFn: async () => { const value = await json(await fetch("/api/profile/me/documents", { cache:"no-store" })); if (!isDocumentList(value)) throw new Error("DOCUMENT_UNAVAILABLE"); return value; } });
+  const selectedId = modal?.kind === "read" ? modal.document.id : undefined;
+  const detail = useQuery({ queryKey:["private-document-detail", selectedId], enabled:!!selectedId, gcTime:0, refetchOnReconnect:false, queryFn:async () => { const value = await json(await fetch(`/api/profile/me/documents/${selectedId}`, { cache:"no-store" })); if (!isDocumentDetail(value)) throw new Error("DOCUMENT_UNAVAILABLE"); return value; } });
+  const mutation = useMutation({ mutationFn:async (command: Command) => {
+    let body: BodyInit | undefined; const headers = new Headers({ "X-CSRF-TOKEN":csrfToken });
+    if (command.kind === "upload") {
+      if (!/\.(docx|pdf)$/i.test(command.file.name)) throw new Error("DOCUMENT_TYPE");
+      if (command.file.size < 1 || command.file.size > 5242880) throw new Error("DOCUMENT_TOO_LARGE");
+      const form = new FormData(); form.append("file", command.file); form.append("language", command.language); body = form;
+    } else if (command.kind === "claim") { headers.set("Content-Type", "application/json"); body = JSON.stringify(command.content); }
+    const path = `/api/profile/me/documents${command.kind === "upload" ? "" : `/${command.document.id}`}${command.kind === "master" ? "/master" : command.kind === "claim" ? "/claims" : ""}`;
+    const response = await fetch(path, { method:command.kind === "delete" ? "DELETE" : "POST", headers, body });
+    if (response.status === 401) onAuthRequired();
+    if (command.kind === "delete" && response.status === 204) return;
+    const value = await json(response); if (!(command.kind === "claim" ? isClaim(value) : isDocument(value))) throw new Error("DOCUMENT_UNAVAILABLE");
+  }, onSuccess:async (_, command) => {
+    setModal(null); setDraft(blank); setNotice(command.kind === "upload" ? "uploaded" : command.kind === "claim" ? "saved" : command.kind === "master" ? "masterSaved" : "deleted");
+    if (command.kind === "upload") { setFile(null); if (fileField.current) fileField.current.value = ""; }
+    cache.removeQueries({ queryKey:["private-document-detail"] });
+    await cache.invalidateQueries({ queryKey:["private-documents"] });
+    if (command.kind === "claim" || command.kind === "delete") { cache.removeQueries({ queryKey:["private-claim-history"] }); await cache.invalidateQueries({ queryKey:["private-claims"] }); }
+  } });
+  const message = (error: Error | null) => error ? t.errors[error.message as keyof typeof t.errors] ?? t.errors.DOCUMENT_UNAVAILABLE : null;
+  function open(document: CareerDocument, kind: "read" | "delete") { mutation.reset(); setNotice(null); setDraft(blank); setModal({ document, kind }); }
+  function close() { if (!mutation.isPending) { setModal(null); setDraft(blank); mutation.reset(); } }
+  function selected() { const field = source.current; if (!field) return; const quote = field.value.slice(field.selectionStart, field.selectionEnd); if (quote.trim() && quote.length <= 1000) setDraft(previous => ({ ...previous, quote, statement:quote })); }
+  function submit(event: FormEvent) { event.preventDefault(); if (modal?.kind === "read" && !mutation.isPending) mutation.mutate({ kind:"claim", document:modal.document, content:draft }); }
+  return <Card className="document-panel"><CardHeader><h2 className="flex items-center gap-2"><FileText size={20}/>{t.title}</h2><p className="hint">{t.intro}</p></CardHeader><CardContent>
+    <form className="document-upload" onSubmit={event => { event.preventDefault(); if (file && !mutation.isPending) mutation.mutate({ kind:"upload", file, language }); }}>
+      <div><label htmlFor="cv-file">{t.file}</label><Input id="cv-file" ref={fileField} type="file" accept=".docx,.pdf" onChange={event => { setFile(event.target.files?.[0] ?? null); mutation.reset(); }} disabled={mutation.isPending}/></div>
+      <div><label htmlFor="cv-language">{t.language}</label><select id="cv-language" value={language} onChange={event => setLanguage(event.target.value as Locale)} disabled={mutation.isPending}><option value="nb">Norsk</option><option value="en">English</option></select></div>
+      <Button type="submit" disabled={!file || mutation.isPending || list.isError}><Upload size={16}/>{mutation.isPending ? t.busy : t.upload}</Button>
+    </form><p className="hint">{t.limits}</p>
+    {notice && <p role="status" className="claim-notice mt-4">{t[notice]}</p>}
+    {(list.isError || mutation.isError && !modal) && <Alert variant="destructive" role="alert"><AlertDescription>{message(list.error ?? mutation.error)}</AlertDescription></Alert>}
+    {list.isPending && <p role="status">{t.loading}</p>}
+    {list.data && (list.data.length ? <div className="document-list">{list.data.map(document => <article key={document.id} aria-label={document.originalName} className="document-tile"><div className="claim-heading"><h3>{document.originalName}</h3>{document.isMaster && <Badge>{t.masterLabel}</Badge>}</div><p className="hint">{Math.ceil(document.byteSize/1024)} KB · {document.language === "nb" ? "Norsk" : "English"}</p><div className="claim-actions">
+      <Button variant="outline" size="sm" onClick={() => open(document, "read")} disabled={mutation.isPending}>{t.open}</Button><Button variant="ghost" size="sm" asChild><a href={`/api/profile/me/documents/${document.id}/original`}><Download size={14}/>{t.download}</a></Button>
+      {!document.isMaster && <Button variant="ghost" size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate({ kind:"master", document })}><Star size={14}/>{t.master}</Button>}<Button variant="ghost" size="sm" disabled={mutation.isPending} onClick={() => open(document, "delete")}><Trash2 size={14}/>{t.remove}</Button>
+    </div></article>)}</div> : <p className="hint mt-4">{t.empty}</p>)}
+    {list.isError && <Button variant="outline" onClick={() => void list.refetch()}>{t.refresh}</Button>}
+    <Dialog open={!!modal} onOpenChange={value => { if (!value) close(); }}><DialogContent className="claim-dialog document-dialog" closeLabel={t.close}><DialogHeader><DialogTitle>{modal?.kind === "delete" ? t.deleteTitle : modal?.document.originalName}</DialogTitle><DialogDescription>{modal?.kind === "delete" ? t.deleteHint : t.select}</DialogDescription></DialogHeader>
+      {mutation.isError && <Alert variant="destructive" role="alert"><AlertDescription>{message(mutation.error)}</AlertDescription></Alert>}
+      {modal?.kind === "delete" && <Button variant="destructive" disabled={mutation.isPending} onClick={() => mutation.mutate({ kind:"delete", document:modal.document })}>{mutation.isPending ? t.busy : t.deleteAction}</Button>}
+      {modal?.kind === "read" && <>{detail.isPending && <p role="status">{t.loading}</p>}{detail.isError && <Alert variant="destructive" role="alert"><AlertDescription>{message(detail.error)}</AlertDescription></Alert>}{detail.data && (detail.data.text ? <>
+        <label htmlFor="document-text">{t.text}</label><Textarea id="document-text" ref={source} value={detail.data.text} readOnly rows={12}/><Button variant="outline" size="sm" onClick={selected}>{t.selected}</Button>
+        <form className="claim-form" onSubmit={submit}><div><label htmlFor="document-quote">{t.quote}</label><Textarea id="document-quote" value={draft.quote} onChange={event => setDraft({ ...draft, quote:event.target.value })} maxLength={1000} required rows={3} disabled={mutation.isPending}/></div>
+          {(["skill", "statement", "context"] as const).map(key => <div key={key}><label htmlFor={`document-${key}`}>{t[key]}</label>{key === "skill" ? <Input id={`document-${key}`} required maxLength={120} value={draft[key]} onChange={event => setDraft({ ...draft, [key]:event.target.value })} disabled={mutation.isPending}/> : <Textarea id={`document-${key}`} required maxLength={key === "statement" ? 1000 : 500} value={draft[key]} onChange={event => setDraft({ ...draft, [key]:event.target.value })} disabled={mutation.isPending}/>}</div>)}
+          <p className="hint">{t.review}</p><Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? t.busy : t.save}</Button>
+        </form>
+      </> : <p>{t.noText}</p>)}</>}
+      <Button variant="outline" disabled={mutation.isPending} onClick={close}>{t.cancel}</Button>
+    </DialogContent></Dialog>
+  </CardContent></Card>;
+}

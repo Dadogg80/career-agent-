@@ -9,7 +9,7 @@
 
 ## Gjeldende fase
 
-Implementation is authorized in small coherent increments. The foundation is merged; current slices include direct URL analysis, sourced overview facts, and an opt-in PostgreSQL/Flyway foundation alongside bounded FINN and NAV import. Browser excerpts must never be presented as verified complete original advertisements. Optional local OIDC/PKCE sign-in and user-owned basic profiles (name/language/revision) are now implemented; experience, competency claims, CV import, saved jobs and production identity remain pending. Do not build the full system at once. No paid services, plan upgrades or infrastructure costs are authorized.
+Implementation is authorized in small coherent increments. The foundation is merged; current slices include direct URL analysis, sourced overview facts, and an opt-in PostgreSQL/Flyway foundation alongside bounded FINN and NAV import. Browser excerpts must never be presented as verified complete original advertisements. Optional local OIDC/PKCE sign-in and user-owned basic profiles (name/language/revision) are now implemented; this branch adds owned reviewed competency claims and local DOCX/PDF source import. Saved jobs, personal matching, automatic private-AI discovery and production identity remain pending. Private CVs and competency content must not enter public Groq endpoints or advertisement diagnostics. Do not build the full system at once. No paid services, plan upgrades or infrastructure costs are authorized.
 
 ## Produktføringer
 

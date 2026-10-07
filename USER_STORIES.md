@@ -243,7 +243,7 @@ As the pilot user, I can see whether retrieval actually succeeded and how the re
 
 ## US-28 — Sign in and reopen my basic profile
 
-Implemented on the current branch, merge pending; this is a subset of the planned full candidate profile.
+Basic identity/profile merged in PR #12; this is a subset of the planned full candidate profile.
 
 As the local pilot, I want to sign in and save my name and preferred profile language so that a persistent, owned workspace exists before adding career evidence.
 
@@ -258,3 +258,16 @@ Acceptance criteria:
 ## Diagnostics presentation update
 
 The diagnostic surface is a hidden, nonmodal right-side shadcn Sheet with a visible DEV edge tab. Preserve the existing event/source boundaries; support keyboard opening, translated close, Escape/focus restoration, narrow viewports and reduced motion. Opening the panel makes no new provider call.
+
+
+## US-29 — Review my own competency statements
+
+Implemented on this branch, PR merge pending. As the pilot I can create a competency with own contribution, context and source; inspect and separately confirm/reject it; edit it back to UNVERIFIED; inspect prior revision snapshots; and permanently delete it and all history. Expected revisions prevent stale confirmation. Other identities/issuers cannot access it. INFERRED creation and automatic discovery remain future work.
+
+## US-30 — Import an original CV and source my competencies
+
+Implemented local slice on this branch, PR merge pending. Upload bounded DOCX/PDF, choose nb/en document language, retain/download identical original bytes, select a master and inspect local extracted text. Selecting an exact excerpt and describing my contribution creates a source-linked UNVERIFIED claim for subsequent review. No private-AI calls are made. Malformed, encrypted, oversized and scanned documents have honest outcomes. Deletion requires approval and explains retained claim source quotes. OCR, automatic AI proposals, layout-preserving generation and production storage are outside this slice.
+
+## US-31 — Read an advertisement even when AI structuring fails
+
+Implemented on this branch, PR merge pending. After source retrieval succeeds, AI failure still shows the title/link and received source text; a manual retry reuses that source. A successful analysis groups employer text, role/applicant/offers, stable practical metadata slots and existing requirement filters. Narrative text uses source wording, not AI-written marketing summaries. Unknown contact details are explicit; no names are invented. Opening details makes no model calls. Both languages and mobile/desktop layouts are covered.

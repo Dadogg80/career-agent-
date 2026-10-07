@@ -1,3 +1,4 @@
+import { safeAnalysisReason } from "../../../../lib/analysis-workflow";
 import { isExtraction } from "../../../../lib/job-requirements";
 
 export async function POST(request: Request) {
@@ -48,7 +49,8 @@ export async function POST(request: Request) {
       const code = value && typeof value === "object" && "code" in value && codes.includes(String(value.code)) ? value.code : "AI_UNAVAILABLE";
       const seconds = Number(response.headers.get("retry-after"));
       const retryAfterSeconds = response.status === 429 && Number.isFinite(seconds) && seconds > 0 ? Math.min(300, Math.ceil(seconds)) : undefined;
-      return Response.json({ code, ...(retryAfterSeconds ? { retryAfterSeconds } : {}) }, { headers: { "Cache-Control": "no-store", ...(retryAfterSeconds ? { "Retry-After": String(retryAfterSeconds) } : {}) }, status: [400, 429, 502, 503].includes(response.status) ? response.status : 503 });
+      const reason = value && typeof value === "object" && "reason" in value ? safeAnalysisReason(value.reason) : undefined;
+      return Response.json({ code, ...(reason ? { reason } : {}), ...(retryAfterSeconds ? { retryAfterSeconds } : {}) }, { headers: { "Cache-Control": "no-store", ...(retryAfterSeconds ? { "Retry-After": String(retryAfterSeconds) } : {}) }, status: [400, 429, 502, 503].includes(response.status) ? response.status : 503 });
     }
     if (!isExtraction(value)) throw new Error("Invalid result");
     return Response.json(value, { headers: { "Cache-Control": "no-store" } });

@@ -1,6 +1,6 @@
 # Local sign-in and basic profile
 
-This optional local pilot adds real OIDC sign-in and a user-owned PostgreSQL profile containing **name and preferred language only**. Experience, competency claims, CV upload, saved jobs and personal matching are later deliveries. Public job analysis still works without sign-in or a database.
+This optional local pilot adds real OIDC sign-in and a user-owned PostgreSQL profile. The current branch adds reviewed competencies and local CV/source import; saved jobs and personal matching are later deliveries. See [CV_IMPORT.md](CV_IMPORT.md). Public job analysis still works without sign-in or a database.
 
 Keycloak runs locally in Docker with no paid account. Spring Security handles OIDC authorization code + PKCE and the application session; we do not implement a password/token service. Keycloak's development mode and imported pilot account are for loopback development only. This is not a production identity deployment or a GDPR compliance claim.
 
@@ -58,8 +58,10 @@ To stop containers while preserving their volumes:
 docker compose --env-file apps/backend/.env --env-file apps/backend/.env.identity -f compose.yaml -f compose.identity.yaml stop
 ```
 
-Changing passwords in environment files does **not** rotate credentials already initialized in PostgreSQL or Keycloak. Do not delete volumes to resolve this: preserve data and change credentials in the relevant service. An environment snapshot is not a profile backup. Export, account deletion, retention and encrypted backups remain outstanding before broader/private-document use.
+Changing passwords in environment files does **not** rotate credentials already initialized in PostgreSQL or Keycloak. Do not delete volumes to resolve this: preserve data and change credentials in the relevant service. An environment snapshot is not a profile backup. Export, account deletion, retention and encrypted backups remain outstanding before broader/external document use. Local document and claim deletion have explicit, separately explained semantics.
 
 If ports change, update matching issuer, backend public origin, redirect URI, frontend origin and server-side frontend configuration together. Redirects are fixed to configured loopback origins; browser-supplied return URLs and owner IDs are never accepted. `.env.identity` contains defaults for this configuration. Do not expose these HTTP services publicly. Production requires HTTPS, secure cookies, a production IdP and deployment-specific controls.
 
 Without the `identity,persistence` profiles, the profile page honestly reports sign-in/storage unavailable. This never falls back to trusting a browser user ID or anonymous private storage.
+
+For nondefault verification ports, set both Next server-side `CAREER_API_BASE_URL` (API proxy) and `BACKEND_PUBLIC_ORIGIN` (browser login redirect) to the matching backend origin. Setting only the API base can make data requests work while login still navigates to the default port.

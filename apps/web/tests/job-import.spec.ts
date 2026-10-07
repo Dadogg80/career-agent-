@@ -77,10 +77,10 @@ test("overview shows variable sourced details without additional model calls", a
   await page.goto("/");
   await page.getByRole("textbox", { name: "Lenke til stillingsannonse" }).fill(url);
   await page.getByRole("button", { name: "Analyser lenke", exact: true }).click();
-  const overview = page.getByRole("region", { name: "Om stillingen og arbeidsgiveren" });
+  const overview = page.getByRole("region", { name: "Forstå stillingen" });
   await expect(overview.getByText("Snarest", { exact: true })).toBeVisible();
-  await overview.getByText("Sitat fra kilden", { exact: true }).first().click();
-  await expect(overview.locator("blockquote").first()).toHaveText("Example AS");
+  await expect(overview.locator(".employer-card")).toContainText("Example AS");
+  await expect(overview.getByText("Test Contact – contact@example.test", { exact: true })).toBeVisible();
   expect(calls).toBe(1);
 });
 test("failed automatic analysis keeps retrieved text for manual retry", async ({ page }) => {

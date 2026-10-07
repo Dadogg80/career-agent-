@@ -198,4 +198,30 @@ flowchart TD
   Stored --> Logout[Sign out of application; invalidate session]
 ```
 
-The form supports Norwegian/English. Ownership is never selected by the browser. Unauthenticated/expired sessions cannot read or write a profile. App restart requires sign-in again, while saved data remains. Experience, skills, claims, CV and personal matching are not part of this flow. Setup is in docs/IDENTITY_SETUP.md. Proposed full MVP flows above remain future work.
+The form supports Norwegian/English. Ownership is never selected by the browser. Unauthenticated/expired sessions cannot read or write a profile. App restart requires sign-in again, while saved data remains. This initial flow covers the basic profile; reviewed claims and local CV import are added by the implemented flow below. Personal matching remains future work. Setup is in docs/IDENTITY_SETUP.md. Proposed full MVP flows above remain future work.
+
+
+## Current branch: source overview, reviewed competencies and CV import
+
+```mermaid
+flowchart TD
+    URL[Submit job URL] --> Fetch[Receive source excerpt]
+    Fetch --> Analyze[Structured AI analysis]
+    Analyze -->|Valid sourced items| Overview[Employer + collapsible role/applicant/offers]
+    Analyze -->|AI failure| Raw[Display received advertisement with unstructured status]
+    Overview --> Metadata[Location + contact + deadline + other facts]
+    Metadata --> Requirements[Existing requirement filters and detail cards]
+    Raw --> Retry[Manual analysis retry using the same source]
+    SignIn[Sign in and save profile] --> Upload[Upload original DOCX/PDF locally]
+    Upload --> Inspect[Inspect extracted text / select master CV]
+    Inspect --> Select[Select exact source quote and describe own contribution]
+    Select --> Unverified[Save UNVERIFIED claim]
+    SignIn --> Manual[Enter manual competency and source/context]
+    Manual --> Unverified
+    Unverified --> Review[Inspect and explicitly confirm / reject]
+    Review --> History[Store revision snapshot and action]
+    History --> Edit[Edit content]
+    Edit --> Unverified
+```
+
+Contact always has a slot, with an honest not-identified state when analysis does not supply it. A failed analysis never replaces available source text with an empty result screen. No private profile/CV material is sent to Groq. Source selection creates a proposal, not confirmed truth. Permanent document deletion explains retained claim quotes; permanent claim deletion removes its history. Login/session expiry, revision conflicts, malformed/oversized files, encrypted PDFs and empty/scanned text have visible states. See docs/CV_IMPORT.md for the bounded import scope.

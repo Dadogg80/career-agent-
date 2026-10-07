@@ -1,80 +1,40 @@
 # Career Agent roadmap
 
-Status checked against remote main on 2026-10-07. Dates are not promised; deliver small, tested pull requests. This is a working implementation sequence, not a claim that the complete MVP exists.
+Status checked against remote main on 2026-10-07. Deliver small tested increments; branch implementation is not a merged release.
 
-## Where we are
+## Current status
 
 | Capability | Actual status |
 | --- | --- |
-| Next.js + Kotlin/Spring Boot foundation | Implemented and merged |
-| Norwegian default / English UI | Implemented for current screens |
-| Groq structured requirement extraction with source quotes | Implemented and merged |
-| NAV API URL import + manual text fallback | Implemented and merged |
-| FINN import through Groq browser excerpts | Implemented and merged; source may be partial/stale |
-| TanStack Query and shadcn/ui workspace | Implemented and required by AGENTS.md |
-| Compact requirement tiles, category filters and detail dialogs | Implemented and merged |
-| PostgreSQL/Flyway profile schema | Implemented and merged (PR #8) |
-| FINN evidence repair and reactive quota cooldown | Implemented and merged (PR #10) |
-| Staged loading, FINN pacing and development diagnostics | Implemented and merged (PR #11) |
-| Hidden right-side diagnostics Sheet | Implemented on current branch; merge pending |
-| Local OIDC login and owned basic profile (name/language/revision) | Implemented and tested on current branch; merge pending |
-| Saved jobs and richer candidate profile | Not implemented |
-| Candidate claims/competence, CV/document upload, personal matching | Not implemented |
-| CV tailoring/export, application CRM, discovery and interview prep | Not implemented |
+| Next.js + Kotlin/Spring Boot, Norwegian default / English | Implemented and merged |
+| TanStack Query and shadcn/ui foundation | Implemented, required by AGENTS.md |
+| Public ad text analysis, NAV API and bounded FINN browser import | Implemented and merged; FINN excerpts may be partial/stale |
+| Compact requirement filters/detail dialogs, pacing and DEV diagnostics Sheet | Implemented and merged |
+| PostgreSQL/Flyway and local OIDC/PKCE basic profile | Implemented and merged, PR #12 |
+| Wrapped FINN title repair / handled-error console warning | Implemented and merged, PR #13 |
+| Two-column original-wording ad overview / visible ad on AI failure | Implemented and locally verified on feat/competency-claims; user PR/merge pending |
+| Owned competency statements, explicit review and revision history | Implemented and locally verified on feat/competency-claims; user PR/merge pending |
+| Local DOCX/PDF original upload, text inspection, master selection and source-selected claims | Implemented and locally verified on feat/competency-claims; user PR/merge pending |
+| Automatic private-AI claim discovery, normalized employment/projects | Not implemented |
+| Saved jobs, personal matching and CV recommendations | Not implemented |
+| Tailored CV artifact/version generation, CRM, discovery, interview/academy/analytics | Not implemented |
 
-The current pilot analyzes public advertisements. Optional local sign-in saves/reopens a basic name/language profile; advertisement results are still transient. The application has no candidate competencies or personal match assessment. Current requirement category explanations are deterministic UI guidance; detailed source context comes from the exact analyzed text, not an additional model call.
+The owner confirmed the current scope is the three deliveries already listed: ad overview, competency review and initial CV import. Saved jobs/matching are not added to this request. CV import is local and user-assisted; there is no private-AI call or automatic claim extraction. See docs/CV_IMPORT.md and the actual validation in docs/DEVELOPMENT_LOG.md.
 
-## Current delivery: direct analysis and useful job overview
+## Current delivery completion criteria
 
-A URL now starts retrieval and analysis from one action. Add sourced overview cards for employer, role, deadline, location, contacts and other useful published details. Source evidence remains expandable. No company research, invented metadata or candidate matching. Validation and PR status are recorded in the development log.
+1. Display employer source paragraphs left, collapsible role/applicant/offers right, then practical metadata and existing requirement cards. Contact has a stable honest unknown slot. Received advertisement text remains visible when AI structuring fails, with manual source-reusing retry and safe diagnostic reasons.
+2. Sign in, save/reopen competencies, separately confirm/reject, reset confirmation on edit, inspect history and explicitly delete. Verify cross-identity isolation, CSRF and revision conflicts against PostgreSQL.
+3. Upload bounded DOCX/PDF, retain/download original, declare language/select master, inspect local text, create an UNVERIFIED claim from an exact source excerpt and then review it. Confirm storage and source history across reload/restart. No OCR or layout-preserving generation is implied.
 
-## Next delivery 1: identity, storage and candidate profile
+## Next proposed deliveries after this branch
 
-Purpose: turn the public-text tool into a safe, persistent personal workspace.
+1. Owned saved advertisement snapshots and normalized experience/project structure, building on the current profile/evidence model.
+2. Personal requirement-to-confirmed-claim matching, explicit uncertainty/clarification and explainable CV wording recommendations. Undocumented experience is unknown, not automatically a skill gap. Private provider processing needs a separate data-policy decision.
+3. Controlled CV version/artifact generation and a simple application CRM recording the exact materials used. Keep originals, bind approvals to versions and avoid arbitrary DOCX-layout promises.
 
-Small implementation sequence:
-1. PostgreSQL in local Docker Compose, schema migrations and integration-test setup — implemented and merged.
-2. Spring Security/OIDC session, ownership and basic profile API/UI — implemented and tested on the current branch, merge pending. Optional local Keycloak is the free pilot provider; production identity remains a separate decision.
-3. User-owned profile, projects/experience and manually entered competency claims with UNVERIFIED/INFERRED/CONFIRMED/REJECTED status and evidence/confirmation history.
-4. Extend the existing basic profile screen with experience/competency review; then save user-owned job snapshots. Keep private data out of analysis diagnostics.
-
-Done when the pilot can log in, save/reopen a profile and competencies, and authorization tests prove another identity cannot access them. These are multiple coherent PRs, not one large commit.
-
-## Next delivery 2: CV and source document import
-
-Purpose: populate the profile from the user's own material without turning AI extraction into truth.
-
-Small implementation sequence:
-1. Authenticated bounded DOCX/PDF upload, object-storage abstraction, metadata and original-document retention.
-2. Text/structure extraction with file-type, size and malformed-document handling.
-3. Proposed claims linked to their source, initially UNVERIFIED, with explicit user confirmation/rejection/editing.
-4. Master CV selection and document language; an uploaded DOCX can be the original CV/template source.
-
-Done when the pilot can upload a CV, inspect proposed experience/skills and confirm the facts to reuse. Uploading a template does not imply preserving arbitrary layout, generating tailored DOCX/PDF or executing embedded document content.
-
-## Next delivery 3: personal matching and approved CV recommendations
-
-Purpose: connect the working job analysis to the confirmed candidate profile.
-
-Small implementation sequence:
-1. Requirement-to-claim/project/evidence comparison with strong, partial and needs-clarification outcomes. Undocumented experience is unknown, not automatically a genuine skill gap.
-2. Targeted competency questions and confirmation history; re-analyze against updated profile versions.
-3. Explainable application recommendation and CV wording/change proposals using confirmed facts only, with user review.
-
-Done when each relevant requirement has inspectable candidate evidence or an explicit uncertainty, and no inferred experience appears as confirmed CV content. Exact CV versioning, controlled template rendering and DOCX/PDF export follow as a separate delivery.
-
-## Later deliveries
-
-CV artifact/version generation → simple application CRM and exact materials used → automatic discovery and digest → interview/follow-up → browser application copilot → interactive academy and analytics.
-
-The product owner now prioritizes a working, inspectable URL → analysis → result flow before the next profile/CV delivery. Validate retrieval, quota handling and usable sourced results in the local pilot first. The staged loader and development diagnostics support this checkpoint without new infrastructure. Keep facts sourced and distinguish missing metadata.
-
-Introduce Kafka, Temporal, pgvector and Redis only when an implemented workload justifies them. No Kubernetes or premature microservices. No paid services or account upgrades are authorized.
+Automatic job discovery/digests → interview/follow-up → browser application copilot → academy/analytics follow later. Introduce Kafka, Temporal, pgvector and Redis only when an implemented workload justifies them. No paid services or account upgrades are used.
 
 ## Completion discipline
 
-Update stories/flows, decisions, development log and security guidance with each delivery. Passing local tests does not establish that GitHub Actions ran. Published branches remain pending until merged. Private profile/CV features require verified ownership, access control and an appropriate provider-data policy before sending candidate material to AI.
-
-## Analysis reliability update
-
-PR #10 merged wrapped FINN title parsing, visible partial-evidence omissions, provider JSON-error mapping, shared reactive rate-limit cooldowns and transient same-source manual retries. PR #11 added honest staged loading, configurable FINN pacing and development diagnostics. The current branch moves diagnostics into a right-side Sheet and introduces optional local sign-in/basic profile persistence. Next: manual experience/competency claims → CV/source import → personal matching. No persistent ad cache, private AI processing or paid infrastructure is introduced. Validation/merge status is in docs/DEVELOPMENT_LOG.md.
+Update stories/flows, decisions, security and the development log. Published branches remain pending until the user merges. Local tests do not establish GitHub Actions execution or fresh-task cloud restoration. Production identity, provider/source terms, account export/deletion, retention, backup and object storage remain unresolved before external rollout.

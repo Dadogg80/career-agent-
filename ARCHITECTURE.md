@@ -97,7 +97,7 @@ RequirementResults is a client presentation component with category filter state
 
 ## Opt-in storage foundation
 
-The `persistence` Spring profile enables JDBC/PostgreSQL and Flyway. Default public-ad analysis excludes database auto-configuration and retains its previous startup behavior. Local Compose is pinned to an official PostgreSQL 17 image digest. Initial identity/profile tables model unique OIDC issuer/subject bindings, profile ownership, language and revision. An optional OIDC session now protects the owned basic-profile API; experience/claims/documents remain future increments. Foreign keys do not replace authorization. See ADR 0011 and docs/POSTGRES_SETUP.md.
+The `persistence` Spring profile enables JDBC/PostgreSQL and Flyway. Default public-ad analysis excludes database auto-configuration and retains its previous startup behavior. Local Compose is pinned to an official PostgreSQL 17 image digest. Initial identity/profile tables model unique OIDC issuer/subject bindings, profile ownership, language and revision. An optional OIDC session now protects the owned basic-profile API; reviewed claims and local document/source import are implemented on this branch. Foreign keys do not replace authorization. See ADR 0011 and docs/POSTGRES_SETUP.md.
 
 ## Implemented local identity and profile boundary
 
@@ -113,6 +113,15 @@ flowchart LR
   JDBC --> PG[(PostgreSQL)]
 ```
 
-The `identity` profile enables OIDC login; `persistence` enables the repository. Private routes resolve `(issuer, subject)` exclusively from the verified principal, never a caller-supplied owner. One profile per owner is enforced in PostgreSQL and scoped in every repository query. Writes serialize on the identity binding and compare the submitted revision. Only name/language are stored in this increment. Fixed Next proxies enforce local/same-origin requests, bounded JSON and no-store responses. HTTP session/CSRF state is held by Spring, not localStorage. Public ad analysis remains independent and never receives profile data. See ADR 0013 and docs/IDENTITY_SETUP.md.
+The `identity` profile enables OIDC login; `persistence` enables the repository. Private routes resolve `(issuer, subject)` exclusively from the verified principal, never a caller-supplied owner. One profile per owner is enforced in PostgreSQL and scoped in every repository query. Writes serialize on the identity binding and compare the submitted revision. The original basic-profile increment stored name/language; the current branch adds claims and documents as described below. Fixed Next proxies enforce local/same-origin requests, bounded JSON and no-store responses. HTTP session/CSRF state is held by Spring, not localStorage. Public ad analysis remains independent and never receives profile data. See ADR 0013 and docs/IDENTITY_SETUP.md.
 
 Development advertisement diagnostics use a nonmodal shadcn Sheet opened from the fixed right DEV tab. The workspace owns current-run state; opening/closing the panel does not restart analysis or make provider calls.
+
+
+## Reviewed competencies and local source documents
+
+The profile module adds domain status/revision policies, an application service/repository port, transactional JDBC adapter and owned REST API. Owner writes serialize on the identity binding; edits/reviews use expected revisions. The documents module uses a storage port with a local filesystem adapter, JDBC metadata/text and bounded local text extraction. Document-selected claims are created through ClaimService and remain UNVERIFIED. Composite foreign keys protect ownership of source links; every read/download/write also verifies the OIDC principal.
+
+Next private proxies enforce same origin, selected cookies/CSRF, bounded multipart/JSON bodies and no-store. TanStack Query and existing shadcn Cards/Dialogs render CV inspection and claim review. Private candidate material never enters the public AI workflow or DEV diagnostics. Storage is local for the pilot; object-store production adapters, crash reconciliation and backup policies are separate work. See ADR 0014/0015.
+
+The job overview displays original source quotations in narrative sections; practical metadata remains inspectable. A failed structured AI result retains and displays the fetched/pasted advertisement with honest unstructured status. The diagnostic reason is an allowlisted category, not a raw model response. FINN still uses browser retrieval followed by structured analysis; no combined tool/JSON call has been introduced.

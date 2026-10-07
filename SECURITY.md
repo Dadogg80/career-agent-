@@ -1,6 +1,6 @@
 # Sikkerhet og personvern — foreløpige krav
 
-Status: Design requirements. The local pilot includes loopback backend binding, limited health responses, and bounded public-advertisement extraction. Optional local OIDC/PKCE sign-in and owned basic-profile persistence are implemented; production deployment, document privacy and several controls below remain requirements. This is not a GDPR compliance claim.
+Status: Design requirements. The local pilot includes loopback backend binding, limited health responses, and bounded public-advertisement extraction. Optional local OIDC/PKCE sign-in and owned basic-profile persistence are implemented; owned manual/source-linked claims and local CV import are implemented on this branch; production deployment and several controls below remain requirements. This is not a GDPR compliance claim.
 
 ## Current AI pilot boundary
 
@@ -58,7 +58,7 @@ Default process limits: 10 Browser Search attempts and 20 structured-analysis at
 
 ## Local persistence boundary
 
-Compose PostgreSQL is loopback-only with a required local password and a persistent volume. The basic profile endpoint requires a verified OIDC session and scopes every operation by issuer+subject. Real PostgreSQL authorization tests cover cross-identity isolation and stale revisions. This does not authorize document upload or private AI processing. Runtime/migration role separation, encrypted backups and production secret management are future deployment requirements.
+Compose PostgreSQL is loopback-only with a required local password and a persistent volume. The basic profile endpoint requires a verified OIDC session and scopes every operation by issuer+subject. Real PostgreSQL authorization tests cover cross-identity isolation and stale revisions. The current branch supports bounded local document upload for the single pilot; it does not authorize private AI processing. Runtime/migration role separation, encrypted backups and production secret management are future deployment requirements.
 
 ## Evidence resilience
 
@@ -74,3 +74,12 @@ Exact FINN URL/tool proof is retained when handling wrapped provider titles. Sou
 - Profile bodies, session cookies, tokens and raw auth errors are excluded from console/server diagnostics. The developer Sheet continues to inspect public ads only. No profile data is sent to Groq.
 
 Before external users or CV imports: choose production identity/HTTPS configuration, resolve deletion/export/retention and backup policy, assess document storage and AI-provider processing, and review request/session abuse limits. These are concrete remaining work, not claims of implemented compliance. The current optional profile stores name/language only.
+
+
+## Current local CV and claim boundary
+
+All private reads/writes/downloads use verified issuer+subject ownership. All private writes require CSRF. Clients cannot assign owners or confirmed statuses. Revision conflicts retain drafts; repeated reviews cannot silently create confirmations. Manual/source-selected creation is UNVERIFIED, and editing resets confirmation. Tests cover cross-subject/cross-issuer access and concurrent reviews against real PostgreSQL.
+
+CV text extraction stays local. Originals use generated UUID storage names and restrictive POSIX permissions; the filename never determines a path. Upload/multipart, expanded ZIP/XML, PDF pages and text have limits. External XML entities/DTDs are disabled. Embedded document content is not executed. Originals download as no-store/nosniff attachments, never inline HTML. There is no OCR, antivirus service or production processing sandbox in this local slice.
+
+Document deletion removes file/text/metadata but preserves user-created claims and their quote history, explicitly explained before deletion; delete claims separately. Account-wide export/deletion, backup retention, crash reconciliation and encrypted backups are unresolved before external use. A filesystem and PostgreSQL transaction cannot guarantee crash-atomic deletion. Public diagnostics only log allowlisted failure categories/counts/timings; private files, text, claims and cookies never enter diagnostic events or Groq calls. See [CV_IMPORT.md](docs/CV_IMPORT.md).

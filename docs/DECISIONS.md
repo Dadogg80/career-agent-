@@ -84,3 +84,10 @@ The delay is a browser-side UX/pacing policy, not account-wide rate-limit enforc
 D-019 (Accepted, explicit UI requirement): move development diagnostics into the official shadcn Sheet, opened by a right-edge DEV tab. Keep it nonmodal so analysis remains usable while inspecting progress. Reuse the existing Radix dependency; no extra AI calls or diagnostic persistence.
 
 D-020 (Accepted, delegated local-pilot decision): use optional local Keycloak with Spring Security OIDC/PKCE before storing career evidence. This provides real authentication without a paid provider or custom password service. Implement owned name/language/revision first, with CSRF, same-origin proxies and PostgreSQL isolation/conflict tests. No private data goes to Groq. Production IdP, HTTPS and private-document/privacy policy remain separate work. See ADR 0013 and IDENTITY_SETUP.md.
+
+
+## 2026-10-07: approved delivery scope and defaults
+
+Accepted: finish the sourced two-column job overview, manual competency review and initial CV/source import. The owner clarified that this request does not add saved jobs or personal matching. Narrative ad sections use original quotes; contact/location/deadline have stable unknown slots. Retain received advertisement text when AI validation fails rather than suppressing the advertisement. Keep strict evidence checks and the existing two-call FINN flow.
+
+Accepted local defaults: 100 owned claims, 20 documents, latest 20 revision snapshots in responses; explicit owner confirmation, edit invalidation and permanent claim-history deletion. Use local DOCX/PDF extraction and user-selected exact source excerpts, without private Groq processing or paid infrastructure. Original/template retention precedes layout preservation/generation. Document deletion detaches source references but leaves created claim quotes as explicitly explained in the UI. See ADR 0014/0015; production privacy/backup policies remain open.

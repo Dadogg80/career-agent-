@@ -2,3 +2,6 @@
 GROQ_API_KEY=""
 # Optional, needed only for Compose and the persistence Spring profile.
 DATABASE_PASSWORD=""
+
+# Optional local original-document path (relative to apps/backend by default).
+# DOCUMENT_STORAGE_PATH=local-data/documents

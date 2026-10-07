@@ -98,6 +98,32 @@ class RequirementExtractorTest {
         assertThat(result.omittedItems).isZero()
     }
 
+    @Test
+    fun `advertised applicant and offer sections retain original wording in one call`() {
+        var calls = 0
+        val text = "Vi er et lokalt selskap. Du liker samarbeid. Vi tilbyr fleksibel arbeidstid. Kontakt: Kari Test, kari@example.test."
+        val service = RequirementExtractor(object : AiModel {
+            override fun generateJson(system: String, user: String, schema: Map<String, Any>): String {
+                calls++
+                assertThat(system).contains("Prioritize CONTACT", "never the application's user", "APPLICANT", "OFFER")
+                assertThat(jacksonObjectMapper().writeValueAsString(schema)).contains("APPLICANT", "OFFER")
+                return """{"requirements":[],"facts":[{"kind":"APPLICANT","label":"Hvem de søker","value":"Samarbeid","quote":"Du liker samarbeid."},{"kind":"OFFER","label":"Tilbud","value":"Fleksibel arbeidstid","quote":"Vi tilbyr fleksibel arbeidstid."},{"kind":"CONTACT","label":"Kontakt","value":"Kari Test","quote":"Kontakt: Kari Test, kari@example.test."}]}"""
+            }
+        }, jacksonObjectMapper())
+        val result = service.extract(text, "nb")
+        assertThat(result.facts.map { it.kind }).containsExactly(JobFactKind.APPLICANT, JobFactKind.OFFER, JobFactKind.CONTACT)
+        assertThat(result.facts[0].quote).isEqualTo("Du liker samarbeid.")
+        assertThat(calls).isEqualTo(1)
+    }
+
+    @Test
+    fun `invalid analysis reports only a safe failure category`() {
+        try { extractor("not JSON").extract(source, "nb"); error("Must fail") }
+        catch (failure: AiFailure) { assertThat(failure.reason).isEqualTo("MALFORMED_JSON") }
+        try { extractor("""{"facts":[],"requirements":[{"label":"Other","kind":"REQUIRED","quote":"Invented source words"}]}""").extract(source, "nb"); error("Must fail") }
+        catch (failure: AiFailure) { assertThat(failure.reason).isEqualTo("NO_SUPPORTED_ITEMS") }
+    }
+
     private fun assertInvalid(result: String) {
         assertThatThrownBy { extractor(result).extract(source, "nb") }
             .isInstanceOf(AiFailure::class.java).hasMessage("AI_INVALID_RESULT")
