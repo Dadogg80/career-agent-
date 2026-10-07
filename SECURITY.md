@@ -1,6 +1,16 @@
 # Sikkerhet og personvern — foreløpige krav
 
-Status: Designkrav og anbefalinger. Første grunnmur har loopback-bind på backend og helsesvar uten komponentdetaljer. Auth, private data og de øvrige tiltakene nedenfor er ikke implementert. Dokumentet er ikke en bekreftelse på GDPR-compliance.
+Status: Design requirements. The local pilot includes loopback backend binding, limited health responses, and bounded public-advertisement extraction. Authentication, private-data persistence and the remaining controls below are not implemented. This is not a GDPR compliance claim.
+
+## Current AI pilot boundary
+
+- Only public advertisements or fictional text should be used. The UI explains that text is sent to Groq on Analyze.
+- The Next.js extraction route accepts loopback hostnames and checks browser Origin against the incoming Host; it does not trust Next.js's internal canonical hostname as the browser origin.
+- Request size, source length, completion tokens, concurrent calls and attempts per backend process are limited. The process budget resets on restart and is not a billing guarantee.
+- Provider failures return allowlisted error codes, not keys, source documents or provider payloads.
+- Source text and results are held only for the request/UI lifecycle, not stored in a database or browser persistence.
+- Tests use a mocked model or missing-key backend; they do not consume live Groq quotas. Explicit manual smoke checks use fictional data.
+- No public deployment is authorized; identity, authorization and persistent per-account limits must precede external users.
 
 ## Krav før ekstern pilot
 

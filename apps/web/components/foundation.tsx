@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { translations, type Locale } from "../lib/translations";
+import { JobAnalyzer } from "./job-analyzer";
 
 type Connection = "loading" | "online" | "offline";
 
@@ -63,6 +64,7 @@ export function Foundation() {
         <p className="eyebrow">{t.stage}</p>
         <h1>{t.title}</h1>
         <p className="introduction">{t.introduction}</p>
+        <JobAnalyzer locale={locale} />
         <section aria-labelledby="next-title" className="card">
           <h2 id="next-title">{t.nextTitle}</h2>
           <p>{t.nextDescription}</p>

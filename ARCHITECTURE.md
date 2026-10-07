@@ -1,6 +1,6 @@
 # Arkitekturgrunnlag
 
-Status: Foreløpig målarkitektur. Bare Next.js-startside, server-side statusproxy og Spring Boot-status er implementert i første endring; øvrige moduler er design. Bekreftede føringer: modular monolith, Kotlin/Spring Boot og PostgreSQL. Første verktøyvalg finnes i [ADR-indeksen](docs/adr/README.md), kjøring i [RUNNING.md](docs/RUNNING.md).
+Status: Target architecture with an implemented welcome page, status proxy, and a bounded Groq advertisement extraction flow in jobs/ai. Private-data modules and PostgreSQL remain design. See the [ADR index](docs/adr/README.md) and [pilot test guide](docs/TESTING_PILOT.md).
 
 ## Systemgrenser
 

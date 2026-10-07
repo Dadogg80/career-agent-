@@ -63,3 +63,18 @@ Loggen beskriver faktisk arbeid, ikke planlagt funksjonalitet. Datoer følger br
 - Updated agent instructions, translated the Git workflow and pending foundation PR handoff, and added an English PR template.
 - Application localization remains Norwegian-first with English support. Existing commit history is unchanged; previous authored commit messages were already English.
 - Documentation-only change; no application behavior or test expectations changed. Checked local links, code fences, and staged whitespace.
+
+## 2026-10-07 — Bounded Groq advertisement pilot
+
+- Confirmed PR #2 merged the foundation into main at `b6f247a`; created `feat/job-requirements` from that main.
+- Reviewed roadmap, domain/architecture, stories, security, AI/provider, local-running and open-decision documents. Resolved stale provider status after checking runtime key presence without showing its value.
+- Authenticated model listing succeeded after setting product User-Agent; the initial urllib request's 403 / code 1010 was not evidence of a missing key.
+- Implemented AiModel/Groq adapter, strict structured extraction, quotation validation, sanitized errors, bounded calls and Norwegian/English input/results UI. No dependency was added.
+- Deliberately delivered a public-text experiment before profile/auth/database so the pilot can test useful AI sooner. Original private-data requirements remain in the roadmap; ADR-0007 records the decision.
+- Backend: 14 tests passed, 0 failures/errors/skips; executable JAR built. A Kotlin/Mockito matcher issue in the new test was diagnosed and corrected before final pass.
+- Frontend: production build and TypeScript passed; all 8 browser tests passed. Automated tests use mocks or an explicitly empty provider key.
+- Live smoke checks: two fictional backend analyses (Norwegian customer-service and English developer advertisements) returned quoted requirements. These are limited checks, not a broad quality or privacy certification.
+- Full live browser check caught an Origin mismatch caused by Next.js canonicalizing request.url to localhost. Corrected comparison to incoming Host, limited hosts to loopback, and added a real missing-key browser regression test. Subsequent live browser → proxy → backend → Groq check passed; two cited requirements were displayed and the screenshot was visually inspected.
+- Only fictional data was used in live inference. The screenshot is a temporary test artifact, not a private candidate document. Test services started by this task were stopped after verification.
+- Documented Docker tradeoffs and recommended native app processes plus PostgreSQL Compose when needed. Added pilot instructions and English PR handoff.
+- Remaining: user testing on Mac and GitHub Actions verification; auth/ownership and backup before private persistence. No candidate matching, CV handling or public deployment is available yet.

@@ -9,7 +9,7 @@
 
 ## Gjeldende fase
 
-Implementasjon er startet etter brukerens klarsignal. Første avgrensede endring er en norsk/engelsk startside og en Kotlin/Spring Boot-backend med testet forbindelse. Fortsett i små, sammenhengende endringer; ikke bygg hele systemet samtidig. Ingen betalte tjenester eller infrastrukturkostnader er autorisert.
+Implementation is authorized in small coherent increments. The foundation is merged; the current slice adds bounded Groq advertisement extraction with a Norwegian/English frontend. Private profiles, authentication and persistence are still pending. Do not build the full system at once. No paid services, plan upgrades or infrastructure costs are authorized.
 
 ## Produktføringer
 
