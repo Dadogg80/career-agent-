@@ -7,7 +7,7 @@ const requirements = [
 ];
 test("compact filters expose source context and keyboard-accessible details without more AI calls", async ({ page }) => {
   let calls = 0;
-  await page.route("**/api/jobs/requirements", route => { calls++; return route.fulfill({ json: { requirements } }); });
+  await page.route("**/api/jobs/requirements", route => { calls++; return route.fulfill({ json: { facts: [], requirements } }); });
   await page.goto("/");
   await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await page.getByRole("textbox", { name: "Stillingsannonse", exact: true }).fill(source);
@@ -34,7 +34,7 @@ test("compact filters expose source context and keyboard-accessible details with
 test("long requirement titles and the detail dialog fit on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const label = "Praktisk erfaring med backend-utvikling, API-design, integrasjoner og skalerbare tjenestearkitekturer i produksjon";
-  await page.route("**/api/jobs/requirements", route => route.fulfill({ json: { requirements: [{ ...requirements[0], label }] } }));
+  await page.route("**/api/jobs/requirements", route => route.fulfill({ json: { facts: [], requirements: [{ ...requirements[0], label }] } }));
   await page.goto("/");
   await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await page.getByRole("textbox", { name: "Stillingsannonse", exact: true }).fill(source);

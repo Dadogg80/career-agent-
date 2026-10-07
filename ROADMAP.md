@@ -12,16 +12,16 @@ Status checked against remote main on 2026-10-07. Dates are not promised; delive
 | NAV API URL import + manual text fallback | Implemented and merged |
 | FINN import through Groq browser excerpts | Implemented and merged; source may be partial/stale |
 | TanStack Query and shadcn/ui workspace | Implemented and required by AGENTS.md |
-| Compact requirement tiles, category filters and detail dialogs | Implemented on feat/compact-requirement-details; PR merge pending |
+| Compact requirement tiles, category filters and detail dialogs | Implemented and merged |
 | PostgreSQL, login, user-owned saved profiles/jobs | Not implemented |
 | Candidate claims/competence, CV/document upload, personal matching | Not implemented |
 | CV tailoring/export, application CRM, discovery and interview prep | Not implemented |
 
 The current pilot analyzes public advertisements. It does not know the candidate, save work across reloads, or produce a personal match assessment. Current requirement category explanations are deterministic UI guidance; detailed source context comes from the exact analyzed text, not an additional model call.
 
-## Current delivery: make analysis easier to inspect
+## Current delivery: direct analysis and useful job overview
 
-Show compact tiles grouped by REQUIRED, PREFERRED and UNCLEAR, with category filters/counts. Open each tile to inspect the original quote, category explanation and surrounding source context. Preserve language, stale-result and browser-excerpt provenance. No additional AI calls or candidate claims.
+A URL now starts retrieval and analysis from one action. Add sourced overview cards for employer, role, deadline, location, contacts and other useful published details. Source evidence remains expandable. No company research, invented metadata or candidate matching. Validation and PR status are recorded in the development log.
 
 ## Next delivery 1: identity, storage and candidate profile
 

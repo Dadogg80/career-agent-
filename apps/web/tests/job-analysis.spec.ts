@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const source = "Vi søker en utvikler. Du må ha erfaring med Kotlin. PostgreSQL er en fordel.";
-const result = { requirements: [{ label: "Kotlin", kind: "REQUIRED", quote: "Du må ha erfaring med Kotlin." }] };
+const result = { facts: [], requirements: [{ label: "Kotlin", kind: "REQUIRED", quote: "Du må ha erfaring med Kotlin." }] };
 
 test("renders cited requirements and marks edited source as outdated", async ({ page }) => {
   await page.route("**/api/jobs/requirements", (route) => route.fulfill({ json: result }));

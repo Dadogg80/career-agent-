@@ -104,7 +104,28 @@ class NavVacancySource(
             val body = description.wholeText().lines().map { it.trim().replace(Regex("[ \t]+"), " ") }
                 .filter { it.isNotEmpty() }.joinToString("\n")
             if (title.isBlank() || title.length > 300 || body.length < 40) throw ImportFailure("SOURCE_INVALID", 502)
-            val text = "$title\n\n$body"
+            // Include only useful published metadata, not arbitrary feed internals.
+            val metadata = mutableListOf<String>()
+            fun add(label: String, node: com.fasterxml.jackson.databind.JsonNode) {
+                if (node.isTextual && node.asText().isNotBlank()) {
+                    metadata += "$label: ${Jsoup.parse(node.asText()).text()}"
+                }
+            }
+            add("Employer", job.path("employer").path("name"))
+            add("About employer", job.path("employer").path("description"))
+            add("Application deadline", job.path("applicationDue"))
+            add("Employment type", job.path("engagementtype"))
+            add("Extent", job.path("extent"))
+            add("Start", job.path("starttime"))
+            job.path("workLocations").takeIf { it.isArray }?.forEach { location ->
+                for (field in listOf("address", "postalCode", "city", "municipal", "county", "country")) {
+                    add("Location $field", location.path(field))
+                }
+            }
+            job.path("contactList").takeIf { it.isArray }?.forEach { contact ->
+                for (field in listOf("name", "title", "email", "phone")) add("Contact $field", contact.path(field))
+            }
+            val text = listOf(title, body, metadata.joinToString("\n")).filter { it.isNotEmpty() }.joinToString("\n\n")
             if (text.length > 15000) throw ImportFailure("SOURCE_TOO_LARGE", 413)
             return ImportedJob(JobImporter.canonicalUrl(id), title, text, Instant.now().toString())
         } catch (error: ImportFailure) { throw error }

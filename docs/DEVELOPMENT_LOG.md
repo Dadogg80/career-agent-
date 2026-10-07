@@ -113,3 +113,9 @@ Confirmed FINN support is merged as PR #6 (`1dbe75e`); started feat/compact-requ
 Validation: production frontend build and TypeScript check passed; 17 Playwright tests passed, including filters, source context, quote display, Enter/Escape/focus restoration, English/Norwegian close labels, long mobile titles and empty filters. Production npm audit reported zero vulnerabilities. Synthetic desktop result/dialog screenshots reviewed. Backend suite was not rerun because backend code is unchanged; E2E exercised the existing backend jar with its Groq key disabled. No live Groq request made. GitHub Actions status is not independently verified.
 
 Consolidated ROADMAP.md into actual status and the next three recommended deliveries: identity/storage/manual profile → CV upload and claim confirmation → matching and CV recommendations. Documented that original/template upload precedes arbitrary layout preservation and artifact export. Updated flows, stories, architecture, decisions and pilot testing instructions. The shadcn/TanStack rule remains in AGENTS.md. PostgreSQL/auth/profiles/CV upload remain unimplemented.
+
+## 2026-10-07 — Direct URL analysis and job overview
+
+Implemented one-action retrieval/analysis, source-backed variable overview cards in Norwegian/English, and published NAV metadata in normalized source text. Added invalid-fact/evidence checks and browser flow tests. Raised the bounded completion limit from 2,200 to 3,500 tokens to accommodate facts plus requirements; existing call quotas remain. Local validation results are recorded below after execution. Private profiles remain pending.
+
+Validation: 37 backend tests passed; frontend production build/type check passed; 19 Playwright tests passed against the real local frontend/backend with mocked AI success responses and real validation/configuration errors. No live model quality or GitHub Actions claim. Result layout uses the full content width after analysis.

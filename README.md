@@ -38,3 +38,7 @@ Dokumenter beskriver enten krav, forslag eller faktisk implementert atferd. Diss
 Markdown-filene er prosjektets felles hukommelse. De skal ikke inneholde pilotens CV, private søknader, kontaktopplysninger eller hemmeligheter.
 
 Arkitektur- og domenedokumentene er foreløpige design. ADR-indeksen og beslutningsregisteret viser hva som er vedtatt og hva som fortsatt er foreslått.
+
+### Direct job analysis
+
+Select **Analyser lenke / Analyze link** to retrieve and analyze a supported public URL in one action. The result includes useful sourced overview facts and compact requirement tiles. Open fact evidence or requirement details as needed; full source text remains expandable. Missing metadata is omitted, and browser excerpts remain explicitly labeled as potentially partial/stale. Private profile/CV features are not yet available.

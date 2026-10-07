@@ -21,7 +21,7 @@ class RequirementsIntegrationTest @Autowired constructor(private val client: Tes
     @Test
     fun `HTTP extraction returns grounded structured requirements`() {
         `when`(model.generateJson(anyString(), anyString(), anyMap())).thenReturn(
-            """{"requirements":[{"label":"Kotlin","kind":"REQUIRED","quote":"Du må ha erfaring med Kotlin."}]}""",
+            """{"facts":[],"requirements":[{"label":"Kotlin","kind":"REQUIRED","quote":"Du må ha erfaring med Kotlin."}]}""",
         )
         val response = client.postForEntity("/api/jobs/requirements", ExtractionRequest(source), Map::class.java)
         assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
@@ -49,7 +49,7 @@ class RequirementsIntegrationTest @Autowired constructor(private val client: Tes
     @Test
     fun `fabricated evidence is rejected over HTTP`() {
         `when`(model.generateJson(anyString(), anyString(), anyMap())).thenReturn(
-            """{"requirements":[{"label":"Kafka","kind":"REQUIRED","quote":"Must know Kafka"}]}""",
+            """{"facts":[],"requirements":[{"label":"Kafka","kind":"REQUIRED","quote":"Must know Kafka"}]}""",
         )
         val response = client.postForEntity("/api/jobs/requirements", ExtractionRequest(source), Map::class.java)
         assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_GATEWAY)

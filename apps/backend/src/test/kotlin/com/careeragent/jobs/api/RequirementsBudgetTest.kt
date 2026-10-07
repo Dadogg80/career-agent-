@@ -37,7 +37,7 @@ class RequirementsBudgetTest {
             override fun generateJson(system: String, user: String, schema: Map<String, Any>): String {
                 started.countDown()
                 check(release.await(5, TimeUnit.SECONDS))
-                return """{"requirements":[]}"""
+                return """{"facts":[],"requirements":[]}"""
             }
         }, jacksonObjectMapper())
         val controller = RequirementsController(extractor, 3)
