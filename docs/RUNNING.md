@@ -87,3 +87,7 @@ javac -version
 ```
 
 Both should report 21. These shell exports select the installed JDK; they do not install it or persist across new terminals. Avoid changing directory to apps/backend again when the prompt already shows backend.
+
+## PostgreSQL foundation update (2026-10-07)
+
+The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Profile login/API/UI and CV upload are not yet available. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.

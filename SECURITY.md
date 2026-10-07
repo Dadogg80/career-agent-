@@ -54,3 +54,7 @@ Accept only canonical modern `https://www.finn.no/job/ad/<numeric-id>` job links
 Discard final generated answers and reasoning; retain bounded numbered browser.open source text with Groq/Exa provenance. Never render HTML from the provider. Enforce 1 MB transport response / 15,000 character normalized text limits, connection/header/body timeouts and no redirects/retries. FINN has no verified active-state/freshness guarantee; the UI requires source review and retains manual paste as fallback.
 
 Default process limits: 10 Browser Search attempts and 20 structured-analysis attempts, independently configurable. Failed search attempts count; restarting resets counters. One API attempt can execute multiple provider-side tool actions. These are operational bounds, not account billing guarantees. Use the existing free-tier pilot account; no upgrade or paid fallback is implemented. Setting GROQ_BROWSER_SEARCH_ENABLED=false disables the feature. Production consumer/source/provider terms and retention assessment remain pending.
+
+## Local persistence boundary
+
+Compose PostgreSQL is loopback-only with a required local password and a persistent volume. No profile endpoint exposes stored data. The next slice must verify OIDC identity and ownership before any private read/write or CV import is enabled. DB integrity tests do not establish authorization. Use synthetic data for this foundation. Runtime/migration role separation, encrypted backups and production secret management are future deployment requirements.

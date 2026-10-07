@@ -51,3 +51,19 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 @media(max-width:480px) { .compact-requirements { grid-template-columns:1fr; }.requirement-tile { min-height:100px; }.requirement-dialog { width:calc(100vw - 28px); padding:22px; } }
 
 .requirement-tile h5 { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }.requirement-dialog h2 { overflow-wrap:anywhere; }
+
+.job-overview { margin-top:24px; }.job-overview h4 { font-weight:650; margin-bottom:12px; font-size:15px; }
+.job-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }.job-facts [data-slot="card"] { padding:16px 0; gap:0; box-shadow:none; }.job-facts [data-slot="card-content"] { padding:0 16px; }
+.fact-label { font-size:11px; color:#6b796d; margin-bottom:7px; }.fact-value { font-size:13px; line-height:1.7; overflow-wrap:anywhere; white-space:pre-wrap; }.job-facts details { margin-top:12px; font-size:11px; }.job-facts blockquote { margin-top:10px; }
+@media(max-width:480px) { .job-facts { grid-template-columns:1fr; } }
+
+.analysis-grid.has-result { grid-template-columns:minmax(0,1fr); }.has-result .job-facts,.has-result .compact-requirements { grid-template-columns:repeat(3,minmax(0,1fr)); }
+@media(max-width:1100px) { .has-result .job-facts,.has-result .compact-requirements { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:480px) { .has-result .job-facts,.has-result .compact-requirements { grid-template-columns:1fr; } }
+
+@media(min-width:851px) {
+  .completed-input { display:grid; grid-template-columns:240px minmax(0,1fr); padding:18px; gap:24px; align-items:center; }
+  .completed-input [data-slot="card-header"],.completed-input [data-slot="card-content"] { padding:0; }.completed-input .step-label,.completed-input .privacy-note,.completed-input .import-form>.hint { display:none; }
+  .completed-input .mode-picker button { padding:9px; font-size:12px; }.completed-input .import-form { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; align-items:center; }
+  .completed-input .import-form label { grid-column:1/-1; margin:0; }.completed-input .import-form button { margin:0; }
+}

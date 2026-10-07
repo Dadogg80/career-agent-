@@ -36,7 +36,7 @@ class GroqAiModel(
         val body = mapOf(
             "model" to model,
             "reasoning_effort" to "low",
-            "max_completion_tokens" to 2200,
+            "max_completion_tokens" to 3500,
             "messages" to listOf(
                 mapOf("role" to "system", "content" to system),
                 mapOf("role" to "user", "content" to user),

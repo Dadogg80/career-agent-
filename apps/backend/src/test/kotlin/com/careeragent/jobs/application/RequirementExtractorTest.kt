@@ -20,32 +20,32 @@ class RequirementExtractorTest {
 
     @Test
     fun `accepts explicit requirements with quotes from the source`() {
-        val result = extractor("""{"requirements":[{"label":"Kotlin","kind":"REQUIRED","quote":"Du må ha erfaring med Kotlin."}]}""")
+        val result = extractor("""{"facts":[],"requirements":[{"label":"Kotlin","kind":"REQUIRED","quote":"Du må ha erfaring med Kotlin."}]}""")
             .extract(source, "nb")
         assertThat(result.requirements).containsExactly(ExtractedRequirement("Kotlin", RequirementKind.REQUIRED, "Du må ha erfaring med Kotlin."))
     }
 
     @Test
     fun `rejects a quotation invented by the model`() {
-        assertInvalid("""{"requirements":[{"label":"Kafka","kind":"REQUIRED","quote":"Du må kunne Kafka."}]}""")
+        assertInvalid("""{"facts":[],"requirements":[{"label":"Kafka","kind":"REQUIRED","quote":"Du må kunne Kafka."}]}""")
     }
 
     @Test
     fun `rejects invalid classification and malformed output`() {
-        assertInvalid("""{"requirements":[{"label":"Kotlin","kind":"CONFIRMED","quote":"Kotlin"}]}""")
+        assertInvalid("""{"facts":[],"requirements":[{"label":"Kotlin","kind":"CONFIRMED","quote":"Kotlin"}]}""")
         assertInvalid("not JSON")
-        assertInvalid("""{"requirements":null}""")
-        assertInvalid("""{"requirements":[{"label":"","kind":"REQUIRED","quote":"Kotlin"}]}""")
+        assertInvalid("""{"facts":[],"requirements":null}""")
+        assertInvalid("""{"facts":[],"requirements":[{"label":"","kind":"REQUIRED","quote":"Kotlin"}]}""")
     }
 
     @Test
     fun `accepts no requirements without inventing any`() {
-        assertThat(extractor("""{"requirements":[]}""").extract(source, "en").requirements).isEmpty()
+        assertThat(extractor("""{"facts":[],"requirements":[]}""").extract(source, "en").requirements).isEmpty()
     }
 
     @Test
     fun `normalizes whitespace in evidence without accepting new words`() {
-        val result = extractor("""{"requirements":[{"label":"Kotlin","kind":"REQUIRED","quote":"Du må ha\n erfaring med Kotlin."}]}""")
+        val result = extractor("""{"facts":[],"requirements":[{"label":"Kotlin","kind":"REQUIRED","quote":"Du må ha\n erfaring med Kotlin."}]}""")
             .extract(source, "nb")
         assertThat(result.requirements).hasSize(1)
     }
@@ -58,6 +58,21 @@ class RequirementExtractorTest {
         for ((text, locale) in listOf("short" to "nb", "x".repeat(15001) to "nb", source to "fr")) {
             assertThatThrownBy { service.extract(text, locale) }.isInstanceOf(AiFailure::class.java).hasMessage("INVALID_INPUT")
         }
+    }
+
+
+    @Test
+    fun `accepts useful source backed facts without requiring all metadata`() {
+        val result = extractor("""{"requirements":[],"facts":[{"kind":"ROLE","label":"Rolle","value":"Utvikler","quote":"Vi søker en utvikler."}]}""").extract(source, "nb")
+        assertThat(result.facts).containsExactly(JobFact(JobFactKind.ROLE, "Rolle", "Utvikler", "Vi søker en utvikler."))
+    }
+
+    @Test
+    fun `rejects invented fact quotes invalid kinds and unbounded metadata`() {
+        assertInvalid("""{"requirements":[],"facts":[{"kind":"COMPANY","label":"Bedrift","value":"Example","quote":"Unknown company"}]}""")
+        assertInvalid("""{"requirements":[],"facts":[{"kind":"GUESS","label":"Rolle","value":"Utvikler","quote":"utvikler"}]}""")
+        assertInvalid("""{"requirements":[]} """)
+        assertInvalid("""{"requirements":[],"facts":[{"kind":"ROLE","label":"Rolle","value":"${"x".repeat(501)}","quote":"utvikler"}]}""")
     }
 
     private fun assertInvalid(result: String) {

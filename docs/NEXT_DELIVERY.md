@@ -1,54 +1,12 @@
-# Next delivery: URL-based job overview
+# Next delivery: identity and usable career profile
 
-Status: NAV/FINN ingestion and the redesigned workspace are merged. Compact requirement details are implemented on `feat/compact-requirement-details`, pending merge. Richer summaries, responsibilities and sourced metadata remain planned.
+Status: direct URL analysis, sourced overview facts, compact requirement details and optional PostgreSQL/Flyway foundation are implemented on `feat/job-overview-flow`, pending merge. Earlier URL review/ingestion proposals are superseded by the implemented flow recorded in USER_FLOWS.md and ADRs 0008/0010/0011.
 
-## Product goal
+## Next coherent slices
 
-Paste a supported public job URL and receive a clear, sourced overview of the role in Norwegian or English. Candidate matching is a subsequent feature.
+1. Configure OIDC login/session and server-side ownership enforcement. Use a verified issuer/subject to resolve the internal identity. The database migration alone does not authenticate anyone. Add unauthorized/cross-owner tests before exposing personal data. Provider client credentials must be configured securely outside Git.
+2. Add profile editing and saved experience/projects/competency claims, with source references, confirmation history and explicit UNVERIFIED/INFERRED/CONFIRMED/REJECTED states. Reopen saved data after reload. Add sanitized request diagnostics during this foundation work.
+3. Add authenticated CV upload, original-file retention and bounded document extraction. Extracted claims start UNVERIFIED and require review. Evaluate provider data policy before sending private candidate material to AI.
+4. Match advertisement requirements to confirmed profile claims and evidence. Missing documentation is unknown, not automatically a skill gap. Add clarification questions and approved CV wording after that.
 
-## Proposed experience
-
-1. Default to a URL input; retain a Paste text alternative.
-2. Show real stage progress: retrieving advertisement, extracting content, analyzing.
-3. Present title/employer, available location/work arrangement/deadline/salary, a short summary, responsibilities, required qualifications, preferred qualifications and important unknowns.
-4. Display missing metadata as Not specified. Never infer remote work, salary or deadlines.
-5. Expose the original source text, quotations, retrieval timestamp and source link for review.
-6. Preserve input on failure and offer manual text import if fetching is unsupported or blocked.
-
-## Small implementation sequence
-
-### A. URL ingestion
-
-Investigate FINN and Arbeidsplassen for supported access and reliable extraction. Implement the first feasible source adapter rather than promise both before investigation. Use ordinary backend HTTP fetching and deterministic HTML/structured-data parsing. Do not add a browser worker unless the selected source genuinely requires it.
-
-Separate source fetching, normalization and AI analysis. Prefer source-provided JobPosting data when valid; ignore navigation, scripts and unrelated listings. Never send raw page HTML directly as trusted model instructions.
-
-Restrict initial fetching to explicit source hosts and supported advertisement paths. Validate schemes, redirects, resolved addresses, timeouts, response types and download size. Do not create an unrestricted server-side URL proxy or bypass source access controls. Block internal/local addresses and unsupported redirect destinations. Inspect actual access terms before implementing a source.
-
-### B. Richer sourced analysis
-
-Extend the output schema beyond the current requirement list. Separate responsibilities from qualifications. Attach evidence to factual metadata and summary points; quotation presence alone does not prove semantic correctness. Unknowns must remain visible. Continue bounded Groq calls and sanitized errors.
-
-### C. Result interface
-
-Use a compact overview, readable sections and expandable source evidence. Add real loading states, clear failures, accessibility and full Norwegian/English labels. Avoid fake match scores or application advice without a candidate profile.
-
-### D. Verification
-
-Use source fixtures and tests for valid/expired/non-advertisement pages, blocked redirects, local/private addresses, oversized responses and source extraction failures. Cover richer schema/evidence validation and the browser URL-to-result flow. Report live source checks separately from fixture tests.
-
-## Later slices
-
-Identity/ownership and PostgreSQL Compose → saved jobs and immutable advertisement snapshots → candidate profile and claim confirmation → evidence-based matching → tailored application material.
-
-The first URL delivery may operate without persistence, like the existing public-text pilot. Durable saving must not be claimed until implemented. No Kafka, Temporal, Redis or vector store is necessary for this scope.
-
-## Unresolved before URL implementation
-
-The first source is NAV’s official vacancy API, using its public experiment token or an optional server-only NAV_API_TOKEN. Website scraping is excluded. FINN ads are absent from this API. Production consumer registration and feed update/deletion compliance must precede saved listings. See ADR-0008.
-
-Groq Browser Search documentation and API support have now been verified for GPT-OSS 20B. It cannot be combined with structured outputs in the same request. The FINN adapter imports only exact-page browser tool source excerpts, not generated summaries, and exposes provenance/completeness limits. See ADR-0010. No plan upgrade or paid fallback was enabled; free limits and account status must not be assumed for production.
-
-## Priority update after compact-result UI
-
-NAV and FINN source import are merged. The current branch implements compact grouped requirements and per-item dialogs without changing extraction. The next three recommended deliveries are now consolidated in ROADMAP.md: identity/storage/manual profile, CV source import/claim confirmation, then personal matching and CV recommendations. Richer job summaries remain on the analysis track but should not delay the profile/CV path requested by the pilot.
+Public job analysis remains database independent. Local backend integration tests require Docker. No private endpoint, CV upload or candidate AI processing exists yet. No paid infrastructure or provider upgrades are authorized. See ROADMAP.md for delivery boundaries and docs/POSTGRES_SETUP.md for local database setup.

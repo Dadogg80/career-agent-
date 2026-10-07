@@ -66,3 +66,7 @@ BackgroundJob har tilstand, antall forsøk, lease og feilklassifisering. AiRun r
 ## Source provenance extension
 
 `ImportedJob.sourceType` distinguishes `NAV_API` from `GROQ_BROWSER_EXCERPT`. FINN's retrievedAt records local receipt of the provider excerpt, not an independently observed source update/fetch time. Quotes prove literal presence in the submitted text, not source freshness, completeness or independent semantic correctness. Imported material does not become a confirmed candidate claim.
+
+## Implemented storage foundation
+
+`app_user` contains an internal UUID and a unique `(oidc_issuer, oidc_subject)` binding. `career_profile` belongs to exactly one user and stores display name, nb/en language, revision and timestamps. Identity verification and profile API/UI remain unimplemented. Claims/evidence/project models remain planned rather than implied by these two tables.

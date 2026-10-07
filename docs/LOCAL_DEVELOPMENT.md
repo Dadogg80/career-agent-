@@ -47,3 +47,7 @@ Et persistent volume er ikke backup. Definer separat backup av database og dokum
 ## Neste implementasjonsforberedelse
 
 Velg og pin støttede verktøyversjoner før oppsettet implementeres. Opprett kjørekommandoer og Compose først når implementasjon er eksplisitt autorisert. Dette dokumentet beskriver en plan, ikke et ferdig utviklingsmiljø.
+
+## PostgreSQL foundation update (2026-10-07)
+
+The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Profile login/API/UI and CV upload are not yet available. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.

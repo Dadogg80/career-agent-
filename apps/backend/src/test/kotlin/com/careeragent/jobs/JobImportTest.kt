@@ -33,6 +33,21 @@ class JobImportTest {
         assertEquals(JobImporter.canonicalUrl(id), job.sourceUrl)
         assertNotNull(java.time.Instant.parse(job.retrievedAt))
     }
+    @Test fun `published metadata becomes source evidence without exposing unrelated fields`() {
+        val raw = jacksonObjectMapper().writeValueAsString(mapOf("uuid" to id, "status" to "ACTIVE", "ad_content" to mapOf(
+            "title" to "Utvikler", "description" to "Du må kunne Kotlin og PostgreSQL for denne rollen.",
+            "applicationDue" to "Snarest", "employer" to mapOf("name" to "Example AS"),
+            "workLocations" to listOf(mapOf("city" to "Oslo")),
+            "contactList" to listOf(mapOf("name" to "Test Contact", "email" to "contact@example.test")),
+            "internalNote" to "must not be included"
+        )))
+        val text = source.parse(id, raw).text
+        assertTrue(text.contains("Employer: Example AS"))
+        assertTrue(text.contains("Application deadline: Snarest"))
+        assertTrue(text.contains("Location city: Oslo"))
+        assertTrue(text.contains("Contact email: contact@example.test"))
+        assertFalse(text.contains("must not be included"))
+    }
     @Test fun `inactive and absent content fail without leaking the document`() {
         assertEquals("SOURCE_NOT_AVAILABLE", assertThrows(ImportFailure::class.java) { source.parse(id, payload("INACTIVE")) }.code)
         assertEquals("SOURCE_INVALID", assertThrows(ImportFailure::class.java) { source.parse(id, payload(description = "short")) }.code)
