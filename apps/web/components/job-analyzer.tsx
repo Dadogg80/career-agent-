@@ -64,7 +64,8 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
     const event: DiagnosticEvent = { runId: run.current.id, elapsedMs: Math.round(performance.now() - run.current.started), stage, state, details };
     if (diagnosticsEnabled) {
       setEvents(previous => [...previous, event].slice(-40));
-      if (state === "error") console.error("[Career Agent]", event);
+      // Expected request failures belong in the workflow UI, not Next's runtime-error overlay.
+      if (state === "error") console.warn("[Career Agent]", event);
       else console.info("[Career Agent]", event);
     }
   }

@@ -58,6 +58,13 @@ test("right-side diagnostics show actual source, stages and sanitized console ev
 
 test("red diagnostic light retains HTTP error and cooldown without automatic retries", async ({ page }) => {
   let calls = 0;
+  const failures: { type: string; event: DiagnosticEvent }[] = [];
+  page.on("console", async message => {
+    if (message.text().startsWith("[Career Agent]")) {
+      const event = await message.args()[1].jsonValue() as DiagnosticEvent;
+      if (event.state === "error") failures.push({ type: message.type(), event });
+    }
+  });
   await page.route("**/api/status", route => route.fulfill({ json: { status: "UP" } }));
   await page.route("**/api/jobs/requirements", route => {
     calls++; return route.fulfill({ status: 429, headers: { "Retry-After": "16" }, json: { code: "AI_RATE_LIMITED", retryAfterSeconds: 16 } });
@@ -71,10 +78,35 @@ test("red diagnostic light retains HTTP error and cooldown without automatic ret
   const panel = page.locator(".analysis-diagnostics");
   await expect(panel.locator('[data-stage="analysis"]')).toHaveAttribute("data-state", "error");
   await expect(panel).toContainText("HTTP 429"); await expect(panel).toContainText("AI_RATE_LIMITED");
+  await expect.poll(() => failures.length).toBe(1);
+  expect(failures[0].type).toBe("warning");
+  expect(failures[0].event.details.code).toBe("AI_RATE_LIMITED");
   await expect(page.getByRole("button", { name: "Analyser", exact: true })).toBeDisabled();
   await page.clock.fastForward(16000);
   await expect(page.getByRole("button", { name: "Analyser", exact: true })).toBeEnabled();
   expect(calls).toBe(1);
+});
+
+test("failed URL retrieval is a warning with its actual code and preserves the link", async ({ page }) => {
+  const failures: { type: string; code: string }[] = [];
+  page.on("console", async message => {
+    if (message.text().startsWith("[Career Agent]")) {
+      const event = await message.args()[1].jsonValue() as DiagnosticEvent;
+      if (event.state === "error") failures.push({ type: message.type(), code: event.details.code! });
+    }
+  });
+  await page.route("**/api/status", route => route.fulfill({ json: { status: "UP" } }));
+  await page.route("**/api/jobs/import", route => route.fulfill({ status: 422, json: { code: "SOURCE_INVALID" } }));
+  await page.goto("/");
+  await page.getByRole("textbox", { name: "Lenke til stillingsannonse" }).fill(url);
+  await page.getByRole("button", { name: "Analyser lenke", exact: true }).click();
+  await page.getByRole("button", { name: "Utviklerdiagnostikk", exact: true }).click();
+  const panel = page.locator(".analysis-diagnostics");
+  await expect(panel.locator('[data-stage="source"]')).toHaveAttribute("data-state", "error");
+  await expect(panel).toContainText("SOURCE_INVALID");
+  await expect(panel).toContainText("HTTP 422");
+  await expect(page.getByRole("textbox", { name: "Lenke til stillingsannonse" })).toHaveValue(url);
+  await expect.poll(() => failures).toEqual([{ type: "warning", code: "SOURCE_INVALID" }]);
 });
 
 test("diagnostic edge tab supports keyboard opening, Escape and a narrow viewport", async ({ page }) => {

@@ -59,6 +59,17 @@ class FinnImportTest {
     @Test fun `large browser excerpts fail without silent truncation`() {
         assertEquals("SOURCE_TOO_LARGE", assertThrows(ImportFailure::class.java) { browser().parse(url, response(body = "x".repeat(15001))) }.code)
     }
+    @Test fun `FINN separator and site suffix can wrap together onto a separate title line`() {
+        val root = mapper.readTree(response())
+        val tool = root.path("choices").path(0).path("message").path("executed_tools").path(0) as com.fasterxml.jackson.databind.node.ObjectNode
+        tool.put("output", tool.path("output").asText().replace("Example \\| FINN.no", "Example\nL2: \\| FINN.no"))
+        val job = browser().parse(url, mapper.writeValueAsString(root))
+        assertEquals("Backend engineer - Example", job.title)
+        assertEquals(url, job.sourceUrl)
+        assertTrue(job.text.contains("Du må kunne Kotlin"))
+        tool.put("output", tool.path("output").asText().replace("URL: $url", "URL: https://www.finn.no/job/ad/999999999"))
+        assertEquals("SOURCE_NOT_AVAILABLE", assertThrows(ImportFailure::class.java) { browser().parse(url, mapper.writeValueAsString(root)) }.code)
+    }
     @Test fun `search uses the documented built-in tool without structured output or code execution`() {
         val body = browser().requestBody(url)
         assertEquals(listOf(mapOf("type" to "browser_search")), body["tools"])

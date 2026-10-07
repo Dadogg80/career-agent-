@@ -12,6 +12,8 @@ The local pilot must make URL retrieval, analysis and failures inspectable befor
 
 Green means that stage completed and its response passed client validation. Yellow means active work or a deliberate pause. Red means a mapped error; inspect its HTTP status/error code and the visible error message. Gray means queued, skipped or stopped, with a text label. Colors never replace the labels. Green does not establish semantic correctness, completeness or freshness of AI/source content.
 
+Expected retrieval/provider failures are logged with `console.warn`, preserving the red workflow state and sanitized details. Using `console.error` for these handled failures caused Next.js development mode to show a runtime-error overlay at the logging line. That line is not the underlying provider cause. Inspect the DEV stage's mapped code/HTTP status and the normal visible error message instead.
+
 Close the panel using its translated close button or Escape; keyboard focus returns to the edge tab. Closing hides the panel, while the current run remains in workspace memory. The panel fits narrow screens and respects reduced-motion preferences. The Sheet uses the existing Radix Dialog dependency; opening it makes no provider request.
 
 The panel and logs are enabled by default in development. Production builds hide them unless explicitly enabled with `NEXT_PUBLIC_JOB_DIAGNOSTICS=true` before building. Source previews are rendered as text, never HTML. Only the latest run is retained in component memory (bounded to 40 events); reload clears it. There is no exported diagnostic file or server log of advertisement bodies. Browser developer tools can retain their own console history independently.

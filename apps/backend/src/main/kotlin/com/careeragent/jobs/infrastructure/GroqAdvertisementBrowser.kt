@@ -113,9 +113,12 @@ class GroqAdvertisementBrowser(
                 if (numbered.none { it.trim() == "URL: $url" }) continue
                 val lines = numbered.filter { it.isNotBlank() && !it.startsWith("URL:") }
                 val firstTitleLine = lines.firstOrNull()?.replace("\\|", "|")?.trim() ?: continue
+                val secondTitleLine = lines.getOrNull(1)?.replace("\\|", "|")?.trim()
                 // Browser extraction may wrap the FINN suffix onto the next numbered line.
-                val pageTitle = if (firstTitleLine.endsWith("|") && lines.getOrNull(1)?.trim() == "FINN.no") {
+                val pageTitle = if (firstTitleLine.endsWith("|") && secondTitleLine == "FINN.no") {
                     "$firstTitleLine FINN.no"
+                } else if (secondTitleLine == "| FINN.no") {
+                    "$firstTitleLine | FINN.no"
                 } else firstTitleLine
                 if (!pageTitle.endsWith("| FINN.no")) continue
                 val title = pageTitle.removeSuffix("| FINN.no").trim()
