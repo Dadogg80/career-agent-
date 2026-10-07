@@ -13,7 +13,9 @@ Status checked against remote main on 2026-10-07. Dates are not promised; delive
 | FINN import through Groq browser excerpts | Implemented and merged; source may be partial/stale |
 | TanStack Query and shadcn/ui workspace | Implemented and required by AGENTS.md |
 | Compact requirement tiles, category filters and detail dialogs | Implemented and merged |
-| PostgreSQL/Flyway profile schema | Implemented on current branch; validation/merge status in development log |
+| PostgreSQL/Flyway profile schema | Implemented and merged (PR #8); private APIs remain pending |
+| FINN evidence repair and reactive quota cooldown | Implemented and merged (PR #10) |
+| Staged loading, FINN pacing and development diagnostics | Implemented on current branch; validation/merge status in development log |
 | Login, user-owned saved profiles/jobs API/UI | Not implemented |
 | Candidate claims/competence, CV/document upload, personal matching | Not implemented |
 | CV tailoring/export, application CRM, discovery and interview prep | Not implemented |
@@ -29,7 +31,7 @@ A URL now starts retrieval and analysis from one action. Add sourced overview ca
 Purpose: turn the public-text tool into a safe, persistent personal workspace.
 
 Small implementation sequence:
-1. PostgreSQL in local Docker Compose, schema migrations and integration-test setup — implemented on current branch.
+1. PostgreSQL in local Docker Compose, schema migrations and integration-test setup — implemented and merged.
 2. Spring Security/OIDC session and server-side ownership/authorization; choose/configure the pilot login provider. Do not expose private data before these boundaries are verified.
 3. User-owned profile, projects/experience and manually entered competency claims with UNVERIFIED/INFERRED/CONFIRMED/REJECTED status and evidence/confirmation history.
 4. Profile screen for editing, reviewing and reopening saved information; save user-owned job snapshots. Add sanitized request diagnostics/build information during this foundation work.
@@ -63,7 +65,7 @@ Done when each relevant requirement has inspectable candidate evidence or an exp
 
 CV artifact/version generation → simple application CRM and exact materials used → automatic discovery and digest → interview/follow-up → browser application copilot → interactive academy and analytics.
 
-Richer job overview/summary and metadata remain a scoped improvement to the analysis track; they should not hold up the requested profile/CV work. Work can resume there when needed for matching. Keep its facts sourced and distinguish missing metadata.
+The product owner now prioritizes a working, inspectable URL → analysis → result flow before the next profile/CV delivery. Validate retrieval, quota handling and usable sourced results in the local pilot first. The staged loader and development diagnostics support this checkpoint without new infrastructure. Keep facts sourced and distinguish missing metadata.
 
 Introduce Kafka, Temporal, pgvector and Redis only when an implemented workload justifies them. No Kubernetes or premature microservices. No paid services or account upgrades are authorized.
 
@@ -73,4 +75,4 @@ Update stories/flows, decisions, development log and security guidance with each
 
 ## Analysis reliability update
 
-Current branch fixes wrapped FINN title parsing, visible partial-evidence omissions, provider JSON-error mapping, shared rate-limit cooldowns and transient same-source manual retries. Login, saved private profiles and CV uploads remain the next product deliveries; this reliability work adds no persistent ad/profile cache or additional infrastructure. Validation/merge status is in docs/DEVELOPMENT_LOG.md.
+PR #10 merged wrapped FINN title parsing, visible partial-evidence omissions, provider JSON-error mapping, shared reactive rate-limit cooldowns and transient same-source manual retries. The current branch adds honest staged loading, configurable FINN pacing and development diagnostics. Login, saved private profiles and CV uploads remain the next product deliveries after the pilot analysis checkpoint; no persistent ad/profile cache or additional infrastructure is introduced. Validation/merge status is in docs/DEVELOPMENT_LOG.md.

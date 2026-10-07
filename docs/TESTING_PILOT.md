@@ -108,3 +108,11 @@ The development config explicitly allows `localhost` and `127.0.0.1` for Next.js
 Analysis controls are disabled until React initializes, with a visible preparing message and a JavaScript-required fallback. A native form reload must not erase a submitted link. If the preparing message never disappears or mode buttons remain disabled, inspect browser Console and Network for failed scripts; an HMR warning alone does not identify every possible browser startup failure. Private browsing can help diagnose stale resources/extensions without deleting profile data.
 
 Run `npm run test:dev` from apps/web to test both loopback hostnames against a real Next development server. AI calls are mocked, and the tests verify origin enforcement, mode switching and one-click URL analysis without navigation. The regular production browser suite includes a delayed-script hydration check.
+
+## Paced URL workflow checkpoint
+
+Before starting the profile/CV delivery, use the frontend development server and test a supported public URL. Expect retrieval status, then a 10-second countdown for FINN, then analysis status and the sourced overview/compact requirements. No manual excerpt screen is required.
+
+Expand **Utviklerdiagnostikk** and inspect the received text, stage lights, HTTP status and result counts. In browser Console, filter `[Career Agent]` to see the same sanitized sequence. Source bodies/keys must not appear in console events. Try stopping during the pause and continuing the same link: the source must be reused, with no second browser search. Repeat in English and at a narrow viewport. Check source quotes and useful metadata against the original ad; a successful HTTP response alone is insufficient.
+
+The current fixed pause reduces rapid back-to-back calls but may still encounter account-level quota rejection. Inspect the reactive retry countdown and manually retry using the retained source. Settings and diagnostic boundaries are in [DEBUGGING.md](DEBUGGING.md). Do not run repeated live probes while assessing free-tier limits.

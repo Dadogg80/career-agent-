@@ -1,5 +1,7 @@
 export const jobTranslations = {
   nb: {
+    pacing: "Venter før analyse …",
+    cancelled: "Analysen er stoppet. Annonsen er beholdt, og du kan fortsette når du ønsker.",
     reuseSource: "Annonsen er allerede hentet. Et nytt forsøk analyserer denne teksten uten nytt nettlesersøk.",
     retryWait: "Groq-kvoten er midlertidig nådd. Du kan prøve igjen om",
     seconds: "sekunder.",
@@ -49,6 +51,7 @@ export const jobTranslations = {
     otherLanguage: "Resultatet beholder språket valgt ved analysen. Kjør på nytt hvis du ønsker et annet resultatspråk.",
     kinds: { REQUIRED: "Må-krav", PREFERRED: "Ønsket", UNCLEAR: "Må avklares" },
     errors: {
+      NETWORK_ERROR: "Kunne ikke kontakte serveren. Kontroller at backenden kjører og prøv igjen. Innholdet ditt er beholdt.",
       SOURCE_AI_NOT_CONFIGURED: "FINN-import trenger GROQ_API_KEY på backend. Du kan lime inn teksten i mellomtiden.",
       SOURCE_ACCESS_DENIED: "Groq-tilgangen må kontrolleres på backend. Lenken din er beholdt.",
       SOURCE_RATE_LIMITED: "Groq-kvoten er nådd. Vent eller lim inn annonseteksten.",
@@ -73,6 +76,8 @@ export const jobTranslations = {
     },
   },
   en: {
+    pacing: "Waiting before analysis …",
+    cancelled: "Analysis stopped. The advertisement is retained; continue whenever you are ready.",
     reuseSource: "This advertisement is already retrieved. Another attempt analyzes this text without another browser search.",
     retryWait: "The Groq quota is temporarily reached. You can try again in",
     seconds: "seconds.",
@@ -122,6 +127,7 @@ export const jobTranslations = {
     otherLanguage: "The result keeps the language selected when it was analyzed. Run again for another result language.",
     kinds: { REQUIRED: "Required", PREFERRED: "Preferred", UNCLEAR: "Needs clarification" },
     errors: {
+      NETWORK_ERROR: "Could not contact the server. Check that the backend is running and try again. Your input has been retained.",
       SOURCE_AI_NOT_CONFIGURED: "FINN import requires GROQ_API_KEY on the backend. You can paste the text in the meantime.",
       SOURCE_ACCESS_DENIED: "Groq access needs to be checked on the backend. Your link has been retained.",
       SOURCE_RATE_LIMITED: "The Groq quota has been reached. Wait or paste the advertisement text.",

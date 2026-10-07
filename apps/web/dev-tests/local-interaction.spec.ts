@@ -30,7 +30,7 @@ for (const host of ["localhost", "127.0.0.1"]) {
     const input = page.getByRole("textbox", { name: "Lenke til stillingsannonse" });
     await input.fill(jobUrl);
     await input.press("Enter");
-    await expect(page.getByRole("heading", { name: "Kotlin", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Kotlin", exact: true })).toBeVisible({ timeout: 15000 });
     await expect(input).toHaveValue(jobUrl);
     expect(imports).toBe(1);
     expect(analyses).toBe(1);

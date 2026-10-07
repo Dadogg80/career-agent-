@@ -143,10 +143,11 @@ flowchart TD
     B --> C[Bounded Groq Browser Search]
     C --> D{Exact browser.open source result available?}
     D -->|No| E[Keep URL, explain error and offer pasted text]
-    D -->|Yes| F[Show Groq/Exa excerpt provenance, title, receipt time and editable text]
-    F --> G[User checks against original advertisement]
-    G --> H[User selects Analyze]
-    H --> I[Separate structured Groq requirement extraction]
+    D -->|Yes| F[Retain exact source context and show retrieval complete]
+    F --> G[Show configurable pause countdown]
+    G --> H{Stopped before analysis?}
+    H -->|Yes| K[Keep source for manual continuation]
+    H -->|No| I[Separate structured Groq requirement extraction]
     I --> J[Quotes validated against the submitted excerpt, provenance remains visible]
 ```
 
@@ -158,7 +159,7 @@ Analyze source → view category counts and grouped tiles → optionally filter 
 
 ## Direct URL analysis and sourced job overview (2026-10-07)
 
-Selecting **Analyze link** retrieves the public advertisement and immediately analyzes the retrieved text. The previous mandatory import/review step is superseded by the product owner's explicit instruction. Manual pasted text remains editable. Retrieval and analysis each keep their existing concurrency, quota, validation and error boundaries; there are no automatic retries. If analysis fails after retrieval, the text remains available under Paste text for retry without another search.
+Selecting **Analyze link** retrieves and analyzes the public advertisement in one action. FINN retrieval is followed by a configurable 10-second pause before structured analysis; NAV normally skips it. The previous mandatory import/review step is superseded by the product owner's explicit instruction. Manual pasted text remains editable. Retrieval and analysis each keep their existing concurrency, quota, validation and error boundaries; there are no automatic retries. If analysis fails after retrieval, the text remains available for retry without another search.
 
 The overview contains up to ten useful, variable facts: employer description, role/responsibilities, deadline, location/work model, contacts, benefits, salary or application process when explicitly present. Every fact carries a verbatim source quote. Missing data is omitted with an explicit notice rather than guessed. Quote membership validation establishes provenance, not semantic correctness of the AI's paraphrase. Browser excerpts can still be partial/stale; this limitation and the original link remain visible. Full source text is expandable, not a required intermediate screen. Requirement tiles/details remain unchanged.
 
@@ -172,4 +173,10 @@ Initial server-rendered analysis controls are disabled until React initializes. 
 
 A valid FINN browser excerpt may have a wrapped site title; presentation emphasis is normalized before analysis. Valid independently cited cards remain visible if another suggestion lacks source evidence, with a visible omission notice. Entirely unsupported or malformed results still fail closed.
 
-After a provider token-rate rejection, show a bounded countdown and keep the URL/text. A manual retry for the same retrieved URL analyzes the current text without a new browser search. Different URLs fetch fresh content. No automatic retries are made; process call limits and exact-source checks remain. Switching input mode/reading/editing remain available while waiting.
+After a provider token-rate rejection, show a bounded countdown and keep the URL/text. A manual retry for the same retrieved URL analyzes the current text without a new browser search. Different URLs fetch fresh content. No automatic retries are made; process call limits and exact-source checks remain. Switching input mode/reading/editing remain available during a reactive quota cooldown. Controls are disabled during the active retrieval/pacing/analysis sequence; the explicit Stop action is available during pacing.
+
+## Development inspection and paced loading
+
+Submit URL → retrieval status → received-source success → FINN pause/countdown (or skipped for NAV) → analysis status → sourced overview and compact requirement cards. Stopping during the pause retains the source and cancels the scheduled analysis; same-URL continuation respects any remaining pause. There is no invented progress percentage or model call for the decorative animation.
+
+Development: expand the diagnostic panel → inspect labeled green/yellow/red/gray stage lights, HTTP status, elapsed time and counts → optionally expand the received source text. Console shows the same sanitized events under `[Career Agent]`; no source bodies or provider secrets are logged. Reload clears in-memory state. Diagnostics are hidden in production unless explicitly enabled before build. See docs/DEBUGGING.md.

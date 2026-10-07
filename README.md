@@ -4,7 +4,7 @@ AI-støttet jobbsøking med etterprøvbar kandidatkunnskap, kompetanseavklaring 
 
 The application now has a Norwegian/English interface and official NAV API URL import, a redesigned shadcn/ui workspace, and Groq-backed advertisement extraction. Candidate profiles, matching, authentication and persistent storage are not implemented yet. See the [pilot test guide](docs/TESTING_PILOT.md) and [run instructions](docs/RUNNING.md).
 
-Supported links are individual `https://arbeidsplassen.nav.no/stillinger/stilling/<uuid>` advertisements available in NAV’s API. FINN links in the form `https://www.finn.no/job/ad/<id>` are supported separately through Groq Browser Search. FINN imports are labeled Groq/Exa source excerpts, which may be incomplete or stale. Selecting Analyze link retrieves and analyzes immediately; source evidence and the original link remain available for inspection. FINN import uses the existing backend GROQ_API_KEY and a separate bounded search quota; other unsupported sources retain the Paste text alternative.
+Supported links are individual `https://arbeidsplassen.nav.no/stillinger/stilling/<uuid>` advertisements available in NAV’s API. FINN links in the form `https://www.finn.no/job/ad/<id>` are supported separately through Groq Browser Search. FINN imports are labeled Groq/Exa source excerpts, which may be incomplete or stale. Selecting Analyze link retrieves and analyzes in one action, with a configurable 10-second pause between FINN calls; source evidence and the original link remain available for inspection. FINN import uses the existing backend GROQ_API_KEY and a separate bounded search quota; other unsupported sources retain the Paste text alternative.
 
 ## Lesestart
 
@@ -24,6 +24,7 @@ Supported links are individual `https://arbeidsplassen.nav.no/stillinger/stillin
 | [docs/RUNNING.md](docs/RUNNING.md) | Installasjon, lokal kjøring og tester for første utviklingsversjon |
 | [docs/GROQ_SETUP.md](docs/GROQ_SETUP.md) | Sikker deling av Groq-nøkkel og hva som gjenstår |
 | [docs/TESTING_PILOT.md](docs/TESTING_PILOT.md) | Local pilot test guide, scope and limits |
+| [docs/DEBUGGING.md](docs/DEBUGGING.md) | Staged loading, pacing, source inspection and development diagnostics |
 | [docs/DOCKER_STRATEGY.md](docs/DOCKER_STRATEGY.md) | Recommended Docker usage and tradeoffs |
 | [docs/NEXT_DELIVERY.md](docs/NEXT_DELIVERY.md) | Proposed URL ingestion and richer job overview delivery |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Bekreftede føringer og anbefalinger som ikke er vedtatt |
@@ -50,3 +51,5 @@ PostgreSQL Compose and Flyway migrations are available behind the `persistence` 
 ### Rate limits and retries
 
 A fresh FINN analysis uses browser retrieval followed by structured extraction. These calls share the Groq account/model quota with Playground and other clients. The application shows a bounded provider cooldown. A manual retry for the same fetched URL reuses the current text instead of repeating browser search. Source-unsupported suggestions are omitted with a visible count; wholly unsupported or invalid results still fail. See ADR 0012 and docs/GROQ_SETUP.md.
+
+The frontend now shows retrieval → pause → analysis with honest loading statuses and a decorative animation. Development includes a collapsed diagnostic panel with status lights, received-source inspection and sanitized console events. Set `NEXT_PUBLIC_ANALYSIS_DELAY_SECONDS` in `apps/web/.env.local` to adjust the default 10-second FINN pause. This does not guarantee quota availability. See [debugging instructions](docs/DEBUGGING.md).
