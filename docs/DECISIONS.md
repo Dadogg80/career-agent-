@@ -46,3 +46,7 @@ Arbeidsmåten er `main` med korte arbeidsbranches, uten permanent `development`,
 - D-015: Use TanStack Query and shadcn/ui for frontend work, as explicitly requested by the user. Next.js routing stays in place; further TanStack packages require a concrete need. ADR-0009.
 - D-016: Use NAV’s official free vacancy API for the first URL adapter. Do not scrape FINN or Arbeidsplassen websites without permission. Public experiment token is for the local pilot; production registration/compliance remains pending. ADR-0008.
 - R-012: Investigate Groq Browser Search as a possible additional source capability. The user’s Playground result is a useful UX example, not independently verified source evidence or proof of API/free-tier availability.
+
+## FINN Browser Search — 2026-10-07
+
+D-017 (Accepted, local pilot): Support modern FINN job URLs through Groq's documented browser_search capability using the existing key/model. Separate provider-mediated source retrieval from structured analysis; use exact-link tool output only, show provenance and potential incompleteness, and bound attempts. The earlier R-012 investigation is completed for API feasibility, with production terms/quota questions remaining. ADR-0010. No plan upgrade, paid fallback or direct FINN website scraper.

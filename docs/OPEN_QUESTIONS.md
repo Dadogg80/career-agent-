@@ -22,5 +22,5 @@ Docker recommendation: native frontend/backend, PostgreSQL in Compose when intro
 
 ## URL access and richer analysis
 
-- Groq Browser Search: which API model/tool corresponds to the user’s Playground configuration? Are calls available within the free plan, what are tool quotas, and can we retrieve exact source text/evidence? Do not activate paid tooling or silently treat search summaries as original advertisements.
+- Resolved for the local FINN pilot: GPT-OSS 20B supports browser_search and returns exact-page browser.open source text. Structured outputs require a separate call. Remaining for production: source/provider reuse terms, freshness/completeness assessment, sustained quotas and account billing controls. Do not treat provider excerpts or search summaries as verified complete originals.
 - NAV: registered consumer access is needed beyond experimentation. API ads exclude FINN; persistent discovery must handle source updates/removals before republishing stored listings.

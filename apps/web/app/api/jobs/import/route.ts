@@ -39,11 +39,11 @@ export async function POST(request: Request) {
     const base = process.env.CAREER_API_BASE_URL ?? "http://127.0.0.1:8080";
     const response = await fetch(`${base}/api/jobs/import`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input), cache: "no-store", signal: AbortSignal.timeout(40000),
+      body: JSON.stringify(input), cache: "no-store", signal: AbortSignal.timeout(60000),
     });
     const value: unknown = await response.json();
     if (!response.ok) {
-      const codes = ["INVALID_URL", "SOURCE_UNSUPPORTED", "SOURCE_NOT_AVAILABLE", "SOURCE_INVALID", "SOURCE_TOO_LARGE", "SOURCE_UNAVAILABLE", "SOURCE_BUSY"];
+      const codes = ["INVALID_URL", "SOURCE_UNSUPPORTED", "SOURCE_NOT_AVAILABLE", "SOURCE_INVALID", "SOURCE_TOO_LARGE", "SOURCE_UNAVAILABLE", "SOURCE_BUSY", "SOURCE_AI_NOT_CONFIGURED", "SOURCE_ACCESS_DENIED", "SOURCE_RATE_LIMITED", "SOURCE_SEARCH_UNAVAILABLE", "SOURCE_SEARCH_DISABLED", "SOURCE_BUDGET_REACHED"];
       const code = value && typeof value === "object" && "code" in value && codes.includes(String(value.code)) ? value.code : "SOURCE_UNAVAILABLE";
       return Response.json({ code }, { status: [400, 404, 413, 429, 502, 503].includes(response.status) ? response.status : 503 });
     }

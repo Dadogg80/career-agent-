@@ -189,4 +189,13 @@ Acceptance criteria implemented:
 - Responsive input/results columns, requirement counts and quotation cards make the result scannable.
 - Editing the source marks the existing analysis outdated. Source evidence reflects the text actually analyzed.
 
-Remaining: FINN URL access, richer overview metadata/responsibilities/summary, saved jobs and immutable persisted snapshots.
+Remaining: richer overview metadata/responsibilities/summary, saved jobs and immutable persisted snapshots. FINN access is covered by the following slice.
+
+## FINN import acceptance criteria
+
+- Modern HTTPS FINN job links route to Groq Browser Search instead of the unsupported-source error.
+- URL query/fragment tracking is removed before sending to the provider; credentials, unrelated hosts, non-job paths and unsafe ports are rejected.
+- Exact URL match is required in both the browser.open arguments and numbered source output. Search snippets, unrelated pages and generated final answers cannot become imported advertisement text.
+- Source excerpt provenance, potential incompleteness/staleness and the original link remain visible in Norwegian/English before analysis and with its results.
+- Missing configuration, disabled search, provider rate limits, budget exhaustion and unavailable evidence preserve input and offer a manual alternative.
+- No automatic analysis, retries, paid fallback, login or application submission.

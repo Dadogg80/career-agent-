@@ -62,3 +62,7 @@ BackgroundJob har tilstand, antall forsøk, lease og feilklassifisering. AiRun r
 ## Transient imported advertisement
 
 `ImportedJob` currently carries a canonical `sourceUrl`, source-provided `title`, normalized `text` and server `retrievedAt`. It is not a persisted job aggregate or candidate claim. Analysis retains the exact submitted text and its language; edits make the displayed result stale. Persisted advertisement identity/versioning will be a separate later change.
+
+## Source provenance extension
+
+`ImportedJob.sourceType` distinguishes `NAV_API` from `GROQ_BROWSER_EXCERPT`. FINN's retrievedAt records local receipt of the provider excerpt, not an independently observed source update/fetch time. Quotes prove literal presence in the submitted text, not source freshness, completeness or independent semantic correctness. Imported material does not become a confirmed candidate claim.

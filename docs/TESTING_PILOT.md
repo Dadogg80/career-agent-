@@ -81,3 +81,14 @@ After the URL-import PR is merged, update your local clone (`git switch main`, `
 7. Switch to English and repeat. Test a narrow browser window; the columns should stack without horizontal scrolling.
 
 NAV’s public token is used automatically for experimentation. A NAV_API_TOKEN is optional, backend-only; do not add it to Git or browser variables. Some Arbeidsplassen links (especially FINN-origin ads) are not in NAV’s API. Rich summaries and candidate matching are still pending. Reload loses the current text/results.
+
+## FINN URL test after merging Browser Search support
+
+1. Stop both processes, pull merged main, rebuild backend and restart both. No new packages or keys are required for this delivery.
+2. Paste `https://www.finn.no/job/ad/478077416` and select Hent annonse.
+3. Expect the AI Engineer / Tieto Banktech source title, editable provider excerpt and Groq/Exa provenance notice while the ad remains accessible.
+4. Open the original and check that the relevant qualifications appear; correct/remove unnecessary information before selecting Analyser.
+5. Check the cited requirements and the persistent excerpt warning. Switch to English to check both stages.
+6. If the provider cannot retrieve the exact page, is rate limited, or reaches the local 10-attempt cap, the URL stays available and pasted text remains an alternative. Successful test-day access does not guarantee future source availability.
+
+Browser Search uses the existing backend key and supported model. Adding `GROQ_BROWSER_SEARCH_ENABLED=false` to the backend environment disables it. Search and analysis use independent process limits. A counter is not a provider billing control; keep the existing account on its free tier.

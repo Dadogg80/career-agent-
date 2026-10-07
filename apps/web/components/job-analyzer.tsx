@@ -54,11 +54,11 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
             <Button variant={mode === "text" ? "default" : "ghost"} onClick={() => changeMode("text")} disabled={pending} aria-pressed={mode === "text"}><FileText />{t.textMode}</Button>
           </div></CardHeader><CardContent>
           {mode === "url" && <form onSubmit={(e) => { e.preventDefault(); if (!pending) { extraction.reset(); importing.mutate(); } }} className="import-form">
-            <label htmlFor="job-url">{t.urlLabel}</label><Input id="job-url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://arbeidsplassen.nav.no/stillinger/stilling/…" maxLength={2048} required disabled={pending} />
+            <label htmlFor="job-url">{t.urlLabel}</label><Input id="job-url" type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://www.finn.no/job/ad/…" maxLength={2048} required disabled={pending} />
             <p className="hint">{t.sourceHelp}</p><Button disabled={pending} type="submit" variant="secondary">{importing.isPending ? <LoaderCircle className="animate-spin" /> : <Link2 />}{importing.isPending ? t.fetching : t.fetch}</Button>
           </form>}
           {(mode === "text" || imported) && <form onSubmit={analyze} className="text-form">
-            {imported && <div className="source-meta"><h3>{imported.title}</h3><a href={imported.sourceUrl} target="_blank" rel="noopener noreferrer">{t.sourceLink}<ArrowUpRight size={14}/></a><p>{t.retrieved}: {new Date(imported.retrievedAt).toLocaleString(locale === "nb" ? "nb-NO" : "en-US")}</p>{text !== imported.text && <p>{t.sourceEdited}</p>}</div>}
+            {imported && <div className="source-meta"><h3>{imported.title}</h3>{imported.sourceType === "GROQ_BROWSER_EXCERPT" && <p className="notice">{t.browserSource}</p>}<a href={imported.sourceUrl} target="_blank" rel="noopener noreferrer">{t.sourceLink}<ArrowUpRight size={14}/></a><p>{t.retrieved}: {new Date(imported.retrievedAt).toLocaleString(locale === "nb" ? "nb-NO" : "en-US")}</p>{text !== imported.text && <p>{t.sourceEdited}</p>}</div>}
             <label htmlFor="job-text">{t.input}</label>{imported && <p className="hint">{t.reviewSource}</p>}
             <Textarea id="job-text" value={text} onChange={(e) => setText(e.target.value)} maxLength={15000} rows={10} disabled={pending} required />
             <p className="hint character-count">{text.length.toLocaleString(locale === "nb" ? "nb-NO" : "en-US")} / 15 000 · {t.minimum}</p>
@@ -72,7 +72,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
           <p className="step-label">{t.resultStep}</p>
           {!result && <Card className="empty-state"><CardContent><div className="empty-icon"><FileText size={30}/></div><h3>{extraction.isPending ? t.pending : t.emptyTitle}</h3><p>{t.emptyDescription}</p><div className="empty-preview" aria-hidden="true"><span/><span/><span/></div></CardContent></Card>}
           {result && <section aria-labelledby="results-title" lang={result.locale}>
-            <h3 id="results-title">{result.imported?.title ?? t.results}</h3><p className="hint">{t.review}</p>
+            <h3 id="results-title">{result.imported?.title ?? t.results}</h3><p className="hint">{t.review}</p>{result.imported?.sourceType === "GROQ_BROWSER_EXCERPT" && <p className="notice">{t.browserSource}</p>}
             {outdated && <Alert variant="destructive" role="alert"><AlertDescription>{t.outdated}</AlertDescription></Alert>}
             {result.locale !== locale && <p className="hint">{t.otherLanguage}</p>}
             <div className="result-counts">{(["REQUIRED", "PREFERRED", "UNCLEAR"] as const).map((kind) => <div key={kind}><strong>{result.requirements.filter(r => r.kind === kind).length}</strong><span>{t.kinds[kind]}</span></div>)}</div>

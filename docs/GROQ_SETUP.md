@@ -30,3 +30,16 @@ Ingen frontend-variabel eller localStorage skal inneholde nøkkelen. Repoets `en
 - Test norsk/engelsk og faktatrofasthet med fiktive data først.
 - Avklar gjeldende datavilkår før private CV-er eller søknader sendes.
 - Nøkkel og provider-feil skal ikke logges i klartekst eller eksponeres til nettleseren.
+
+## FINN Browser Search
+
+The existing backend GROQ_API_KEY is reused; no Exa key or new frontend secret is required. Supported modern FINN links use the documented GPT-OSS browser_search tool. The existing default GROQ_MODEL=openai/gpt-oss-20b works. Changing to a model without browser tool support will fail safely; structured analysis remains a separate request because Browser Search is incompatible with structured outputs.
+
+Optional backend environment settings:
+
+```sh
+GROQ_BROWSER_SEARCH_ENABLED=true
+GROQ_BROWSER_MAX_REQUESTS=10
+```
+
+Counters reset when the backend restarts and include failures. Automatic retries and paid-plan fallback are disabled. Provider-side tool actions can exceed one per API attempt; local attempt limits do not guarantee zero billing on a paid account. Keep the existing pilot account on its free tier. Public link and provider-mediated page context pass through Groq/Exa; review snippets against the original, especially if they are partial or stale.
