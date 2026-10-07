@@ -149,3 +149,9 @@ Added a collapsed development diagnostic panel with labeled stage lights, HTTP s
 Validation: 25 production browser tests and five real development-server tests passed, covering 10-second scheduling, no duplicate calls, stop/resume, failed retrieval, mobile/reduced-motion behavior, collapsed source inspection, green/red diagnostics, sanitized console events and both loopback hostnames. Frontend production build and TypeScript check passed. Synthetic loading/diagnostic screenshot inspected; kept outside Git. Backend tests were not rerun because backend code is unchanged; production E2E exercised the existing real backend JAR with its provider key disabled. No live Groq request was made and no account-quota or GitHub Actions success is claimed. A fixed delay cannot guarantee account-wide token availability.
 
 Documentation: DEBUGGING.md provides local inspection/configuration instructions; README, flows/stories, roadmap, decisions, security, Groq/run/pilot guides record the behavior and pilot checkpoint.
+
+## 2026-10-07 — Right-side developer diagnostics
+
+Confirmed PR #11 merged paced analysis/diagnostics into main (`9dd9f11`); started `feat/diagnostics-sheet-and-profile-foundation` from updated main. Replaced the inline collapsed card with the official shadcn Sheet and fixed right-edge DEV tab. The panel is nonmodal, retains the current run when closed, uses translated close/Escape/focus behavior and fits narrow screens with reduced-motion support. Reused the existing Radix dependency; no new AI calls or persisted diagnostics.
+
+Validation: all six real development-server browser tests passed, including source/status/console boundaries, red error lights, keyboard/mobile behavior and both loopback origins. Production build and TypeScript passed. Production diagnostics remain off by default. Updated DEBUGGING.md with the new interaction. Synthetic screenshots stay outside Git.
