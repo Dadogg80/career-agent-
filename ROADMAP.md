@@ -55,6 +55,12 @@ Oppdater relevante stories og flyter, før faktisk validering i utviklingsloggen
 
 ## Current implementation update — URL import and interface
 
-Implemented on `feat/job-url-import`, pending PR merge: official NAV API import of an individual Arbeidsplassen URL, editable source review before AI, canonical source URL/retrieval time, manual fallback, TanStack Query and shadcn/ui workspace with responsive input/results columns. This partially delivers US-17; FINN URL support and richer role summaries remain pending. No persistent storage, candidate matching or application submission is implied.
+Implemented on `feat/job-url-import`, pending PR merge: official NAV API import of an individual Arbeidsplassen URL, editable source review before AI, canonical source URL/retrieval time, manual fallback, TanStack Query and shadcn/ui workspace with responsive input/results columns. This partially delivers US-17; FINN URL support is added in the subsequent Browser Search slice below; richer role summaries remain pending. No persistent storage, candidate matching or application submission is implied.
 
 Next small delivery: expand the validated AI schema to responsibilities, a short sourced summary and important unknowns, then expose these as readable overview sections. Evaluate Groq Browser Search separately before committing to FINN integration.
+
+## FINN URL slice — implemented, pending PR merge
+
+`feat/finn-browser-search` accepts modern FINN job links through Groq's built-in Browser Search. Only a browser.open tool result for the exact canonical URL is accepted; the model's final summary/reasoning is never imported. Source provenance and incompleteness are visible before and after analysis. Search and structured extraction remain separate calls with separate attempt caps and no automatic retry. No new dependencies or backend website scraper were added.
+
+Next: richer source-backed summaries/responsibilities/metadata, then identity and persistence. Unsupported source access still falls back to pasted text.

@@ -79,7 +79,7 @@ class JobImportApiTest {
     @Autowired lateinit var mvc: MockMvc
     @MockitoBean lateinit var source: VacancySource
     @Test fun `unsupported source returns a safe error without fetching`() {
-        mvc.perform(post("/api/jobs/import").contentType("application/json").content("{\"url\":\"https://www.finn.no/job/ad/123\"}"))
+        mvc.perform(post("/api/jobs/import").contentType("application/json").content("{\"url\":\"https://other.example/job/ad/123\"}"))
             .andExpect(status().isBadRequest).andExpect(jsonPath("$.code").value("SOURCE_UNSUPPORTED"))
         verifyNoInteractions(source)
     }

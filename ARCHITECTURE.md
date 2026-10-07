@@ -84,3 +84,9 @@ Testcontainers er ønsket for PostgreSQL; verifiser Docker-tilgang i faktisk utv
 `JobImporter` validates supported links and delegates to the `VacancySource` port. `NavVacancySource` uses the official NAV vacancy API via a bounded fixed-host HTTP client, with jsoup only for normalizing its HTML description. API records use `ad_content` (verified live), despite an older example showing `json`. No Playwright scraping, Kafka or workflow infrastructure is needed.
 
 Next.js remains the routing and backend proxy layer. TanStack Query handles service health and import/analysis mutations with no automatic AI retries. shadcn/ui components are committed as source, with Tailwind CSS tokens and a responsive workspace composition. Mutation caches are not persisted and have zero garbage-collection retention after becoming inactive; displayed content remains in component state until reload. See ADR-0009.
+
+## FINN provider-mediated source adapter
+
+`JobImporter` routes validated FINN links to `AdvertisementBrowser`, implemented by `GroqAdvertisementBrowser`. The adapter enables only the documented built-in `browser_search` tool; structured outputs are intentionally absent from this request. The existing structured RequirementExtractor runs only after user review. Parse source text exclusively from exact-link `browser.open` executed_tools output, discard generated content/reasoning, and return `sourceType=GROQ_BROWSER_EXCERPT`. NAV records return `NAV_API`.
+
+The backend communicates only with Groq's fixed HTTPS endpoint. It does not fetch FINN or other provider-returned URLs itself. Local host/path controls do not govern Groq/Exa's internal browsing. Provider access is not a blanket FINN reuse license; production terms assessment remains necessary. See ADR-0010.

@@ -133,4 +133,21 @@ flowchart TD
     J -->|Edit source text| L[Mark result outdated]
 ```
 
-The pilot does not save input or results across reload. URL import makes no AI call. A fetched page is never automatically sent to Groq; the user reviews normalized text first. API-returned application links are not fetched. The current interface does not offer automated submission or personal match scores.
+The pilot does not save input or results across reload. NAV URL import makes no AI call. FINN import uses one Groq Browser Search API call before review, with its own bounded attempt limit. A fetched page is never automatically sent to Groq; the user reviews normalized text first. API-returned application links are not fetched. The current interface does not offer automated submission or personal match scores.
+
+## FINN source branch
+
+```mermaid
+flowchart TD
+    A[Paste modern FINN job URL] --> B[Validate and canonicalize exact advertisement link]
+    B --> C[Bounded Groq Browser Search]
+    C --> D{Exact browser.open source result available?}
+    D -->|No| E[Keep URL, explain error and offer pasted text]
+    D -->|Yes| F[Show Groq/Exa excerpt provenance, title, receipt time and editable text]
+    F --> G[User checks against original advertisement]
+    G --> H[User selects Analyze]
+    H --> I[Separate structured Groq requirement extraction]
+    I --> J[Quotes validated against the submitted excerpt, provenance remains visible]
+```
+
+The excerpt is provider-mediated source context, not the model's generated summary, a complete advertisement guarantee, or independently verified live source data. The website's update time and ad's active status are not established by a successful provider read.

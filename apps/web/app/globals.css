@@ -32,3 +32,5 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 @media(max-width:480px) { main { padding:26px 18px; }.topbar { padding:0 18px; }.topbar>span { max-width:130px; font-size:11px; }h1 { letter-spacing:-1px; }.workspace-heading { align-items:flex-start; }.workspace-heading>.inline-flex { display:none; }.app-footer { flex-direction:column; align-items:flex-start; }.result-counts div { padding:12px; }.mode-picker button { font-size:12px; }.page-intro { margin-bottom:25px; } }
 
 [data-slot="card"] { border-color:#dce2d9; } .workspace-heading>span,.pilot-badge { border-color:#dce2d9; }
+
+.notice { font-size:12px; line-height:1.7; padding:10px 12px; margin:12px 0; background:#f8eedc; border-radius:6px; color:#775c2e; }

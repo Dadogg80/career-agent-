@@ -72,3 +72,18 @@ CI-workflow er skrevet, men en lokal passering dokumenterer ikke at GitHub Actio
 Stop both running processes with Ctrl+C. From the repository root, run `git switch main` and `git pull --ff-only`. Reinstall frontend dependencies with `npm ci` when package-lock.json changes, rebuild the backend and start both using the commands above. A GitHub push does not update or restart your local application. Next.js dev mode reloads many UI edits automatically; backend JAR changes and dependency changes require restart.
 
 NAV import needs no personal token during experimentation; the public experiment token is fetched server-side. An optional NAV_API_TOKEN may be added to the backend `.env`. No Docker or database is needed for this slice.
+
+## FINN support and Java discovery on macOS
+
+FINN import reuses GROQ_API_KEY and defaults to Browser Search enabled with 10 attempts per backend process. No dependency reinstall is needed when updating only this delivery. Restart both after pulling main so the new backend route and client validator are active.
+
+If a new Mac terminal reports Unable to locate a Java Runtime, activate the already installed Homebrew JDK 21 in that terminal before Gradle or java:
+
+```sh
+export JAVA_HOME="$(brew --prefix openjdk@21)/libexec/openjdk.jdk/Contents/Home"
+export PATH="$JAVA_HOME/bin:$PATH"
+java -version
+javac -version
+```
+
+Both should report 21. These shell exports select the installed JDK; they do not install it or persist across new terminals. Avoid changing directory to apps/backend again when the prompt already shows backend.

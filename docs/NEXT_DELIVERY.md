@@ -1,6 +1,6 @@
 # Next delivery: URL-based job overview
 
-Status: URL ingestion and the redesigned workspace are implemented on `feat/job-url-import`; merge is pending. Richer summaries, responsibilities and sourced metadata remain planned.
+Status: NAV ingestion and the redesigned workspace are merged. FINN Browser Search support is implemented on `feat/finn-browser-search`, pending merge. Richer summaries, responsibilities and sourced metadata remain planned.
 
 ## Product goal
 
@@ -47,4 +47,4 @@ The first URL delivery may operate without persistence, like the existing public
 
 The first source is NAV’s official vacancy API, using its public experiment token or an optional server-only NAV_API_TOKEN. Website scraping is excluded. FINN ads are absent from this API. Production consumer registration and feed update/deletion compliance must precede saved listings. See ADR-0008.
 
-Groq Playground Browser Search was suggested by the user as a potential FINN integration. API/model availability, free-plan tool quotas/pricing, source retrieval and evidence validation remain unverified. Documentation access from this cloud environment returned HTTP errors; no search calls or paid features were enabled.
+Groq Browser Search documentation and API support have now been verified for GPT-OSS 20B. It cannot be combined with structured outputs in the same request. The FINN adapter imports only exact-page browser tool source excerpts, not generated summaries, and exposes provenance/completeness limits. See ADR-0010. No plan upgrade or paid fallback was enabled; free limits and account status must not be assumed for production.

@@ -4,7 +4,7 @@ AI-støttet jobbsøking med etterprøvbar kandidatkunnskap, kompetanseavklaring 
 
 The application now has a Norwegian/English interface and official NAV API URL import, a redesigned shadcn/ui workspace, and Groq-backed advertisement extraction. Candidate profiles, matching, authentication and persistent storage are not implemented yet. See the [pilot test guide](docs/TESTING_PILOT.md) and [run instructions](docs/RUNNING.md).
 
-Supported links are individual `https://arbeidsplassen.nav.no/stillinger/stilling/<uuid>` advertisements available in NAV’s API. FINN advertisements are excluded from that API; use Paste text for those. Review imported text before selecting Analyze.
+Supported links are individual `https://arbeidsplassen.nav.no/stillinger/stilling/<uuid>` advertisements available in NAV’s API. FINN links in the form `https://www.finn.no/job/ad/<id>` are supported separately through Groq Browser Search. FINN imports are labeled Groq/Exa source excerpts, which may be incomplete or stale. Review against the original before selecting Analyze. FINN import uses the existing backend GROQ_API_KEY and a separate bounded search quota; other unsupported sources retain the Paste text alternative.
 
 ## Lesestart
 
