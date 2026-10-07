@@ -16,6 +16,7 @@ Bekreftet betyr eksplisitt føring fra brukeren. Anbefalt betyr arkitektens fors
 | D-008 | Modular monolith først; Kotlin/Spring Boot foretrekkes. | Opprinnelig produktvisjon; endelige versjoner og modulgrenser gjenstår. |
 | D-009 | PostgreSQL er ønsket system of record. | Produktvisjonen; vector search er en avledet retrieval-mekanisme. |
 | D-010 | Beslutninger, planer og fremdrift skal lagres i dedikerte Markdown-filer. | Gjeldende brukerforespørsel; dokumentasjon er del av hver senere endring. |
+| D-011 | Fortsett selvstendig med dokumentasjon og Git-publisering. | Brukerens instruksjon etter foreslått neste steg; ikke en eksplisitt bestilling på applikasjonsimplementasjon. |
 
 ## Anbefalinger for diskusjon
 
@@ -32,4 +33,6 @@ Bekreftet betyr eksplisitt føring fra brukeren. Anbefalt betyr arkitektens fors
 
 ## Formelle arkitekturbeslutninger senere
 
-Opprett ADR-er for modulgrenser, identitet/isolasjon, claim-livssyklus, AI-orkestrering, bakgrunnsjobber, dokumentversjoner og databehandling når disse behandles. Registrer alternativer, begrunnelse, konsekvenser og status. Ikke lag vedtatte ADR-er bare for å fylle dokumentlisten.
+[ADR-indeksen](adr/README.md) inneholder to vedtatte produktføringer og tre foreslåtte detaljbeslutninger. Identitet/isolasjon og databehandling trenger videre avklaring før egne vedtatte ADR-er.
+
+Arbeidsmåten er `main` med korte arbeidsbranches, uten permanent `development`, valgt under den delegerte instruksjonen om å fortsette. Se [Git-arbeidsflyten](GIT_WORKFLOW.md). Branch protection er ikke konfigurert.
