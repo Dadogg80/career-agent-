@@ -1,6 +1,6 @@
 # User stories
 
-Status: Alle stories er foreslått og ikke implementert. Prioritet P0 gjelder første nyttige leveranse, P1 komplett foreslått MVP, P2 senere forbedring. Akseptansekriterier er krav som skal verifiseres, ikke rapporterte testresultater.
+Status: Stories er arbeidsforslag. Første grunnmur støtter norsk/engelsk på startsiden; ingen story er ferdig som komplett produktflyt. Prioritet P0 gjelder første nyttige leveranse, P1 komplett foreslått MVP, P2 senere forbedring. Akseptansekriterier er krav, ikke rapporterte testresultater.
 
 ## Første nyttige leveranse
 

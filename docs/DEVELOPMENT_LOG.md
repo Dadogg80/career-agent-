@@ -34,3 +34,17 @@ Loggen beskriver faktisk arbeid, ikke planlagt funksjonalitet. Datoer følger br
 - Dokumentert Gemini, Groq og lokal Ollama som kandidater; ingen provider eller modell er valgt.
 - Forsøk på lesing av offisielle Google/Groq-sider ble blokkert av nettverksproxy med 403 Forbidden. Dagens gratisnivåer og vilkår er derfor ikke verifisert.
 - Ingen credentials er etterspurt eller lagret, og ingen modellkall er utført.
+
+## 2026-10-07 — Første implementasjon: språk og tjenesteforbindelse
+
+- Brukerens forespørsel om å starte utviklingen ble tolket som klarsignal til en liten grunnmur; omfanget ble forklart før endringer.
+- Opprettet branch `feat/foundation` fra dokumentasjonsbranchen. Arkitekturdokumentasjonen følger derfor med i branchens historikk og er ikke allerede merget til main.
+- Implementert Next.js-startside med norsk som standard, engelsk, beholdt språkvalg og tilgjengelig tjenestestatus med retry.
+- Implementert Kotlin/Spring Boot API med systemstatus og begrenset health-endpoint. Backend binder loopback som standard; ingen private kandidatdata eller auth-flyt finnes ennå.
+- Lagt til checksum-verifisert Gradle wrapper, npm-lockfile, E2E-oppsett og GitHub Actions-workflow.
+- Rettet lokale miljøprerequisites: JDK 21 manglet selv om Java-runtime fantes. Temurin-distribusjon og Gradle ble checksum-verifisert. Eksisterende proxy og plattformens Java trust store er konfigurert utenfor Git; TLS-verifikasjon er beholdt.
+- Verifisert: backend test/build, 2 integrasjonstester passert uten skips; Next.js-produksjonsbygg og TypeScript passert; 3 Playwright-tester passert mot faktisk frontend/backend med systemets Chromium. Npm audit for runtime-dependencies rapporterte 0 kjente sårbarheter på kontrolltidspunktet.
+- Gradle wrapper-kjøring bestod etter bootstrap; oppgaver ble korrekt gjenbrukt fra cache. Wrapper-JAR ble også sammenlignet med offisiell checksum.
+- Frozen npm-installasjon (`npm ci`) og påfølgende TypeScript-kontroll bestod. Lokale lenker og kodegjerder i 23 prosjektdokumenter bestod kontrollen. Git-attributter normaliserer plattformens linjeskift for wrapper-skriptene.
+- GitHub Actions og kjøring på brukerens Mac er ikke verifisert. Ingen database, AI-integrasjon, betaling eller offentlig deploy er gjort.
+- Neste sammenhengende funksjon: eierskap/tilgang og manuelt kandidatgrunnlag med persistens og claim-bekreftelse, før AI-generering.

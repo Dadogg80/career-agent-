@@ -6,7 +6,7 @@ Bekreftet betyr eksplisitt føring fra brukeren. Anbefalt betyr arkitektens fors
 
 | ID | Føring | Grunnlag og konsekvens |
 | --- | --- | --- |
-| D-001 | Ingen applikasjonsimplementasjon før eksplisitt beslutning. | Brukerens opprinnelige instruksjon; nåværende oppgave autoriserer dokumentasjon. |
+| D-001 | Ingen applikasjonsimplementasjon før klarsignal. | Opprinnelig instruksjon. Klarsignal til første lille implementasjon er nå gitt; se D-012. |
 | D-002 | Norsk først, engelsk fra første versjon. | Brukerens eksplisitte språkkrav; UI og dokumentspråk må skilles. |
 | D-003 | Langsiktig målgruppe er alle jobbsøkere. | Brukerens svar; modellen skal ikke være utviklerspesifikk. |
 | D-004 | Produkteieren er eneste pilot og trenger rask praktisk nytte. | Brukerens svar; prioriter hele, små brukerflyter. |
@@ -17,6 +17,7 @@ Bekreftet betyr eksplisitt føring fra brukeren. Anbefalt betyr arkitektens fors
 | D-009 | PostgreSQL er ønsket system of record. | Produktvisjonen; vector search er en avledet retrieval-mekanisme. |
 | D-010 | Beslutninger, planer og fremdrift skal lagres i dedikerte Markdown-filer. | Gjeldende brukerforespørsel; dokumentasjon er del av hver senere endring. |
 | D-011 | Fortsett selvstendig med dokumentasjon og Git-publisering. | Brukerens instruksjon etter foreslått neste steg; ikke en eksplisitt bestilling på applikasjonsimplementasjon. |
+| D-012 | Start første avgrensede utvikling. | Brukerens «vi kan vel kanskje starte utviklingen nå?» er tolket som klarsignal, med omfang forklart før arbeidet. Ingen betalingsautorisasjon. |
 
 ## Anbefalinger for diskusjon
 

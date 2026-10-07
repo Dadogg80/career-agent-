@@ -1,6 +1,6 @@
 # Sikkerhet og personvern — foreløpige krav
 
-Status: Designkrav og anbefalinger. Ingen tekniske tiltak er implementert eller verifisert ennå. Dokumentet er ikke en bekreftelse på GDPR-compliance.
+Status: Designkrav og anbefalinger. Første grunnmur har loopback-bind på backend og helsesvar uten komponentdetaljer. Auth, private data og de øvrige tiltakene nedenfor er ikke implementert. Dokumentet er ikke en bekreftelse på GDPR-compliance.
 
 ## Krav før ekstern pilot
 

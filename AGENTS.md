@@ -2,7 +2,7 @@
 
 ## Gjeldende fase
 
-Produkt- og arkitekturarbeid. Dokumentasjon er autorisert. Ikke start applikasjonsimplementasjon, dependency-installasjon eller infrastrukturprovisjonering før brukeren eksplisitt bestemmer at implementasjonen skal begynne.
+Implementasjon er startet etter brukerens klarsignal. Første avgrensede endring er en norsk/engelsk startside og en Kotlin/Spring Boot-backend med testet forbindelse. Fortsett i små, sammenhengende endringer; ikke bygg hele systemet samtidig. Ingen betalte tjenester eller infrastrukturkostnader er autorisert.
 
 ## Produktføringer
 

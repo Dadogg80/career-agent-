@@ -1,0 +1,41 @@
+name: Foundation checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - name: Backend integration tests and executable JAR
+        working-directory: apps/backend
+        run: ./gradlew --no-daemon test bootJar
+      - name: Install web dependencies from lockfile
+        working-directory: apps/web
+        run: npm ci
+      - name: Production build and type check
+        working-directory: apps/web
+        run: npm run build && npm run typecheck
+      - name: Install test browser
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+      - name: Browser tests against real frontend and backend
+        working-directory: apps/web
+        run: npm run test:e2e
