@@ -16,6 +16,7 @@ Bekreftet betyr eksplisitt føring fra brukeren. Anbefalt betyr arkitektens fors
 | D-008 | Modular monolith først; Kotlin/Spring Boot foretrekkes. | Opprinnelig produktvisjon; endelige versjoner og modulgrenser gjenstår. |
 | D-009 | PostgreSQL er ønsket system of record. | Produktvisjonen; vector search er en avledet retrieval-mekanisme. |
 | D-010 | Beslutninger, planer og fremdrift skal lagres i dedikerte Markdown-filer. | Gjeldende brukerforespørsel; dokumentasjon er del av hver senere endring. |
+| D-011 | Fortsett selvstendig med dokumentasjon og Git-publisering. | Brukerens instruksjon etter foreslått neste steg; ikke en eksplisitt bestilling på applikasjonsimplementasjon. |
 
 ## Anbefalinger for diskusjon
 
@@ -29,7 +30,10 @@ Bekreftet betyr eksplisitt føring fra brukeren. Anbefalt betyr arkitektens fors
 | R-006 | Ingen fremtredende totalscore i første versjon. | Prioriter forklarbare vurderinger per krav fremfor falsk presisjon. |
 | R-007 | Utsett Kafka, Temporal, Redis og pgvector til dokumentert behov. | Mindre drift og raskere pilot; varig jobbtilstand er fortsatt nødvendig. |
 | R-008 | EU/EØS som føring for senere drift og databehandlere. | Reduserer noen personvernkomplikasjoner; erstatter ikke leverandørvurdering. |
+| R-009 | Native frontend/backend og mulig lokal AI på Apple M1; PostgreSQL i container. | Pilotmaskinen har 16 GB delt minne. Begrens samtidighet og valider modellkvalitet før leverandørvalg; se LOCAL_DEVELOPMENT.md. |
 
 ## Formelle arkitekturbeslutninger senere
 
-Opprett ADR-er for modulgrenser, identitet/isolasjon, claim-livssyklus, AI-orkestrering, bakgrunnsjobber, dokumentversjoner og databehandling når disse behandles. Registrer alternativer, begrunnelse, konsekvenser og status. Ikke lag vedtatte ADR-er bare for å fylle dokumentlisten.
+[ADR-indeksen](adr/README.md) inneholder to vedtatte produktføringer og tre foreslåtte detaljbeslutninger. Identitet/isolasjon og databehandling trenger videre avklaring før egne vedtatte ADR-er.
+
+Arbeidsmåten er `main` med korte arbeidsbranches, uten permanent `development`, valgt under den delegerte instruksjonen om å fortsette. Se [Git-arbeidsflyten](GIT_WORKFLOW.md). Branch protection er ikke konfigurert.

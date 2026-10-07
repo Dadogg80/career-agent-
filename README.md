@@ -13,6 +13,12 @@ Prosjektet er i produkt- og arkitekturfasen. Applikasjonen er ikke implementert.
 | [USER_STORIES.md](USER_STORIES.md) | Stories med akseptansekriterier og foreslått prioritet |
 | [ROADMAP.md](ROADMAP.md) | Foreslåtte leveranser og ferdigkriterier |
 | [SECURITY.md](SECURITY.md) | Foreløpige sikkerhets- og personvernkrav |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Systemgrenser, modulansvar, AI og varig arbeid |
+| [DOMAIN.md](DOMAIN.md) | Domenebegreper og invarianter |
+| [docs/adr/README.md](docs/adr/README.md) | Arkitekturbeslutninger med eksplisitt status |
+| [docs/GIT_WORKFLOW.md](docs/GIT_WORKFLOW.md) | Branches, commits, push og review |
+| [docs/LOCAL_DEVELOPMENT.md](docs/LOCAL_DEVELOPMENT.md) | Foreslått lokal drift og AI-utprøving på Apple M1 |
+| [docs/AI_OPTIONS.md](docs/AI_OPTIONS.md) | AI-kandidater, gratisnivåer og nødvendige kontroller |
 | [docs/DECISIONS.md](docs/DECISIONS.md) | Bekreftede føringer og anbefalinger som ikke er vedtatt |
 | [docs/OPEN_QUESTIONS.md](docs/OPEN_QUESTIONS.md) | Uavklarte spørsmål og konsekvenser |
 | [docs/DEVELOPMENT_LOG.md](docs/DEVELOPMENT_LOG.md) | Hva som faktisk er gjort og kontrollert |
@@ -24,4 +30,4 @@ Dokumenter beskriver enten krav, forslag eller faktisk implementert atferd. Diss
 
 Markdown-filene er prosjektets felles hukommelse. De skal ikke inneholde pilotens CV, private søknader, kontaktopplysninger eller hemmeligheter.
 
-`ARCHITECTURE.md`, `DOMAIN.md` og formelle ADR-er opprettes når tilhørende beslutninger er behandlet. Beslutningsregisteret viser inntil da hva som er avklart.
+Arkitektur- og domenedokumentene er foreløpige design. ADR-indeksen og beslutningsregisteret viser hva som er vedtatt og hva som fortsatt er foreslått.
