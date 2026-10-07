@@ -1,6 +1,10 @@
 # Foreslått roadmap
 
-Status: Forslag. Ingen implementasjon er startet, og ingen datoer eller leveranser er lovet. Se [beslutningsregisteret](docs/DECISIONS.md) for hva som er bekreftet.
+Status: Implementasjon av første grunnmur er startet. Leveransenes detaljer er fortsatt arbeidsforslag; ingen datoer er lovet. Se [beslutningsregisteret](docs/DECISIONS.md).
+
+## Grunnmur — første avgrensede endring
+
+Norsk/engelsk startside, Spring Boot-status, frontend/backend-forbindelse og test-/build-oppsett. Dette er forarbeid til US-01, ikke hele språkkravet for framtidige skjermer. Profil, auth, PostgreSQL og AI inngår ikke i denne endringen.
 
 ## Leveranse 1 — Vurder en stilling
 

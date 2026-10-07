@@ -1,1 +1,19 @@
+# Dependencies and generated output
+node_modules/
+.next/
+build/
+.gradle/
+test-results/
+playwright-report/
+*.tsbuildinfo
+next-env.d.ts
+.cache/
+
+# Local configuration and private data
 .env
+.env.*
+!.env.example
+local-data/
+*.log
+.DS_Store
+.idea/

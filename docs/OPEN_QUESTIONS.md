@@ -11,3 +11,5 @@
 | Q-007 | Hvordan skal backup, sletting og retensjon fungere i lokal pilot? | Bevaring av arbeid og personvern. | Uavklart |
 
 Ikke gjenta tidligere besvarte spørsmål om målgruppe, standardspråk, gratis pilot eller ønsket fremtidig kundetype. Oppdater denne filen når et spørsmål avklares og lenk til beslutningen.
+
+Implementasjon av en avgrenset grunnmur er startet etter klarsignal. Q-003 gjelder fortsatt detaljene i hele MVP-en og blokkerer ikke denne første statusflyten.

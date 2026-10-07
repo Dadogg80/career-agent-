@@ -1,6 +1,6 @@
 # Arkitekturgrunnlag
 
-Status: Design for diskusjon, ikke implementert. Bekreftede føringer: modular monolith, Kotlin/Spring Boot og PostgreSQL. Konkret kjøreoppsett og versjoner velges før implementasjon. Se [ADR-indeksen](docs/adr/README.md).
+Status: Foreløpig målarkitektur. Bare Next.js-startside, server-side statusproxy og Spring Boot-status er implementert i første endring; øvrige moduler er design. Bekreftede føringer: modular monolith, Kotlin/Spring Boot og PostgreSQL. Første verktøyvalg finnes i [ADR-indeksen](docs/adr/README.md), kjøring i [RUNNING.md](docs/RUNNING.md).
 
 ## Systemgrenser
 
