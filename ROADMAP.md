@@ -52,3 +52,9 @@ Kafka innføres ved reelt behov for hendelsesdistribusjon. Temporal innføres ve
 ## Dokumentasjon per leveranse
 
 Oppdater relevante stories og flyter, før faktisk validering i utviklingsloggen, og registrer nye beslutninger. Ikke marker en leveranse ferdig bare fordi plan eller dokumentasjon er skrevet.
+
+## Current implementation update — URL import and interface
+
+Implemented on `feat/job-url-import`, pending PR merge: official NAV API import of an individual Arbeidsplassen URL, editable source review before AI, canonical source URL/retrieval time, manual fallback, TanStack Query and shadcn/ui workspace with responsive input/results columns. This partially delivers US-17; FINN URL support and richer role summaries remain pending. No persistent storage, candidate matching or application submission is implied.
+
+Next small delivery: expand the validated AI schema to responsibilities, a short sourced summary and important unknowns, then expose these as readable overview sections. Evaluate Groq Browser Search separately before committing to FINN integration.

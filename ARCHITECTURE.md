@@ -78,3 +78,9 @@ Originalfiler er immutable ved redigering. Konto-/dokument-sletting følger en e
 - Realistiske DOCX/PDF-eksempler og separat kvalitetsvurdering av AI.
 
 Testcontainers er ønsket for PostgreSQL; verifiser Docker-tilgang i faktisk utviklings-/CI-miljø før dette gjøres til et obligatorisk kjørekrav.
+
+## Implemented source and frontend boundaries
+
+`JobImporter` validates supported links and delegates to the `VacancySource` port. `NavVacancySource` uses the official NAV vacancy API via a bounded fixed-host HTTP client, with jsoup only for normalizing its HTML description. API records use `ad_content` (verified live), despite an older example showing `json`. No Playwright scraping, Kafka or workflow infrastructure is needed.
+
+Next.js remains the routing and backend proxy layer. TanStack Query handles service health and import/analysis mutations with no automatic AI retries. shadcn/ui components are committed as source, with Tailwind CSS tokens and a responsive workspace composition. Mutation caches are not persisted and have zero garbage-collection retention after becoming inactive; displayed content remains in component state until reload. See ADR-0009.

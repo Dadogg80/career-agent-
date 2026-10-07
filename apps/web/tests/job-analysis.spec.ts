@@ -6,10 +6,11 @@ const result = { requirements: [{ label: "Kotlin", kind: "REQUIRED", quote: "Du 
 test("renders cited requirements and marks edited source as outdated", async ({ page }) => {
   await page.route("**/api/jobs/requirements", (route) => route.fulfill({ json: result }));
   await page.goto("/");
+  await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await page.getByRole("textbox", { name: "Stillingsannonse" }).fill(source);
   await page.getByRole("button", { name: "Analyser", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Kotlin", exact: true })).toBeVisible();
-  await expect(page.getByText("Må-krav", { exact: true })).toBeVisible();
+  await expect(page.getByRole("listitem").getByText("Må-krav", { exact: true })).toBeVisible();
   await expect(page.locator("blockquote")).toHaveText("Du må ha erfaring med Kotlin.");
   await page.getByRole("textbox", { name: "Stillingsannonse" }).fill(source + " Ny tekst.");
   await expect(page.getByRole("region", { name: "Analyser en stillingsannonse" }).getByRole("alert")).toContainText("Annonsen er endret");
@@ -22,6 +23,7 @@ test("English request and UI error retain the advertisement", async ({ page }) =
     return route.fulfill({ status: 429, json: { code: "AI_RATE_LIMITED" } });
   });
   await page.goto("/");
+  await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await page.getByRole("combobox", { name: "Språk" }).selectOption("en");
   await page.getByRole("textbox", { name: "Job advertisement" }).fill(source);
   await page.getByRole("button", { name: "Analyze", exact: true }).click();
@@ -38,6 +40,7 @@ test("real proxy rejects invalid input without an AI call", async ({ request }) 
 
 test("real browser proxy reaches the backend and reports missing configuration", async ({ page }) => {
   await page.goto("/");
+  await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await page.getByRole("textbox", { name: "Stillingsannonse" }).fill(source);
   await page.getByRole("button", { name: "Analyser", exact: true }).click();
   await expect(page.getByRole("region", { name: "Analyser en stillingsannonse" }).getByRole("alert")).toContainText("AI er ikke konfigurert");

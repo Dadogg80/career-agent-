@@ -85,3 +85,13 @@ Loggen beskriver faktisk arbeid, ikke planlagt funksjonalitet. Datoer følger br
 - The user successfully built the backend and opened the frontend on their Mac. A successful local Groq analysis has not been reported; opening the screen does not verify inference.
 - Reviewed existing extraction code and roadmap after the user prioritized URL input and a readable summary.
 - Created a proposed staged plan: supported-source fetching, sourced richer analysis, result UI and source/security/browser verification. No application code was changed and URL support is not implemented.
+
+## 2026-10-07 — Official NAV URL import and redesigned workspace
+
+Implemented on `feat/job-url-import`, pending merge: supported Arbeidsplassen URL validation, official NAV API adapter with public experiment token, active-record/plain-text normalization, bounded HTTP requests, review-before-AI flow and manual fallback. FINN and Arbeidsplassen website scraping are excluded following their terms; NAV’s API excludes FINN-origin ads. Live API response uses `ad_content`, verified and reflected in fictional fixtures.
+
+At the user’s request, redesigned the interface with an input/results workspace, readable quotation cards, requirement counts, source evidence, mobile stacking and Norwegian/English copy. Added TanStack Query and official shadcn/ui components with Tailwind/Lucide; recorded the development rule in AGENTS.md and ADR-0009. No automatic AI retries, persisted content, fake scores or new routing framework.
+
+Validation: 25 backend tests passed; frontend production build and TypeScript check passed; 12 Playwright tests passed (AI outcomes mocked or key disabled); production dependency audit reported zero vulnerabilities. Live official NAV import returned title, canonical source and 4,510 characters of normalized text. Desktop and mobile synthetic result screenshots inspected. No new live Groq analysis was required; Groq Browser Search feasibility remains unverified, and documentation requests returned HTTP errors. GitHub Actions execution is not independently verified here.
+
+Remaining: richer sourced summary/responsibilities/metadata, Browser Search assessment, consumer registration and feed removal compliance before persistent discovery, identity/storage and candidate matching. Local test screenshots/source data stay outside Git.

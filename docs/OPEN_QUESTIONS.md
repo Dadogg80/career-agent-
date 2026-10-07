@@ -19,3 +19,8 @@ No product decision blocks the local public-advertisement extraction experiment.
 Q-003 concerns the full MVP and does not block small agreed steps. Q-004 matters before document export; Q-005 before URL import; Q-006 and Q-007 must be resolved before private-data persistence or an external pilot. They are not reasons to stop the current public-text test.
 
 Docker recommendation: native frontend/backend, PostgreSQL in Compose when introduced. See [DOCKER_STRATEGY.md](DOCKER_STRATEGY.md). No paid services are assumed.
+
+## URL access and richer analysis
+
+- Groq Browser Search: which API model/tool corresponds to the user’s Playground configuration? Are calls available within the free plan, what are tool quotas, and can we retrieve exact source text/evidence? Do not activate paid tooling or silently treat search summaries as original advertisements.
+- NAV: registered consumer access is needed beyond experimentation. API ads exclude FINN; persistent discovery must handle source updates/removals before republishing stored listings.

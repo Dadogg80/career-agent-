@@ -67,3 +67,17 @@ Default model: `openai/gpt-oss-20b`, configurable through backend `GROQ_MODEL`. 
 Default safety limit: 20 accepted analysis attempts per backend process, including failed attempts, and one in-flight call. Restart resets this limit; it is not a durable billing cap. `AI_MAX_REQUESTS` can reduce the limit. Output is bounded to 2,200 completion tokens per call. A limited smoke test does not establish complete Norwegian quality or prompt-injection resistance.
 
 Report missing/incorrect requirements, misleading categories, invented labels, latency, and confusing UI. Avoid copying real private candidate data into GitHub issues.
+
+## URL import and redesigned workspace
+
+After the URL-import PR is merged, update your local clone (`git switch main`, `git pull --ff-only`). Stop both running processes with Ctrl+C. Run `npm ci` in apps/web to install the new dependencies, and restart backend/frontend using the existing run instructions. Keep your existing backend `.env`; no Groq key changes are required.
+
+1. Open the Norwegian interface and select Use a link (Bruk lenke).
+2. Paste an individual Arbeidsplassen URL. Select Hent annonse.
+3. Review the title, source link/time and editable text. Correct/remove any unnecessary personal details.
+4. Select Analyser; check categories and quotations. Open Se kildegrunnlaget.
+5. Edit the text and verify the outdated-result warning.
+6. Try FINN: the import should explain the limitation and retain your URL. Select Lim inn tekst and paste the advertisement instead.
+7. Switch to English and repeat. Test a narrow browser window; the columns should stack without horizontal scrolling.
+
+NAV’s public token is used automatically for experimentation. A NAV_API_TOKEN is optional, backend-only; do not add it to Git or browser variables. Some Arbeidsplassen links (especially FINN-origin ads) are not in NAV’s API. Rich summaries and candidate matching are still pending. Reload loses the current text/results.

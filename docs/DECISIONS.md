@@ -40,3 +40,9 @@ Confirmed records explicit user requirements; recommendations record design prop
 The [ADR index](adr/README.md) is the authoritative list of accepted/proposed architecture records. Identity and private-data processing still require concrete decisions before private profile storage.
 
 Arbeidsmåten er `main` med korte arbeidsbranches, uten permanent `development`, valgt under den delegerte instruksjonen om å fortsette. Se [Git-arbeidsflyten](GIT_WORKFLOW.md). Branch protection er ikke konfigurert.
+
+## Accepted implementation decisions — 2026-10-07
+
+- D-015: Use TanStack Query and shadcn/ui for frontend work, as explicitly requested by the user. Next.js routing stays in place; further TanStack packages require a concrete need. ADR-0009.
+- D-016: Use NAV’s official free vacancy API for the first URL adapter. Do not scrape FINN or Arbeidsplassen websites without permission. Public experiment token is for the local pilot; production registration/compliance remains pending. ADR-0008.
+- R-012: Investigate Groq Browser Search as a possible additional source capability. The user’s Playground result is a useful UX example, not independently verified source evidence or proof of API/free-tier availability.

@@ -58,3 +58,7 @@ En eksternt endret CV må registreres som egen filversjon hvis systemet skal vit
 ## Teknisk prosesstilstand
 
 BackgroundJob har tilstand, antall forsøk, lease og feilklassifisering. AiRun registrerer en bestemt oppgave og inputreferanser. Disse er tekniske prosessbegreper og skal ikke bli kandidatens erfaringspåstander.
+
+## Transient imported advertisement
+
+`ImportedJob` currently carries a canonical `sourceUrl`, source-provided `title`, normalized `text` and server `retrievedAt`. It is not a persisted job aggregate or candidate claim. Analysis retains the exact submitted text and its language; edits make the displayed result stale. Persisted advertisement identity/versioning will be a separate later change.

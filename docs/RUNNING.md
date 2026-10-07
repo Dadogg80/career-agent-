@@ -1,6 +1,6 @@
 # Kjør første utviklingsversjon
 
-Status: A welcome page, language selection, service status and Groq advertisement extraction are implemented. Profiles, database, document processing and authentication are not implemented. This version must not be used for private candidate storage or as a public SaaS. See [TESTING_PILOT.md](TESTING_PILOT.md) for the complete AI test flow.
+Status: A redesigned shadcn/ui workspace, Norwegian/English selection, official NAV URL import, service status and Groq requirement extraction are implemented. Profiles, database, document processing and authentication are not implemented. This version must not be used for private candidate storage or as a public SaaS. See [TESTING_PILOT.md](TESTING_PILOT.md) for the complete AI test flow.
 
 ## Forutsetninger
 
@@ -18,6 +18,10 @@ Fra repoets rot:
 ```sh
 cd apps/backend
 ./gradlew test bootJar
+# Load your existing local .env. This file is not committed.
+set -a
+source .env
+set +a
 java -jar build/libs/career-agent-backend.jar
 ```
 
@@ -59,6 +63,12 @@ Noen cloud-miljøer injiserer HTTP(S)-proxy gjennom miljøvariabler. Java/Gradle
 
 ## Kjente grenser
 
-Ingen autentisering er implementert. Backend er derfor bundet til loopback og inneholder bare offentlig, ikke-personlig systemstatus. Innlogging og autorisasjon må implementeres før private data eller ekstern pilot.
+Ingen autentisering er implementert. Backend is therefore bound to loopback and supports only system status and the public-advertisement pilot. Innlogging og autorisasjon må implementeres før private data eller ekstern pilot.
 
 CI-workflow er skrevet, men en lokal passering dokumenterer ikke at GitHub Actions har kjørt. Se utviklingsloggen for faktisk verifikasjon.
+
+## After merging a delivery
+
+Stop both running processes with Ctrl+C. From the repository root, run `git switch main` and `git pull --ff-only`. Reinstall frontend dependencies with `npm ci` when package-lock.json changes, rebuild the backend and start both using the commands above. A GitHub push does not update or restart your local application. Next.js dev mode reloads many UI edits automatically; backend JAR changes and dependency changes require restart.
+
+NAV import needs no personal token during experimentation; the public experiment token is fetched server-side. An optional NAV_API_TOKEN may be added to the backend `.env`. No Docker or database is needed for this slice.

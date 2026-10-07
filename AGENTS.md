@@ -9,7 +9,7 @@
 
 ## Gjeldende fase
 
-Implementation is authorized in small coherent increments. The foundation is merged; the current slice adds bounded Groq advertisement extraction with a Norwegian/English frontend. Private profiles, authentication and persistence are still pending. Do not build the full system at once. No paid services, plan upgrades or infrastructure costs are authorized.
+Implementation is authorized in small coherent increments. The foundation is merged; the current slice adds official NAV API URL import and a redesigned Norwegian/English frontend. Private profiles, authentication and persistence are still pending. Do not build the full system at once. No paid services, plan upgrades or infrastructure costs are authorized.
 
 ## Produktføringer
 
@@ -47,3 +47,7 @@ Hver cloud-task har allerede et isolert miljø. Bruk eksisterende checkout; ikke
 - Bevar historikken når en beslutning erstattes; marker den som erstattet og lenk til etterfølgeren.
 - Når en publisert branch er klar for brukerens PR/merge: oppgi base- og head-branch, PR-tittel og full beskrivelse med faktisk validering og begrensninger. Ikke merge til main på brukerens vegne uten instruksjon. Sjekk oppdatert remote main før neste arbeidsbranch.
 - Ikke lagre rå samtalelogger eller persondata for å øke dokumentmengden. Dokumenter relevant hensikt, krav, begrunnelse og resultat.
+
+## Frontend implementation rule
+
+Use TanStack Query for server queries and asynchronous mutations. Use shadcn/ui components, kept in `apps/web/components/ui`, as the UI foundation. Keep Next.js routing; do not introduce TanStack Router or Table without a concrete need. Norwegian remains the default. Preserve visible evidence, accessible controls, responsive layouts and honest feature availability; no fake match scores or inactive navigation presented as working features. Disable automatic retries for AI mutations.

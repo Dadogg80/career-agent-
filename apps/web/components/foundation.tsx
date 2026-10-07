@@ -1,81 +1,31 @@
 "use client";
-
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { BriefcaseBusiness, ArrowUpRight, Compass, ShieldCheck, CircleCheck, CircleAlert } from "lucide-react";
 import { translations, type Locale } from "../lib/translations";
 import { JobAnalyzer } from "./job-analyzer";
-
-type Connection = "loading" | "online" | "offline";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 
 export function Foundation() {
   const [locale, setLocale] = useState<Locale>("nb");
-  const [connection, setConnection] = useState<Connection>("loading");
   const t = translations[locale];
-
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("career-agent.locale");
-      if (saved === "nb" || saved === "en") setLocale(saved);
-    } catch {
-      // Language selection still works if browser storage is disabled.
-    }
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.lang = locale;
-  }, [locale]);
-
-  const checkConnection = useCallback(async () => {
-    setConnection("loading");
-    try {
-      const response = await fetch("/api/status");
-      const result = await response.json();
-      setConnection(response.ok && result.status === "UP" ? "online" : "offline");
-    } catch {
-      setConnection("offline");
-    }
-  }, []);
-
-  useEffect(() => {
-    void checkConnection();
-  }, [checkConnection]);
-
-  function changeLocale(value: Locale) {
-    setLocale(value);
-    try {
-      localStorage.setItem("career-agent.locale", value);
-    } catch {
-      // Persistence is optional; do not block the user's choice.
-    }
-  }
-
-  return (
-    <div className="shell">
-      <header>
-        <a className="brand" href="/">Career Agent</a>
-        <label className="language-picker">
-          {t.language}
-          <select value={locale} onChange={(event) => changeLocale(event.target.value as Locale)}>
-            <option value="nb">Norsk</option>
-            <option value="en">English</option>
-          </select>
-        </label>
-      </header>
-      <main>
-        <p className="eyebrow">{t.stage}</p>
-        <h1>{t.title}</h1>
-        <p className="introduction">{t.introduction}</p>
-        <JobAnalyzer locale={locale} />
-        <section aria-labelledby="next-title" className="card">
-          <h2 id="next-title">{t.nextTitle}</h2>
-          <p>{t.nextDescription}</p>
-        </section>
-        <section aria-labelledby="connection-title" className="card">
-          <h2 id="connection-title">{t.connection}</h2>
-          <p role="status" aria-live="polite">{t[connection === "loading" ? "loading" : connection]}</p>
-          {connection === "offline" && <button onClick={() => void checkConnection()}>{t.retry}</button>}
-        </section>
-        <p className="principle">{t.principle}</p>
+  const connection = useQuery({ queryKey: ["system-status"], queryFn: async () => {
+    const response = await fetch("/api/status"); const value = await response.json();
+    if (!response.ok || value.status !== "UP") throw new Error("Unavailable"); return value;
+  } });
+  useEffect(() => { try { const saved = localStorage.getItem("career-agent.locale"); if (saved === "nb" || saved === "en") setLocale(saved); } catch {} }, []);
+  useEffect(() => { document.documentElement.lang = locale; }, [locale]);
+  function changeLocale(value: Locale) { setLocale(value); try { localStorage.setItem("career-agent.locale", value); } catch {} }
+  return <div className="app-shell">
+    <aside className="sidebar"><a className="brand" href="/"><span className="brand-mark"><BriefcaseBusiness size={20}/></span>Career Agent<span className="brand-dot">.</span></a>
+      <p className="nav-caption">{locale === "nb" ? "ARBEIDSOMRÅDE" : "WORKSPACE"}</p><a className="nav-active" href="#analyzer-title"><Compass size={18}/>{locale === "nb" ? "Stillingsanalyse" : "Job analysis"}<ArrowUpRight size={15}/></a>
+      <div className="sidebar-note"><ShieldCheck size={22}/><h2>{locale === "nb" ? "Din erfaring, korrekt fortalt." : "Your experience, accurately told."}</h2><p>{t.principle}</p></div><Badge variant="outline" className="pilot-badge">{locale === "nb" ? "Pilot · ikke lagret" : "Pilot · not saved"}</Badge>
+    </aside>
+    <div className="main-shell"><header className="topbar"><span>{locale === "nb" ? "Jobbsøking med retning" : "A clearer path to your next role"}</span><label className="language-picker">{t.language}<select value={locale} onChange={(e) => changeLocale(e.target.value as Locale)}><option value="nb">Norsk</option><option value="en">English</option></select></label></header>
+      <main><div className="page-intro"><p className="eyebrow">{locale === "nb" ? "FRA ANNONSE TIL OVERSIKT" : "FROM ADVERTISEMENT TO CLARITY"}</p><h1>{t.title}</h1><p className="introduction">{t.introduction}</p></div><JobAnalyzer locale={locale}/>
+      <footer className="app-footer"><div className="connection-status">{connection.isError ? <CircleAlert size={15}/> : <CircleCheck size={15}/>}<span role="status">{t[connection.isFetching ? "loading" : connection.isError ? "offline" : "online"]}</span>{connection.isError && <Button variant="ghost" size="sm" onClick={() => void connection.refetch()}>{t.retry}</Button>}</div><span>{locale === "nb" ? "Profil og personlig matching kommer senere" : "Profiles and personal matching are coming later"}</span></footer>
       </main>
     </div>
-  );
+  </div>;
 }
