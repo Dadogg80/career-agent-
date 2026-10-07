@@ -1,0 +1,13 @@
+# Åpne spørsmål
+
+| ID | Spørsmål | Hva påvirkes? | Status |
+| --- | --- | --- | --- |
+| Q-001 | Hvilket operativsystem, RAM og eventuelt skjermkort har pilotmaskinen? | Lokal drift, Docker og mulighet for lokal AI. | Ubesvart |
+| Q-002 | Lokal modell eller ekstern AI, og hva er faktisk tilgjengelig uten kostnad? | Analyseflyt, kvalitet, personvern og gjennomførbarhet. Ingen betalt API antas autorisert. | Uavklart |
+| Q-003 | Skal anbefalt MVP og leveranserekkefølge vedtas som arbeidsplan? | Omfang før implementasjonsstart. | Forslag dokumentert |
+| Q-004 | Hvilken CV-mal og hvilke layoutkrav er nødvendige for piloten? | Eksport og eventuell manuell mellomløsning. | Uavklart |
+| Q-005 | Hvilken annonsekilde integreres først, og er tilgangen tillatt? | URL-import; tekstimport kan utvikles uavhengig. | Uavklart |
+| Q-006 | Hvilken lokal tilgangsmodell og senere OIDC-provider skal brukes? | Innlogging, sesjoner og flerbrukerisolasjon. | Uavklart |
+| Q-007 | Hvordan skal backup, sletting og retensjon fungere i lokal pilot? | Bevaring av arbeid og personvern. | Uavklart |
+
+Ikke gjenta tidligere besvarte spørsmål om målgruppe, standardspråk, gratis pilot eller ønsket fremtidig kundetype. Oppdater denne filen når et spørsmål avklares og lenk til beslutningen.
