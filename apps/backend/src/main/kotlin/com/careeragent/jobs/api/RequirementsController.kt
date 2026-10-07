@@ -3,6 +3,7 @@ package com.careeragent.jobs.api
 import com.careeragent.ai.application.AiFailure
 import com.careeragent.jobs.application.RequirementExtractor
 import org.springframework.beans.factory.annotation.Value
+import org.slf4j.LoggerFactory
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.annotation.ExceptionHandler
@@ -21,6 +22,7 @@ class RequirementsController(
     private val extractor: RequirementExtractor,
     @Value("\${AI_MAX_REQUESTS:20}") private val maxRequests: Int,
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val permits = Semaphore(1)
     private val used = AtomicInteger()
 
@@ -40,8 +42,12 @@ class RequirementsController(
     }
 
     @ExceptionHandler(AiFailure::class)
-    fun failure(error: AiFailure): ResponseEntity<Map<String, String>> =
-        ResponseEntity.status(error.httpStatus).body(mapOf("code" to error.code))
+    fun failure(error: AiFailure): ResponseEntity<Map<String, String>> {
+        logger.warn("Job analysis rejected: code={}, status={}", error.code, error.httpStatus)
+        val response = ResponseEntity.status(error.httpStatus)
+        error.retryAfterSeconds?.let { response.header("Retry-After", it.toString()) }
+        return response.body(mapOf("code" to error.code))
+    }
 
     @ExceptionHandler(HttpMessageNotReadableException::class)
     fun malformed(): ResponseEntity<Map<String, String>> =

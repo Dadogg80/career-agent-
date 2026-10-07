@@ -18,6 +18,7 @@ class GroqAiModel(
     private val mapper: ObjectMapper,
     @Value("\${GROQ_API_KEY:}") private val apiKey: String,
     @Value("\${GROQ_MODEL:openai/gpt-oss-20b}") private val model: String,
+    private val cooldown: GroqCooldown,
 ) : AiModel {
     private val client: HttpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(5))
@@ -31,7 +32,20 @@ class GroqAiModel(
         }
         .build()
 
+    internal fun providerFailure(status: Int, body: String, retryAfter: String?): AiFailure? = when (status) {
+        200 -> null
+        401, 403 -> AiFailure("AI_ACCESS_DENIED", 503)
+        429 -> AiFailure("AI_RATE_LIMITED", 429, cooldown.record(retryAfter))
+        400 -> {
+            val code = try { mapper.readTree(body).path("error").path("code").asText() } catch (_: Exception) { "" }
+            AiFailure(if (code == "json_validate_failed") "AI_INVALID_RESULT" else "AI_UNAVAILABLE", if (code == "json_validate_failed") 502 else 503)
+        }
+        else -> AiFailure("AI_UNAVAILABLE", 503)
+    }
+
     override fun generateJson(system: String, user: String, schema: Map<String, Any>): String {
+        val remaining = cooldown.remainingSeconds()
+        if (remaining > 0) throw AiFailure("AI_RATE_LIMITED", 429, remaining)
         if (apiKey.isBlank()) throw AiFailure("AI_NOT_CONFIGURED", 503)
         val body = mapOf(
             "model" to model,
@@ -55,12 +69,7 @@ class GroqAiModel(
             .build()
         try {
             val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-            when (response.statusCode()) {
-                200 -> Unit
-                401, 403 -> throw AiFailure("AI_ACCESS_DENIED", 503)
-                429 -> throw AiFailure("AI_RATE_LIMITED", 429)
-                else -> throw AiFailure("AI_UNAVAILABLE", 503)
-            }
+            providerFailure(response.statusCode(), response.body(), response.headers().firstValue("retry-after").orElse(null))?.let { throw it }
             val json = mapper.readTree(response.body())
             val choice = json.path("choices").path(0)
             if (choice.path("finish_reason").asText() != "stop") throw AiFailure("AI_INVALID_RESULT", 502)

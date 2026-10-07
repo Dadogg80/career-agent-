@@ -68,3 +68,7 @@ No candidate matching, private profile storage or company research is implied by
 ## 2026-10-07 — Opt-in PostgreSQL foundation
 
 Accepted: implement local PostgreSQL Compose, Flyway migrations and real migration tests as the next profile prerequisite. Preserve public-ad startup without a database. Use JDBC first; no need for JPA before domain repositories exist. Initial identity/profile schema establishes integrity, not authorization. OIDC/owner enforcement and profile UI follow separately. See ADR 0011.
+
+## 2026-10-07 — Source formatting and provider rate limits
+
+Accepted: preserve exact source proof while handling wrapped FINN titles, normalize emphasis before AI extraction, expose partial evidence omissions, reuse fetched text on manual retries and propagate provider cooldowns. This supersedes all-or-nothing quote rejection for well-shaped results with independently valid cards. Shape/bounds validation and all-unsupported rejection remain. No automatic retries or paid upgrades. See ADR 0012.

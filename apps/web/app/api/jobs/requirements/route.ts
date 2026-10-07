@@ -46,7 +46,9 @@ export async function POST(request: Request) {
     if (!response.ok) {
       const codes = ["INVALID_INPUT", "AI_NOT_CONFIGURED", "AI_ACCESS_DENIED", "AI_RATE_LIMITED", "AI_BUSY", "AI_BUDGET_REACHED", "AI_INVALID_RESULT", "AI_UNAVAILABLE"];
       const code = value && typeof value === "object" && "code" in value && codes.includes(String(value.code)) ? value.code : "AI_UNAVAILABLE";
-      return Response.json({ code }, { status: [400, 429, 502, 503].includes(response.status) ? response.status : 503 });
+      const seconds = Number(response.headers.get("retry-after"));
+      const retryAfterSeconds = response.status === 429 && Number.isFinite(seconds) && seconds > 0 ? Math.min(300, Math.ceil(seconds)) : undefined;
+      return Response.json({ code, ...(retryAfterSeconds ? { retryAfterSeconds } : {}) }, { headers: { "Cache-Control": "no-store", ...(retryAfterSeconds ? { "Retry-After": String(retryAfterSeconds) } : {}) }, status: [400, 429, 502, 503].includes(response.status) ? response.status : 503 });
     }
     if (!isExtraction(value)) throw new Error("Invalid result");
     return Response.json(value, { headers: { "Cache-Control": "no-store" } });

@@ -70,3 +70,7 @@ Introduce Kafka, Temporal, pgvector and Redis only when an implemented workload 
 ## Completion discipline
 
 Update stories/flows, decisions, development log and security guidance with each delivery. Passing local tests does not establish that GitHub Actions ran. Published branches remain pending until merged. Private profile/CV features require verified ownership, access control and an appropriate provider-data policy before sending candidate material to AI.
+
+## Analysis reliability update
+
+Current branch fixes wrapped FINN title parsing, visible partial-evidence omissions, provider JSON-error mapping, shared rate-limit cooldowns and transient same-source manual retries. Login, saved private profiles and CV uploads remain the next product deliveries; this reliability work adds no persistent ad/profile cache or additional infrastructure. Validation/merge status is in docs/DEVELOPMENT_LOG.md.

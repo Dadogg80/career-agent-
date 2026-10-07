@@ -57,3 +57,15 @@ test("cross-origin and oversized requests are rejected", async ({ request }) => 
   const oversized = await request.post("/api/jobs/requirements", { data: { text: "x".repeat(100001), locale: "nb" } });
   expect(oversized.status()).toBe(413);
 });
+
+test("partial evidence is visible in both languages and valid cards remain usable", async ({ page }) => {
+  await page.route("**/api/jobs/requirements", route => route.fulfill({ json: { ...result, omittedItems: 1 } }));
+  await page.goto("/");
+  await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
+  await page.getByRole("textbox", { name: "Stillingsannonse" }).fill(source);
+  await page.getByRole("button", { name: "Analyser", exact: true }).click();
+  await expect(page.getByText(/Noen AI-forslag/)).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Kotlin", exact: true })).toBeVisible();
+  await page.getByRole("combobox", { name: "Språk" }).selectOption("en");
+  await expect(page.getByText(/Some AI suggestions/)).toBeVisible();
+});

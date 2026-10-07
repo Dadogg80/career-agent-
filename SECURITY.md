@@ -58,3 +58,7 @@ Default process limits: 10 Browser Search attempts and 20 structured-analysis at
 ## Local persistence boundary
 
 Compose PostgreSQL is loopback-only with a required local password and a persistent volume. No profile endpoint exposes stored data. The next slice must verify OIDC identity and ownership before any private read/write or CV import is enabled. DB integrity tests do not establish authorization. Use synthetic data for this foundation. Runtime/migration role separation, encrypted backups and production secret management are future deployment requirements.
+
+## Evidence resilience
+
+Exact FINN URL/tool proof is retained when handling wrapped provider titles. Source emphasis normalization and Unicode whitespace matching do not authorize invented words. Only independently quoted suggestions survive; omission counts are visible. All-unsupported/malformed outputs fail. The React-session source is transient and reused only for the same canonical URL. Sanitized rejection logs contain codes/status/counts, not personal content, credentials, raw model output or provider messages.

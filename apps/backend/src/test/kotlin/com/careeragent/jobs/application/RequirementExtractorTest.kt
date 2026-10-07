@@ -75,6 +75,29 @@ class RequirementExtractorTest {
         assertInvalid("""{"requirements":[],"facts":[{"kind":"ROLE","label":"Rolle","value":"${"x".repeat(501)}","quote":"utvikler"}]}""")
     }
 
+    @Test
+    fun `one unsupported fact does not discard valid sourced requirements`() {
+        val result = extractor("""{"requirements":[{"label":"Kotlin","kind":"REQUIRED","quote":"Du må ha erfaring med Kotlin."}],"facts":[{"kind":"LOCATION","label":"Lokasjon","value":"Oslo","quote":"Kontoret ligger i Oslo."}]}""").extract(source, "nb")
+        assertThat(result.requirements).hasSize(1)
+        assertThat(result.facts).isEmpty()
+        assertThat(result.omittedItems).isEqualTo(1)
+    }
+
+    @Test
+    fun `unsupported requirements are omitted while source backed facts remain`() {
+        val result = extractor("""{"requirements":[{"label":"Kafka","kind":"REQUIRED","quote":"Kafka er nødvendig."}],"facts":[{"kind":"ROLE","label":"Rolle","value":"Utvikler","quote":"Vi søker en utvikler."}]}""").extract(source, "nb")
+        assertThat(result.requirements).isEmpty()
+        assertThat(result.facts).hasSize(1)
+        assertThat(result.omittedItems).isEqualTo(1)
+    }
+
+    @Test
+    fun `Unicode whitespace differences do not introduce new words`() {
+        val result = extractor("""{"requirements":[{"label":"Kotlin","kind":"REQUIRED","quote":"Du må ha\u00a0erfaring med Kotlin."}],"facts":[]}""").extract(source, "nb")
+        assertThat(result.requirements).hasSize(1)
+        assertThat(result.omittedItems).isZero()
+    }
+
     private fun assertInvalid(result: String) {
         assertThatThrownBy { extractor(result).extract(source, "nb") }
             .isInstanceOf(AiFailure::class.java).hasMessage("AI_INVALID_RESULT")
