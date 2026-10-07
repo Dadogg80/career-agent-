@@ -6,6 +6,8 @@ Status: Valgt arbeidsmåte for dokumentasjon under brukerens instruksjon om å f
 - Korte branches som `docs/architecture-foundation` og `feat/career-profile` brukes til sammenhengende endringer.
 - Ingen permanent `development` nå; én pilot og små leveranser trenger ikke et separat integrasjonsløp.
 - Bruk pull requests når GitHub-verktøytilgang tillater det. Publisert branch er ikke det samme som en opprettet eller godkjent PR.
+- Brukeren oppretter og merger PR-er når API-tilgangen er utilgjengelig. Når en branch er klar, lever tittel, beskrivelse, base/head og relevante testresultater. Ikke la brukeren måtte utforme teksten selv.
+- Fetch main eksplisitt ved behov: enkelte cloud-checkouts har bare HEAD i fetch-refspec og en vanlig fetch kan etterlate origin/main utdatert.
 - Ikke force-push, overskriv remote historikk eller slett andres branches.
 - Før commit: undersøk diff, kontroller dokumentasjon og kjør relevante tester når kode finnes.
 - Før push: inkluder bare tilsiktede filer og kontroller at persondata/hemmeligheter ikke inngår.

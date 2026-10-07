@@ -48,3 +48,11 @@ Loggen beskriver faktisk arbeid, ikke planlagt funksjonalitet. Datoer følger br
 - Frozen npm-installasjon (`npm ci`) og påfølgende TypeScript-kontroll bestod. Lokale lenker og kodegjerder i 23 prosjektdokumenter bestod kontrollen. Git-attributter normaliserer plattformens linjeskift for wrapper-skriptene.
 - GitHub Actions og kjøring på brukerens Mac er ikke verifisert. Ingen database, AI-integrasjon, betaling eller offentlig deploy er gjort.
 - Neste sammenhengende funksjon: eierskap/tilgang og manuelt kandidatgrunnlag med persistens og claim-bekreftelse, før AI-generering.
+
+## 2026-10-07 — Kontroll av main og Groq-secret
+
+- Eksplisitt fetch av main avklarte at PR #1 for `docs/architecture-foundation` er merget. Main-tip var `28170e5`; implementasjonscommit `bcb40d8` var ikke inkludert.
+- Main hadde også brukerens `.gitignore` og `env_example`. Eksempelfilens nøkkelfelt ble kontrollert uten utskrift av verdi; det er en placeholder, ikke en mottatt credential.
+- Merget main inn i `feat/foundation`, bevart brukerfilen og løst add/add-konflikten i `.gitignore` ved å beholde `.env` og eksisterende ignoreringsregler.
+- Lagret secret-krav `GROQ_API_KEY` til `api.groq.com` i Codex-draft. Backend bekreftet lagring og at publisering kreves. Ingen secret-verdi finnes i kjøremiljøet ennå.
+- Dokumentert sikker konfigurasjon og brukerens ønskede PR-arbeidsflyt. PR-tittel og full beskrivelse finnes i PR_FOUNDATION.md.

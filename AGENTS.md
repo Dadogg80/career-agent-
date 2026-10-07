@@ -38,4 +38,5 @@ Hver cloud-task har allerede et isolert miljø. Bruk eksisterende checkout; ikke
 - Registrer uavklarte spørsmål i docs/OPEN_QUESTIONS.md. Et forslag er ikke en bekreftet beslutning.
 - Oppdater eksisterende dokument fremfor å lage parallelle, motstridende beskrivelser.
 - Bevar historikken når en beslutning erstattes; marker den som erstattet og lenk til etterfølgeren.
+- Når en publisert branch er klar for brukerens PR/merge: oppgi base- og head-branch, PR-tittel og full beskrivelse med faktisk validering og begrensninger. Ikke merge til main på brukerens vegne uten instruksjon. Sjekk oppdatert remote main før neste arbeidsbranch.
 - Ikke lagre rå samtalelogger eller persondata for å øke dokumentmengden. Dokumenter relevant hensikt, krav, begrunnelse og resultat.
