@@ -1,6 +1,6 @@
 # Next delivery: URL-based job overview
 
-Status: NAV ingestion and the redesigned workspace are merged. FINN Browser Search support is implemented on `feat/finn-browser-search`, pending merge. Richer summaries, responsibilities and sourced metadata remain planned.
+Status: NAV/FINN ingestion and the redesigned workspace are merged. Compact requirement details are implemented on `feat/compact-requirement-details`, pending merge. Richer summaries, responsibilities and sourced metadata remain planned.
 
 ## Product goal
 
@@ -48,3 +48,7 @@ The first URL delivery may operate without persistence, like the existing public
 The first source is NAV’s official vacancy API, using its public experiment token or an optional server-only NAV_API_TOKEN. Website scraping is excluded. FINN ads are absent from this API. Production consumer registration and feed update/deletion compliance must precede saved listings. See ADR-0008.
 
 Groq Browser Search documentation and API support have now been verified for GPT-OSS 20B. It cannot be combined with structured outputs in the same request. The FINN adapter imports only exact-page browser tool source excerpts, not generated summaries, and exposes provenance/completeness limits. See ADR-0010. No plan upgrade or paid fallback was enabled; free limits and account status must not be assumed for production.
+
+## Priority update after compact-result UI
+
+NAV and FINN source import are merged. The current branch implements compact grouped requirements and per-item dialogs without changing extraction. The next three recommended deliveries are now consolidated in ROADMAP.md: identity/storage/manual profile, CV source import/claim confirmation, then personal matching and CV recommendations. Richer job summaries remain on the analysis track but should not delay the profile/CV path requested by the pilot.

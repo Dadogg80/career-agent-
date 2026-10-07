@@ -1,66 +1,71 @@
-# Foreslått roadmap
+# Career Agent roadmap
 
-Status: Implementasjon av første grunnmur er startet. Leveransenes detaljer er fortsatt arbeidsforslag; ingen datoer er lovet. Se [beslutningsregisteret](docs/DECISIONS.md).
+Status checked against remote main on 2026-10-07. Dates are not promised; deliver small, tested pull requests. This is a working implementation sequence, not a claim that the complete MVP exists.
 
-## Grunnmur — første avgrensede endring
+## Where we are
 
-Norsk/engelsk startside, Spring Boot-status, frontend/backend-forbindelse og test-/build-oppsett. Dette er forarbeid til US-01, ikke hele språkkravet for framtidige skjermer. Profil, auth, PostgreSQL og AI inngår ikke i denne endringen.
+| Capability | Actual status |
+| --- | --- |
+| Next.js + Kotlin/Spring Boot foundation | Implemented and merged |
+| Norwegian default / English UI | Implemented for current screens |
+| Groq structured requirement extraction with source quotes | Implemented and merged |
+| NAV API URL import + manual text fallback | Implemented and merged |
+| FINN import through Groq browser excerpts | Implemented and merged; source may be partial/stale |
+| TanStack Query and shadcn/ui workspace | Implemented and required by AGENTS.md |
+| Compact requirement tiles, category filters and detail dialogs | Implemented on feat/compact-requirement-details; PR merge pending |
+| PostgreSQL, login, user-owned saved profiles/jobs | Not implemented |
+| Candidate claims/competence, CV/document upload, personal matching | Not implemented |
+| CV tailoring/export, application CRM, discovery and interview prep | Not implemented |
 
-## Leveranse 1 — Vurder en stilling
+The current pilot analyzes public advertisements. It does not know the candidate, save work across reloads, or produce a personal match assessment. Current requirement category explanations are deterministic UI guidance; detailed source context comes from the exact analyzed text, not an additional model call.
 
-### Current incremental delivery
+## Current delivery: make analysis easier to inspect
 
-Pasted-advertisement extraction is merged into main with Groq and a Norwegian/English UI. Candidate matching, persistent snapshots, profile isolation and clarification workflows remain unfinished. US-04/US-05 are not complete.
+Show compact tiles grouped by REQUIRED, PREFERRED and UNCLEAR, with category filters/counts. Open each tile to inspect the original quote, category explanation and surrounding source context. Preserve language, stale-result and browser-excerpt provenance. No additional AI calls or candidate claims.
 
-The user now prioritizes URL input and a clear job summary. The proposed next slice is supported-source ingestion plus a sourced overview; see [NEXT_DELIVERY.md](docs/NEXT_DELIVERY.md). This brings US-17 forward. Identity/persistence still precedes private profiles and saved candidate data.
+## Next delivery 1: identity, storage and candidate profile
 
-Stories: US-01–US-07.
+Purpose: turn the public-text tool into a safe, persistent personal workspace.
 
-- Norsk/engelsk grensesnitt og manuelt kandidatgrunnlag.
-- Eierskap og tilgangsmodell for piloten.
-- Innlimt annonse, kravbasert analyse og relevante avklaringer.
-- Enkel lagring av stilling og eget valg.
+Small implementation sequence:
+1. PostgreSQL in local Docker Compose, schema migrations and integration-test setup.
+2. Spring Security/OIDC session and server-side ownership/authorization; choose/configure the pilot login provider. Do not expose private data before these boundaries are verified.
+3. User-owned profile, projects/experience and manually entered competency claims with UNVERIFIED/INFERRED/CONFIRMED/REJECTED status and evidence/confirmation history.
+4. Profile screen for editing, reviewing and reopening saved information; save user-owned job snapshots. Add sanitized request diagnostics/build information during this foundation work.
 
-Ferdig når piloten kan gjennomføre denne flyten med faktatrofast resultat og gjenåpne lagret arbeid. AI-kjøreform og eventuelle kostnader må være avklart før avhengig implementasjon.
+Done when the pilot can log in, save/reopen a profile and competencies, and authorization tests prove another identity cannot access them. These are multiple coherent PRs, not one large commit.
 
-## Leveranse 2 — Forbedre søknaden
+## Next delivery 2: CV and source document import
 
-Stories: US-08–US-11.
+Purpose: populate the profile from the user's own material without turning AI extraction into truth.
 
-- CV-import med kildegrunnlag og bekreftelse.
-- Separat valg av dokumentspråk.
-- CV-endringsforslag og søknadstekst med versjonsbundet godkjenning.
+Small implementation sequence:
+1. Authenticated bounded DOCX/PDF upload, object-storage abstraction, metadata and original-document retention.
+2. Text/structure extraction with file-type, size and malformed-document handling.
+3. Proposed claims linked to their source, initially UNVERIFIED, with explicit user confirmation/rejection/editing.
+4. Master CV selection and document language; an uploaded DOCX can be the original CV/template source.
 
-Ferdig når piloten kan få godkjent søknadsinnhold uten at ukjent eller inferert erfaring blir fremstilt som fakta.
+Done when the pilot can upload a CV, inspect proposed experience/skills and confirm the facts to reuse. Uploading a template does not imply preserving arbitrary layout, generating tailored DOCX/PDF or executing embedded document content.
 
-## Leveranse 3 — Bruk materialet og følg søknaden
+## Next delivery 3: personal matching and approved CV recommendations
 
-Stories: US-12–US-16.
+Purpose: connect the working job analysis to the confirmed candidate profile.
 
-- Malbasert DOCX/PDF-eksport.
-- Faktisk innsending, dokumentkoblinger, status og notater.
-- Gjenopptak, kostnadsgrenser og personvernfunksjoner.
+Small implementation sequence:
+1. Requirement-to-claim/project/evidence comparison with strong, partial and needs-clarification outcomes. Undocumented experience is unknown, not automatically a genuine skill gap.
+2. Targeted competency questions and confirmation history; re-analyze against updated profile versions.
+3. Explainable application recommendation and CV wording/change proposals using confirmed facts only, with user review.
 
-Ferdig når eksakt materiale kan spores fra godkjenning til brukerbekreftet innsending og søknadssaken kan følges videre. Eksport/sletting og flerbrukerisolasjon skal være verifisert før ekstern pilot.
+Done when each relevant requirement has inspectable candidate evidence or an explicit uncertainty, and no inferred experience appears as confirmed CV content. Exact CV versioning, controlled template rendering and DOCX/PDF export follow as a separate delivery.
 
-## Senere prioritering
+## Later deliveries
 
-URL-import kan trekkes frem dersom en kilde er enkel og tillatt å integrere. Automatisk discovery, intervju, browser-assistent, kurs og organisasjonsfunksjoner prioriteres ut fra pilotens erfaringer.
+CV artifact/version generation → simple application CRM and exact materials used → automatic discovery and digest → interview/follow-up → browser application copilot → interactive academy and analytics.
 
-Kafka innføres ved reelt behov for hendelsesdistribusjon. Temporal innføres ved tilstrekkelig kompleksitet i varige arbeidsflyter. Ingen av delene er et MVP-ferdigkriterium i dette forslaget.
+Richer job overview/summary and metadata remain a scoped improvement to the analysis track; they should not hold up the requested profile/CV work. Work can resume there when needed for matching. Keep its facts sourced and distinguish missing metadata.
 
-## Dokumentasjon per leveranse
+Introduce Kafka, Temporal, pgvector and Redis only when an implemented workload justifies them. No Kubernetes or premature microservices. No paid services or account upgrades are authorized.
 
-Oppdater relevante stories og flyter, før faktisk validering i utviklingsloggen, og registrer nye beslutninger. Ikke marker en leveranse ferdig bare fordi plan eller dokumentasjon er skrevet.
+## Completion discipline
 
-## Current implementation update — URL import and interface
-
-Implemented on `feat/job-url-import`, pending PR merge: official NAV API import of an individual Arbeidsplassen URL, editable source review before AI, canonical source URL/retrieval time, manual fallback, TanStack Query and shadcn/ui workspace with responsive input/results columns. This partially delivers US-17; FINN URL support is added in the subsequent Browser Search slice below; richer role summaries remain pending. No persistent storage, candidate matching or application submission is implied.
-
-Next small delivery: expand the validated AI schema to responsibilities, a short sourced summary and important unknowns, then expose these as readable overview sections. Evaluate Groq Browser Search separately before committing to FINN integration.
-
-## FINN URL slice — implemented, pending PR merge
-
-`feat/finn-browser-search` accepts modern FINN job links through Groq's built-in Browser Search. Only a browser.open tool result for the exact canonical URL is accepted; the model's final summary/reasoning is never imported. Source provenance and incompleteness are visible before and after analysis. Search and structured extraction remain separate calls with separate attempt caps and no automatic retry. No new dependencies or backend website scraper were added.
-
-Next: richer source-backed summaries/responsibilities/metadata, then identity and persistence. Unsupported source access still falls back to pasted text.
+Update stories/flows, decisions, development log and security guidance with each delivery. Passing local tests does not establish that GitHub Actions ran. Published branches remain pending until merged. Private profile/CV features require verified ownership, access control and an appropriate provider-data policy before sending candidate material to AI.

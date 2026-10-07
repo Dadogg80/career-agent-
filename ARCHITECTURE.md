@@ -90,3 +90,7 @@ Next.js remains the routing and backend proxy layer. TanStack Query handles serv
 `JobImporter` routes validated FINN links to `AdvertisementBrowser`, implemented by `GroqAdvertisementBrowser`. The adapter enables only the documented built-in `browser_search` tool; structured outputs are intentionally absent from this request. The existing structured RequirementExtractor runs only after user review. Parse source text exclusively from exact-link `browser.open` executed_tools output, discard generated content/reasoning, and return `sourceType=GROQ_BROWSER_EXCERPT`. NAV records return `NAV_API`.
 
 The backend communicates only with Groq's fixed HTTPS endpoint. It does not fetch FINN or other provider-returned URLs itself. Local host/path controls do not govern Groq/Exa's internal browsing. Provider access is not a blanket FINN reuse license; production terms assessment remains necessary. See ADR-0010.
+
+## Requirement result presentation
+
+RequirementResults is a client presentation component with category filter state. Each tile uses the official shadcn Dialog/Radix focus handling. Source context is deterministically taken from the exact analyzed snapshot with normalized whitespace and explicit clipping marks; it does not invoke AI. Generic category guidance explains the classification, without inventing role facts or candidate evidence. The backend extraction contract is unchanged.

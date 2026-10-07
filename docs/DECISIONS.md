@@ -50,3 +50,9 @@ Arbeidsmåten er `main` med korte arbeidsbranches, uten permanent `development`,
 ## FINN Browser Search — 2026-10-07
 
 D-017 (Accepted, local pilot): Support modern FINN job URLs through Groq's documented browser_search capability using the existing key/model. Separate provider-mediated source retrieval from structured analysis; use exact-link tool output only, show provenance and potential incompleteness, and bound attempts. The earlier R-012 investigation is completed for API feasibility, with production terms/quota questions remaining. ADR-0010. No plan upgrade, paid fallback or direct FINN website scraper.
+
+## Compact analysis and profile-first follow-up — 2026-10-07
+
+D-018 (Accepted delegated UI decision): use compact grouped tiles/category filters and the official shadcn Dialog for per-requirement inspection. Keep quote/category guidance/source context distinct; no new model calls. TanStack Query/shadcn remain mandatory.
+
+R-013 (Recommended implementation sequence): after the compact-result delivery, prioritize identity/PostgreSQL/manual profile → bounded CV import and claim confirmation → evidence-based matching/CV recommendations. These are multiple small PRs. Template upload precedes layout-preserving rendering/export; the latter is not claimed as part of upload. ROADMAP.md now consolidates actual implementation status and the next three deliveries instead of stale merge-pending entries.

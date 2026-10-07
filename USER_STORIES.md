@@ -199,3 +199,15 @@ Remaining: richer overview metadata/responsibilities/summary, saved jobs and imm
 - Source excerpt provenance, potential incompleteness/staleness and the original link remain visible in Norwegian/English before analysis and with its results.
 - Missing configuration, disabled search, provider rate limits, budget exhaustion and unavailable evidence preserve input and offer a manual alternative.
 - No automatic analysis, retries, paid fallback, login or application submission.
+
+## Inspect compact requirements
+
+As a jobseeker, I can scan grouped requirement tiles and open an individual requirement to understand its source and category without reading a long repeated list.
+
+Acceptance criteria implemented:
+- Category filters show real counts and pressed state; empty categories explain their empty state.
+- Compact cards display category, label and a clear details action. Long titles are visually clamped; the full label remains accessible and appears in details.
+- The shadcn Dialog shows the original quote, a deterministic explanation of the AI-suggested category, and surrounding exact submitted-source text (normalized whitespace, marked clipping).
+- Keyboard Enter opens, Escape closes and focus returns to the tile; close labels are Norwegian/English.
+- Stale-result and Groq/Exa provenance remain visible in details.
+- Filtering/opening details adds no AI call. No candidate matching or AI-generated technical explanation is implied.
