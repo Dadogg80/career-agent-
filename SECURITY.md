@@ -9,6 +9,7 @@ Status: Design requirements. The local pilot includes loopback backend binding, 
 - Request size, source length, completion tokens, concurrent calls and attempts per backend process are limited. The process budget resets on restart and is not a billing guarantee.
 - Provider failures return allowlisted error codes, not keys, source documents or provider payloads.
 - Source text and results are held only for the request/UI lifecycle, not stored in a database or browser persistence.
+- Development diagnostics log only allowlisted stages, counts, timings, HTTP status and mapped error codes. Never log source text, titles, full URLs, raw provider responses or credentials. A separately expanded UI preview displays the received public source as escaped text. Diagnostics default off in production and retain at most 40 events for the current run in component memory. See docs/DEBUGGING.md.
 - Tests use a mocked model or missing-key backend; they do not consume live Groq quotas. Explicit manual smoke checks use fictional data.
 - No public deployment is authorized; identity, authorization and persistent per-account limits must precede external users.
 

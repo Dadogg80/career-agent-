@@ -72,3 +72,9 @@ Accepted: implement local PostgreSQL Compose, Flyway migrations and real migrati
 ## 2026-10-07 — Source formatting and provider rate limits
 
 Accepted: preserve exact source proof while handling wrapped FINN titles, normalize emphasis before AI extraction, expose partial evidence omissions, reuse fetched text on manual retries and propagate provider cooldowns. This supersedes all-or-nothing quote rejection for well-shaped results with independently valid cards. Shape/bounds validation and all-unsupported rejection remain. No automatic retries or paid upgrades. See ADR 0012.
+
+## 2026-10-07 — Inspectable paced analysis before profile work
+
+Accepted, explicit product-owner priority: finish a working, observable URL → analysis → usable result loop before the next profile/CV milestone. Use a truthful staged loader and decorative document/cards animation, a default configurable 10-second pause after FINN retrieval, stop/resume without refetching, and collapsible development diagnostics with sanitized console events. NAV/pasted text normally skip this inter-Groq pause. Source bodies can be explicitly inspected in the UI but never added to logs.
+
+The delay is a browser-side UX/pacing policy, not account-wide rate-limit enforcement or a token availability forecast. Keep existing reactive provider cooldowns, manual retry and backend bounds. No new queue, provider calls, paid upgrades, dependencies or persisted diagnostic data. Production hides diagnostics unless explicitly opted in at build time. See DEBUGGING.md.

@@ -214,7 +214,7 @@ Acceptance criteria implemented:
 
 ## Direct URL analysis and sourced job overview (2026-10-07)
 
-Selecting **Analyze link** retrieves the public advertisement and immediately analyzes the retrieved text. The previous mandatory import/review step is superseded by the product owner's explicit instruction. Manual pasted text remains editable. Retrieval and analysis each keep their existing concurrency, quota, validation and error boundaries; there are no automatic retries. If analysis fails after retrieval, the text remains available under Paste text for retry without another search.
+Selecting **Analyze link** retrieves and analyzes the public advertisement in one action. FINN retrieval is followed by a configurable 10-second pause before structured analysis; NAV normally skips it. The previous mandatory import/review step is superseded by the product owner's explicit instruction. Manual pasted text remains editable. Retrieval and analysis each keep their existing concurrency, quota, validation and error boundaries; there are no automatic retries. If analysis fails after retrieval, the text remains available for retry without another search.
 
 The overview contains up to ten useful, variable facts: employer description, role/responsibilities, deadline, location/work model, contacts, benefits, salary or application process when explicitly present. Every fact carries a verbatim source quote. Missing data is omitted with an explicit notice rather than guessed. Quote membership validation establishes provenance, not semantic correctness of the AI's paraphrase. Browser excerpts can still be partial/stale; this limitation and the original link remain visible. Full source text is expandable, not a required intermediate screen. Requirement tiles/details remain unchanged.
 
@@ -228,4 +228,15 @@ As a pilot user, I can switch between Link and Paste text after the interface in
 
 A valid FINN browser excerpt may have a wrapped site title; presentation emphasis is normalized before analysis. Valid independently cited cards remain visible if another suggestion lacks source evidence, with a visible omission notice. Entirely unsupported or malformed results still fail closed.
 
-After a provider token-rate rejection, show a bounded countdown and keep the URL/text. A manual retry for the same retrieved URL analyzes the current text without a new browser search. Different URLs fetch fresh content. No automatic retries are made; process call limits and exact-source checks remain. Switching input mode/reading/editing remain available while waiting.
+After a provider token-rate rejection, show a bounded countdown and keep the URL/text. A manual retry for the same retrieved URL analyzes the current text without a new browser search. Different URLs fetch fresh content. No automatic retries are made; process call limits and exact-source checks remain. Switching input mode/reading/editing remain available during a reactive quota cooldown; active workflow controls are disabled until completion or explicit stop during pacing.
+
+## Paced loading and developer inspection (P0 pilot)
+
+As the pilot user, I can see whether retrieval actually succeeded and how the received source becomes an analysis before profile/CV development continues.
+
+- Show truthful retrieval/pause/analysis stages, a default 10-second FINN pause and an actual countdown. The decorative animation makes no AI calls and respects reduced-motion preferences.
+- Keep one-action submission; normally skip inter-Groq pacing for NAV/pasted text. Expose a bounded configuration setting rather than hardcoding an unchangeable delay.
+- Stop during the pause without sending the analysis request. Retain source and respect the remaining pause when resuming; same-URL continuation must not repeat browser search.
+- Provide a collapsible development panel with labeled stage lights, mapped errors/HTTP status, timings, text length and requirement/fact/omission counts. Allow explicit inspection of the actual received source as escaped text.
+- Emit sanitized console events with a per-run ID. Never include advertisement bodies/titles/full URLs, contacts, raw provider payloads or secrets. Production diagnostics require explicit opt-in; no persistent debug storage.
+- Keep bounded reactive Retry-After handling and manual retry. A fixed pause must not be described as guaranteeing quota availability or as an automatic failure retry.

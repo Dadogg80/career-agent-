@@ -99,3 +99,7 @@ The development config explicitly allows `localhost` and `127.0.0.1` for Next.js
 Analysis controls are disabled until React initializes, with a visible preparing message and a JavaScript-required fallback. A native form reload must not erase a submitted link. If the preparing message never disappears or mode buttons remain disabled, inspect browser Console and Network for failed scripts; an HMR warning alone does not identify every possible browser startup failure. Private browsing can help diagnose stale resources/extensions without deleting profile data.
 
 Run `npm run test:dev` from apps/web to test both loopback hostnames against a real Next development server. AI calls are mocked, and the tests verify origin enforcement, mode switching and one-click URL analysis without navigation. The regular production browser suite includes a delayed-script hydration check.
+
+## Staged loading and development diagnostics
+
+After pulling this frontend-only delivery, restart `npm run dev -- --hostname 127.0.0.1` from apps/web. No backend rebuild, Docker restart, new dependency or key is needed. The local UI includes a collapsed **Utviklerdiagnostikk** panel and sanitized Console events prefixed `[Career Agent]`. FINN retrieval now has a visible 10-second pause before analysis, configurable in apps/web/.env.local. See [DEBUGGING.md](DEBUGGING.md) for settings and inspection steps. Ten seconds does not guarantee shared Groq quota availability.

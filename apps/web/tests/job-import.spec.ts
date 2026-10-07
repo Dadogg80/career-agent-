@@ -43,7 +43,7 @@ test("FINN direct analysis retains provenance in both languages", async ({ page 
   await page.goto("/");
   await page.getByRole("textbox", { name: "Lenke til stillingsannonse" }).fill(finn);
   await page.getByRole("button", { name: "Analyser lenke", exact: true }).click();
-  await expect(page.getByText(/Kildeutdrag via Groq/)).toBeVisible();
+  await expect(page.getByText(/Kildeutdrag via Groq/)).toBeVisible({ timeout: 15000 });
   await expect(page.getByRole("link", { name: "Åpne originalannonsen" })).toHaveAttribute("href", finn);
   await expect(page.getByText("Ingen eksplisitte krav ble funnet.")).toBeVisible();
   expect(analyzed).toBe(true);
