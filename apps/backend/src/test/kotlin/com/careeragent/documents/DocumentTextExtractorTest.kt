@@ -17,11 +17,12 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 object DocumentFixture {
-    fun docx(text: String, unsafeXml: String? = null): ByteArray {
+    fun docx(text: String, unsafeXml: String? = null, parts: Map<String, String> = emptyMap()): ByteArray {
         val out = ByteArrayOutputStream()
         ZipOutputStream(out).use { zip ->
             zip.putNextEntry(ZipEntry("[Content_Types].xml")); zip.write("<Types>application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml</Types>".toByteArray()); zip.closeEntry()
             zip.putNextEntry(ZipEntry("word/document.xml")); zip.write((unsafeXml ?: """<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>$text</w:t></w:r></w:p></w:body></w:document>""").toByteArray()); zip.closeEntry()
+            parts.forEach { (name, xml) -> zip.putNextEntry(ZipEntry(name)); zip.write(xml.toByteArray()); zip.closeEntry() }
         }
         return out.toByteArray()
     }
@@ -38,6 +39,25 @@ object DocumentFixture {
 }
 class DocumentTextExtractorTest {
     private val extractor = DocumentTextExtractor()
+    @Test fun `Word tables text boxes headers footers and line breaks retain source text`() {
+        val main = """<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Built APIs</w:t><w:tab/><w:t>with Kotlin</w:t><w:br/><w:t>and PostgreSQL</w:t></w:r></w:p><w:tbl><w:tr><w:tc><w:p><w:r><w:t>Team collaboration</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:txbxContent><w:p><w:r><w:t>Azure course</w:t></w:r></w:p></w:txbxContent></w:body></w:document>"""
+        fun part(text: String) = """<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>$text</w:t></w:r></w:p></w:hdr>"""
+        val bytes = DocumentFixture.docx("", main, mapOf("word/header1.xml" to part("Technical skills: Docker"), "word/header2.xml" to part("Technical skills: Docker"), "word/footer1.xml" to part("Scrum certification")))
+        assertThat(extractor.extract(bytes, "docx")).isEqualTo("Built APIs\twith Kotlin\nand PostgreSQL\nTeam collaboration\nAzure course\n\nTechnical skills: Docker\n\nScrum certification")
+        assertCode("DOCUMENT_INVALID") { extractor.extract(DocumentFixture.docx("safe", parts = mapOf("word/header1.xml" to "<!DOCTYPE doc [<!ENTITY x SYSTEM 'file:///etc/passwd'>]><p>&x;</p>")), "docx") }
+    }
+    @Test fun `PDF text follows visual position instead of drawing order`() {
+        val out = ByteArrayOutputStream()
+        PDDocument().use { document ->
+            document.addPage(PDPage())
+            PDPageContentStream(document, document.getPage(0)).use { content ->
+                for ((text, y) in listOf("Second experience" to 600f, "First experience" to 700f)) {
+                    content.beginText(); content.setFont(PDType1Font(Standard14Fonts.FontName.HELVETICA), 12f); content.newLineAtOffset(30f,y); content.showText(text); content.endText()
+                }
+            }; document.save(out)
+        }
+        assertThat(extractor.extract(out.toByteArray(), "pdf")).isEqualTo("First experience\nSecond experience")
+    }
     @Test fun `DOCX and PDF extract text without altering originals`() {
         val docx = DocumentFixture.docx("Built APIs with Kotlin"); val before = docx.copyOf()
         assertThat(extractor.extract(docx, "docx")).isEqualTo("Built APIs with Kotlin"); assertThat(docx).isEqualTo(before)

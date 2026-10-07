@@ -2,6 +2,7 @@ package com.careeragent.documents.application
 
 import com.careeragent.documents.domain.*
 import com.careeragent.documents.infrastructure.DocumentTextExtractor
+import com.careeragent.documents.infrastructure.LocalPdfOcr
 import com.careeragent.profile.application.*
 import com.careeragent.profile.domain.*
 import org.springframework.context.annotation.Profile
@@ -18,12 +19,13 @@ interface DocumentRepository {
     fun create(identity: VerifiedIdentity, id: UUID, name: String, mediaType: String, size: Long, hash: String, text: String, language: String): CareerDocument
     fun selectMaster(identity: VerifiedIdentity, id: UUID): CareerDocument
     fun delete(identity: VerifiedIdentity, id: UUID)
+    fun replaceText(identity: VerifiedIdentity, id: UUID, text: String, method: String): DocumentDetail
 }
 @Service
 @Profile("persistence")
 class DocumentService(private val repository: DocumentRepository, private val storage: DocumentStorage,
     private val extractor: DocumentTextExtractor, private val claims: ClaimService,
-    private val analyses: DocumentAnalysisRepository) {
+    private val analyses: DocumentAnalysisRepository, private val ocr: LocalPdfOcr) {
     private val permit = Semaphore(1)
     fun list(identity: VerifiedIdentity) = repository.list(identity)
     fun detail(identity: VerifiedIdentity, id: UUID) = repository.detail(identity, id)
@@ -47,6 +49,16 @@ class DocumentService(private val repository: DocumentRepository, private val st
         } finally { permit.release() }
     }
     fun selectMaster(identity: VerifiedIdentity, id: UUID) = repository.selectMaster(identity, id)
+    fun reread(identity: VerifiedIdentity, id: UUID, useOcr: Boolean): DocumentDetail {
+        val (document, bytes) = original(identity, id)
+        if (useOcr && document.mediaType != "application/pdf") throw DocumentFailure("DOCUMENT_TYPE", 400)
+        if (!permit.tryAcquire()) throw DocumentFailure("DOCUMENT_BUSY", 429)
+        try {
+            val result = if (useOcr) ocr.extract(bytes) else com.careeragent.documents.infrastructure.ReadDocument(extractor.extract(bytes, if (document.mediaType == "application/pdf") "pdf" else "docx"), "TEXT")
+            if (result.text.isBlank() && repository.detail(identity, id).text.isNotBlank()) throw DocumentFailure("DOCUMENT_AI_NO_TEXT", 400)
+            return repository.replaceText(identity, id, result.text, result.method)
+        } finally { permit.release() }
+    }
     fun delete(identity: VerifiedIdentity, id: UUID) {
         val original = original(identity, id).second
         storage.delete(id)

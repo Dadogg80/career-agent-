@@ -16,9 +16,9 @@ import java.util.concurrent.atomic.AtomicInteger
 
 interface DocumentAnalysisRepository {
     fun load(identity: VerifiedIdentity, documentId: UUID): DocumentAnalysis?
-    fun save(identity: VerifiedIdentity, documentId: UUID, analysis: DocumentAnalysis): DocumentAnalysis
+    fun save(identity: VerifiedIdentity, documentId: UUID, analysis: DocumentAnalysis, expectedText: String): DocumentAnalysis
     fun loadCollection(identity: VerifiedIdentity): DocumentAnalysis?
-    fun saveCollection(identity: VerifiedIdentity, analysis: DocumentAnalysis): DocumentAnalysis
+    fun saveCollection(identity: VerifiedIdentity, analysis: DocumentAnalysis, expectedText: Map<UUID, String>): DocumentAnalysis
 }
 
 @Service
@@ -44,9 +44,9 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
             if (used.get() >= maxRequests) throw AiFailure("AI_BUDGET_REACHED", 429)
             used.incrementAndGet()
             val output = model.generateJson(prompt(locale), text, schema(false))
-            val parsed = parse(output, text, source)
+            val parsed = parse(output, text, source, locale)
             return analyses.save(identity, id, DocumentAnalysis(UUID.randomUUID(), locale, "Groq", parsed.first,
-                parsed.second, text.length, source.length, text != source, parsed.third, OffsetDateTime.now()))
+                parsed.second, text.length, source.length, text != source, parsed.third, OffsetDateTime.now()), source)
         } finally { permit.release() }
     }
 
@@ -68,16 +68,21 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
             used.incrementAndGet()
             val output = model.generateJson(prompt(locale) + "\nConsider all supplied documents together, preserving context and source attribution. Every item must identify the documentId whose quote supports it. Never combine conflicting or unrelated experience. A course or certificate is learning evidence, not production experience.", mapper.writeValueAsString(excerpts), schema(true))
             val sent = excerpts.associate { it.documentId to it.text }
-            val parsed = parseSources(output, sent, sources.mapValues { it.value.text }, true)
+            val parsed = parseSources(output, sent, sources.mapValues { it.value.text }, true, locale)
             val sourceDocuments = excerpts.map { AnalysisDocument(it.documentId, sources.getValue(it.documentId).document.originalName, it.text.length, sources.getValue(it.documentId).text.length) }
             return analyses.saveCollection(identity, DocumentAnalysis(UUID.randomUUID(), locale, "Groq", parsed.first, parsed.second,
-                excerpts.sumOf { it.text.length }, sources.values.sumOf { it.text.length }, excerpts.size != availableCount || excerpts.any { it.text != sources.getValue(it.documentId).text }, parsed.third, OffsetDateTime.now(), sourceDocuments))
+                excerpts.sumOf { it.text.length }, sources.values.sumOf { it.text.length }, excerpts.size != availableCount || excerpts.any { it.text != sources.getValue(it.documentId).text }, parsed.third, OffsetDateTime.now(), sourceDocuments), sources.mapValues { it.value.text })
         } finally { permit.release() }
     }
 
     private fun prompt(locale: String) = """
                 Summarize explicit competencies stated in this candidate document. Return up to 3 concise summary items
-                and up to 10 distinct competency suggestions in ${if (locale == "nb") "Norwegian Bokmål" else "English"}.
+                and up to 20 distinct competency suggestions in ${if (locale == "nb") "Norwegian Bokmål" else "English"}.
+                Inspect the entire submitted text, including skill lists, employment, projects, responsibilities, courses and certificates.
+                Extract each explicitly named technology or skill separately when useful; do not stop after the first ten.
+                Prefer concrete contributions, but retain explicit skills even when only listed, labeling that limitation.
+                Keep statements concise (prefer under 180 characters), context under 100, and quotes under 240 to fit the output budget.
+                NEVER exceed 3 summary items or 20 suggestions. Return a compact valid response within the token budget.
                 Each summary text must be at most 500 characters. Each suggestion must contain a skill (120 characters),
                 a statement of what the candidate actually did (1000 characters) and project/employment context (500 characters).
                 If context is absent write '${if (locale == "nb") "Kontekst ikke oppgitt" else "Context not stated"}'.
@@ -92,12 +97,12 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
                 Return empty arrays when there is no explicit competency evidence.
             """.trimIndent()
 
-    internal fun parse(output: String, sent: String, source: String): Triple<List<CompetencySummary>, List<CompetencySuggestion>, Int> {
+    internal fun parse(output: String, sent: String, source: String, locale: String = "nb"): Triple<List<CompetencySummary>, List<CompetencySuggestion>, Int> {
         val id = UUID(0, 0)
-        return parseSources(output, mapOf(id to sent), mapOf(id to source), false)
+        return parseSources(output, mapOf(id to sent), mapOf(id to source), false, locale)
     }
 
-    private fun parseSources(output: String, sent: Map<UUID, String>, source: Map<UUID, String>, collection: Boolean): Triple<List<CompetencySummary>, List<CompetencySuggestion>, Int> {
+    private fun parseSources(output: String, sent: Map<UUID, String>, source: Map<UUID, String>, collection: Boolean, locale: String): Triple<List<CompetencySummary>, List<CompetencySuggestion>, Int> {
         try {
             val root = try { mapper.readTree(output) } catch (_: Exception) { throw AiFailure("AI_INVALID_RESULT", 502, reason = "MALFORMED_JSON") }
             fun fields(node: JsonNode, expected: Set<String>) { require(node.isObject && node.fieldNames().asSequence().toSet() == expected) }
@@ -109,25 +114,46 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
             }
             fields(root, setOf("summary", "suggestions"))
             val summaries = root.path("summary"); val suggestions = root.path("suggestions")
-            require(summaries.isArray && summaries.size() <= 3 && suggestions.isArray && suggestions.size() <= 10)
+            require(summaries.isArray && summaries.size() <= 100 && suggestions.isArray && suggestions.size() <= 100)
             var omitted = 0
+            fun <T> checkedItem(read: () -> T): T? = try { read() } catch (_: IllegalArgumentException) { omitted++; null }
             fun document(item: JsonNode): UUID = if (!collection) UUID(0, 0) else UUID.fromString(value(item, "documentId", 36))
-            fun supported(quote: String, id: UUID): Boolean = (sent[id]?.contains(quote) == true && source[id]?.contains(quote) == true).also { if (!it) omitted++ }
+            fun supported(quote: String, id: UUID): String? {
+                val approved = sent[id]?.let { matchQuote(it, quote) }
+                val original = source[id]?.let { matchQuote(it, quote) }
+                if (approved == null || original == null) { omitted++; return null }
+                return original
+            }
             val summary = summaries.mapNotNull { item ->
-                fields(item, setOf("text", "quote") + if (collection) setOf("documentId") else emptySet()); val text = value(item, "text", 500); val quote = value(item, "quote", 600); val id = document(item)
-                if (supported(quote, id)) CompetencySummary(text, quote, if (collection) id else null) else null
+                checkedItem {
+                    fields(item, setOf("text", "quote") + if (collection) setOf("documentId") else emptySet()); val text = value(item, "text", 500); val quote = value(item, "quote", 600); val id = document(item)
+                    supported(quote, id)?.let { CompetencySummary(text, it, if (collection) id else null) }
+                }
             }
             val proposals = suggestions.mapNotNull { item ->
-                fields(item, setOf("skill", "statement", "context", "quote") + if (collection) setOf("documentId") else emptySet())
-                val skill = value(item, "skill", 120); val statement = value(item, "statement", 1000)
-                val context = value(item, "context", 500); val quote = value(item, "quote", 600)
-                val id = document(item)
-                if (supported(quote, id)) CompetencySuggestion(skill, statement, context, quote, if (collection) id else null) else null
+                checkedItem {
+                    fields(item, setOf("skill", "statement", "context", "quote") + if (collection) setOf("documentId") else emptySet())
+                    val skill = value(item, "skill", 120); val statement = value(item, "statement", 1000)
+                    require(item.path("context").isTextual)
+                    val context = if (item.path("context").asText().isBlank()) { if (locale == "nb") "Kontekst ikke oppgitt" else "Context not stated" } else value(item, "context", 500)
+                    val quote = value(item, "quote", 600); val id = document(item)
+                    supported(quote, id)?.let { CompetencySuggestion(skill, statement, context, it, if (collection) id else null) }
+                }
             }.distinctBy { listOf(it.skill.lowercase(), it.statement, it.context, it.quote, it.documentId) }
+            omitted += maxOf(0, summary.size - 3) + maxOf(0, proposals.size - 20)
             if (omitted > 0 && summary.isEmpty() && proposals.isEmpty()) throw AiFailure("AI_INVALID_RESULT", 502, reason = "NO_SUPPORTED_ITEMS")
-            return Triple(summary, proposals, omitted)
+            return Triple(summary.take(3), proposals.take(20), omitted)
         } catch (error: AiFailure) { throw error }
         catch (_: Exception) { throw AiFailure("AI_INVALID_RESULT", 502, reason = "INVALID_STRUCTURE") }
+    }
+
+    // Only layout whitespace may differ; return the actual source slice for subsequent claim validation.
+    internal fun matchQuote(source: String, quote: String): String? {
+        if (source.contains(quote)) return quote
+        val tokens = quote.trim().split(Regex("[\\s\\u00a0]+"))
+        if (tokens.isEmpty()) return null
+        val pattern = tokens.joinToString("[\\s\\u00a0]+") { Regex.escape(it) }
+        return Regex(pattern).find(source)?.value?.takeIf { it.length <= 600 }
     }
 
     private fun schema(collection: Boolean): Map<String, Any> = mapOf("type" to "object", "additionalProperties" to false,

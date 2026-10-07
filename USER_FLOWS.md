@@ -246,3 +246,29 @@ flowchart TD
 ```
 
 Unreadable scans are visibly excluded; long documents share a bounded excerpt budget. Reanalysis does not change saved claims. A source upload/deletion clears the combined summary. No original binaries, filenames or other profile content enter the provider prompt; private source previews are not advertisement diagnostics.
+
+## Competency workspace and document recovery (ADR 0017)
+
+```mermaid
+flowchart TD
+    Profile[Saved profile] --> Dashboard[Search competencies / filter review status]
+    Profile --> Library[Documents with readable-text counts]
+    Library --> Review[Open right-side source review Sheet]
+    Review --> Read{Need better text?}
+    Read -->|DOCX or text PDF| Reread[Reread immutable original locally]
+    Read -->|Textless PDF page| OCR[Explicit local OCR with limits]
+    OCR -->|Unavailable or failed| Keep[Retain original and previous source; show recovery guidance]
+    Reread --> Changed{Text changed?}
+    OCR --> Changed
+    Changed -->|Yes| Invalidate[Invalidate old analyses; preserve claims and originals]
+    Changed -->|No| Retain[Retain existing analyses]
+    Invalidate --> Preview[Review distributed source selection / focus a document]
+    Retain --> Preview
+    Preview --> Consent[Approve reviewed excerpts]
+    Consent --> AI[One bounded AI call, up to twenty proposals]
+    AI --> Source[Inspect actual source quote and edit proposal]
+    Source --> Save[Explicit save as UNVERIFIED]
+    Save --> Dashboard
+```
+
+Regular uploads do not invoke OCR or AI. OCR is optional and cannot promise complete reading of mixed text/image layouts. Distributed excerpts include later passages but remain limited; source selection and another approved call can target missing sections. Whitespace changes never authorize changed words. Saved claims remain separate from replaceable AI suggestion snapshots.

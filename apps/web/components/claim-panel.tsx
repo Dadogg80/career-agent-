@@ -1,7 +1,7 @@
 "use client";
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Check, X, History, Trash2 } from "lucide-react";
+import { Plus, Pencil, Check, X, History, Trash2, Search, ShieldCheck, ClipboardCheck, Files } from "lucide-react";
 import { Card, CardHeader, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -33,6 +33,7 @@ export function ClaimPanel({ locale, csrfToken, onAuthRequired }: { locale: Loca
   const t = copy[locale]; const cache = useQueryClient();
   const [modal, setModal] = useState<Modal | null>(null);
   const [draft, setDraft] = useState<ClaimContent>(empty);
+  const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<ClaimStatus | "ALL">("ALL");
   const [notice, setNotice] = useState<"created" | "changed" | "reviewed" | "deleted" | null>(null);
   const list = useQuery({ queryKey: ["private-claims"], gcTime: 0, refetchOnReconnect: false, queryFn: async () => {
@@ -65,7 +66,12 @@ export function ClaimPanel({ locale, csrfToken, onAuthRequired }: { locale: Loca
   async function reload() { close(); setNotice(null); await list.refetch(); }
   function submit(event: FormEvent) { event.preventDefault(); if (change.isPending || !modal) return; if (modal.kind === "create") change.mutate({ kind: "create", content: draft }); else if (modal.kind === "edit") change.mutate({ kind: "edit", content: draft, claim: modal.claim }); }
   function message(error: Error | null) { return error ? t.errors[error.message as keyof typeof t.errors] ?? t.errors.CLAIM_UNAVAILABLE : null; }
-  const visible = (list.data ?? []).filter(claim => filter === "ALL" || claim.status === filter);
+  const visible = (list.data ?? []).filter(claim => (filter === "ALL" || claim.status === filter) && `${claim.skill} ${claim.statement} ${claim.context} ${claim.sourceNote}`.toLocaleLowerCase(locale).includes(search.toLocaleLowerCase(locale)));
+  const stats = [
+    { label: locale === "nb" ? "Kompetanseområder" : "Distinct skills", value: new Set((list.data ?? []).filter(c => c.status !== "REJECTED").map(c => c.skill.toLocaleLowerCase(locale).trim())).size, icon: Files },
+    { label: locale === "nb" ? "Bekreftede opplysninger" : "Confirmed statements", value: (list.data ?? []).filter(c => c.status === "CONFIRMED").length, icon: ShieldCheck },
+    { label: locale === "nb" ? "Trenger gjennomgang" : "Needs review", value: (list.data ?? []).filter(c => ["UNVERIFIED", "INFERRED"].includes(c.status)).length, icon: ClipboardCheck },
+  ];
   const actions = (claim: CompetencyClaim) => <div className="claim-actions">
     <Button variant="outline" size="sm" onClick={() => open({ kind: "edit", claim })}><Pencil size={14}/>{t.edit}</Button>
     {claim.status !== "CONFIRMED" && <Button variant="outline" size="sm" onClick={() => open({ kind: "confirm", claim })}><Check size={14}/>{t.confirm}</Button>}
@@ -75,12 +81,14 @@ export function ClaimPanel({ locale, csrfToken, onAuthRequired }: { locale: Loca
   </div>;
   const selected = modal && modal.kind !== "create" ? modal.claim : null;
   const modalTitle = modal?.kind === "create" ? t.add : modal?.kind === "edit" ? t.edit : modal?.kind === "confirm" ? t.confirmTitle : modal?.kind === "reject" ? t.rejectTitle : modal?.kind === "delete" ? t.deleteTitle : t.history;
-  return <Card className="claim-panel"><CardHeader><div className="claim-heading"><h2>{t.title}</h2><Button onClick={() => open({ kind: "create" })} disabled={list.isPending || list.isError}><Plus size={16}/>{t.add}</Button></div><p className="hint">{t.intro}</p></CardHeader><CardContent>
+  return <Card className="claim-panel" id="profile-competencies"><CardHeader><div className="claim-heading"><h2>{t.title}</h2><Button onClick={() => open({ kind: "create" })} disabled={list.isPending || list.isError}><Plus size={16}/>{t.add}</Button></div><p className="hint">{t.intro}</p></CardHeader><CardContent>
     {notice && <p role="status" className="claim-notice">{t[notice]}</p>}
     {list.isPending && <p role="status">{t.loading}</p>}
     {list.isError && <Alert variant="destructive"><AlertDescription>{message(list.error)}</AlertDescription></Alert>}
-    {list.data && <><div className="claim-filters" aria-label={t.count}><Button variant={filter === "ALL" ? "default" : "outline"} size="sm" aria-pressed={filter === "ALL"} onClick={() => setFilter("ALL")}>{t.all} ({list.data.length})</Button>{(Object.keys(t.statuses) as ClaimStatus[]).map(status => <Button key={status} size="sm" variant={filter === status ? "default" : "outline"} aria-pressed={filter === status} onClick={() => setFilter(status)}>{t.statuses[status]} ({list.data!.filter(claim => claim.status === status).length})</Button>)}</div>
-      {visible.length === 0 ? <p className="hint">{list.data.length ? t.emptyFilter : t.empty}</p> : <div className="claim-grid">{visible.map(claim => <article key={claim.id} className="claim-tile" aria-label={claim.skill}><div className="claim-heading"><h3>{claim.skill}</h3><Badge variant="outline" data-claim-status={claim.status}>{t.statuses[claim.status]}</Badge></div><p className="claim-statement">{claim.statement}</p><p className="hint">{claim.context}</p><details><summary>{t.sourceNote}</summary><p className="claim-source">{claim.sourceNote}</p>{claim.sourceQuote && <blockquote className="claim-source">{claim.sourceQuote}</blockquote>}<p className="hint">{t.revision}: {claim.revision}</p></details>{actions(claim)}</article>)}</div>}
+    {list.data && <><div className="competency-stats">{stats.map(stat => <div key={stat.label}><stat.icon size={20}/><strong>{stat.value}</strong><span>{stat.label}</span></div>)}</div>
+      <div className="competency-search"><Search size={18}/><Input aria-label={locale === "nb" ? "Søk i kompetanse" : "Search competencies"} placeholder={locale === "nb" ? "Søk etter kompetanse, prosjekt eller kilde …" : "Search skills, projects or sources …"} value={search} onChange={event => setSearch(event.target.value)}/></div>
+      <div className="claim-filters" aria-label={t.count}><Button variant={filter === "ALL" ? "default" : "outline"} size="sm" aria-pressed={filter === "ALL"} onClick={() => setFilter("ALL")}>{t.all} ({list.data.length})</Button>{(Object.keys(t.statuses) as ClaimStatus[]).map(status => <Button key={status} size="sm" variant={filter === status ? "default" : "outline"} aria-pressed={filter === status} onClick={() => setFilter(status)}>{t.statuses[status]} ({list.data!.filter(claim => claim.status === status).length})</Button>)}</div>
+      {visible.length === 0 ? <p className="hint">{list.data.length ? t.emptyFilter : t.empty}</p> : <div className="claim-grid">{visible.map(claim => <article key={claim.id} className="claim-tile" aria-label={claim.skill}><div className="claim-heading"><h3>{claim.skill}</h3><Badge variant="outline" data-claim-status={claim.status}>{t.statuses[claim.status]}</Badge></div><p className="claim-statement">{claim.statement}</p><p className="hint">{claim.context}</p><details><summary>{t.sourceNote}</summary><p className="claim-statement-full">{claim.statement}</p><p className="claim-source">{claim.sourceNote}</p>{claim.sourceQuote && <blockquote className="claim-source">{claim.sourceQuote}</blockquote>}<p className="hint">{t.revision}: {claim.revision}</p></details>{actions(claim)}</article>)}</div>}
     </>}
     <p className="hint mt-5">{t.aiBoundary}</p><Button variant="ghost" size="sm" onClick={() => void reload()} disabled={change.isPending}>{t.reload}</Button>
     <Dialog open={!!modal} onOpenChange={value => { if (!value) close(); }}><DialogContent className="claim-dialog" closeLabel={t.close}><DialogHeader><DialogTitle>{modalTitle}</DialogTitle><DialogDescription>{modal?.kind === "edit" ? t.editNotice : modal?.kind === "confirm" ? t.confirmNotice : modal?.kind === "reject" ? t.rejectNotice : modal?.kind === "delete" ? t.deleteNotice : modal?.kind === "create" ? t.sourceHint : t.byYou}</DialogDescription></DialogHeader>

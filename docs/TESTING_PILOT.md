@@ -129,3 +129,7 @@ After merge and restart, check that a fetched advertisement remains readable whe
 ## Optional document AI summaries
 
 After updating/rebuilding this branch, use Min profil → CV og dokumenter → Oppsummer alle dokumentene med AI. Review all readable source excerpts and approve sending; do not send unnecessary private details. GROQ_API_KEY is reused server-side. The new V4 migration is automatic. No new dependency/service or account upgrade is needed. Individual analysis is available inside each document. See [CV_IMPORT.md](CV_IMPORT.md) for partial coverage, source inspection, UNVERIFIED review, persistence and failure behavior. Public advertisement diagnostics exclude this private content.
+
+## Competency workspace and document recovery checks
+
+Search saved competencies by context/source, combine with status filters and inspect source evidence; counts reflect stored statements, not confidence. Open documents in the right-side Sheet, check readable character counts and try rereading an older DOCX containing header/footer skills. For a small image-only PDF, explicitly choose OCR after installing Tesseract. Missing-helper messages must retain the original; successful OCR text needs separate reviewed-preview approval. Verify more than ten explicit proposals can display, longer collections include later passages, focus/reset controls change the preview and clear consent, and reanalysis never changes saved claims. On mobile both source and result remain reachable without horizontal overflow.

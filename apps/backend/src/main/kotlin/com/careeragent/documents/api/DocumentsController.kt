@@ -29,6 +29,11 @@ class DocumentsController(private val services: ObjectProvider<DocumentService>)
         return ResponseEntity.ok().header("Cache-Control", "no-store").header("X-Content-Type-Options", "nosniff").header("Content-Type", "application/octet-stream").header("Content-Disposition", ContentDisposition.attachment().filename(document.originalName, Charsets.UTF_8).build().toString()).body(bytes)
     }
     @PostMapping("/{documentId}/master") fun master(@AuthenticationPrincipal principal: OidcUser?, @PathVariable documentId: String) = response(service().selectMaster(identity(principal), id(documentId)))
+    @PostMapping("/{documentId}/reread", consumes = ["application/json"])
+    fun reread(@AuthenticationPrincipal principal: OidcUser?, @PathVariable documentId: String, @RequestBody input: Map<String, Any?>): ResponseEntity<*> {
+        if (input.keys != setOf("ocr") || input["ocr"] !is Boolean) throw DocumentFailure("DOCUMENT_INVALID", 400)
+        return response(service().reread(identity(principal), id(documentId), input["ocr"] as Boolean))
+    }
     @PostMapping("/{documentId}/claims", consumes = ["application/json"])
     fun claim(@AuthenticationPrincipal principal: OidcUser?, @PathVariable documentId: String, @RequestBody input: Map<String, Any?>): ResponseEntity<*> {
         val fields = setOf("skill", "statement", "context", "quote")

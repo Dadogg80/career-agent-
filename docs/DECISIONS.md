@@ -95,3 +95,17 @@ Accepted local defaults: 100 owned claims, 20 documents, latest 20 revision snap
 ## 2026-10-07 — AI summaries from all competency documents before merge
 
 Accepted, explicit owner instruction: extend this same CV/competency branch before main merge with opt-in Groq summaries and source-backed proposals from uploaded CVs and other competency documents, individually or together. Preview/edit and per-run provider approval are explicit; upload makes no AI call. Validate quotes against the identified owned source and submitted excerpt, persist the latest owned result, preserve previous analysis on failure and save chosen claims as UNVERIFIED with separate confirmation. Use one bounded call, existing free-tier credentials, no new dependency/paid upgrade and no automatic retry. ADR 0016 supersedes ADR 0015 private-AI deferral for this local pilot; external rollout/privacy remains unresolved.
+
+## 2026-10-07 — Competency workspace and recoverable document reading
+
+Accepted, owner requested a UX/UI rethink and better extraction before advancing. Keep TanStack/shadcn, separate source review from suggestions in a wide Sheet, show recorded-data status counts/search and document readability. Redistribute the bounded AI input budget across complete short documents and start/middle/end passages of long ones; permit up to twenty concise proposals, with exact source attribution and separate user review. Do not promise exhaustive reading or auto-confirm. Add owned existing-original rereading and explicitly requested free local Tesseract OCR for textless PDF pages, without a cloud OCR provider/new JVM/npm dependency. Preserve originals/claims, invalidate changed-source analyses and reject stale in-flight saves. See ADR 0017; scan support remains bounded and optional.
+
+## 2026-10-07 — First CV export uses a standard template
+
+Accepted, explicit product-owner answer: use a controlled clean standard template for the first DOCX/PDF export and always preserve the uploaded original. This resolves the initial layout priority in Q-004. Arbitrary imported DOCX-layout adaptation is a later capability, not a requirement for first export. Bind approval/export to versioned content and template; do not infer application submission from download. Template design/language details can use Norwegian-first/English defaults. Export is not implemented by this workspace branch.
+
+## 2026-10-07 — Personal matching approval and local pilot hosting
+
+Accepted, explicit owner answers: personal job matching may send relevant CONFIRMED competency statements together with advertisement text to Groq only after a visible editable preview and approval for each analysis. Existing document-analysis consent does not authorize this future flow. Keep UNVERIFIED/INFERRED items separate, minimize shared personal details and preserve evidence/revisions in any future comparison. Matching remains unimplemented; define its owned endpoints and tests in a separate increment.
+
+Accepted: the first working pilot runs locally on the owner's Mac; online hosting follows later. No deployment, paid infrastructure or plan upgrade is authorized. Routine UI, testing and implementation decisions remain delegated. Backup/export and production provider/privacy decisions remain open before broader rollout.

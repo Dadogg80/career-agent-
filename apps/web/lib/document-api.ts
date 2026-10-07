@@ -1,7 +1,7 @@
 import { localRequest, privateBase, sessionHeaders, privateResponse, smallJson, mappedPrivateError } from "./private-api";
 import { claimId, isClaim } from "./claims";
 import { isDocument, isDocumentList, isDocumentDetail } from "./documents";
-type Operation = "list" | "upload" | "detail" | "original" | "master" | "claim" | "delete";
+type Operation = "list" | "upload" | "detail" | "original" | "master" | "claim" | "delete" | "reread";
 export async function documentProxy(request: Request, operation: Operation, id?: string) {
   if (!localRequest(request)) return privateResponse({ code: "ACCESS_DENIED" }, undefined, 403);
   if (id !== undefined && !claimId.test(id)) return privateResponse({ code: "DOCUMENT_INVALID" }, undefined, 400);
@@ -20,6 +20,13 @@ export async function documentProxy(request: Request, operation: Operation, id?:
       const upload = new FormData(); upload.append("file", file); upload.append("language", String(language)); body = upload;
     } catch { return privateResponse({ code: "DOCUMENT_INVALID" }, undefined, 400); }
   }
+  if (operation === "reread") {
+    try {
+      const value = await smallJson(request) as Record<string, unknown>;
+      if (!value || Object.keys(value).join(",") !== "ocr" || typeof value.ocr !== "boolean") throw new Error("Invalid reread");
+      headers.set("Content-Type", "application/json"); body = JSON.stringify(value);
+    } catch { return privateResponse({ code: "DOCUMENT_INVALID" }, undefined, 400); }
+  }
   if (operation === "claim") {
     try {
       const value = await smallJson(request, 16384) as Record<string, unknown>;
@@ -28,9 +35,9 @@ export async function documentProxy(request: Request, operation: Operation, id?:
     } catch { return privateResponse({ code: "DOCUMENT_INVALID" }, undefined, 400); }
   }
   try {
-    const suffix = operation === "original" ? "/original" : operation === "master" ? "/master" : operation === "claim" ? "/claims" : "";
-    const method = operation === "delete" ? "DELETE" : ["upload", "master", "claim"].includes(operation) ? "POST" : "GET";
-    const upstream = await fetch(`${privateBase()}/api/profile/me/documents${id ? `/${id}` : ""}${suffix}`, { method, headers, body, cache: "no-store", redirect: "manual", signal: AbortSignal.timeout(30000) });
+    const suffix = operation === "reread" ? "/reread" : operation === "original" ? "/original" : operation === "master" ? "/master" : operation === "claim" ? "/claims" : "";
+    const method = operation === "delete" ? "DELETE" : ["upload", "master", "claim", "reread"].includes(operation) ? "POST" : "GET";
+    const upstream = await fetch(`${privateBase()}/api/profile/me/documents${id ? `/${id}` : ""}${suffix}`, { method, headers, body, cache: "no-store", redirect: "manual", signal: AbortSignal.timeout(operation === "reread" ? 120000 : 30000) });
     if (upstream.status === 204 && operation === "delete") return privateResponse(null, upstream);
     if (upstream.ok && operation === "original") {
       const bytes = await upstream.arrayBuffer(); if (bytes.byteLength > 5242880) throw new Error("Invalid file");
@@ -38,7 +45,7 @@ export async function documentProxy(request: Request, operation: Operation, id?:
     }
     const value: unknown = await upstream.json();
     if (!upstream.ok) return privateResponse(mappedPrivateError(value), upstream, [400,401,403,404,409,413,429,503].includes(upstream.status) ? upstream.status : 503);
-    const valid = operation === "list" ? isDocumentList(value) : operation === "detail" ? isDocumentDetail(value) : operation === "claim" ? isClaim(value) : isDocument(value);
+    const valid = operation === "list" ? isDocumentList(value) : ["detail", "reread"].includes(operation) ? isDocumentDetail(value) : operation === "claim" ? isClaim(value) : isDocument(value);
     if (!valid) throw new Error("Invalid response");
     return privateResponse(value, upstream);
   } catch { return privateResponse({ code: "DOCUMENT_UNAVAILABLE" }); }

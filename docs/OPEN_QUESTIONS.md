@@ -5,10 +5,12 @@
 | Q-001 | Hvilket operativsystem, RAM og eventuelt skjermkort har pilotmaskinen? | Lokal drift, Docker og mulighet for lokal AI. | Avklart: Apple M1, 16 GB, macOS; se LOCAL_DEVELOPMENT.md |
 | Q-002 | Which AI provider can the pilot use? | Groq access and fictional Norwegian/English extraction have been verified. `openai/gpt-oss-20b` is the initial configurable model. No plan upgrade or paid fallback. | Resolved for this pilot slice; broader quality evaluation remains |
 | Q-003 | Skal anbefalt MVP og leveranserekkefølge vedtas som arbeidsplan? | Omfang før implementasjonsstart. | Forslag dokumentert |
-| Q-004 | Hvilken CV-mal og hvilke layoutkrav er nødvendige for piloten? | Eksport og eventuell manuell mellomløsning. | Uavklart |
-| Q-005 | Hvilken annonsekilde integreres først, og er tilgangen tillatt? | URL-import; tekstimport kan utvikles uavhengig. | Uavklart |
+| Q-004 | First-export layout priority? | Owner selected a controlled standard template; preserve the original, arbitrary DOCX layout later. | Resolved 2026-10-07 |
+| Q-005 | Initial advertisement sources and permitted access? | Bounded local NAV/FINN adapters are implemented; reuse/discovery terms remain separate. | Resolved for pilot; production terms open |
 | Q-006 | Which local access model and later OIDC provider? | Sign-in, sessions and user isolation. | Resolved for local pilot: optional Keycloak + Spring OIDC/PKCE (ADR 0013); production provider still open |
 | Q-007 | Hvordan skal backup, sletting og retensjon fungere i lokal pilot? | Bevaring av arbeid og personvern. | Uavklart |
+| Q-008 | May personal matching send profile evidence to Groq? | Relevant CONFIRMED statements and advertisement text, with preview and approval per analysis. | Resolved 2026-10-07; matching not implemented |
+| Q-009 | First-pilot hosting? | Local Mac first; online hosting later, no paid services or deployment authorized. | Resolved 2026-10-07 |
 
 Ikke gjenta tidligere besvarte spørsmål om målgruppe, standardspråk, gratis pilot eller ønsket fremtidig kundetype. Oppdater denne filen når et spørsmål avklares og lenk til beslutningen.
 
@@ -16,7 +18,7 @@ Ikke gjenta tidligere besvarte spørsmål om målgruppe, standardspråk, gratis 
 
 No product decision blocks the local public-advertisement extraction experiment. The delegated defaults are pasted text, Groq, Norwegian-first UI, source quotations, bounded calls, and no persistence. See [ADR-0007](adr/0007-groq-advertisement-pilot.md).
 
-Q-003 concerns the full MVP and does not block small agreed steps. Q-004 matters before document export. Q-005 is resolved for bounded NAV/FINN pilot adapters; source reuse/discovery terms remain open. Q-006 is resolved for local basic-profile sign-in (ADR 0013). Q-007 remains open before broader private-document use or an external pilot; the current branch adds local CV processing/source selection with optional private analysis only after reviewed-preview approval. These questions do not block public-text analysis.
+Q-003 concerns the full MVP and does not block small agreed steps. Q-004 is resolved: a standard template precedes arbitrary imported-layout adaptation; export remains unimplemented. Q-005 is resolved for bounded NAV/FINN pilot adapters; source reuse/discovery terms remain open. Q-006 is resolved for local basic-profile sign-in (ADR 0013). Q-007 remains open before broader private-document use or an external pilot; the current branch adds local CV processing/source selection with optional private analysis only after reviewed-preview approval. These questions do not block public-text analysis.
 
 Docker recommendation: native frontend/backend, PostgreSQL in Compose when introduced. See [DOCKER_STRATEGY.md](DOCKER_STRATEGY.md). No paid services are assumed.
 

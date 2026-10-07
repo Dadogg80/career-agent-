@@ -2,6 +2,8 @@
 
 Status: Accepted for the single local pilot, 2026-10-07; explicitly requested by the product owner before merging the CV branch.
 
+Implementation extension: [ADR 0017](0017-competency-workspace-and-local-reading.md) adds twenty-proposal limits, whitespace-only evidence recovery, distributed excerpts, partial-item validation and optional explicit local OCR. The original decision below records the initial delivery.
+
 ## Decision
 
 Extend the local import of ADR 0015 with optional Groq summarization of one document or all selected readable documents together. Upload and text extraction remain local. The user reviews/edits bounded text previews and approves each provider submission. Use the existing server-only Groq adapter without browser tools, profile injection, a new provider, a paid upgrade or automatic retries.

@@ -36,6 +36,7 @@ class DocumentSecurityIntegrationTest {
     @Autowired lateinit var mvc: MockMvc
     @Autowired lateinit var json: ObjectMapper
     @Autowired lateinit var jdbc: JdbcTemplate
+    @Autowired lateinit var analyses: com.careeragent.documents.application.DocumentAnalysisRepository
     private val path = "/api/profile/me/documents"
     private fun caller(subject: String, issuer: String = "https://identity.example.test") = oidcLogin().idToken { it.issuer(issuer).subject(subject).audience(listOf("career-agent")).issuedAt(Instant.now()).expiresAt(Instant.now().plusSeconds(600)) }
     private fun profile(subject: String = UUID.randomUUID().toString(), issuer: String = "https://identity.example.test"): String {
@@ -58,6 +59,43 @@ class DocumentSecurityIntegrationTest {
         val second = upload(user, "synthetic.pdf", DocumentFixture.pdf())
         mvc.perform(post("$path/$second/master").with(caller(user)).with(csrf())).andExpect(status().isOk)
         mvc.perform(get("$path/$id").with(caller(user))).andExpect(jsonPath("$.document.isMaster").value(false))
+    }
+    @Test fun `rereading existing originals recovers missing sections invalidates stale analysis and preserves claims`() {
+        val user = profile(); val other = profile(); val body = "Built APIs with Kotlin for a synthetic project."
+        val header = """<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>Azure course certificate</w:t></w:r></w:p></w:hdr>"""
+        val bytes = DocumentFixture.docx(body, parts=mapOf("word/header1.xml" to header)); val id = upload(user, bytes=bytes)
+        // Simulate extraction persisted by the previous main-body-only reader.
+        jdbc.update("UPDATE career_document SET extracted_text = ? WHERE id = ?", body, UUID.fromString(id))
+        mvc.perform(post("$path/$id/claims").with(caller(user)).with(csrf()).contentType("application/json").content("""{"skill":"Kotlin","statement":"Built APIs","context":"Project","quote":"Built APIs with Kotlin"}""")).andExpect(status().isOk)
+        val valid = """{"summary":[{"text":"Kotlin APIs","quote":"Built APIs with Kotlin"}],"suggestions":[]}"""
+        `when`(ai.generateJson(anyString(), anyString(), anyMap())).thenReturn(valid)
+        mvc.perform(post("$path/$id/analysis").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("text" to body,"locale" to "nb","consent" to true)))).andExpect(status().isOk)
+        val reread = post("$path/$id/reread").contentType("application/json").content("""{"ocr":false}""")
+        mvc.perform(reread.with(caller(other)).with(csrf())).andExpect(status().isNotFound)
+        mvc.perform(post("$path/$id/reread").with(caller(user)).contentType("application/json").content("""{"ocr":false}""")).andExpect(status().isForbidden)
+        mvc.perform(post("$path/$id/reread").with(caller(user)).with(csrf()).contentType("application/json").content("""{"ocr":false,"text":"injected"}""")).andExpect(status().isBadRequest)
+        mvc.perform(post("$path/$id/reread").with(caller(user)).with(csrf()).contentType("application/json").content("""{"ocr":false}""")).andExpect(status().isOk).andExpect(jsonPath("$.text").value("$body\n\nAzure course certificate")).andExpect(jsonPath("$.document.extractionMethod").value("TEXT"))
+        mvc.perform(get("$path/$id/analysis").with(caller(user))).andExpect(jsonPath("$.analysis").isEmpty)
+        mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$[0].status").value("UNVERIFIED")).andExpect(jsonPath("$[0].sourceQuote").value("Built APIs with Kotlin"))
+        assertThat(mvc.perform(get("$path/$id/original").with(caller(user))).andReturn().response.contentAsByteArray).isEqualTo(bytes)
+        verify(ai, times(1)).generateJson(anyString(), anyString(), anyMap())
+        mvc.perform(post("$path/$id/reread").with(caller(user)).with(csrf()).contentType("application/json").content("""{"ocr":true}""")).andExpect(status().isBadRequest)
+    }
+    @Test fun `changed document text prevents an in flight analysis from republishing stale evidence`() {
+        val user = profile(); val body = "Built APIs with Kotlin for a synthetic project."; val id = upload(user, bytes=DocumentFixture.docx(body))
+        `when`(ai.generateJson(anyString(), anyString(), anyMap())).thenAnswer {
+            jdbc.update("UPDATE career_document SET extracted_text = ? WHERE id = ?", "Different source after rereading", UUID.fromString(id))
+            """{"summary":[{"text":"Kotlin APIs","quote":"Built APIs with Kotlin"}],"suggestions":[]}"""
+        }
+        mvc.perform(post("$path/$id/analysis").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("text" to body,"locale" to "nb","consent" to true)))).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("DOCUMENT_ANALYSIS_CONFLICT"))
+        mvc.perform(get("$path/$id/analysis").with(caller(user))).andExpect(jsonPath("$.analysis").isEmpty)
+    }
+    @Test fun `empty rereading cannot erase text recovered earlier with OCR`() {
+        val user = profile(); val id = upload(user, "scan.pdf", DocumentFixture.pdf(""))
+        jdbc.update("UPDATE career_document SET extracted_text = ?, extraction_method = 'OCR' WHERE id = ?", "Previously recovered Kotlin course evidence", UUID.fromString(id))
+        mvc.perform(post("$path/$id/reread").with(caller(user)).with(csrf()).contentType("application/json").content("""{"ocr":false}""")).andExpect(status().isBadRequest).andExpect(jsonPath("$.code").value("DOCUMENT_AI_NO_TEXT"))
+        mvc.perform(get("$path/$id").with(caller(user))).andExpect(jsonPath("$.text").value("Previously recovered Kotlin course evidence")).andExpect(jsonPath("$.document.extractionMethod").value("OCR"))
+        verifyNoInteractions(ai)
     }
     @Test fun `source quotes create unverified owned claims with revision provenance and invalid quotations fail`() {
         val user = profile(); val id = upload(user)

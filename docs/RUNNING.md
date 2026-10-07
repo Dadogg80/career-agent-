@@ -146,3 +146,7 @@ Stop the running Java process **before** rebuilding its JAR. Overwriting an arch
 ## Optional document AI summaries
 
 After updating/rebuilding this branch, use Min profil → CV og dokumenter → Oppsummer alle dokumentene med AI. Review all readable source excerpts and approve sending; do not send unnecessary private details. GROQ_API_KEY is reused server-side. The new V4 migration is automatic. No new dependency/service or account upgrade is needed. Individual analysis is available inside each document. See [CV_IMPORT.md](CV_IMPORT.md) for partial coverage, source inspection, UNVERIFIED review, persistence and failure behavior. Public advertisement diagnostics exclude this private content.
+
+## Optional local scan reading
+
+V5 applies automatically on backend restart. Existing originals do not need reuploading: choose **Les originalen på nytt** in their review Sheet. For image-only PDF pages, install free Tesseract on the Mac backend (`brew install tesseract`); Norwegian OCR additionally uses `brew install tesseract-lang` and `DOCUMENT_OCR_LANGUAGES=nor+eng` in `apps/backend/.env`. Restart Java after changing its environment/PATH. OCR is explicitly selected, local, limited to ten pages and requires text review before a separate AI call. It is optional for ordinary text-based PDF/DOCX. See CV_IMPORT.md.
