@@ -28,3 +28,9 @@ Loggen beskriver faktisk arbeid, ikke planlagt funksjonalitet. Datoer følger br
 - Dokumentert forslag: native frontend/backend, PostgreSQL-container og utprøving av en liten lokal modell via native Ollama.
 - Oppdatert åpent spørsmål om maskin; AI-valg er fortsatt betinget av lokal kvalitet og ytelse.
 - Ingen installasjon eller modellkjøring er utført på pilotmaskinen. Ingen betalt fallback er aktivert.
+
+## 2026-10-07 — Gratis AI-alternativer
+
+- Dokumentert Gemini, Groq og lokal Ollama som kandidater; ingen provider eller modell er valgt.
+- Forsøk på lesing av offisielle Google/Groq-sider ble blokkert av nettverksproxy med 403 Forbidden. Dagens gratisnivåer og vilkår er derfor ikke verifisert.
+- Ingen credentials er etterspurt eller lagret, og ingen modellkall er utført.
