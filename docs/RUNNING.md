@@ -1,13 +1,13 @@
 # Kjør første utviklingsversjon
 
-Status: Grunnmur med startside, språkvalg og tjenestestatus. Profil, database, dokumentbehandling, auth og AI er ikke implementert. Bruk ikke versjonen til lagring av private kandidatdata eller som offentlig SaaS.
+Status: A welcome page, language selection, service status and Groq advertisement extraction are implemented. Profiles, database, document processing and authentication are not implemented. This version must not be used for private candidate storage or as a public SaaS. See [TESTING_PILOT.md](TESTING_PILOT.md) for the complete AI test flow.
 
 ## Forutsetninger
 
 - JDK 21 for maskinens arkitektur (ARM64 på M1).
 - Node.js 24 og npm.
 - Nettverk til npm, Maven Central og Gradle-distribusjonen ved første installasjon.
-- Ingen API-nøkkel, database eller Docker er nødvendig for denne endringen.
+- System status needs no API key. Advertisement extraction needs `GROQ_API_KEY` on the backend. No database or Docker is required yet.
 
 Oppsettskommandoene må kjøres på maskinen hvor applikasjonen skal brukes. Verktøy som er installert i Codex er ikke automatisk installert på Mac-en.
 

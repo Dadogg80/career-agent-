@@ -8,6 +8,10 @@ Norsk/engelsk startside, Spring Boot-status, frontend/backend-forbindelse og tes
 
 ## Leveranse 1 — Vurder en stilling
 
+### Current incremental delivery
+
+Pasted-advertisement extraction is implemented on `feat/job-requirements` with Groq and a Norwegian/English UI. This intentionally precedes the private-profile/database slice so the pilot can evaluate AI on public text. Candidate matching, persistent snapshots, profile isolation and clarification workflows remain unfinished. US-04/US-05 are not complete.
+
 Stories: US-01–US-07.
 
 - Norsk/engelsk grensesnitt og manuelt kandidatgrunnlag.

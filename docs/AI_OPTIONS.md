@@ -1,6 +1,6 @@
 # AI-alternativer for pilot
 
-Status: Kandidater for vurdering, ikke vedtatt provider. Gjeldende gratisnivåer, regiontilgang, modeller og datavilkår er ikke verifisert. Forsøk på å lese offisielle Google/Groq-sider fra Codex-miljøet fikk proxy-feilen `403 Forbidden` den 2026-10-07. Dette sier ikke noe om tilgang fra pilotens Mac.
+Status: Historical comparison. Groq is now selected for the bounded public-advertisement pilot; model access and fictional inference are verified. Current free quotas and private-data processing terms are not established by that test. Earlier documentation fetches failed; that did not establish that API access was unavailable. See [GROQ_SETUP.md](GROQ_SETUP.md).
 
 ## Alternativer
 

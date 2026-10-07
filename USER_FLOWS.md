@@ -1,6 +1,6 @@
 # Brukerflyter
 
-Status: Foreslåtte MVP-flyter. Diagrammene beskriver ønsket atferd; ingen flyt er implementert. Story-ID-er viser til [USER_STORIES.md](USER_STORIES.md).
+Status: Proposed full MVP flows. The full flows below are not implemented. A bounded public-advertisement flow (US-23) is available on feat/job-requirements: paste text → explicitly send to Groq → inspect categories and source quotations → edit/retry. It has no candidate matching or persistence. Story IDs refer to [USER_STORIES.md](USER_STORIES.md).
 
 ## 1. Fra første besøk til søknad
 

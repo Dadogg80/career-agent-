@@ -10,5 +10,6 @@ Status Accepted betyr vedtatt føring. Proposed betyr konkret forslag som kan re
 | [0004](0004-durable-jobs.md) | Proposed | Varige databasejobber før broker/workflow-plattform |
 | [0005](0005-document-approval.md) | Proposed | Versjonsbundet godkjenning og søknadsartefakter |
 | [0006](0006-foundation-toolchain.md) | Accepted | Første implementasjonsomfang og verktøyversjoner |
+| [0007](0007-groq-advertisement-pilot.md) | Accepted | Bounded Groq advertisement extraction pilot |
 
 Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert implementasjon av disse krever fortsatt design og autorisert implementasjonsstart.

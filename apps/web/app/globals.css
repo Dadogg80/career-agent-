@@ -18,3 +18,14 @@ h2 { font-size: 20px; margin: 0 0 10px; }
 .card p, .principle { line-height: 1.65; }
 .principle { color: #425850; margin-top: 28px; }
 @media (max-width: 480px) { .shell { padding: 18px; } header { align-items: flex-start; } .language-picker { flex-direction: column; align-items: flex-start; } main { padding-top: 40px; } }
+.analyzer label { display: block; font-weight: 650; margin: 18px 0 8px; }
+textarea { width: 100%; resize: vertical; font: inherit; line-height: 1.5; border: 1px solid #668177; border-radius: 8px; padding: 12px; color: #18312c; background: #fff; }
+.notice, .hint { font-size: 14px; color: #425850; }
+.notice { border-left: 3px solid #668177; padding-left: 12px; }
+button:disabled { opacity: .6; cursor: wait; }
+.requirements { list-style: none; padding: 0; }
+.requirements li { border-top: 1px solid #d6dfd3; padding: 20px 0; }
+.badge { font-size: 13px; background: #e7eee5; border-radius: 5px; padding: 4px 8px; }
+h4 { font-size: 18px; margin: 12px 0; }
+blockquote { border-left: 3px solid #d6dfd3; margin: 0; padding-left: 14px; line-height: 1.6; overflow-wrap: anywhere; white-space: pre-wrap; }
+[role="alert"] { color: #8b302a; }

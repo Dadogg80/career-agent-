@@ -1,6 +1,6 @@
 # Beslutningsregister
 
-Bekreftet betyr eksplisitt føring fra brukeren. Anbefalt betyr arkitektens forslag; det skal ikke omtales som vedtatt. Brukeren har delegert vurdering av flere alternativer, men tekniske detaljer og implementasjonsstart er fortsatt uavklart.
+Confirmed records explicit user requirements; recommendations record design proposals. Implementation has started, and the user has delegated routine choices. Accepted implementation decisions identify their scope and do not imply that the full MVP is approved or completed.
 
 ## Bekreftede føringer
 
@@ -18,6 +18,8 @@ Bekreftet betyr eksplisitt føring fra brukeren. Anbefalt betyr arkitektens fors
 | D-010 | Beslutninger, planer og fremdrift skal lagres i dedikerte Markdown-filer. | Gjeldende brukerforespørsel; dokumentasjon er del av hver senere endring. |
 | D-011 | Fortsett selvstendig med dokumentasjon og Git-publisering. | Brukerens instruksjon etter foreslått neste steg; ikke en eksplisitt bestilling på applikasjonsimplementasjon. |
 | D-012 | Start første avgrensede utvikling. | Brukerens «vi kan vel kanskje starte utviklingen nå?» er tolket som klarsignal, med omfang forklart før arbeidet. Ingen betalingsautorisasjon. |
+| D-013 | Use English for GitHub communication. | Explicit user requirement: commits, PR titles/descriptions and other GitHub communication. |
+| D-014 | Groq for the bounded advertisement pilot. | User supplied access; authenticated model listing and fictional extraction verified. Delegated implementation choice in ADR-0007; no private CV processing or paid fallback. |
 
 ## Anbefalinger for diskusjon
 
@@ -35,6 +37,6 @@ Bekreftet betyr eksplisitt føring fra brukeren. Anbefalt betyr arkitektens fors
 
 ## Formelle arkitekturbeslutninger senere
 
-[ADR-indeksen](adr/README.md) inneholder to vedtatte produktføringer og tre foreslåtte detaljbeslutninger. Identitet/isolasjon og databehandling trenger videre avklaring før egne vedtatte ADR-er.
+The [ADR index](adr/README.md) is the authoritative list of accepted/proposed architecture records. Identity and private-data processing still require concrete decisions before private profile storage.
 
 Arbeidsmåten er `main` med korte arbeidsbranches, uten permanent `development`, valgt under den delegerte instruksjonen om å fortsette. Se [Git-arbeidsflyten](GIT_WORKFLOW.md). Branch protection er ikke konfigurert.

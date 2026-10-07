@@ -1,19 +1,21 @@
 # Groq: sikker nøkkelkonfigurasjon
 
-Status: Brukeren har opplyst at en GroqCloud API-nøkkel er tilgjengelig. Nøkkelen er ikke mottatt eller verifisert. Ingen Groq-integrasjon eller modellkall er implementert.
+Status: The user configured Groq access in Codex. Authenticated model listing and fictional Norwegian/English inference succeeded. The backend now integrates Groq behind AiModel. Credentials were not displayed or committed.
 
 ## Codex cloud-miljø
 
-Det er lagret et secret-krav i miljøutkastet:
+The current environment exposes the following secret requirement:
 
 - Navn og applikasjonsvariabel: `GROQ_API_KEY`.
 - Tillatt HTTPS-destinasjon: `api.groq.com`.
 - Selve verdien skal legges inn i Secrets i miljøinnstillingene, aldri i chat eller Git.
-- Brukeren må gjennomgå og lagre endringen, deretter publisere miljøet. Utkastet alene injiserer ikke nøkkelen eller aktiverer nettverkstilgangen.
+- The requirement was originally saved as a draft; the user has since published configuration and runtime access is verified. A future draft change alone does not activate a key or network access.
 
 Dette er proxy-støttet konfigurasjon: en injisert variabel kan være en placeholder som erstattes ved autorisert HTTPS-egress. Bruk nøkkelen gjennom den støttede ruten; ikke forsøk å hente ut en rå nøkkelverdi.
 
 Når konfigurasjonen er aktiv, kontroller variabelens tilstedeværelse uten å vise verdien. Verifiser deretter tilgang med et read-only modelloppslag før modellvalg eller inference. Tilgang og gratis kvote er separate spørsmål.
+
+The initial Python urllib request was rejected with HTTP 403 / error code 1010. A product User-Agent (`career-agent/0.1`) resolved the request; this was not evidence of a missing key. The Java adapter uses the same User-Agent and the existing HTTPS proxy when present, with TLS verification enabled.
 
 ## Lokal Mac
 

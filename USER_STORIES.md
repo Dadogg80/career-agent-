@@ -1,6 +1,21 @@
 # User stories
 
-Status: Stories er arbeidsforslag. Første grunnmur støtter norsk/engelsk på startsiden; ingen story er ferdig som komplett produktflyt. Prioritet P0 gjelder første nyttige leveranse, P1 komplett foreslått MVP, P2 senere forbedring. Akseptansekriterier er krav, ikke rapporterte testresultater.
+Status: Working stories. US-23 is implemented for a bounded local test on feat/job-requirements. The original profile/matching stories are not complete. P0 targets the first useful delivery, P1 the proposed complete MVP and P2 later improvements. Acceptance criteria are requirements; the development log records actual validation.
+
+## Current pilot slice
+
+### US-23 — Inspect an advertisement with source quotations (P0)
+
+As a jobseeker, I want to paste a public advertisement and inspect AI-extracted requirements, so that I can understand the role before a candidate profile is available.
+
+- Support Norwegian and English, explicit required/preferred/unclear categories and source quotations.
+- Validate that every quotation occurs in the source and show that labels/categories are AI suggestions.
+- Retain input on error and mark results as stale after source edits.
+- Explain external Groq processing before submission. Do not persist data or generate a candidate score.
+- Limit input, output, concurrent inference and attempts; do not enable a paid fallback.
+- A real browser call must reach the backend through the proxy; tests with no configured key must make no provider calls.
+
+This slice does not replace the persistence, ownership or matching requirements of US-04/US-05.
 
 ## Første nyttige leveranse
 
