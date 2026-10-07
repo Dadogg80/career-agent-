@@ -1,11 +1,11 @@
 export type RequirementKind = "REQUIRED" | "PREFERRED" | "UNCLEAR";
 export type Requirement = { label: string; kind: RequirementKind; quote: string };
 
-export type JobFact = { kind: "COMPANY" | "ROLE" | "DEADLINE" | "LOCATION" | "CONTACT" | "OTHER"; label: string; value: string; quote: string };
+export type JobFact = { kind: "COMPANY" | "ROLE" | "APPLICANT" | "OFFER" | "DEADLINE" | "LOCATION" | "CONTACT" | "OTHER"; label: string; value: string; quote: string };
 export function isFact(value: unknown): value is JobFact {
   if (!value || typeof value !== "object") return false;
   const f = value as Record<string, unknown>;
-  return typeof f.kind === "string" && ["COMPANY", "ROLE", "DEADLINE", "LOCATION", "CONTACT", "OTHER"].includes(f.kind) &&
+  return typeof f.kind === "string" && ["COMPANY", "ROLE", "APPLICANT", "OFFER", "DEADLINE", "LOCATION", "CONTACT", "OTHER"].includes(f.kind) &&
     typeof f.label === "string" && f.label.trim().length > 0 && f.label.length <= 100 &&
     typeof f.value === "string" && f.value.trim().length > 0 && f.value.length <= 500 &&
     typeof f.quote === "string" && f.quote.trim().length > 0 && f.quote.length <= 1000;

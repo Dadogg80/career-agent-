@@ -38,7 +38,7 @@ class GroqAiModel(
         429 -> AiFailure("AI_RATE_LIMITED", 429, cooldown.record(retryAfter))
         400 -> {
             val code = try { mapper.readTree(body).path("error").path("code").asText() } catch (_: Exception) { "" }
-            AiFailure(if (code == "json_validate_failed") "AI_INVALID_RESULT" else "AI_UNAVAILABLE", if (code == "json_validate_failed") 502 else 503)
+            AiFailure(if (code == "json_validate_failed") "AI_INVALID_RESULT" else "AI_UNAVAILABLE", if (code == "json_validate_failed") 502 else 503, reason = if (code == "json_validate_failed") "PROVIDER_SCHEMA_MISMATCH" else null)
         }
         else -> AiFailure("AI_UNAVAILABLE", 503)
     }
@@ -57,7 +57,7 @@ class GroqAiModel(
             ),
             "response_format" to mapOf(
                 "type" to "json_schema",
-                "json_schema" to mapOf("name" to "job_requirements", "strict" to true, "schema" to schema),
+                "json_schema" to mapOf("name" to "career_analysis", "strict" to true, "schema" to schema),
             ),
         )
         val request = HttpRequest.newBuilder(URI.create("https://api.groq.com/openai/v1/chat/completions"))
@@ -72,9 +72,9 @@ class GroqAiModel(
             providerFailure(response.statusCode(), response.body(), response.headers().firstValue("retry-after").orElse(null))?.let { throw it }
             val json = mapper.readTree(response.body())
             val choice = json.path("choices").path(0)
-            if (choice.path("finish_reason").asText() != "stop") throw AiFailure("AI_INVALID_RESULT", 502)
+            if (choice.path("finish_reason").asText() != "stop") throw AiFailure("AI_INVALID_RESULT", 502, reason = "OUTPUT_INCOMPLETE")
             val content = choice.path("message").path("content")
-            if (!content.isTextual || content.asText().isBlank()) throw AiFailure("AI_INVALID_RESULT", 502)
+            if (!content.isTextual || content.asText().isBlank()) throw AiFailure("AI_INVALID_RESULT", 502, reason = "EMPTY_OUTPUT")
             return content.asText()
         } catch (e: AiFailure) {
             throw e

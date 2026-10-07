@@ -120,3 +120,12 @@ The current fixed pause reduces rapid back-to-back calls but may still encounter
 ## Owned basic profile checkpoint
 
 Follow [IDENTITY_SETUP.md](IDENTITY_SETUP.md) to start optional local sign-in. Verify saving and reopening name/language, a revision conflict across two tabs, logout and Norwegian/English presentation. This scope does not include CV/experience or provider processing of private candidate material. Open the DEV edge tab to inspect public-ad diagnostics separately; profile bodies are not part of that panel.
+
+
+## This branch: overview, competencies and local CV import
+
+After merge and restart, check that a fetched advertisement remains readable when structuring fails and that retry reuses the source. A successful result shows source wording, collapsible narrative sections, stable metadata/contact slots and the existing requirement cards. For private features, follow [IDENTITY_SETUP.md](IDENTITY_SETUP.md), save the basic profile and then follow [CV_IMPORT.md](CV_IMPORT.md). Document/claim data survives reload and backend restart; sign in again after restart. Upload/extraction stay local; optional AI summaries send only reviewed text after explicit approval. Tests use synthetic documents; do not commit real CVs or debugging dumps.
+
+## Optional document AI summaries
+
+After updating/rebuilding this branch, use Min profil → CV og dokumenter → Oppsummer alle dokumentene med AI. Review all readable source excerpts and approve sending; do not send unnecessary private details. GROQ_API_KEY is reused server-side. The new V4 migration is automatic. No new dependency/service or account upgrade is needed. Individual analysis is available inside each document. See [CV_IMPORT.md](CV_IMPORT.md) for partial coverage, source inspection, UNVERIFIED review, persistence and failure behavior. Public advertisement diagnostics exclude this private content.

@@ -15,6 +15,8 @@
 .nav-link { display:flex; align-items:center; gap:10px; padding:13px 12px; font-size:14px; border-radius:8px; margin-top:6px; }.nav-link:hover { background:#eef2eb; }.sidebar .nav-active+.nav-active,.sidebar .nav-link+.nav-active { margin-top:6px; }
 .topbar-nav { display:flex; gap:18px; align-items:center; }.topbar-nav a[aria-current="page"] { color:#245844; font-weight:650; }
 .profile-workspace { max-width:740px; }.profile-workspace h2 { font-weight:650; font-size:19px; }.profile-form { display:grid; gap:12px; max-width:460px; margin-top:12px; }.profile-form label { font-size:13px; font-weight:600; }.profile-form button { justify-self:start; margin-top:8px; }.profile-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px; }
+.claim-panel { margin-top:24px; }.claim-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }.claim-filters,.claim-actions,.claim-dialog-actions { display:flex; flex-wrap:wrap; gap:8px; margin:16px 0; }.claim-grid { display:grid; gap:14px; }.claim-tile { padding:20px; border:1px solid #dce2d9; border-radius:12px; background:#fcfdf9; }.claim-tile h3,.claim-review h3 { font-size:16px; font-weight:650; overflow-wrap:anywhere; }.claim-statement,.claim-source,.claim-review p,.claim-history p { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.7; }.claim-tile details { margin-top:12px; }.claim-tile summary { font-size:12px; font-weight:600; }.claim-actions { margin-bottom:0; }.claim-notice { padding:12px; background:#e8f2e3; border-radius:8px; margin-bottom:14px; }[data-claim-status="CONFIRMED"] { background:#e4efdf; color:#315f27; }[data-claim-status="REJECTED"] { background:#f4e4e0; color:#8d4133; }[data-claim-status="UNVERIFIED"],[data-claim-status="INFERRED"] { background:#f8efd9; color:#7b5e24; }
+.claim-dialog { width:calc(100vw - 24px); max-width:620px; max-height:calc(100dvh - 32px); overflow-y:auto; border-radius:12px; }.claim-form { display:grid; gap:14px; }.claim-form label { display:block; margin-bottom:6px; font-size:13px; font-weight:600; }.claim-history ol { display:grid; gap:16px; padding:0; list-style:none; }.claim-history li { padding-bottom:16px; border-bottom:1px solid #dce2d9; }.claim-history h3 { font-weight:600; }.claim-review { display:grid; gap:12px; }.claim-dialog-actions { margin-bottom:0; }
 @media(max-width:480px) { .topbar-nav { gap:10px; font-size:11px; }.topbar { gap:10px; }.language-picker { gap:5px; }.profile-form { width:100%; } }
 * { box-sizing:border-box; } body { margin:0; background:var(--background); color:var(--foreground); }
 button,summary,select { cursor:pointer; } button:disabled { cursor:wait; }
@@ -105,3 +107,28 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 .diagnostic-source { border-top:1px solid #e5e9e0; padding-top:12px; }.diagnostic-source pre { max-height:240px; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; font-size:11px; line-height:1.8; background:#f6f8f2; padding:12px; border-radius:8px; }
 @media(prefers-reduced-motion:reduce) { .sorting-document,.sorting-chips span,.animate-spin,.diagnostic-sheet[data-state] { animation:none; } }
 @media(max-width:480px) { .analysis-progress [data-slot="card-content"] { padding:20px 14px; }.progress-steps { font-size:10px; }.diagnostic-sheet { padding:24px 16px; } }
+
+.employer-overview-grid { display:grid; grid-template-columns:minmax(0, .85fr) minmax(0, 1.45fr); gap:18px; align-items:start; }
+.employer-overview-grid [data-slot="card"] { box-shadow:none; overflow:hidden; }
+.overview-card-heading { display:flex; align-items:center; gap:9px; color:#245844; }
+.overview-card-heading h5 { font-size:14px; font-weight:650; }
+.employer-card [data-slot="card-header"] { padding:22px 22px 14px; }.employer-card [data-slot="card-content"] { padding:0 22px 22px; }
+.employer-excerpt { font-size:14px; line-height:1.85; white-space:pre-wrap; overflow-wrap:anywhere; color:#3b5145; }
+.employer-excerpt + .employer-excerpt { margin-top:16px; }
+.employer-sections { display:grid; gap:12px; min-width:0; }
+.employer-section summary { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 22px; font-size:14px; font-weight:650; cursor:pointer; list-style:none; }
+.employer-section summary::-webkit-details-marker { display:none; }.employer-section summary:focus-visible { outline:2px solid #245844; outline-offset:-4px; }
+.employer-section details[open] summary svg { transform:rotate(180deg); }.employer-section [data-slot="card-content"] { padding:0 22px 22px; }
+.overview-source-note { margin:12px 0 18px; }.metadata-entry { margin-top:12px; }.metadata-entry + .metadata-entry { border-top:1px solid #e4e9e1; padding-top:12px; }
+@media(max-width:760px) { .employer-overview-grid { grid-template-columns:minmax(0,1fr); gap:12px; } }
+.fallback-advertisement { max-height:560px; overflow:auto; padding-right:10px; }
+.document-panel { margin-top:24px; }.document-upload { display:flex; flex-wrap:wrap; gap:12px; align-items:end; margin-bottom:12px; }.document-upload>div:first-child { flex:1; min-width:200px; }.document-upload label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; }.document-upload input[type="file"] { padding:7px; height:auto; }.document-list { display:grid; gap:12px; margin-top:18px; }.document-tile { border:1px solid #dce2d9; border-radius:10px; padding:18px; }.document-tile h3 { font-size:15px; font-weight:650; overflow-wrap:anywhere; }.document-dialog { max-width:760px; }.document-dialog label { font-size:13px; font-weight:600; }.document-dialog textarea[readonly] { font-size:13px; line-height:1.7; background:#f6f8f3; }.document-upload select { border:1px solid #dce2d9; border-radius:8px; padding:9px; }
+.document-ai-panel { margin: 1rem 0; }
+.document-ai-consent { display: flex; align-items: flex-start; gap: .6rem; font-weight: 500; }
+.document-ai-consent input { width: 1rem; height: 1rem; flex-shrink: 0; margin-top: .2rem; accent-color: var(--primary); }
+.document-ai-result { display: grid; gap: 1rem; margin-top: 1rem; }
+.document-ai-result h4 { margin-bottom: .6rem; }
+.document-summary-item { padding: .6rem 0; border-bottom: 1px solid var(--border); }
+.document-suggestion-grid { display: grid; gap: .7rem; }
+.document-suggestion-grid .claim-heading { flex-wrap: wrap; }
+.document-ai-result blockquote { white-space: pre-wrap; overflow-wrap: anywhere; border-left: 2px solid var(--border); padding-left: .7rem; margin: .5rem 0; }

@@ -10,6 +10,7 @@ class GroqFailureTest {
         val failure = model.providerFailure(400, """{"error":{"code":"json_validate_failed","failed_generation":"PRIVATE CONTENT"}}""", null)!!
         assertThat(failure.code).isEqualTo("AI_INVALID_RESULT")
         assertThat(failure.httpStatus).isEqualTo(502)
+        assertThat(failure.reason).isEqualTo("PROVIDER_SCHEMA_MISMATCH")
         assertThat(failure.message).doesNotContain("PRIVATE CONTENT")
         assertThat(model.providerFailure(400, "malformed", null)!!.code).isEqualTo("AI_UNAVAILABLE")
     }

@@ -1,0 +1,88 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Sparkles, LoaderCircle } from "lucide-react";
+import { Card, CardContent, CardHeader } from "./ui/card";
+import { Button } from "./ui/button";
+import { Textarea } from "./ui/textarea";
+import { Badge } from "./ui/badge";
+import { Alert, AlertDescription } from "./ui/alert";
+import { isDocumentAnalysis, type DocumentAnalysis, type CompetencySuggestion } from "../lib/document-analysis";
+import type { Locale } from "../lib/translations";
+import type { DocumentDetail } from "../lib/documents";
+
+const copy = {
+  nb: {
+    title:"AI-sammendrag og kompetanseforslag", intro:"AI kan oppsummere det dokumentet faktisk beskriver. Forslag er ubekreftet og legges ikke automatisk til profilen.",
+    preview:"Tekst som sendes til Groq", privacy:"Kontroller teksten og fjern navn, kontaktdata og andre opplysninger AI ikke trenger. Bare teksten i feltet sendes til Groq, ikke originalfilen eller resten av profilen. Behandlingen følger Groq-kontoens vilkår og innstillinger.",
+    consent:"Jeg vil sende teksten over til Groq for denne analysen", analyze:"Oppsummer kompetansen med AI", busy:"AI leser teksten og lager kildebaserte forslag …", loading:"Henter lagret analyse …", summary:"Kompetansesammendrag", suggestions:"Kompetanseforslag", choose:"Se gjennom dette forslaget", quote:"Kildeutdrag", unverified:"AI-forslag · ubekreftet", empty:"Ingen eksplisitt kompetanse ble funnet i denne teksten.",
+    partial:"Analysen bruker et redigert, begrenset eller valgt dokumentgrunnlag. Se inkluderte dokumenter og kildesitater; ikke alt originalinnhold er dekket.", limit:"Maks 12 000 tegn per analyse. Lange dokumenter starter med et utdrag; velg relevant tekst selv.", omitted:"Forslag uten gyldig kildesitat ble utelatt", saved:"Siste lagrede analyse", replace:"En ny vellykket analyse erstatter sammendraget og forslagene nedenfor. Lagrede kompetansepunkter endres ikke.", retry:"Hent lagret analyse på nytt", wait:"Vent før nytt forsøk", seconds:"sekunder", chosen:"Forslaget er lagt i redigeringsfeltene nedenfor. Kontroller og lagre det som ubekreftet; bekreftelse skjer separat i kompetansedelen.",
+    errors:{ AI_NOT_CONFIGURED:"Groq-nøkkelen er ikke konfigurert på backend.", AI_ACCESS_DENIED:"Groq avviste tilgangen. Kontroller konto og backend-nøkkel.", AI_RATE_LIMITED:"Groq-kvoten er nådd. Vent før du prøver igjen.", AI_BUSY:"En dokumentanalyse pågår allerede. Prøv igjen etterpå.", AI_BUDGET_REACHED:"Pilotgrensen for dokumentanalyser er nådd for denne backend-kjøringen.", AI_INVALID_RESULT:"AI-svaret kunne ikke kontrolleres mot dokumentet. Teksten og eventuell tidligere analyse er beholdt.", AI_UNAVAILABLE:"AI-tjenesten svarte ikke. Teksten er beholdt; prøv igjen senere.", DOCUMENT_AI_INPUT_INVALID:"Velg mellom 40 og 12 000 tegn og godkjenn sendingen.", DOCUMENT_AI_CONSENT_REQUIRED:"Godkjenn sending til Groq før analysen.", DOCUMENT_AI_NO_TEXT:"Ingen lesbar dokumenttekst. OCR støttes ikke ennå.", DOCUMENT_NOT_FOUND:"Dokumentet finnes ikke eller er utilgjengelig.", AUTH_REQUIRED:"Sesjonen er utløpt. Logg inn igjen.", ACCESS_DENIED:"Forespørselen ble avvist. Last siden på nytt.", DOCUMENT_UNAVAILABLE:"Kunne ikke hente eller lagre analysen. Prøv igjen.", PROFILE_DISABLED:"Profillagring er ikke aktivert." },
+  },
+  en: {
+    title:"AI summary and competency suggestions", intro:"AI can summarize what the document explicitly describes. Suggestions are unverified and are never added to your profile automatically.",
+    preview:"Text sent to Groq", privacy:"Review the text and remove names, contact details and other information AI does not need. Only the text in this field is sent to Groq, not the original file or the rest of your profile. Processing follows your Groq account's terms and settings.",
+    consent:"I want to send the text above to Groq for this analysis", analyze:"Summarize competencies with AI", busy:"AI is reading the text and creating source-backed suggestions …", loading:"Loading saved analysis …", summary:"Competency summary", suggestions:"Competency suggestions", choose:"Review this suggestion", quote:"Source excerpt", unverified:"AI suggestion · unverified", empty:"No explicit competency evidence was found in this text.",
+    partial:"This analysis uses edited, limited or selected source excerpts. Check included documents and quotes; not all original content is covered.", limit:"Maximum 12,000 characters per analysis. Long documents start with an excerpt; select the relevant text yourself.", omitted:"Suggestions without valid source quotes were omitted", saved:"Latest saved analysis", replace:"A new successful analysis replaces the summary and suggestions below. Saved competencies are unchanged.", retry:"Reload saved analysis", wait:"Wait before trying again", seconds:"seconds", chosen:"The suggestion is in the editing fields below. Review and save it as unverified; confirmation is a separate action in the competency section.",
+    errors:{ AI_NOT_CONFIGURED:"The backend Groq key is not configured.", AI_ACCESS_DENIED:"Groq denied access. Check your account and backend key.", AI_RATE_LIMITED:"Groq quota reached. Wait before trying again.", AI_BUSY:"Another document analysis is running. Try again afterwards.", AI_BUDGET_REACHED:"The document-analysis pilot budget for this backend process is exhausted.", AI_INVALID_RESULT:"The AI response could not be checked against the document. Your text and any previous analysis are retained.", AI_UNAVAILABLE:"The AI service did not respond. Your text is retained; try again later.", DOCUMENT_AI_INPUT_INVALID:"Choose 40 to 12,000 characters and approve sending.", DOCUMENT_AI_CONSENT_REQUIRED:"Approve sending to Groq before analysis.", DOCUMENT_AI_NO_TEXT:"No readable document text. OCR is not supported yet.", DOCUMENT_NOT_FOUND:"The document does not exist or is unavailable.", AUTH_REQUIRED:"Your session expired. Sign in again.", ACCESS_DENIED:"The request was rejected. Reload the page.", DOCUMENT_UNAVAILABLE:"Could not load or save the analysis. Try again.", PROFILE_DISABLED:"Profile storage is not enabled." },
+  },
+};
+class AnalysisError extends Error { constructor(code: string, readonly retryAfter?: number) { super(code); } }
+export function DocumentAiAnalysis({ id, text, locale, csrfToken, onAuthRequired, onChoose, documents }: {
+  id:string; text:string; locale:Locale; csrfToken:string; onAuthRequired:() => void; documents?:DocumentDetail[];
+  onChoose:(suggestion:CompetencySuggestion & { analysisId:string }) => void;
+}) {
+  const t = copy[locale]; const cache = useQueryClient();
+  const [preview, setPreview] = useState(text.slice(0, 12000));
+  const [excerpts, setExcerpts] = useState<Record<string,string>>(() => {
+    const readable = documents?.filter(item => item.text.trim()) ?? [];
+    const share = Math.floor(12000 / Math.max(1, readable.length));
+    return Object.fromEntries(readable.map(item => [item.document.id, item.text.slice(0, share)]));
+  });
+  const inputCharacters = documents ? Object.values(excerpts).reduce((sum, value) => sum + value.length, 0) : preview.length;
+  const endpoint = `/api/profile/me/documents${documents ? "" : `/${id}`}/analysis`; const [consent, setConsent] = useState(false);
+  const [cooldown, setCooldown] = useState(0); const [remaining, setRemaining] = useState(0); const [chosen, setChosen] = useState(false);
+  useEffect(() => { if (!cooldown) return; const tick = () => setRemaining(Math.max(0, Math.ceil((cooldown - Date.now())/1000))); tick(); const timer = setInterval(tick, 500); return () => clearInterval(timer); }, [cooldown]);
+  const key = ["private-document-analysis", documents ? "collection" : id];
+  async function read(response: Response) {
+    if (response.status === 401) onAuthRequired();
+    const value: unknown = await response.json();
+    if (!response.ok) {
+      const code = value && typeof value === "object" && "code" in value && Object.hasOwn(t.errors, String(value.code)) ? String(value.code) : "DOCUMENT_UNAVAILABLE";
+      const retry = Number(response.headers.get("retry-after"));
+      throw new AnalysisError(code, response.status === 429 && code === "AI_RATE_LIMITED" ? Math.min(300, Math.max(1, retry || 60)) : undefined);
+    }
+    if (value !== null && !isDocumentAnalysis(value)) throw new AnalysisError("AI_INVALID_RESULT");
+    return value as DocumentAnalysis | null;
+  }
+  const saved = useQuery({ queryKey:key, gcTime:0, retry:false, refetchOnWindowFocus:false, refetchOnReconnect:false,
+    queryFn:async () => read(await fetch(endpoint, { cache:"no-store" })) });
+  const analysis = useMutation({ retry:false, mutationFn:async () => {
+    const value = await read(await fetch(endpoint, { method:"POST", headers:{ "Content-Type":"application/json", "X-CSRF-TOKEN":csrfToken }, body:JSON.stringify(documents ? { documents:Object.entries(excerpts).filter(([, value]) => value.trim()).map(([documentId, text]) => ({ documentId, text })), locale, consent } : { text:preview, locale, consent }), signal:AbortSignal.timeout(35000) }));
+    if (!value) throw new AnalysisError("AI_INVALID_RESULT"); return value;
+  }, onSuccess:value => { cache.setQueryData(key, value); setConsent(false); setChosen(false); }, onError:error => { if (error instanceof AnalysisError && error.retryAfter) { setRemaining(error.retryAfter); setCooldown(Date.now() + error.retryAfter*1000); } } });
+  const error = analysis.error ?? saved.error;
+  const message = error ? t.errors[error.message as keyof typeof t.errors] ?? t.errors.DOCUMENT_UNAVAILABLE : null;
+  const value = saved.data;
+  return <Card className="document-ai-panel"><CardHeader><h3 className="flex items-center gap-2"><Sparkles size={18}/>{documents ? locale === "nb" ? "Samlet kompetanse fra dokumentene" : "Combined document competencies" : t.title}</h3><p className="hint">{t.intro}</p></CardHeader><CardContent>
+    <form className="claim-form" onSubmit={event => { event.preventDefault(); if (consent && inputCharacters >= 40 && inputCharacters <= 12000 && !analysis.isPending && !remaining) analysis.mutate(); }}>
+      {documents ? documents.map(item => <div key={item.document.id} className="document-ai-excerpt"><label htmlFor={`ai-${item.document.id}`}>{t.preview}: {item.document.originalName}</label>{item.text.trim() ? <Textarea id={`ai-${item.document.id}`} rows={4} value={excerpts[item.document.id] ?? ""} maxLength={12000} onChange={event => { setExcerpts(previous => ({ ...previous, [item.document.id]:event.target.value })); setConsent(false); analysis.reset(); }} disabled={analysis.isPending}/> : <p className="hint">{locale === "nb" ? "Ingen lesbar tekst; dette dokumentet sendes ikke til AI. OCR støttes ikke ennå." : "No readable text; this document is not sent to AI. OCR is not supported yet."}</p>}</div>) : <><label htmlFor="document-ai-preview">{t.preview}</label><Textarea id="document-ai-preview" rows={6} value={preview} maxLength={12000} onChange={event => { setPreview(event.target.value); setConsent(false); analysis.reset(); }} disabled={analysis.isPending}/></>}
+      <p className="hint">{inputCharacters} / 12 000 · {t.limit}</p><p className="hint">{t.privacy}</p>
+      <label className="document-ai-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} disabled={analysis.isPending}/><span>{t.consent}</span></label>
+      <Button type="submit" disabled={!consent || (documents ? inputCharacters < 40 : preview.trim().length < 40) || inputCharacters > 12000 || analysis.isPending || remaining > 0 || saved.isPending || saved.isError}>{analysis.isPending ? <LoaderCircle className="animate-spin" size={16}/> : <Sparkles size={16}/>} {t.analyze}</Button>
+    </form>
+    {saved.isPending && <p role="status">{t.loading}</p>}
+    {analysis.isPending && <p role="status" className="hint mt-3">{t.busy}</p>}
+    {message && <Alert variant="destructive" role="alert"><AlertDescription>{message}</AlertDescription></Alert>}
+    {remaining > 0 && <p role="status">{t.wait}: {remaining} {t.seconds}</p>}
+    {saved.isError && <Button variant="outline" onClick={() => void saved.refetch()}>{t.retry}</Button>}
+    {chosen && <p role="status" className="claim-notice mt-3">{t.chosen}</p>}
+    {value && <div className="document-ai-result"><p className="hint">{t.saved}: {new Date(value.createdAt).toLocaleString(locale === "nb" ? "nb-NO" : "en-GB")} · {value.provider} · {value.locale === "nb" ? "Norsk" : "English"} · {value.inputCharacters}/{value.sourceCharacters}</p>{documents && <p className="hint">{locale === "nb" ? "Dokumenter i analysen" : "Documents in analysis"}: {value.documents.length} / {documents.length}</p>}<p className="hint">{t.replace}</p>
+      {value.partial && <Alert><AlertDescription>{t.partial}</AlertDescription></Alert>}
+      {!!value.omittedItems && <p className="hint">{t.omitted}: {value.omittedItems}</p>}
+      {value.summary.length > 0 && <section aria-label={t.summary}><h4>{t.summary}</h4>{value.summary.map((item, index) => <div key={index} className="document-summary-item"><p lang={value.locale}>{item.text}</p>{item.documentId && <p className="hint">{value.documents.find(doc => doc.documentId === item.documentId)?.originalName}</p>}<details><summary>{t.quote}</summary><blockquote>{item.quote}</blockquote></details></div>)}</section>}
+      {value.suggestions.length > 0 && <section aria-label={t.suggestions}><h4>{t.suggestions}</h4><div className="document-suggestion-grid">{value.suggestions.map((item, index) => <Card key={`${value.id}-${index}`}><CardContent><div className="claim-heading"><h5>{item.skill}</h5><Badge variant="outline">{t.unverified}</Badge></div><p lang={value.locale}>{item.statement}</p><p className="hint" lang={value.locale}>{item.context}</p>{item.documentId && <p className="hint">{value.documents.find(doc => doc.documentId === item.documentId)?.originalName}</p>}<details><summary>{t.quote}</summary><blockquote>{item.quote}</blockquote></details><Button variant="outline" size="sm" disabled={analysis.isPending} onClick={() => { onChoose({ ...item, analysisId:value.id }); setChosen(true); }}>{t.choose}</Button></CardContent></Card>)}</div></section>}
+      {!value.summary.length && !value.suggestions.length && <p>{t.empty}</p>}
+    </div>}
+  </CardContent></Card>;
+}

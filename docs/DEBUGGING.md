@@ -45,3 +45,8 @@ No advertisement body, title, full URL, contact details, raw provider payload, e
 ## Validation boundary
 
 Automated browser tests mock provider outcomes or disable the backend key. They prove sequencing, cancellation, source reuse, diagnostic data boundaries and UI behavior, not live provider availability or model quality. A real pilot run is still needed to assess the current advertisement and account quota. Verify the result overview and quotes against the original before relying on the analysis.
+
+
+## Analysis rejected after Groq HTTP 200
+
+HTTP 200 means the provider returned a response, not that the app accepted the structured content/evidence. The backend and DEV events now include an allowlisted reason: PROVIDER_SCHEMA_MISMATCH, OUTPUT_INCOMPLETE, EMPTY_OUTPUT, MALFORMED_JSON, INVALID_STRUCTURE or NO_SUPPORTED_ITEMS. No raw failed_generation, provider body or input text is logged. A failed analysis shows the available source excerpt and a retry, without an empty result panel. Missing structured fields mean not identified, not proof they are absent from the source. Private CV import never uses this diagnostic panel.

@@ -126,3 +126,23 @@ test("diagnostic edge tab supports keyboard opening, Escape and a narrow viewpor
   await page.keyboard.press("Escape");
   await expect(sheet).not.toBeVisible(); await expect(tab).toBeFocused();
 });
+
+test("analysis rejection shows its safe category and the received source without a runtime overlay", async ({ page }) => {
+  const failures: DiagnosticEvent[] = [];
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  page.on("console", async message => { if (message.text().startsWith("[Career Agent]") && message.type() === "warning") failures.push(await message.args()[1].jsonValue()); });
+  await page.route("**/api/status", route => route.fulfill({ json: { status:"UP" } }));
+  await page.route("**/api/jobs/requirements", route => route.fulfill({ status:502, json:{ code:"AI_INVALID_RESULT", reason:"NO_SUPPORTED_ITEMS", failed_generation:"PRIVATE_PROVIDER_PAYLOAD" } }));
+  await page.goto("/");
+  await page.getByRole("button", { name:"Lim inn tekst", exact:true }).click();
+  await page.getByRole("textbox", { name:"Stillingsannonse", exact:true }).fill(source);
+  await page.getByRole("button", { name:"Analyser", exact:true }).click();
+  await expect(page.locator(".fallback-advertisement")).toHaveText(source);
+  await page.getByRole("button", { name:"Utviklerdiagnostikk", exact:true }).click();
+  await expect(page.locator(".analysis-diagnostics")).toContainText("NO_SUPPORTED_ITEMS");
+  await expect.poll(() => failures.length).toBe(1);
+  expect(failures[0].details.reason).toBe("NO_SUPPORTED_ITEMS");
+  expect(JSON.stringify(failures)).not.toContain("PRIVATE_");
+  expect(errors).toEqual([]);
+});

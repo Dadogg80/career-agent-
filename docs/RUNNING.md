@@ -1,6 +1,6 @@
 # Kjør første utviklingsversjon
 
-Status: A redesigned shadcn/ui workspace, Norwegian/English selection, official NAV URL import, service status and Groq requirement extraction are implemented. Optional local OIDC sign-in and a saved basic name/language profile are implemented. Document processing, competencies, matching and public SaaS deployment remain future work. See [IDENTITY_SETUP.md](IDENTITY_SETUP.md) for the opt-in profile setup. See [TESTING_PILOT.md](TESTING_PILOT.md) for the complete AI test flow.
+Status: A redesigned shadcn/ui workspace, Norwegian/English selection, official NAV URL import, service status and Groq requirement extraction are implemented. Optional local OIDC sign-in and a saved basic name/language profile are implemented. This branch adds reviewed competencies and bounded local DOCX/PDF source import; personal matching and public SaaS deployment remain future work. See [CV_IMPORT.md](CV_IMPORT.md). See [IDENTITY_SETUP.md](IDENTITY_SETUP.md) for the opt-in profile setup. See [TESTING_PILOT.md](TESTING_PILOT.md) for the complete AI test flow.
 
 ## Forutsetninger
 
@@ -90,7 +90,7 @@ Both should report 21. These shell exports select the installed JDK; they do not
 
 ## PostgreSQL foundation update (2026-10-07)
 
-The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Optional local profile login/API/UI are now available for name/language only; see [IDENTITY_SETUP.md](IDENTITY_SETUP.md). Experience, competency claims and CV upload remain future increments. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.
+The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Optional local profile login/API/UI are available; see [IDENTITY_SETUP.md](IDENTITY_SETUP.md). Reviewed competency claims and local CV upload/source selection are added on this branch; normalized experience/projects and automatic AI discovery remain future increments. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.
 
 ## Local development interaction troubleshooting
 
@@ -107,3 +107,42 @@ For the earlier pacing delivery, restart `npm run dev -- --hostname 127.0.0.1` f
 ## Basic profile delivery
 
 This delivery changes backend security/dependencies and adds optional local identity configuration. Rebuild/restart the backend after merging; enable `persistence,identity` and the additional Compose file to test sign-in. Follow [IDENTITY_SETUP.md](IDENTITY_SETUP.md) rather than only the older public-ad commands above. Public job analysis can still use the default database-independent startup.
+
+## Update and restart after merging this branch
+
+Stop the running backend/frontend with Ctrl+C. From the repository root on the pilot Mac:
+
+```sh
+git switch main
+git pull --ff-only origin main
+export JAVA_HOME="$(brew --prefix openjdk@21)/libexec/openjdk.jdk/Contents/Home"
+export PATH="$JAVA_HOME/bin:/Applications/Docker.app/Contents/Resources/bin:$PATH"
+node scripts/configure-local-identity.mjs
+docker compose --env-file apps/backend/.env --env-file apps/backend/.env.identity -f compose.yaml -f compose.identity.yaml up -d --wait
+cd apps/backend
+./gradlew test bootJar
+set -a
+source .env
+source .env.identity
+set +a
+SPRING_PROFILES_ACTIVE=persistence,identity java -jar build/libs/career-agent-backend.jar
+```
+
+The helper preserves an existing identity file; no passwords or provider keys need to be changed. Flyway applies new migrations automatically. Keep existing volumes and `apps/backend/local-data/documents` (or the configured storage path).
+
+In a second terminal from the repository root:
+
+```sh
+cd apps/web
+nvm use 24
+npm ci
+npm run dev -- --hostname 127.0.0.1
+```
+
+Use the local application at `http://127.0.0.1:3000`. For Min profil/CV sign in as `pilot` using the password in your own ignored `.env.identity`. Public ad analysis works without sign-in. If changing default ports, configure both Next API base and backend public login origin consistently. The local private pilot is not an externally deployed SaaS.
+
+Stop the running Java process **before** rebuilding its JAR. Overwriting an archive used by a live Spring Boot classloader can produce class-loading failures; rebuild first, then start the new process.
+
+## Optional document AI summaries
+
+After updating/rebuilding this branch, use Min profil → CV og dokumenter → Oppsummer alle dokumentene med AI. Review all readable source excerpts and approve sending; do not send unnecessary private details. GROQ_API_KEY is reused server-side. The new V4 migration is automatic. No new dependency/service or account upgrade is needed. Individual analysis is available inside each document. See [CV_IMPORT.md](CV_IMPORT.md) for partial coverage, source inspection, UNVERIFIED review, persistence and failure behavior. Public advertisement diagnostics exclude this private content.

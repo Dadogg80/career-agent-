@@ -1,6 +1,6 @@
 # Domenemodell
 
-Status: Foreløpig modell. Ingen schema eller API er implementert. Navn og detaljer kan endres ved konkret design.
+Status: The broader model remains a design. Identity/basic profile are merged; this branch implements owned competency claims/revisions and source documents. Normalized Employment, Project, Skill taxonomy, applications and personal matching remain future work.
 
 ## Eierskap
 
@@ -70,3 +70,14 @@ BackgroundJob har tilstand, antall forsøk, lease og feilklassifisering. AiRun r
 ## Implemented storage foundation
 
 `app_user` contains an internal UUID and a unique `(oidc_issuer, oidc_subject)` binding. `career_profile` belongs to exactly one user and stores display name, nb/en language, revision and timestamps. OIDC verifies identity for the optional basic profile API/UI. Creation submits revision 0; the first saved revision is 1, and successful updates increment it. Stale revisions fail without changing stored content. The internal user binding is created transactionally on explicit save, not by accepting an email or browser owner ID. Claims/evidence/project models remain planned rather than implied by these two tables.
+
+
+## Implemented competency and document subset
+
+CompetencyClaim stores a skill label, own-contribution statement, prose project/employment context, source note, status and optimistic revision. CompetencyClaimRevision stores a full snapshot/action/owner/timestamp. Manual and document-selected claims start UNVERIFIED; explicit owner confirmation/rejection records a revision, and content editing resets confirmation. INFERRED has no creation path yet. A self-confirmation is not external certification.
+
+CareerDocument holds owner, original filename/media type/size/hash, declared nb/en language, original storage object, extracted text and master selection. Claim sourceDocumentId/sourceQuote bind a user-selected exact excerpt to an owned document. Confirmation does not prove that a source semantically supports every claim; the user reviews their own contribution. Deleting a document detaches references while retaining created claim/source-quote history; deleting the claim removes all its revisions. Details and limits are in [CV_IMPORT.md](docs/CV_IMPORT.md) and ADR 0014/0015.
+
+## DocumentAnalysis (ADR 0016)
+
+DocumentAnalysis is an owned suggestion snapshot, not candidate truth. It records an ID, language/provider/time, bounded summary and competency suggestions, source quotes/document IDs, input/source character counts, partial coverage and omitted evidence count. Individual results are linked to their document; the combined result belongs to the verified profile owner and lists included documents. Only explicit user saving creates a CompetencyClaim, always UNVERIFIED, with an AI-assisted CV source note and retained exact quote. Successful reanalysis replaces the latest suggestion snapshot, not claims/history. Creating/deleting a document invalidates the combined snapshot; individual results cascade on document deletion.

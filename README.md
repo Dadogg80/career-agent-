@@ -2,7 +2,7 @@
 
 AI-støttet jobbsøking med etterprøvbar kandidatkunnskap, kompetanseavklaring og brukerens kontroll over søknadsmaterialet.
 
-The application now has a Norwegian/English interface and official NAV API URL import, a redesigned shadcn/ui workspace, and Groq-backed advertisement extraction. Optional local OIDC sign-in and an owned, saved basic profile (name/language) are now implemented; competencies, CV upload, saved jobs and matching remain pending. See [local identity setup](docs/IDENTITY_SETUP.md). See the [pilot test guide](docs/TESTING_PILOT.md) and [run instructions](docs/RUNNING.md).
+The application now has a Norwegian/English interface and official NAV API URL import, a redesigned shadcn/ui workspace, and Groq-backed advertisement extraction. Optional local OIDC sign-in and an owned, saved basic profile (name/language) are implemented; this branch adds reviewed competencies and local CV/source import. Saved jobs and personal matching remain pending. See [CV import](docs/CV_IMPORT.md). See [local identity setup](docs/IDENTITY_SETUP.md). See the [pilot test guide](docs/TESTING_PILOT.md) and [run instructions](docs/RUNNING.md).
 
 Supported links are individual `https://arbeidsplassen.nav.no/stillinger/stilling/<uuid>` advertisements available in NAV’s API. FINN links in the form `https://www.finn.no/job/ad/<id>` are supported separately through Groq Browser Search. FINN imports are labeled Groq/Exa source excerpts, which may be incomplete or stale. Selecting Analyze link retrieves and analyzes in one action, with a configurable 10-second pause between FINN calls; source evidence and the original link remain available for inspection. FINN import uses the existing backend GROQ_API_KEY and a separate bounded search quota; other unsupported sources retain the Paste text alternative.
 
@@ -42,7 +42,7 @@ Arkitektur- og domenedokumentene er foreløpige design. ADR-indeksen og beslutni
 
 ### Direct job analysis
 
-Select **Analyser lenke / Analyze link** to retrieve and analyze a supported public URL in one action. The result includes useful sourced overview facts and compact requirement tiles. Open fact evidence or requirement details as needed; full source text remains expandable. Missing metadata is omitted, and browser excerpts remain explicitly labeled as potentially partial/stale. Experience/competency and CV features are not yet available. The basic profile is separate from public-ad analysis.
+Select **Analyser lenke / Analyze link** to retrieve and analyze a supported public URL in one action. The result includes useful sourced overview facts and compact requirement tiles. Open fact evidence or requirement details as needed; full source text remains expandable. The overview shows employer source paragraphs on the left, collapsible role/applicant/offers on the right, then practical details and requirement cards. Contact, location and deadline have stable slots with honest unknown states. If AI structuring fails, the received advertisement remains visible as plain text, with a manual retry; unsupported AI suggestions are never accepted merely to fill cards. Browser excerpts remain explicitly labeled as potentially partial/stale. Reviewed competencies and local CV import are available on this branch behind local sign-in. The basic profile is separate from public-ad analysis.
 
 ### Optional persistence foundation
 
@@ -53,3 +53,7 @@ PostgreSQL Compose and Flyway migrations are available behind the `persistence` 
 A fresh FINN analysis uses browser retrieval followed by structured extraction. These calls share the Groq account/model quota with Playground and other clients. The application shows a bounded provider cooldown. A manual retry for the same fetched URL reuses the current text instead of repeating browser search. Source-unsupported suggestions are omitted with a visible count; wholly unsupported or invalid results still fail. See ADR 0012 and docs/GROQ_SETUP.md.
 
 The frontend now shows retrieval → pause → analysis with honest loading statuses and a decorative animation. Development includes a hidden right-side shadcn Sheet, opened from the DEV edge tab, with status lights, received-source inspection and sanitized console events. Set `NEXT_PUBLIC_ANALYSIS_DELAY_SECONDS` in `apps/web/.env.local` to adjust the default 10-second FINN pause. This does not guarantee quota availability. See [debugging instructions](docs/DEBUGGING.md).
+
+## Document AI competency summaries
+
+The current branch adds opt-in Groq analysis of one document or all readable uploaded CVs/certificates together. Review editable excerpts, approve sending, inspect source-backed summaries/suggestions and explicitly save selected drafts as UNVERIFIED before separate confirmation. Nothing is sent during upload. Uses the existing backend GROQ_API_KEY, local identity/persistence and a bounded single provider call. See [CV_IMPORT.md](docs/CV_IMPORT.md) and [ADR 0016](docs/adr/0016-opt-in-document-ai-analysis.md).

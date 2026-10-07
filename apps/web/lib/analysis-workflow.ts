@@ -1,3 +1,7 @@
+export const analysisFailureReasons = ["PROVIDER_SCHEMA_MISMATCH", "OUTPUT_INCOMPLETE", "EMPTY_OUTPUT", "MALFORMED_JSON", "NO_SUPPORTED_ITEMS", "INVALID_STRUCTURE"] as const;
+export type AnalysisFailureReason = typeof analysisFailureReasons[number];
+export function safeAnalysisReason(value: unknown): AnalysisFailureReason | undefined { return analysisFailureReasons.includes(value as AnalysisFailureReason) ? value as AnalysisFailureReason : undefined; }
+
 export type AnalysisStage = "source" | "wait" | "analysis";
 export type StageState = "running" | "success" | "error" | "skipped" | "cancelled";
 export type AnalysisPhase = AnalysisStage | "idle" | "done" | "error" | "cancelled";
@@ -15,6 +19,7 @@ export type DiagnosticEvent = {
     reused?: boolean;
     seconds?: number;
     code?: string;
+    reason?: AnalysisFailureReason;
     requirements?: number;
     facts?: number;
     omittedItems?: number;

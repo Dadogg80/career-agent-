@@ -9,7 +9,7 @@ import java.text.Normalizer
 
 enum class RequirementKind { REQUIRED, PREFERRED, UNCLEAR }
 data class ExtractedRequirement(val label: String, val kind: RequirementKind, val quote: String)
-enum class JobFactKind { COMPANY, ROLE, DEADLINE, LOCATION, CONTACT, OTHER }
+enum class JobFactKind { COMPANY, ROLE, APPLICANT, OFFER, DEADLINE, LOCATION, CONTACT, OTHER }
 data class JobFact(val kind: JobFactKind, val label: String, val value: String, val quote: String)
 data class RequirementExtraction(val requirements: List<ExtractedRequirement>, val facts: List<JobFact> = emptyList(), val omittedItems: Int = 0)
 
@@ -24,12 +24,19 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
         val result = model.generateJson(
             """
             Extract up to 12 explicit job requirements and up to 10 useful facts from the provided advertisement.
-            Facts should cover employer/company description, role/responsibilities, deadline, location/work model,
+            Facts should cover employer/company description, role/responsibilities, the applicant sought, what is offered, deadline, location/work model,
             contact names/details, salary, benefits, employment type, application process or language when stated.
             Omit missing facts. Never research the company, invent details or calculate a date from ambiguous text.
             Use concise localized labels and values, preserving names, dates and contact details.
-            Fact kind must be exactly COMPANY, ROLE, DEADLINE, LOCATION, CONTACT or OTHER.
-            Use OTHER for salary, benefits, employment type, application process and language.
+            Fact kind must be exactly COMPANY, ROLE, APPLICANT, OFFER, DEADLINE, LOCATION, CONTACT or OTHER.
+            Use COMPANY for the employer's own description, ROLE for responsibilities, APPLICANT for the employer's
+            description of the person they seek, and OFFER for what the employer offers (including benefits).
+            For these narrative facts, choose an informative contiguous paragraph as the quote, not just a heading.
+            APPLICANT describes the advertised ideal applicant, never the application's user.
+            Prioritize CONTACT, DEADLINE and LOCATION when present, then narrative sections and other useful metadata.
+            Preserve all published contact names, titles and contact details within the existing limits.
+            Use multiple CONTACT facts for multiple people if needed. Never infer a contact person from a company name.
+            Use OTHER for salary, employment type, application process and language.
             Every fact must have a verbatim source quote supporting its complete value.
             Copy quotes exactly, including any markup; never combine separate passages or insert ellipses.
             Requirement labels: at most 200 characters; quotes: at most 600.
@@ -44,7 +51,7 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
             schema,
         )
         try {
-            val root = mapper.readTree(result)
+            val root = try { mapper.readTree(result) } catch (_: Exception) { throw AiFailure("AI_INVALID_RESULT", 502, reason = "MALFORMED_JSON") }
             val items = root.path("requirements")
             if (!items.isArray || items.size() > 12) throw IllegalArgumentException()
             var omittedItems = 0
@@ -80,12 +87,14 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
             }
             if (omittedItems > 0) {
                 logger.warn("Job analysis omitted unsupported evidence: count={}", omittedItems)
-                if (requirements.isEmpty() && facts.isEmpty()) throw IllegalArgumentException()
+                if (requirements.isEmpty() && facts.isEmpty()) throw AiFailure("AI_INVALID_RESULT", 502, reason = "NO_SUPPORTED_ITEMS")
             }
             return RequirementExtraction(requirements, facts, omittedItems)
+        } catch (failure: AiFailure) {
+            throw failure
         } catch (_: Exception) {
             logger.warn("Job analysis rejected: code=AI_INVALID_RESULT")
-            throw AiFailure("AI_INVALID_RESULT", 502)
+            throw AiFailure("AI_INVALID_RESULT", 502, reason = "INVALID_STRUCTURE")
         }
     }
 

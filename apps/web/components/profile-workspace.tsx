@@ -8,10 +8,12 @@ import { Input } from "./ui/input";
 import { Alert, AlertDescription } from "./ui/alert";
 import { isProfile, isSession } from "../lib/profile";
 import type { Locale } from "../lib/translations";
+import { DocumentPanel } from "./document-panel";
+import { ClaimPanel } from "./claim-panel";
 
 const translations = {
-  nb: { title: "Min profil", intro: "Et lagret grunnlag for din videre jobbsøking.", login: "Logg inn", logout: "Logg ut av Career Agent", loading: "Henter profil …", unavailable: "Profilinnlogging er ikke aktivert i dette miljøet ennå.", unavailableHint: "Stillingsanalysen er tilgjengelig. Profilen åpnes når lokal innlogging og lagring er konfigurert.", name: "Navn", language: "Foretrukket profilspråk", save: "Lagre profil", saving: "Lagrer …", saved: "Profilen er lagret.", revision: "Lagret versjon", reload: "Hent lagret versjon", next: "Erfaring, kompetanse og CV-opplasting kommer i neste profilutvidelse.", loginFailed: "Innloggingen ble ikke fullført. Prøv igjen.", errors: { PROFILE_UNAVAILABLE: "Kunne ikke hente eller lagre profilen. Prøv igjen.", AUTH_REQUIRED: "Sesjonen er utløpt. Logg inn igjen.", ACCESS_DENIED: "Endringen ble avvist. Last siden på nytt og prøv igjen.", PROFILE_INVALID: "Kontroller navn og språk før du lagrer.", PROFILE_CONFLICT: "Profilen er endret i en annen fane. Hent lagret versjon før du redigerer videre; det erstatter utkastet ditt.", PROFILE_DISABLED: "Profillagring er ikke aktivert i dette miljøet." } },
-  en: { title: "My profile", intro: "A saved foundation for your job search.", login: "Sign in", logout: "Sign out of Career Agent", loading: "Loading profile …", unavailable: "Profile sign-in is not enabled in this environment yet.", unavailableHint: "Job analysis is available. Your profile opens when local sign-in and storage are configured.", name: "Name", language: "Preferred profile language", save: "Save profile", saving: "Saving …", saved: "Profile saved.", revision: "Saved revision", reload: "Load saved version", next: "Experience, competencies and CV upload follow in the next profile extension.", loginFailed: "Sign-in did not complete. Try again.", errors: { PROFILE_UNAVAILABLE: "Could not load or save the profile. Try again.", AUTH_REQUIRED: "Your session has expired. Sign in again.", ACCESS_DENIED: "The change was rejected. Reload the page and try again.", PROFILE_INVALID: "Check your name and language before saving.", PROFILE_CONFLICT: "Your profile changed in another tab. Load the saved version before editing again; this replaces your draft.", PROFILE_DISABLED: "Profile storage is not enabled in this environment." } },
+  nb: { title: "Min profil", intro: "Et lagret grunnlag for din videre jobbsøking.", login: "Logg inn", logout: "Logg ut av Career Agent", loading: "Henter profil …", unavailable: "Profilinnlogging er ikke aktivert i dette miljøet ennå.", unavailableHint: "Stillingsanalysen er tilgjengelig. Profilen åpnes når lokal innlogging og lagring er konfigurert.", name: "Navn", language: "Foretrukket profilspråk", save: "Lagre profil", saving: "Lagrer …", saved: "Profilen er lagret.", revision: "Lagret versjon", reload: "Hent lagret versjon", next: "Lagre basisprofilen først for å legge til erfaring og kompetanse.", loginFailed: "Innloggingen ble ikke fullført. Prøv igjen.", errors: { PROFILE_UNAVAILABLE: "Kunne ikke hente eller lagre profilen. Prøv igjen.", AUTH_REQUIRED: "Sesjonen er utløpt. Logg inn igjen.", ACCESS_DENIED: "Endringen ble avvist. Last siden på nytt og prøv igjen.", PROFILE_INVALID: "Kontroller navn og språk før du lagrer.", PROFILE_CONFLICT: "Profilen er endret i en annen fane. Hent lagret versjon før du redigerer videre; det erstatter utkastet ditt.", PROFILE_DISABLED: "Profillagring er ikke aktivert i dette miljøet." } },
+  en: { title: "My profile", intro: "A saved foundation for your job search.", login: "Sign in", logout: "Sign out of Career Agent", loading: "Loading profile …", unavailable: "Profile sign-in is not enabled in this environment yet.", unavailableHint: "Job analysis is available. Your profile opens when local sign-in and storage are configured.", name: "Name", language: "Preferred profile language", save: "Save profile", saving: "Saving …", saved: "Profile saved.", revision: "Saved revision", reload: "Load saved version", next: "Save your basic profile first to add experience and competencies.", loginFailed: "Sign-in did not complete. Try again.", errors: { PROFILE_UNAVAILABLE: "Could not load or save the profile. Try again.", AUTH_REQUIRED: "Your session has expired. Sign in again.", ACCESS_DENIED: "The change was rejected. Reload the page and try again.", PROFILE_INVALID: "Check your name and language before saving.", PROFILE_CONFLICT: "Your profile changed in another tab. Load the saved version before editing again; this replaces your draft.", PROFILE_DISABLED: "Profile storage is not enabled in this environment." } },
 };
 async function readJson(response: Response) {
   const value = await response.json();
@@ -22,6 +24,7 @@ export function ProfileWorkspace({ locale }: { locale: Locale }) {
   const t = translations[locale]; const cache = useQueryClient();
   const [name, setName] = useState(""); const [language, setLanguage] = useState<Locale>("nb");
   const [loginFailed, setLoginFailed] = useState(false);
+  const [claimExpired, setClaimExpired] = useState(false);
   useEffect(() => { setLoginFailed(new URLSearchParams(window.location.search).get("login") === "failed"); }, []);
   const session = useQuery({ queryKey: ["private-session"], gcTime: 0, refetchOnReconnect: false, queryFn: async () => {
     const value = await readJson(await fetch("/api/auth/session", { cache: "no-store" }));
@@ -41,13 +44,13 @@ export function ProfileWorkspace({ locale }: { locale: Locale }) {
   const logout = useMutation({ mutationFn: async () => {
     const response = await fetch("/api/auth/logout", { method: "POST", headers: { "X-CSRF-TOKEN": session.data!.csrfToken } });
     if (response.status !== 204) await readJson(response);
-  }, onSuccess: () => { setName(""); cache.removeQueries({ queryKey: ["private-profile"] }); cache.removeQueries({ queryKey: ["private-session"] }); window.location.assign("/"); } });
+  }, onSuccess: () => { setName(""); cache.removeQueries({ queryKey: ["private-profile"] }); cache.removeQueries({ queryKey: ["private-session"] }); cache.removeQueries({ queryKey: ["private-claims"] }); cache.removeQueries({ queryKey: ["private-claim-history"] }); cache.removeQueries({ queryKey: ["private-documents"] }); cache.removeQueries({ queryKey: ["private-document-analysis"] }); cache.removeQueries({ queryKey: ["private-document-collection-text"] }); cache.removeQueries({ queryKey: ["private-document-detail"] }); window.location.assign("/"); } });
   function submit(event: FormEvent) { event.preventDefault(); if (!save.isPending && !logout.isPending) save.mutate(); }
   const error = session.error ?? profile.error ?? save.error ?? logout.error;
-  const message = error ? t.errors[error.message as keyof typeof t.errors] ?? t.errors.PROFILE_UNAVAILABLE : undefined;
+  const message = claimExpired ? t.errors.AUTH_REQUIRED : error ? t.errors[error.message as keyof typeof t.errors] ?? t.errors.PROFILE_UNAVAILABLE : undefined;
   const available = session.data?.loginAvailable && session.data.profilesAvailable;
   const loggedIn = session.data?.authenticated;
-  const expired = [profile.error, save.error, logout.error].some(value => value?.message === "AUTH_REQUIRED");
+  const expired = claimExpired || [profile.error, save.error, logout.error].some(value => value?.message === "AUTH_REQUIRED");
   return <section aria-labelledby="profile-title" className="profile-workspace"><Card>
     <CardHeader><h2 id="profile-title" className="flex items-center gap-2"><UserRound size={20} />{t.title}</h2><p className="hint">{t.intro}</p></CardHeader><CardContent>
       {loginFailed && !loggedIn && <Alert variant="destructive"><AlertDescription>{t.loginFailed}</AlertDescription></Alert>}
@@ -63,9 +66,10 @@ export function ProfileWorkspace({ locale }: { locale: Locale }) {
           {save.isSuccess && <p role="status">{t.saved}</p>}
           {profile.data && <p className="hint">{t.revision}: {profile.data.revision}</p>}
         </form>}
+        {profile.data === null && <p className="hint">{t.next}</p>}
         <div className="profile-actions"><Button variant="outline" onClick={async () => { save.reset(); await profile.refetch(); }} disabled={save.isPending || logout.isPending}>{t.reload}</Button><Button variant="ghost" onClick={() => logout.mutate()} disabled={save.isPending || logout.isPending}><LogOut />{t.logout}</Button></div>
       </>}
       {session.isError && <Button variant="outline" onClick={() => void session.refetch()}>{t.reload}</Button>}
-      <p className="hint mt-6">{t.next}</p>
-    </CardContent></Card></section>;
+      <p className="hint mt-6">{locale === "nb" ? "Personlig matching og CV-generering kommer senere." : "Personal matching and CV generation follow later."}</p>
+    </CardContent></Card>{loggedIn && !expired && profile.data && session.data && <><DocumentPanel locale={locale} csrfToken={session.data.csrfToken} onAuthRequired={() => setClaimExpired(true)}/><ClaimPanel locale={locale} csrfToken={session.data.csrfToken} onAuthRequired={() => setClaimExpired(true)}/></>}</section>;
 }

@@ -43,10 +43,10 @@ class RequirementsController(
 
     @ExceptionHandler(AiFailure::class)
     fun failure(error: AiFailure): ResponseEntity<Map<String, String>> {
-        logger.warn("Job analysis rejected: code={}, status={}", error.code, error.httpStatus)
+        logger.warn("Job analysis rejected: code={}, status={}, reason={}", error.code, error.httpStatus, error.reason ?: "UNSPECIFIED")
         val response = ResponseEntity.status(error.httpStatus)
         error.retryAfterSeconds?.let { response.header("Retry-After", it.toString()) }
-        return response.body(mapOf("code" to error.code))
+        return response.body(mapOf("code" to error.code) + (error.reason?.let { mapOf("reason" to it) } ?: emptyMap()))
     }
 
     @ExceptionHandler(HttpMessageNotReadableException::class)

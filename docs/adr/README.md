@@ -16,6 +16,9 @@ Status Accepted betyr vedtatt føring. Proposed betyr konkret forslag som kan re
 | [0011](0011-opt-in-postgresql-foundation.md) | Accepted | Opt-in PostgreSQL, Flyway and tested identity/profile foundation |
 | [0012](0012-job-evidence-and-provider-backoff.md) | Accepted | Source format handling, partial evidence and Groq retry backoff |
 | [0013](0013-local-oidc-and-owned-profile.md) | Accepted, local pilot | OIDC/PKCE sessions and user-owned basic profiles |
+| [0014](0014-competency-claims-and-revisions.md) | Accepted, local pilot | Owned statements, revision review and document evidence |
+| [0015](0015-local-cv-source-import.md) | Accepted, local pilot; AI deferral superseded by 0016 | Local DOCX/PDF originals and user-selected source claims |
+| [0016](0016-opt-in-document-ai-analysis.md) | Accepted, local pilot | Opt-in individual/combined source-backed document summaries |
 | [0010](0010-finn-browser-search.md) | Accepted | Bounded FINN import from exact-link Groq browser tool excerpts |
 
 Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert implementasjon av disse krever fortsatt design og autorisert implementasjonsstart.
