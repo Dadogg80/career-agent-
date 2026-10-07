@@ -78,3 +78,10 @@ Loggen beskriver faktisk arbeid, ikke planlagt funksjonalitet. Datoer følger br
 - Only fictional data was used in live inference. The screenshot is a temporary test artifact, not a private candidate document. Test services started by this task were stopped after verification.
 - Documented Docker tradeoffs and recommended native app processes plus PostgreSQL Compose when needed. Added pilot instructions and English PR handoff.
 - Remaining: user testing on Mac and GitHub Actions verification; auth/ownership and backup before private persistence. No candidate matching, CV handling or public deployment is available yet.
+
+## 2026-10-07 — URL overview proposal
+
+- Confirmed PR #3 merged advertisement extraction into main at `7c35cf5`.
+- The user successfully built the backend and opened the frontend on their Mac. A successful local Groq analysis has not been reported; opening the screen does not verify inference.
+- Reviewed existing extraction code and roadmap after the user prioritized URL input and a readable summary.
+- Created a proposed staged plan: supported-source fetching, sourced richer analysis, result UI and source/security/browser verification. No application code was changed and URL support is not implemented.

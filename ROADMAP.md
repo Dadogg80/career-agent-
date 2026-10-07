@@ -10,7 +10,9 @@ Norsk/engelsk startside, Spring Boot-status, frontend/backend-forbindelse og tes
 
 ### Current incremental delivery
 
-Pasted-advertisement extraction is implemented on `feat/job-requirements` with Groq and a Norwegian/English UI. This intentionally precedes the private-profile/database slice so the pilot can evaluate AI on public text. Candidate matching, persistent snapshots, profile isolation and clarification workflows remain unfinished. US-04/US-05 are not complete.
+Pasted-advertisement extraction is merged into main with Groq and a Norwegian/English UI. Candidate matching, persistent snapshots, profile isolation and clarification workflows remain unfinished. US-04/US-05 are not complete.
+
+The user now prioritizes URL input and a clear job summary. The proposed next slice is supported-source ingestion plus a sourced overview; see [NEXT_DELIVERY.md](docs/NEXT_DELIVERY.md). This brings US-17 forward. Identity/persistence still precedes private profiles and saved candidate data.
 
 Stories: US-01–US-07.
 
