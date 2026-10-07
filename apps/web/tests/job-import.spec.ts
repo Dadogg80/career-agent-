@@ -93,3 +93,20 @@ test("failed automatic analysis keeps retrieved text for manual retry", async ({
   await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await expect(page.getByRole("textbox", { name: "Stillingsannonse", exact: true })).toHaveValue(text);
 });
+
+test("unhydrated controls cannot submit a native form and become usable after scripts load", async ({ page }) => {
+  let release!: () => void;
+  const scripts = new Promise<void>(resolve => { release = resolve; });
+  await page.route("**/_next/**/*.js*", async route => { await scripts; await route.continue(); });
+  await page.goto("/", { waitUntil: "commit" });
+  const input = page.getByRole("textbox", { name: "Lenke til stillingsannonse" });
+  try {
+    await expect(input).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Analyser lenke", exact: true })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Lim inn tekst", exact: true })).toBeDisabled();
+    await expect(page.getByText("Klargjør grensesnittet …")).toBeVisible();
+  } finally { release(); }
+  await expect(input).toBeEnabled();
+  await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
+  await expect(page.getByRole("textbox", { name: "Stillingsannonse", exact: true })).toBeVisible();
+});

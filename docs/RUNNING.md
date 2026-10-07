@@ -91,3 +91,11 @@ Both should report 21. These shell exports select the installed JDK; they do not
 ## PostgreSQL foundation update (2026-10-07)
 
 The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Profile login/API/UI and CV upload are not yet available. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.
+
+## Local development interaction troubleshooting
+
+The development config explicitly allows `localhost` and `127.0.0.1` for Next.js development assets/HMR. This does not relax API request-origin checks or production security. Restart the frontend after updating Next config, and consistently open the same local hostname.
+
+Analysis controls are disabled until React initializes, with a visible preparing message and a JavaScript-required fallback. A native form reload must not erase a submitted link. If the preparing message never disappears or mode buttons remain disabled, inspect browser Console and Network for failed scripts; an HMR warning alone does not identify every possible browser startup failure. Private browsing can help diagnose stale resources/extensions without deleting profile data.
+
+Run `npm run test:dev` from apps/web to test both loopback hostnames against a real Next development server. AI calls are mocked, and the tests verify origin enforcement, mode switching and one-click URL analysis without navigation. The regular production browser suite includes a delayed-script hydration check.

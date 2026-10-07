@@ -219,3 +219,7 @@ Selecting **Analyze link** retrieves the public advertisement and immediately an
 The overview contains up to ten useful, variable facts: employer description, role/responsibilities, deadline, location/work model, contacts, benefits, salary or application process when explicitly present. Every fact carries a verbatim source quote. Missing data is omitted with an explicit notice rather than guessed. Quote membership validation establishes provenance, not semantic correctness of the AI's paraphrase. Browser excerpts can still be partial/stale; this limitation and the original link remain visible. Full source text is expandable, not a required intermediate screen. Requirement tiles/details remain unchanged.
 
 No candidate matching, private profile storage or company research is implied by this overview. All extracted facts are AI suggestions from the advertisement. Existing source quotes and optional source review remain available; older mandatory review instructions do not apply to this flow.
+
+## Local interaction reliability
+
+As a pilot user, I can switch between Link and Paste text after the interface initializes, submit by button or Enter, and retain my link while loading, after success and after an error. Before JavaScript initializes, controls are disabled with visible feedback rather than permitting an accidental native form reload. Development works on localhost and 127.0.0.1; unrelated origins remain blocked.

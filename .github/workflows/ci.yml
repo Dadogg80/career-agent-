@@ -39,3 +39,6 @@ jobs:
       - name: Browser tests against real frontend and backend
         working-directory: apps/web
         run: npm run test:e2e
+      - name: Local development origin and interaction regression checks
+        working-directory: apps/web
+        run: npm run test:dev
