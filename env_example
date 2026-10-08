@@ -6,5 +6,15 @@ DATABASE_PASSWORD=""
 # Optional local original-document path (relative to apps/backend by default).
 # DOCUMENT_STORAGE_PATH=local-data/documents
 
-# Optional per-process attempt cap shared by single/combined document AI.
-# DOCUMENT_AI_MAX_REQUESTS=10
+# Optional task models; empty values fall back to GROQ_MODEL (20B by default).
+# Leave these unset until a source-grounded quality comparison passes.
+# GROQ_MODEL=openai/gpt-oss-20b
+# GROQ_JOB_MODEL=
+# GROQ_DOCUMENT_MODEL=
+# GROQ_PROFILE_MODEL=
+# GROQ_MATCH_MODEL=
+
+# Whole-document workflow attempt budget and delay between its sequential calls.
+# The legacy single/combined analysis API has a separate process-local counter.
+# DOCUMENT_AI_MAX_REQUESTS=40
+# DOCUMENT_AI_BATCH_DELAY_SECONDS=65

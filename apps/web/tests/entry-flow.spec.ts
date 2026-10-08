@@ -60,6 +60,12 @@ test("signed-in login opens the dashboard with honest counts and review prioriti
  await expect(page.locator(".workspace-navigation a[aria-current='page']")).toContainText("Oversikt");
  await page.screenshot({ path: "/tmp/career-dashboard-desktop.png", fullPage: true });
  expect(aiCalls).toBe(0);
+ await page.route("**/api/profile/me/documents", r => r.fulfill({json:[]}));
+ await page.route("**/api/profile/me/entries", r => r.fulfill({json:[]}));
+ await page.getByRole("link", {name:"Gjennomgå kompetanse",exact:true}).click();
+ await expect(page.getByRole("button", {name:"Din kompetanse",exact:true})).toHaveAttribute("aria-pressed","true");
+ await expect(page.locator("#profile-competencies")).toBeVisible();
+ await expect(page.locator("#profile-documents")).toBeHidden();
 });
 
 test("mobile navigation is keyboard accessible and sign-out clears the workspace", async ({ page }) => {

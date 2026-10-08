@@ -65,3 +65,7 @@ Search recorded competencies by skill/project/source and filter their review sta
 ## Local job library and matching
 
 The current branch adds owned saved advertisement snapshots and a searchable library, plus approved personal matching against selected CONFIRMED statements. Save/reopen makes no AI call. Each match shows exact preview/revision references and requires approval before one private Groq request. Changed evidence marks the result stale; undocumented skills remain unknown. See [Saved jobs](docs/SAVED_JOBS.md), [Matching](docs/MATCHING.md) and [Roadmap](ROADMAP.md). The owner authorized publishing and merging this local-pilot delivery on 2026-10-08.
+
+### Whole-document review and Groq optimization
+
+The current unpublished branch adds automatic document portions, editable sourced profile/history/competency drafts and section-based profile navigation. See [the workflow and limits](docs/FULL_DOCUMENT_REVIEW.md) and [Groq documentation findings/configuration](docs/GROQ_OPTIMIZATION.md). Model defaults remain unchanged pending live quality comparison.

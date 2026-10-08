@@ -5,6 +5,17 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class GroqFailureTest {
+    @Test fun `task-specific model configuration is explicit and summary output stays bounded without exposing reasoning`() {
+        val model=GroqAiModel(jacksonObjectMapper(),"","openai/gpt-oss-20b",GroqCooldown(),documentModel="openai/gpt-oss-120b",profileModel="qwen/qwen3.8-27b")
+        val document=model.requestBody("static","dynamic",emptyMap(),com.careeragent.ai.application.AiTask.DOCUMENT_EXTRACTION)
+        assertThat(document["model"]).isEqualTo("openai/gpt-oss-120b")
+        assertThat(document["include_reasoning"]).isEqualTo(false)
+        val profile=model.requestBody("static","dynamic",emptyMap(),com.careeragent.ai.application.AiTask.PROFILE_SUMMARY)
+        assertThat(profile["model"]).isEqualTo("qwen/qwen3.8-27b")
+        assertThat(profile["max_completion_tokens"]).isEqualTo(1800)
+        assertThat(profile["reasoning_format"]).isEqualTo("hidden")
+        assertThat(model.requestBody("static","dynamic",emptyMap(),com.careeragent.ai.application.AiTask.JOB_ANALYSIS)["model"]).isEqualTo("openai/gpt-oss-20b")
+    }
     @Test fun `schema failure is distinguished without exposing provider payload`() {
         val model = GroqAiModel(jacksonObjectMapper(), "", "openai/gpt-oss-20b", GroqCooldown())
         val failure = model.providerFailure(400, """{"error":{"code":"json_validate_failed","failed_generation":"PRIVATE CONTENT"}}""", null)!!

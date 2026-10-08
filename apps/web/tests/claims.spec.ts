@@ -25,7 +25,7 @@ test("manual entry, explicit review, edit reset, history and delete require sepa
     history.push({ ...snapshot, action, recordedAt: snapshot.updatedAt, recordedBy: "PROFILE_OWNER" });
     return route.fulfill({ json: stored });
   });
-  await page.goto("/career/profile");
+  await page.goto("/career/profile"); await page.getByRole("button", {name:"Din kompetanse",exact:true}).click();
   await page.getByRole("button", { name: "Legg til kompetanse", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("textbox", { name: "Kompetanse", exact: true }).fill(initial.skill);
@@ -60,7 +60,7 @@ test("manual entry, explicit review, edit reset, history and delete require sepa
 test("stale edits preserve the draft and expired claim access closes the private workspace", async ({ page }) => {
   await profile(page); let expired = false;
   await page.route("**/api/profile/me/claims**", route => route.request().method() === "GET" ? route.fulfill({ json: [initial] }) : route.fulfill({ status: expired ? 401 : 409, json: { code: expired ? "AUTH_REQUIRED" : "CLAIM_CONFLICT" } }));
-  await page.goto("/career/profile");
+  await page.goto("/career/profile"); await page.getByRole("button", {name:"Din kompetanse",exact:true}).click();
   await page.getByRole("article", { name: "Webhooks", exact: true }).getByRole("button", { name: "Rediger", exact: true }).click();
   const dialog = page.getByRole("dialog"); const field = dialog.getByRole("textbox", { name: "Hva gjorde du selv?", exact: true });
   await field.fill("My retained draft");

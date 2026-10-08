@@ -30,7 +30,7 @@ test("competency search combines context with status filters and separates confi
   ];
   await page.route("**/api/profile/me/claims", route => route.fulfill({ json:claims }));
   await page.route("**/api/profile/me/documents", route => route.fulfill({ json:[document] }));
-  await page.goto("/career/profile");
+  await page.goto("/career/profile"); await page.getByRole("button", {name:"Din kompetanse",exact:true}).click();
   const panel = page.locator("#profile-competencies");
   await expect(panel.locator(".competency-stats")).toContainText("Kompetanseområder");
   await expect(panel.getByRole("article")).toHaveCount(3);
@@ -48,43 +48,15 @@ test("competency search combines context with status filters and separates confi
   await page.screenshot({ path:"/tmp/competency-workspace-mobile.png", fullPage:true });
 });
 
-test("combined analysis covers later passages and renders more than ten proposals without confirming them", async ({ page }) => {
-  await identity(page); let calls = 0; let stored: object | null = null;
-  const source = "Opening skills\n" + "Synthetic project experience.\n".repeat(1000) + "\nBuilt APIs with Kotlin at the end";
-  const course = "Completed a PostgreSQL course with a synthetic certificate.";
-  await page.route("**/api/profile/me/claims", route => route.fulfill({ json:[] }));
-  await page.route("**/api/profile/me/documents**", route => {
-    const url = route.request().url();
-    if (url.endsWith("/analysis")) {
-      if (route.request().method() === "GET") return route.fulfill({ json:stored });
-      calls++; const input = route.request().postDataJSON();
-      expect(input.documents[0].text).toContain("Built APIs with Kotlin at the end");
-      expect(input.documents[0].text.length).toBeGreaterThan(11000);
-      expect(input.documents.reduce((sum:number, item:{text:string}) => sum+item.text.length,0)).toBeLessThanOrEqual(12000);
-      stored = { id:second, locale:"nb", provider:"Groq", summary:[{ text:"API development supported by the CV", quote:"Built APIs with Kotlin", documentId:id }],
-        suggestions:Array.from({ length:16 }, (_,index) => ({ skill:index === 15 ? "Kotlin" : `Explicit skill ${index+1}`, statement:"Document describes API development", context:"Synthetic project", quote:"Built APIs with Kotlin", documentId:id })),
-        inputCharacters:input.documents.reduce((sum:number, item:{text:string}) => sum+item.text.length,0), sourceCharacters:source.length+course.length, partial:true, omittedItems:0, createdAt:time,
-        documents:[{ documentId:id, originalName:document.originalName, inputCharacters:input.documents[0].text.length, sourceCharacters:source.length }, { documentId:second, originalName:"synthetic-course.docx", inputCharacters:course.length, sourceCharacters:course.length }] };
-      return route.fulfill({ json:stored });
-    }
-    if (url.endsWith(id)) return route.fulfill({ json:{ document:{ ...document, textCharacters:source.length }, text:source } });
-    if (url.endsWith(second)) return route.fulfill({ json:{ document:{ ...document, id:second, originalName:"synthetic-course.docx", textCharacters:course.length }, text:course } });
-    return route.fulfill({ json:[{ ...document, textCharacters:source.length }, { ...document, id:second, originalName:"synthetic-course.docx", textCharacters:course.length }] });
-  });
-  await page.goto("/career/profile");
-  await page.getByRole("button", { name:"Oppsummer alle dokumentene med AI", exact:true }).click();
-  const sheet = page.getByRole("dialog");
-  await sheet.getByRole("checkbox").check(); await sheet.getByRole("button", { name:"Oppsummer kompetansen med AI", exact:true }).click();
-  await expect(sheet.getByRole("button", { name:"Se gjennom dette forslaget", exact:true })).toHaveCount(16);
-  await sheet.getByRole("textbox", { name:"Søk i AI-forslag", exact:true }).fill("Kotlin");
-  await expect(sheet.getByRole("button", { name:"Se gjennom dette forslaget", exact:true })).toHaveCount(1);
-  expect(calls).toBe(1);
-  await page.screenshot({ path:"/tmp/competency-analysis-desktop.png", fullPage:false });
-  await page.setViewportSize({ width:390, height:844 });
-  expect(await page.evaluate(() => window.document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  await sheet.getByRole("button", { name:"Se gjennom dette forslaget", exact:true }).click();
-  await expect(sheet.getByLabel("Kompetanse", { exact:true })).toHaveValue("Kotlin");
-  await expect(sheet.getByLabel("Valgt kildesitat", { exact:true })).toHaveValue("Built APIs with Kotlin");
+test("combined workflow sends every selected source including late passages and keeps proposals searchable",async({page})=>{
+ await identity(page);const source="## Example AS\n"+"Synthetic project experience.\n".repeat(1000)+"Built APIs with Kotlin at the end";const course="Completed a PostgreSQL course with a synthetic certificate.";let starts=0;
+ const analysis={id:second,locale:"nb",provider:"Groq",summary:[],profile:[],careerEntries:[],suggestions:Array.from({length:16},(_,i)=>({skill:i===15?"Kotlin":`Explicit skill ${i+1}`,statement:"Document describes API development",context:"Example AS",quote:"Built APIs with Kotlin",documentId:id})),inputCharacters:source.length+course.length,sourceCharacters:source.length+course.length,partial:false,omittedItems:0,createdAt:time,documents:[{documentId:id,originalName:document.originalName,inputCharacters:source.length,sourceCharacters:source.length},{documentId:second,originalName:"synthetic-course.docx",inputCharacters:course.length,sourceCharacters:course.length}]};
+ const run={id:second,scope:"collection",revision:2,status:"COMPLETED",completedBatches:10,totalBatches:10,nextAt:null,issue:null,analysis};
+ await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[]}));await page.route("**/api/profile/me/documents**",r=>{
+  const url=r.request().url();if(url.includes("/workflow")){if(r.request().method()==="POST"){starts++;const input=r.request().postDataJSON();expect(input.documents[0].text).toBe(source);expect(input.documents[1].text).toBe(course);expect(input.documents[0].text.length).toBeGreaterThan(12000);return r.fulfill({json:run});}return r.fulfill({json:null});}
+  if(url.endsWith(id))return r.fulfill({json:{document,text:source}});if(url.endsWith(second))return r.fulfill({json:{document:{...document,id:second,originalName:"synthetic-course.docx"},text:course}});return r.fulfill({json:[document,{...document,id:second,originalName:"synthetic-course.docx"}]});
+ });
+ await page.goto("/career/profile");await page.getByRole("button",{name:"Oppsummer alle dokumentene med AI",exact:true}).click();const sheet=page.locator(".document-workspace-sheet");await sheet.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Groq for denne analysen"}).check();await sheet.getByRole("button",{name:"Bygg profil fra dokumentene",exact:true}).click();await expect(sheet.getByRole("button",{name:"Se gjennom",exact:true})).toHaveCount(16);await sheet.getByLabel("Søk i AI-forslag",{exact:true}).fill("Kotlin");await expect(sheet.getByRole("button",{name:"Se gjennom",exact:true})).toHaveCount(1);expect(starts).toBe(1);
 });
 
 test("unreadable PDF can be reread with local OCR while errors preserve originals and successful text needs separate AI consent", async ({ page, request }) => {
@@ -102,14 +74,14 @@ test("unreadable PDF can be reread with local OCR while errors preserve original
     if (url.endsWith("/analysis")) return route.fulfill({ json:null });
     return route.fulfill({ json:url.endsWith(id) ? { document:{ ...pdf, textCharacters:source.length, extractionMethod:source ? "OCR" : "TEXT" }, text:source } : [{ ...pdf, textCharacters:source.length }] });
   });
-  await page.goto("/career/profile");
+  await page.goto("/career/profile"); await page.getByRole("button", {name:"Din kompetanse",exact:true}).click();
   await expect(page.locator("#profile-documents")).toContainText("Ingen lesbar tekst · prøv OCR");
-  await page.getByRole("button", { name:"Se tekst og legg til kompetanse", exact:true }).click();
+  await page.getByRole("button", {name:"Dokumenter og AI-profil",exact:true}).click(); await page.getByRole("button", { name:"Analyser dokumentet", exact:true }).click();
   const sheet = page.getByRole("dialog"); const reread = sheet.getByRole("button", { name:"Les skannet PDF med OCR", exact:true });
   await reread.click(); await expect(sheet.getByRole("alert")).toContainText("Installer Tesseract");
   await reread.click();
-  await expect(sheet.getByLabel("Tekst som sendes til Groq", { exact:true })).toHaveValue(source);
-  await expect(sheet.getByRole("button", { name:"Oppsummer kompetansen med AI", exact:true })).toBeDisabled();
+  await sheet.locator(".source-review-tile > summary").click(); await expect(sheet.getByLabel("Tekst som sendes fra synthetic-scan.pdf", { exact:true })).toHaveValue(source);
+  await expect(sheet.getByRole("button", { name:"Bygg profil fra dokumentene", exact:true })).toBeDisabled();
   expect(attempts).toBe(2);
   const path = `/api/profile/me/documents/${id}/reread`;
   expect((await request.post(path, { data:{ ocr:true } })).status()).toBe(403);
@@ -121,5 +93,5 @@ test("all supporting documents remain inspectable for one competency with their 
  const competency={id,skill:"Kotlin",statement:"Built Kotlin APIs",context:"Example AS",sourceNote:"Document: original.md",sourceDocumentId:id,sourceQuote:"Built Kotlin APIs",status:"CONFIRMED",revision:2,createdAt:time,updatedAt:time};
  await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));await page.route("**/api/profile/me",r=>r.fulfill({json:{id,displayName:"Fictional Pilot",preferredLanguage:"nb",revision:1}}));await page.route("**/api/profile/me/documents",r=>r.fulfill({json:[]}));await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[competency]}));
  await page.route(`**/api/profile/me/claims/${id}/evidence`,r=>r.fulfill({json:[{id,documentId:id,originalName:"original.md",statement:competency.statement,context:competency.context,quote:"Built Kotlin APIs",recordedAt:time},{id:second,documentId:null,originalName:"certificate.txt",statement:competency.statement,context:competency.context,quote:"Kotlin APIs at Example AS",recordedAt:time}]}));
- await page.goto("/career/profile");const tile=page.getByRole("article",{name:"Kotlin",exact:true});await tile.locator("summary").click();await tile.getByRole("button",{name:"Se alle dokumentkilder",exact:true}).click();await expect(tile).toContainText("certificate.txt · originalen er slettet");await expect(tile.getByText("Kotlin APIs at Example AS",{exact:true})).toBeVisible();await expect(page.locator(".claim-tile")).toHaveCount(1);
+ await page.goto("/career/profile"); await page.getByRole("button", {name:"Din kompetanse",exact:true}).click();const tile=page.getByRole("article",{name:"Kotlin",exact:true});await tile.locator("summary").click();await tile.getByRole("button",{name:"Se alle dokumentkilder",exact:true}).click();await expect(tile).toContainText("certificate.txt · originalen er slettet");await expect(tile.getByText("Kotlin APIs at Example AS",{exact:true})).toBeVisible();await expect(page.locator(".claim-tile")).toHaveCount(1);
 });

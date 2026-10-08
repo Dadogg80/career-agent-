@@ -17,7 +17,7 @@ test("career timeline confirms actual roles separately and editing resets confir
   else if(method === "DELETE"){saved=null;return r.fulfill({status:204});}
   history.push({...saved});return r.fulfill({json:saved});
  });
- await page.goto("/career/profile");
+ await page.goto("/career/profile"); await page.getByRole("button", {name:"Arbeid og utdanning",exact:true}).click();
  await page.getByRole("button",{name:"Legg til historikk",exact:true}).click();
  let dialog=page.getByRole("dialog");
  await dialog.getByRole("textbox",{name:"Formell tittel / navn",exact:true}).fill("Developer");

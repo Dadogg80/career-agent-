@@ -21,7 +21,7 @@ The initial Python urllib request was rejected with HTTP 403 / error code 1010. 
 
 Codex-konfigurasjonen overfører ikke nøkkelen til Mac-en. Ved lokal kjøring må `GROQ_API_KEY` settes i backend-prosessens miljø gjennom sikker lokal konfigurasjon. Spring Boot leser ikke automatisk en vilkårlig `.env`-fil.
 
-Ingen frontend-variabel eller localStorage skal inneholde nøkkelen. Repoets `env_example` har et eksempelnavn `GROQCLOUD_API_KEY`; planlagt standard er `GROQ_API_KEY`. Eksempelfilen er ikke lastet av applikasjonen og skal aldri fylles med en ekte nøkkel i Git.
+Ingen frontend-variabel eller localStorage skal inneholde nøkkelen. The repository `env_example` uses the implemented `GROQ_API_KEY` name. Eksempelfilen er ikke lastet av applikasjonen og skal aldri fylles med en ekte nøkkel i Git.
 
 ## Før AI aktiveres
 
@@ -53,3 +53,8 @@ The application honors a bounded Retry-After countdown and shares an observed co
 The frontend additionally pauses for 10 seconds after FINN retrieval before initiating the second call. Configure the bounded public build-time setting `NEXT_PUBLIC_ANALYSIS_DELAY_SECONDS` in `apps/web/.env.local` (0–120 seconds); restart dev or rebuild production after changes. It is a pacing aid, not token-availability prediction. NAV/pasted-text flows normally skip this inter-Groq pause. Loading stages and the development diagnostic panel make retrieval/wait/analysis visible; see [DEBUGGING.md](DEBUGGING.md).
 
 json_validate_failed indicates model output failed the requested schema (for example, an invalid fact kind), distinct from a network failure. Allowed kinds are spelled out in the prompt and the sanitized UI code is AI_INVALID_RESULT. Unsupported source quotations are omitted with a visible count when other supported cards remain; invalid structures/bounds or wholly unsupported results still fail. No raw failed_generation is logged or shown.
+
+
+## Task configuration and current optimizations
+
+Optional backend `GROQ_JOB_MODEL`, `GROQ_DOCUMENT_MODEL`, `GROQ_PROFILE_MODEL` and `GROQ_MATCH_MODEL` fall back to `GROQ_MODEL`. Unset values preserve the current 20B default. Browser Search continues using `GROQ_MODEL`; it cannot be combined with strict JSON. Do not copy experimental model overrides without quality validation. See [GROQ_OPTIMIZATION.md](GROQ_OPTIMIZATION.md) for documented caching, usage headers, output budgets and account quota limits. Document workflow pacing is configured by `DOCUMENT_AI_BATCH_DELAY_SECONDS` (default 65); it does not solve daily exhaustion.

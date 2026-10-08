@@ -1,0 +1,9 @@
+import { claimId } from "./claims";
+import { isDocumentAnalysis,type DocumentAnalysis } from "./document-analysis";
+export type DocumentRun = {id:string;scope:string;revision:number;status:"RUNNING"|"PAUSED"|"COMPLETED";completedBatches:number;totalBatches:number;nextAt:string|null;issue:string|null;analysis:DocumentAnalysis};
+export function isDocumentRun(value:unknown):value is DocumentRun {
+ if(!value || typeof value!=="object")return false;const v=value as DocumentRun;
+ return typeof v.id==="string" && claimId.test(v.id) && (v.scope==="collection" || typeof v.scope==="string" && claimId.test(v.scope)) && Number.isSafeInteger(v.revision) && v.revision>0 && ["RUNNING","PAUSED","COMPLETED"].includes(v.status) && Number.isInteger(v.totalBatches) && v.totalBatches>=1 && v.totalBatches<=1000 && Number.isInteger(v.completedBatches) && v.completedBatches>=0 && v.completedBatches<=v.totalBatches && (v.nextAt===null || typeof v.nextAt==="string" && Number.isFinite(Date.parse(v.nextAt))) && (v.issue===null || typeof v.issue==="string" && /^AI_[A-Z_]{1,40}$/.test(v.issue)) && isDocumentAnalysis(v.analysis);
+}
+export const profileLabels={nb:{PROFILE:"Om deg",CORE_SKILLS:"Kjernekompetanse",KEY_INFORMATION:"Nøkkelinformasjon",EXPERIENCE:"Erfaring",EDUCATION:"Utdanning og kurs",INTERESTS:"Interesser"},en:{PROFILE:"About you",CORE_SKILLS:"Core competencies",KEY_INFORMATION:"Key information",EXPERIENCE:"Experience",EDUCATION:"Education and courses",INTERESTS:"Interests"}};
+export const categoryLabels={nb:{TECHNOLOGY:"Teknologier",DELIVERY:"Ansvar og leveranser",LEADERSHIP:"Ledelse",DOMAIN:"Domene",LEARNING:"Læring",OTHER:"Annen kompetanse"},en:{TECHNOLOGY:"Technologies",DELIVERY:"Responsibilities and delivery",LEADERSHIP:"Leadership",DOMAIN:"Domain",LEARNING:"Learning",OTHER:"Other competencies"}};

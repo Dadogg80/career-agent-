@@ -127,3 +127,8 @@ Accepted under the owner's autonomous pilot instruction: received source text ta
 ## Source-selected competencies and local document checks — 2026-10-07
 
 Accepted under the owner's request to test actual uploaded evidence: separate literal document extraction from generative writing. The model selects numbered evidence; the application supplies source wording, validates skill labels and nearby same-document context proof, and exposes unknown associations. Reopened old suggestions obey this presentation rule without altering saved claims. Add a read-only original/text/quote check and smaller optional detail windows, without provider retries, automatic confirmation, paid services or publication. See ADR 0023. A green technical check never claims semantic or exhaustive correctness.
+
+
+## Resumed document/profile review — 2026-10-08
+
+The owner explicitly resumed the planned implementation and reiterated automatic whole-document processing, prefilled career history, editable AI summaries/competencies, improved profile navigation, PDF readability, model configuration and the incremental domain model. Accepted implementation scope is ADR 0024. Keep existing disclosed source-deletion semantics, per-run provider consent and explicit factual confirmation. Task model overrides are implemented but defaults remain unchanged pending live quality comparison; there is no automatic quota fallback. The full proposed domain schema is not accepted wholesale. The latest development instruction to defer publishing remains in effect for this branch.

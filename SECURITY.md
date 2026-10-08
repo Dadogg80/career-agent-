@@ -115,3 +115,7 @@ CV and application routes require the same verified OIDC owner and CSRF protecti
 ## Actual-document validation and source selection
 
 A numbered-evidence model request contains only the explicitly reviewed excerpt, temporary passage numbers and document ordinals; original files, filenames and profile/claim contents are not added. IDs cannot select unreviewed text or foreign-document context. Source wording/whole-term labels limit adjacent-skill inventions but still require user review. A read-only local check does not call AI, perform OCR, repair storage or write data; it exposes only IDs, counts and check categories. Provider/transport diagnostics contain allowlisted categories and HTTP status, never payloads, tokens, exception messages or CV text. Real owner-provided CVs and private test outputs remain outside Git.
+
+## Whole-document run privacy
+
+Owned run state now stores original-text snapshots and approved previews in PostgreSQL alongside source evidence; include this private state in backup, export and future account-deletion policy. Per-run approval covers sequential extraction and final synthesis of that selected data only. Embedded source instructions remain untrusted data. Source mutations/deletion invalidate affected runs; imported claim/history quotations follow existing disclosed retention. Imported history evidence uses owner/revision-scoped foreign keys. No provider response, private source, API key or hidden reasoning is logged. Broader GDPR/provider policy remains unresolved before outside users.

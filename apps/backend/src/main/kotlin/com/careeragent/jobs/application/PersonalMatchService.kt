@@ -52,7 +52,7 @@ class PersonalMatchService(private val jobs: SavedJobRepository, private val cla
         try {
             if (used.get() >= maxRequests) throw AiFailure("AI_BUDGET_REACHED", 429)
             used.incrementAndGet()
-            val output = model.generateJson(prompt(request.locale), mapper.writeValueAsString(mapOf("advertisement" to request.text, "requirements" to requirements, "confirmedClaims" to selected)), schema)
+            val output = model.generateJson(prompt(request.locale), mapper.writeValueAsString(mapOf("advertisement" to request.text, "requirements" to requirements, "confirmedClaims" to selected)), schema, com.careeragent.ai.application.AiTask.PERSONAL_MATCH)
             val parsed = parse(output, job.content.requirements.size, requirements.map { it["index"] as Int }.toSet(), selected, request.locale)
             return results.save(identity, jobId, PersonalMatch(UUID.randomUUID(), request.locale, OffsetDateTime.now(), parsed.first, selected, parsed.second, characters))
         } finally { permit.release() }

@@ -8,6 +8,7 @@ import java.util.UUID
 
 class EntryFailure(val code: String, val status: Int) : RuntimeException(code)
 interface CareerEntryRepository {
+ fun evidence(identity:VerifiedIdentity,id:UUID):List<CareerEntryEvidence> = emptyList()
  fun list(identity: VerifiedIdentity): List<CareerEntry>
  fun create(identity: VerifiedIdentity, content: CareerEntryContent): CareerEntry
  fun edit(identity: VerifiedIdentity, id: UUID, content: CareerEntryContent, revision: Long): CareerEntry
@@ -18,6 +19,7 @@ interface CareerEntryRepository {
 @Service
 @Profile("persistence")
 class CareerEntryService(private val entries: CareerEntryRepository) {
+ fun evidence(identity:VerifiedIdentity,id:UUID)=entries.evidence(identity,id)
  fun list(identity: VerifiedIdentity) = entries.list(identity)
  fun create(identity: VerifiedIdentity, content: CareerEntryContent) = entries.create(identity, validate(content))
  fun edit(identity: VerifiedIdentity, id: UUID, content: CareerEntryContent, revision: Long): CareerEntry { revision(revision); return entries.edit(identity, id, validate(content), revision) }

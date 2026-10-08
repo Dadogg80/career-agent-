@@ -18,6 +18,10 @@ class JdbcCareerEntryRepository(private val jdbc: JdbcTemplate,private val json:
  private fun current(owner: UUID,id: UUID) = jdbc.query("SELECT * FROM career_entry WHERE owner_id = ? AND id = ?",mapper,owner,id).singleOrNull() ?: throw EntryFailure("ENTRY_NOT_FOUND",404)
  private fun expected(entry: CareerEntry,revision: Long) { if(entry.revision != revision) throw EntryFailure("ENTRY_CONFLICT",409) }
  private fun record(owner: UUID,entry: CareerEntry) { jdbc.update("INSERT INTO career_entry_revision(entry_id,owner_id,revision,snapshot) VALUES(?,?,?,?::jsonb)",entry.id,owner,entry.revision,json.writeValueAsString(entry)) }
+ @Transactional(readOnly=true) override fun evidence(identity:VerifiedIdentity,id:UUID):List<CareerEntryEvidence> {
+  val owner=owner(identity);current(owner,id)
+  return jdbc.query("SELECT revision,document_id,original_name,quote,period_text FROM career_entry_evidence WHERE owner_id=? AND entry_id=? ORDER BY revision DESC,id LIMIT 100",{r,_->CareerEntryEvidence(r.getLong("revision"),r.getObject("document_id",UUID::class.java),r.getString("original_name"),r.getString("quote"),r.getString("period_text"))},owner,id)
+ }
  @Transactional(readOnly=true) override fun list(identity: VerifiedIdentity) = jdbc.query("SELECT * FROM career_entry WHERE owner_id = ? ORDER BY created_at DESC,id LIMIT 50",mapper,owner(identity))
  @Transactional override fun create(identity: VerifiedIdentity,content: CareerEntryContent): CareerEntry {
   val owner=owner(identity,true)

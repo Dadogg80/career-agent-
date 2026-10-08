@@ -14,3 +14,7 @@ The owner explicitly authorized pushing this tested delivery and merging it to m
 4. Add market discovery/scheduling only after checking source-access/reuse terms, freshness, deduplication and budget. Controlled browser preparation, academy/analytics and external hosting remain later milestones.
 
 Kafka, Temporal, pgvector and Redis are deferred until a concrete workload justifies them. Local integration tests require Docker; private workflows require the documented PostgreSQL/OIDC setup. Production identity, backups, deletion/export policy and external-provider privacy controls remain open before an external pilot.
+
+## Current resumed slice
+
+Whole-document analysis, editable candidate/history/competency drafts, compact profile sections, local PDF repair and task model configuration are implemented and tested on the unpublished branch. See [FULL_DOCUMENT_REVIEW.md](FULL_DOCUMENT_REVIEW.md). Live Groq quality comparison is still blocked by quota; defaults remain unchanged. Next product increments remain reviewed CV/application wording, interview preparation and later discovery. Publishing and merging are separate from local completion.

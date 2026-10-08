@@ -29,3 +29,7 @@ Automated results are recorded in [DEVELOPMENT_LOG.md](DEVELOPMENT_LOG.md). Mock
 ## Read-only evidence diagnostics
 
 After uploading or reopening documents, choose **Check documents**. Verify original/text pass only when the actual checks succeed; an unanalyzed file stays unanalyzed, OCR needs visual review, and partial input stays partial. Open a source from the report and compare it with the unchanged original. Rerun checking with no AI quota consumption. A quoted technology still needs contextual review; the report never certifies exhaustive extraction. Keep actual CVs/provider responses out of Git and test artifacts intended for sharing.
+
+## Whole-document review on the current feature branch
+
+Follow [FULL_DOCUMENT_REVIEW.md](FULL_DOCUMENT_REVIEW.md). Start from Documents and AI profile, review one or all sources, approve once, and expect genuine waits between calls. Review/edit skill contributions and history fields before explicit confirmation. Stop/reopen a run, verify drafts remain and continuation needs approval. Check unsupported/read-only sources, source evidence, Norwegian/English and mobile navigation. Test data/AI controls are covered synthetically; real Groq extraction quality remains a separate quota-dependent check.

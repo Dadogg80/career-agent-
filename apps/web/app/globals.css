@@ -254,3 +254,31 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 .application-workspace { display:grid;gap:20px; }.application-filters { display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:12px; }.workspace-select { display:block;width:100%;padding:10px;border:1px solid #d7dfd4;border-radius:7px;background:white;font-size:13px; }.application-card-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px; }.application-card-grid h3 { font-size:17px;margin:16px 0 10px;font-weight:650; }.application-card-top { display:flex;flex-wrap:wrap;gap:8px; }.application-form { display:grid;gap:16px; }.application-form [data-slot="card-content"] { display:grid;gap:14px; }.application-form label { display:grid;gap:7px;font-size:13px; }.application-form>button { justify-self:start; }.application-form h3 { font-weight:650; }@media(max-width:600px){.application-filters { grid-template-columns:1fr; }}
 
 .document-check-list{list-style:none;padding:0;display:grid;gap:1rem;margin:1rem 0}.document-check-list li{display:flex;align-items:flex-start;gap:.65rem}.document-check-list svg{flex-shrink:0;margin-top:.15rem;color:#98703f}.document-check-list [data-state="PASS"] svg{color:#2b7653}.document-check-list [data-state="FAIL"] svg{color:#ab3c3c}.document-check-list [data-state="MISSING"] svg{color:#78837c}.document-check-list p{margin:.25rem 0;font-size:.9rem;overflow-wrap:anywhere}
+
+/* Document review prioritizes source selection and compact, editable drafts. */
+.profile-section-navigation { position: sticky; top: 0; z-index: 10; background: var(--background); padding: 1rem 0; }
+.profile-section-buttons, .competency-filter-row { display:flex; gap:.5rem; flex-wrap:wrap; }
+.full-document-workflow { display:grid; gap:1.25rem; margin:1rem 0; }
+.document-source-grid, .profile-summary-grid, .career-draft-grid, .competency-proposal-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+.source-review-tile { min-width:0; border:1px solid var(--border); border-radius:12px; padding:1rem; }
+.source-review-tile summary { display:flex; align-items:center; justify-content:space-between; gap:.5rem; cursor:pointer; }
+.source-review-tile summary span { overflow-wrap:anywhere; }
+.source-review-tile textarea { margin-top:.75rem; }
+.document-run-status { padding:1rem; background:var(--secondary); border-radius:12px; }
+.document-run-status > div, .document-results-heading { display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.document-run-status progress { width:100%; height:.6rem; accent-color:var(--primary); margin:.75rem 0; }
+.competency-context-group { display:grid; gap:.75rem; }
+.full-document-workflow h4 { font-weight:650; margin-bottom:.5rem; }
+.full-document-workflow p { margin-bottom:.75rem; }
+.full-document-workflow blockquote, .draft-evidence blockquote { white-space:pre-wrap; font-size:.9rem; border-left:3px solid var(--border); padding:.5rem .75rem; overflow-wrap:anywhere; }
+.document-draft-sheet { width:min(95vw,620px); max-width:620px; overflow-y:auto; display:flex; flex-direction:column; gap:.75rem; }
+.profile-workspace [hidden] { display:none; }
+@media(min-width:1400px) { .competency-proposal-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:720px) { .document-source-grid,.profile-summary-grid,.career-draft-grid,.competency-proposal-grid { grid-template-columns:1fr; } .profile-section-navigation { position:static; } }
+@media(prefers-reduced-motion:reduce) { .document-draft-sheet { animation:none; } }
+
+/* Keep document review controls readable on small screens and long filenames. */
+.document-review-header { min-width:0; text-align:left; }
+.document-review-header p { min-width:0; max-width:100%; overflow-wrap:anywhere; }
+.consent-row { display:flex; align-items:flex-start; gap:.65rem; line-height:1.6; margin:1rem 0; }
+.consent-row input { flex-shrink:0; width:1rem; height:1rem; margin-top:.2rem; accent-color:var(--primary); }

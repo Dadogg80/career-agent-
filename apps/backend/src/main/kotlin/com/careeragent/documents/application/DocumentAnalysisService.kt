@@ -2,6 +2,7 @@ package com.careeragent.documents.application
 
 import com.careeragent.ai.application.AiFailure
 import com.careeragent.ai.application.AiModel
+import com.careeragent.ai.application.AiTask
 import com.careeragent.documents.domain.*
 import com.careeragent.profile.application.VerifiedIdentity
 import com.fasterxml.jackson.databind.JsonNode
@@ -44,7 +45,7 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
         try {
             if (used.get() >= maxRequests) throw AiFailure("AI_BUDGET_REACHED", 429)
             used.incrementAndGet()
-            val output = selection.expand(model.generateJson(prompt(locale), selection.input(), DocumentEvidenceSelection.schema()), false)
+            val output = selection.expand(model.generateJson(prompt(locale), selection.input(), DocumentEvidenceSelection.schema(), AiTask.DOCUMENT_EXTRACTION), false)
             val parsed = parse(output, text, source, locale)
             return analyses.save(identity, id, DocumentAnalysis(UUID.randomUUID(), locale, "Groq", parsed.first,
                 parsed.second, text.length, source.length, text != source, parsed.third, OffsetDateTime.now()), source)
@@ -62,7 +63,7 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
         val summary = analysis.summary.mapNotNull { item ->
             val source = sources[item.documentId ?: single]
             if (source == null || !source.contains(item.quote)) { omitted++; null }
-            else item.copy(text = matchQuote(item.quote, item.text) ?: item.quote.take(500))
+            else item.copy(text = if (analysis.profile.isNotEmpty()) item.text else matchQuote(item.quote, item.text) ?: item.quote.take(500))
         }
         val suggestions = analysis.suggestions.mapNotNull { item ->
             val source = sources[item.documentId ?: single]
@@ -71,7 +72,7 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
             else {
                 val proof = verifiedContext(item.contextQuote, item.context, item.quote, source)
                 val context = if (proof != null || item.contextQuote == null && item.quote.contains(item.context, ignoreCase = true)) item.context else if (analysis.locale == "nb") "Kontekst ikke oppgitt" else "Context not stated"
-                item.copy(skill = skill, statement = matchQuote(item.quote, item.statement) ?: item.quote, context = context, contextQuote = proof,
+                item.copy(skill = skill, statement = if(item.drafted) item.statement else matchQuote(item.quote, item.statement) ?: item.quote, context = context, contextQuote = proof,
                     additionalSources = item.additionalSources.filter { evidence -> sources[evidence.documentId]?.contains(evidence.quote) == true })
             }
         }
@@ -114,7 +115,7 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
         try {
             if (used.get() >= maxRequests) throw AiFailure("AI_BUDGET_REACHED", 429)
             used.incrementAndGet()
-            val output = selection.expand(model.generateJson(prompt(locale), selection.input(), DocumentEvidenceSelection.schema()), true)
+            val output = selection.expand(model.generateJson(prompt(locale), selection.input(), DocumentEvidenceSelection.schema(), AiTask.DOCUMENT_EXTRACTION), true)
             val parsed = parseSources(output, sent, sources.mapValues { it.value.text }, true, locale)
             val sourceDocuments = excerpts.map { AnalysisDocument(it.documentId, sources.getValue(it.documentId).document.originalName, it.text.length, sources.getValue(it.documentId).text.length) }
             return analyses.saveCollection(identity, DocumentAnalysis(UUID.randomUUID(), locale, "Groq", parsed.first, parsed.second,

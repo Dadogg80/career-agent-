@@ -4,7 +4,7 @@ Status checked against remote main on 2026-10-08; the owner authorized publishin
 
 ## Current status
 
-Maintenance round on 2026-10-08: advertisement partial-result validation and long Groq cooldown preservation are implemented locally and tested. Full-document extraction, automatic career-history/profile filling, the related UI redesign and the experimental PDF text repair are paused pending agreement on the [knowledge-model proposal](docs/CAREER_KNOWLEDGE_MODEL_PROPOSAL.md). Proposed per-task model routing has not been activated. This round has not been pushed or merged.
+The owner resumed the document/profile slice after the knowledge-model review. On `feat/full-document-career-review`, complete-source sequential analysis, editable sourced competency/history/profile drafts, section-based profile navigation, PDF tracking/column handling and configurable task models are implemented and locally tested. Defaults remain GPT OSS 20B because the live quality comparison was blocked by Groq quota. This branch is not pushed or merged; the prior pause is superseded for this specific scope. The full normalized knowledge graph and later roadmap capabilities remain separate.
 
 | Capability | Actual status |
 | --- | --- |
@@ -21,6 +21,9 @@ Maintenance round on 2026-10-08: advertisement partial-result validation and lon
 | Competency search/status dashboard, wider document review Sheet, improved source coverage and local rereading/OCR | Implemented and locally validated on feat/competency-workspace; ready for the authorized delivery merge |
 | Reviewed typed career history, role/client distinction and revision review | Implemented on the local branch; real PostgreSQL and browser checks |
 | Public landing, dedicated sign-in, workspace overview and responsive navigation | Implemented on the local branch; production/development browser regression checks completed |
+| Whole-document sourced profile/competency/history review | Implemented and tested on the unpublished current branch; explicit per-run approval and factual confirmation |
+| Task-specific model configuration and safe token/cache usage logging | Implemented locally; default model unchanged, live quality comparison pending |
+| PDF character-spacing/column repair | Implemented and tested locally, including the six supplied private test documents |
 | Adjacent-skill inference, full normalized employment/project graph | Not implemented |
 | Owned saved job snapshots and searchable library | Implemented on current local branch; verified in the integrated local pilot |
 | Approved personal requirement-to-claim matching | Implemented on current local branch; verified in the integrated local pilot |

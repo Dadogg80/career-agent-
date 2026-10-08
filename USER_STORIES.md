@@ -331,3 +331,11 @@ As a jobseeker, I want employment, projects, education and certificates with the
 
 - **US46 — Check my actual evidence:** locally check owned originals, text reproducibility and existing AI quotation support without another model call or writes. Show distinct intact/missing/OCR/partial/unsupported states with text and accessible indicators, then open the document for inspection. A passing technical check must not imply semantic or exhaustive correctness.
 - **US47 — Source-selected competencies:** suggestions use original wording and a skill label found in their own quote. Show nearby same-document context proof or unknown context; preserve course/list limitations and require separate user confirmation. Invalid items cannot turn an unrelated valid quote into invented experience. Older results reopen safely without rewriting confirmed claims.
+
+## Resumed document/profile slice
+
+- As a candidate, I approve full documents once and the system handles portions automatically. Acceptance: full editable previews, no manual part selection, source coverage and resumable owned progress.
+- As a candidate, I review distinct explicit technologies and contributions grouped by supported company/project. Acceptance: editable AI descriptions, exact multi-source evidence, conservative deduplication, search/category filters and no automatic confirmation.
+- As a candidate, I receive prefilled employment/project/education drafts and supported profile summaries. Acceptance: unknown dates/interests remain unknown, user edits and confirms explicitly, and career-entry evidence remains revision-linked.
+- As a candidate, I reach documents, competencies and career history through clear profile sections. Acceptance: dashboard links select the destination and mobile review fits the screen.
+- As a candidate, I retain useful work on provider failure. Acceptance: saved portions remain visible, full cooldown is respected, no automatic retry/model switch and explicit continuation.

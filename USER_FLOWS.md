@@ -360,3 +360,7 @@ flowchart TD
 ```
 
 Technical checks do not certify semantics or completeness. Provider failures keep previous usable results; no automatic call or confirmation follows the check.
+
+## Whole-document profile flow (ADR 0024)
+
+Upload and read locally → inspect full previews → approve selected documents once → automatic sequential sourced analysis → bounded candidate summary → inspect/edit profile, history and skill cards → save unverified or explicitly confirm reviewed experience. Paused runs retain previous drafts and need manual approved continuation. Document deletion/rereading invalidates affected progress. See [FULL_DOCUMENT_REVIEW.md](docs/FULL_DOCUMENT_REVIEW.md).

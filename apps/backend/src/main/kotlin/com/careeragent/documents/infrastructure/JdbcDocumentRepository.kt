@@ -44,6 +44,7 @@ class JdbcDocumentRepository(private val jdbc: JdbcTemplate) : DocumentRepositor
     @Transactional
     override fun delete(identity: VerifiedIdentity, id: UUID) {
         val owner = owner(identity, true); document(owner, id)
+        jdbc.update("DELETE FROM document_analysis_run WHERE owner_id=? AND jsonb_exists(state->'sources', ?)", owner, id.toString())
         jdbc.update("DELETE FROM career_document WHERE owner_id = ? AND id = ?", owner, id)
         jdbc.update("DELETE FROM document_collection_analysis WHERE owner_id = ?", owner)
     }
@@ -53,6 +54,7 @@ class JdbcDocumentRepository(private val jdbc: JdbcTemplate) : DocumentRepositor
         val previous = jdbc.queryForObject("SELECT extracted_text FROM career_document WHERE owner_id = ? AND id = ?", String::class.java, owner, id)
         jdbc.update("UPDATE career_document SET extracted_text = ?, extraction_method = ? WHERE owner_id = ? AND id = ?", text, method, owner, id)
         if (previous != text) {
+            jdbc.update("DELETE FROM document_analysis_run WHERE owner_id=? AND jsonb_exists(state->'sources', ?)", owner, id.toString())
             jdbc.update("DELETE FROM document_analysis WHERE owner_id = ? AND document_id = ?", owner, id)
             jdbc.update("DELETE FROM document_collection_analysis WHERE owner_id = ?", owner)
         }
