@@ -118,3 +118,7 @@ CompetencySuggestion optionally retains contextQuote: the nearby literal header 
 ## AI approval snapshots
 
 AiSelection identifies a configured provider and model per task. AiApprovalPreview binds the tasks and selections to a non-secret fingerprint. A DocumentRun persists this approval snapshot; changing provider/model cannot authorize continuation implicitly. This is separate from authentication, source Evidence and factual Claim confirmation. PersonalMatch stores its generating provider/model; old records retain their Groq default.
+
+## AI plan and result attribution — 2026-10-08
+
+An AI plan maps tasks to backend-configured provider/model selections and has a recipient/model fingerprint. A document run retains its planned selections and approved sources; an explicitly approved plan change affects only future portions. `DocumentAnalysis.aiSelections` records actual successful contributors. Personal matches persist their actual provider/model; public extraction returns its actual selection. These execution facts are separate from factual competency confirmation and original source provenance.

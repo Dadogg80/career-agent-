@@ -1,6 +1,6 @@
 # Local pilot user experience
 
-Status: implemented entry/navigation redesign on the unpublished `feat/competency-workspace` branch. Reviewed CV export and manual application tracking are also implemented destinations; automatic discovery, academy and external submission are deferred.
+Status: entry/navigation redesign merged in PR #16 on 2026-10-08. Current evidence-quality and AI-recovery refinements are on `feat/document-evidence-quality`. Reviewed CV export and manual application tracking are also implemented destinations; automatic discovery, academy and external submission are deferred.
 
 ## Entry and orientation
 
@@ -44,10 +44,18 @@ See `DEVELOPMENT_LOG.md` for executed checks and the actual local identity smoke
 
 Advertisement results expand received employer, role, applicant and offer sections before practical details and compact requirement cards. An accessible full-text reader exposes what was actually received. If AI structuring fails, explicit source headings and labeled contact/location/deadline fields are organized locally with a visible recovery notice; unavailable text is never invented. Previous valid results are retained only for the unchanged source.
 
-Document controls show readable coverage, source filenames and exact quotes. Long documents have independently approved parts. Guided competency review shows one contribution and its context at a time; skip leaves it unverified. Multi-source evidence opens only on request. Identical competency/contribution/context can reuse a reviewed record; different employer/project contexts stay separate.
+Document controls show readable coverage, source filenames and exact quotes. Whole-document review uses a single approved full-text selection with automatic bounded processing. The older optional excerpt endpoint remains compatible. Guided competency review shows one contribution and its context at a time; skip leaves it unverified. Multi-source evidence opens only on request. Identical competency/contribution/context can reuse a reviewed record; different employer/project contexts stay separate.
 
 CV creation separates selection, preview and approval. Only current confirmed competencies and typed career entries are selectable. A revised draft reuses relevant unchanged selections while preserving the approved file. PDF/DOCX download failures retain the draft or approved version. Applications distinguish manually recording a submission from sending one externally, show follow-up dates and preserve the exact submitted CV/date/text. Sheets and confirmation dialogs use the shared shadcn foundation, and private asynchronous operations use TanStack Query.
 
 ## Document-based profile review
 
 Profile navigation now separates Documents and AI profile, Your competencies and Career history. Upload stays accessible at the top; dashboard review links open the correct section. Full source previews collapse by document. Supported summaries and career drafts use two-column cards; competencies group by company/project with category filters and search. The review Sheet contains prefilled editable fields, source evidence and an explicit confirmation choice. On mobile cards stack, consent controls wrap, evidence keeps its original language and provider waits show actual progress. Partial coverage and unknown context never imply a skill gap.
+
+## Compact AI identity and recovery
+
+Shared shadcn badges show provider and configured model before a call and actual recorded contributors with its result. Muted labels distinguish the saved plan from successful output; Gemini uses a subtle violet accent and Groq a green accent. The small Change control reveals backend-configured choices. Recoverable failures offer a direct alternate-provider action, keeping content visible and requiring new private recipient consent. Models absent from older records are shown as unknown, never reconstructed from current settings.
+
+Document results separate competencies, profile prose and timeline drafts rather than stacking all sections. Company/project cards group exact skill labels while keeping distinct contributions editable. Source coverage is available on demand with explicit limits.
+
+AI work uses a compact spinner and animated dots; genuine quota/pacing waits use an hourglass and actual remaining time. Pending matching keeps the previous result visible and disables duplicate submission. Motion stops under `prefers-reduced-motion`; status text remains accessible. A paused run is not presented as an active generation. FINN source retrieval shows its own actual Groq/model identity separately from the selected analysis provider.

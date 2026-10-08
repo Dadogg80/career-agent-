@@ -1,6 +1,6 @@
 package com.careeragent.jobs.application
 
-import com.careeragent.ai.application.AiFailure
+import com.careeragent.ai.application.*
 import com.careeragent.ai.application.AiModel
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.JsonNode
@@ -12,17 +12,18 @@ enum class RequirementKind { REQUIRED, PREFERRED, UNCLEAR }
 data class ExtractedRequirement(val label: String, val kind: RequirementKind, val quote: String)
 enum class JobFactKind { COMPANY, ROLE, APPLICANT, OFFER, DEADLINE, LOCATION, CONTACT, OTHER }
 data class JobFact(val kind: JobFactKind, val label: String, val value: String, val quote: String)
-data class RequirementExtraction(val requirements: List<ExtractedRequirement>, val facts: List<JobFact> = emptyList(), val omittedItems: Int = 0)
+data class RequirementExtraction(val requirements: List<ExtractedRequirement>, val facts: List<JobFact> = emptyList(), val omittedItems: Int = 0, val aiSelection: AiSelection? = null)
 
 @Service
 class RequirementExtractor(private val model: AiModel, private val mapper: ObjectMapper) {
     private val logger = LoggerFactory.getLogger(javaClass)
-    fun extract(text: String, locale: String): RequirementExtraction {
+    fun extract(text: String, locale: String): RequirementExtraction = extract(text,locale,null,null)
+    fun extract(text: String, locale: String, plan: AiPlan?, routing: AiRouting?): RequirementExtraction {
         if (text.trim().length < 40 || text.length > 15000 || locale !in setOf("nb", "en")) {
             throw AiFailure("INVALID_INPUT", 400)
         }
         val language = if (locale == "nb") "Norwegian Bokmål" else "English"
-        val result = model.generateJson(
+        val result = (if(plan!=null && routing!=null)ApprovedAiModel(model,routing,plan) else model).generateJson(
             """
             Extract up to 12 explicit job requirements and up to 10 useful facts from the provided advertisement.
             Facts should cover employer/company description, role/responsibilities, the applicant sought, what is offered, deadline, location/work model,
@@ -95,7 +96,7 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
                 logger.warn("Job analysis items omitted: count={} categories={}", omittedItems, omissions)
                 if (requirements.isEmpty() && facts.isEmpty()) throw AiFailure("AI_INVALID_RESULT", 502, reason = "NO_SUPPORTED_ITEMS")
             }
-            return RequirementExtraction(requirements, facts, omittedItems)
+            return RequirementExtraction(requirements, facts, omittedItems,plan?.tasks?.get(AiTask.JOB_ANALYSIS))
         } catch (failure: AiFailure) {
             throw failure
         } catch (_: Exception) {

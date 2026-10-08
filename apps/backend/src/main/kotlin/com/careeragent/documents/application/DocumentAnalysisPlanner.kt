@@ -25,7 +25,9 @@ internal object DocumentAnalysisPlanner {
     fun headers(text: String): List<Pair<Int, String>> {
         val lines = Regex("[^\\r\\n]+").findAll(text).toList()
         val explicit = Regex("(?i)^(?:(?:project|prosjekt|client|kunde|employer|arbeidsgiver)\\s*:|#{1,6}\\s+|.{1,100}\\s+[-–]\\s+\\()")
-        val boundary = Regex("(?i)^(?:profil|profile|kjernekompetanse|core skills|teknologier|technologies|utdanning|education|interesser|interests|nøkkelkvalifikasjoner|key qualifications|sertifiseringer|certifications|arbeidserfaring|experience)$")
+        val boundary = Regex("(?i)^(?:profil|profile|kjernekompetanse|core skills|skills|kompetanse|technical skills|teknologier|technologies|utdanning|education|interesser|interests|nøkkelkvalifikasjoner|key qualifications|sertifiseringer|certifications|arbeidserfaring|experience)$")
+        val date = "(?:\\d{2}[./](?:19|20)\\d{2}|(?:19|20)\\d{2}(?:-\\d{2})?)"
+        val datedHeader = Regex("(?i)^$date\\s*[-–—]\\s*(?:$date|present|now|nå|dags dato)\\s+.+[\\p{L}].*$")
         val roleOrDate = Regex("(?i)(developer|utvikler|consultant|konsulent|lead|leder|engineer|cto|founder|student|bachelor|master|\\b(?:19|20)\\d{2}\\b)")
         return lines.mapIndexedNotNull { index, line ->
             val heading = line.value.trim()
@@ -33,7 +35,8 @@ internal object DocumentAnalysisPlanner {
             val candidate = heading.length in 2..120 && heading.split(Regex("\\s+")).size <= 9 &&
                 !heading.endsWith('.') && !heading.startsWith('-') && !heading.contains('@') && !heading.contains(':') &&
                 !Regex("(?i)(teknologi|technology|ansvar|responsibilities|frontend|backend|skills|\\b(?:19|20)\\d{2}\\b)").containsMatchIn(heading) && roleOrDate.containsMatchIn(next)
-            if (explicit.containsMatchIn(heading) || boundary.matches(heading) || candidate) line.range.first to heading else null
+            val timeline = heading.length <= 300 && datedHeader.matches(heading)
+            if (explicit.containsMatchIn(heading) || boundary.matches(heading) || candidate || timeline) line.range.first to heading else null
         }
     }
     private fun nearestHeader(text: String, start: Int) = headers(text).lastOrNull { it.first < start }?.second

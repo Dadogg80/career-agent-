@@ -4,7 +4,7 @@ Status checked against remote main on 2026-10-08; the owner authorized publishin
 
 ## Current status
 
-The owner resumed the document/profile slice after the knowledge-model review. On `feat/full-document-career-review`, complete-source sequential analysis, editable sourced competency/history/profile drafts, section-based profile navigation, PDF tracking/column handling and configurable task models are implemented and locally tested. Defaults remain GPT OSS 20B because the live quality comparison was blocked by Groq quota. This branch is not pushed or merged; the prior pause is superseded for this specific scope. The full normalized knowledge graph and later roadmap capabilities remain separate.
+PR #16 merged the tested local pilot and Gemini/full-document continuation on 2026-10-08 at `5c18439265e6fa2b9852b1a16c631d5ba7be6dc7`. Both pre-merge Foundation checks passed. The current `feat/document-evidence-quality` slice adds PDF mixed-layout/context fixes, compact document results and explicitly approved provider recovery. Default routing still preserves Groq unless configured otherwise; Gemini 3.5 Flash was validated with synthetic evidence. Automatic document-confirmed profile import, dynamic presentation and matching improvements remain queued. The full normalized knowledge graph and later roadmap capabilities are separate.
 
 | Capability | Actual status |
 | --- | --- |
@@ -18,19 +18,19 @@ The owner resumed the document/profile slice after the knowledge-model review. O
 | Owned competency statements, explicit review and revision history | Implemented and merged, PR #14 |
 | Local DOCX/PDF original upload, text inspection, master selection and source-selected claims | Implemented and merged, PR #14 |
 | Opt-in single/combined document AI summaries and source-backed suggestions | Implemented and merged, PR #14 |
-| Competency search/status dashboard, wider document review Sheet, improved source coverage and local rereading/OCR | Implemented and locally validated on feat/competency-workspace; ready for the authorized delivery merge |
-| Reviewed typed career history, role/client distinction and revision review | Implemented on the local branch; real PostgreSQL and browser checks |
-| Public landing, dedicated sign-in, workspace overview and responsive navigation | Implemented on the local branch; production/development browser regression checks completed |
-| Whole-document sourced profile/competency/history review | Implemented and tested on the unpublished current branch; explicit per-run approval and factual confirmation |
-| Task-specific model configuration and safe token/cache usage logging | Implemented locally; default model unchanged, live quality comparison pending |
-| PDF character-spacing/column repair | Implemented and tested locally, including the six supplied private test documents |
+| Competency search/status dashboard, wider document review Sheet, improved source coverage and local rereading/OCR | Merged in the tested local pilot |
+| Reviewed typed career history, role/client distinction and revision review | Merged in the tested local pilot; real PostgreSQL and browser checks |
+| Public landing, dedicated sign-in, workspace overview and responsive navigation | Merged in the tested local pilot; production/development browser checks |
+| Whole-document sourced profile/competency/history review | Merged in PR #16; explicit per-run approval and factual confirmation |
+| Task-specific model configuration and safe token/cache usage logging | Merged in PR #16; default unchanged, synthetic Gemini validation passed |
+| PDF character-spacing/column repair | Merged initial repair; current mixed-layout refinements locally checked against seven unique private documents |
 | Adjacent-skill inference, full normalized employment/project graph | Not implemented |
-| Owned saved job snapshots and searchable library | Implemented on current local branch; verified in the integrated local pilot |
-| Approved personal requirement-to-claim matching | Implemented on current local branch; verified in the integrated local pilot |
-| Reviewed CV selection, preview and immutable standard DOCX/PDF export | Implemented on the tested delivery branch; verified with real local identity/storage and automated checks |
-| Manual application cases, exact approved CV references, history and follow-up dates | Implemented on the tested delivery branch; verified with real local identity/storage and automated checks |
-| Local advertisement recovery, richer received text, UTF-8 TXT/Markdown and conservative multi-source deduplication | Implemented locally; verified with real local identity/storage and automated checks |
-| Source-selected document competencies, context proof and local original/text/quote check | Implemented locally; current validation recorded in DEVELOPMENT_LOG.md; ready for delivery |
+| Owned saved job snapshots and searchable library | Merged in the tested local pilot |
+| Approved personal requirement-to-claim matching | Merged in the tested local pilot |
+| Reviewed CV selection, preview and immutable standard DOCX/PDF export | Merged in the tested local pilot; real identity/storage and automated checks |
+| Manual application cases, exact approved CV references, history and follow-up dates | Merged in the tested local pilot; real identity/storage and automated checks |
+| Local advertisement recovery, richer received text, UTF-8 TXT/Markdown and conservative multi-source deduplication | Merged in the tested local pilot; real identity/storage and automated checks |
+| Source-selected document competencies, context proof and local original/text/quote check | Merged initial evidence checks; current recovery/refinements tracked separately |
 | Automatic CV rewriting, discovery, interview/academy/analytics and browser submission | Not implemented |
 
 The previous delivery scope was the three deliveries already listed: ad overview, competency review and initial CV import. Saved jobs/matching were excluded from that earlier delivery; the latest instruction authorizes publishing and merging the tested local pilot workflow. The owner subsequently added AI competency summarization across uploaded documents before merge. Upload/extraction remain local; a separately approved Groq call creates stored source-backed suggestions, and an explicit user save creates UNVERIFIED claims. See docs/CV_IMPORT.md and the actual validation in docs/DEVELOPMENT_LOG.md.
@@ -43,7 +43,7 @@ The previous delivery scope was the three deliveries already listed: ad overview
 
 ## Authorized local-pilot increments
 
-The owner expanded the pilot with public entry, dedicated sign-in and a serious UX/UI redesign. Public entry, CV generation and application tracking are implemented and locally verified; publication/merge remain separate. Standard CV generation uses reviewed selections; automatic AI rewriting and the full normalized employment/project graph remain separate future increments. The owner authorized publication and merge on 2026-10-08; long-term product phases remain separate. See docs/UX_DESIGN.md.
+The owner expanded the pilot with public entry, dedicated sign-in and a serious UX/UI redesign. Public entry, CV generation and application tracking are implemented, tested and merged. Standard CV generation uses reviewed selections; automatic AI rewriting and the full normalized employment/project graph remain separate future increments. The owner authorized publication and merge on 2026-10-08; long-term product phases remain separate. See docs/UX_DESIGN.md.
 
 1. Owned saved advertisement snapshots and reviewed typed employment/projects are implemented. A full normalized career graph remains future work.
 2. Personal requirement-to-confirmed-claim matching, explicit uncertainty/clarification and explainable CV wording recommendations. Undocumented experience is unknown, not automatically a skill gap. The owner approved relevant CONFIRMED claims plus ad text with preview and approval per analysis; production provider/privacy policy remains separate.
@@ -57,4 +57,10 @@ Update stories/flows, decisions, security and the development log. Published bra
 
 ## Current Gemini continuation — 2026-10-08
 
-Implemented locally: explicit Groq/Gemini task routing, recipient/model-bound private approval, persisted run protection, Gemini cooldown and sanitized token logging. Stable 3.5 Flash passed synthetic extraction/profile checks; 3.8 Flash generation returned 503. The related document-quality slice adds explicit responsibility coverage and prevents final synthesis from erasing already sourced profile sections. Real-document Gemini quality remains pending recipient-approved testing. Next: measured document coverage/PDF reading → conservative competency reconciliation → profile/history UX. Native Gemini PDF/URL retrieval, full normalized catalog/conflict model and later discovery/interview/browser/academy features remain separate.
+Merged in PR #16: explicit Groq/Gemini task routing, recipient/model-bound private approval, persisted run protection, Gemini cooldown and sanitized token logging. Stable 3.5 Flash passed synthetic extraction/profile checks; 3.8 Flash generation returned 503. The related document-quality slice adds explicit responsibility coverage and prevents final synthesis from erasing already sourced profile sections. Real-document Gemini quality remains pending recipient-approved testing. Next: measured document coverage/PDF reading → conservative competency reconciliation → profile/history UX. Native Gemini PDF/URL retrieval, full normalized catalog/conflict model and later discovery/interview/browser/academy features remain separate.
+
+## Verified merge and current recovery slice — 2026-10-08
+
+PR #16 is merged (`5c18439265e6fa2b9852b1a16c631d5ba7be6dc7`); both pre-merge Foundation checks passed. The related `feat/document-evidence-quality` branch adds mixed-layout PDF reading/context preservation, compact grouped document review and approved per-operation Groq/Gemini recovery with actual provider/model identities (ADR 0026).
+
+Next priorities: document-grounded automatic profile population and sourced confirmation semantics → dynamic candidate presentation → automatic matching evidence selection, explained percentage and inline clarification. Full conflict/catalog normalization, native Gemini source/PDF tools and the later discovery/interview/browser/academy roadmap remain separate. This slice does not claim those features are complete.

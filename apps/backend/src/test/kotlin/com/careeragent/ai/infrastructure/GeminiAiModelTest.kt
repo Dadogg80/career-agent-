@@ -89,4 +89,29 @@ class GeminiAiModelTest {
         env.setProperty("GEMINI_DOCUMENT_MODEL","gemini-3.5-flash-lite")
         assertThatThrownBy { config.requireApproval(approved.token,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY) }.isInstanceOf(AiFailure::class.java)
     }
+    @Test fun `configured alternatives have scoped approvals and request local selection does not mutate defaults`() {
+        val env=MockEnvironment().withProperty("GEMINI_API_KEY","fictional-key")
+        val routing=AiRouting(env)
+        val options=routing.options(AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)
+        val gemini=options.first { it.approval.selections.single().provider=="Gemini" }
+        assertThat(gemini.available).isTrue()
+        val plan=routing.resolveApproval(gemini.approval.token,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)
+        assertThat(plan.tasks.values.map { it.provider }).containsOnly("Gemini")
+        assertThat(routing.selection(AiTask.DOCUMENT_EXTRACTION).provider).isEqualTo("Groq")
+        assertThatThrownBy { routing.resolveApproval(gemini.approval.token,AiTask.PERSONAL_MATCH) }.isInstanceOf(AiFailure::class.java)
+        env.setProperty("GEMINI_API_KEY","")
+        assertThatThrownBy { routing.resolveApproval(gemini.approval.token,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY) }.isInstanceOf(AiFailure::class.java)
+    }
+    @Test fun `explicit selected Gemini adapter runs even while default routing is Groq`() {
+        val client=mock(HttpClient::class.java)
+        @Suppress("UNCHECKED_CAST") val response=mock(HttpResponse::class.java) as HttpResponse<String>
+        `when`(response.statusCode()).thenReturn(200)
+        `when`(response.headers()).thenReturn(HttpHeaders.of(emptyMap()){ _,_ -> true })
+        `when`(response.body()).thenReturn("""{"candidates":[{"finishReason":"STOP","content":{"parts":[{"text":"{}"}]}}]}""")
+        `when`(client.send(any(HttpRequest::class.java),any<HttpResponse.BodyHandler<String>>())).thenReturn(response)
+        val model=GeminiAiModel(mapper,"fictional-key",AiRouting(MockEnvironment()),client)
+        assertThat(model.generateJson("rules","data",emptyMap(),AiTask.PERSONAL_MATCH,AiSelection("Gemini","gemini-3.5-flash"))).isEqualTo("{}")
+        verify(client,times(1)).send(any(HttpRequest::class.java),any<HttpResponse.BodyHandler<String>>())
+    }
+
 }

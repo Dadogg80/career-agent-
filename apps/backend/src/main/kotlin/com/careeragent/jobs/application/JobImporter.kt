@@ -2,9 +2,10 @@ package com.careeragent.jobs.application
 
 import org.springframework.stereotype.Service
 import java.net.URI
+import com.careeragent.ai.application.AiSelection
 
 class ImportFailure(val code: String, val httpStatus: Int, val retryAfterSeconds: Int? = null) : RuntimeException(code)
-data class ImportedJob(val sourceUrl: String, val title: String, val text: String, val retrievedAt: String, val sourceType: String = "NAV_API")
+data class ImportedJob(val sourceUrl: String, val title: String, val text: String, val retrievedAt: String, val sourceType: String = "NAV_API", val aiSelection: AiSelection? = null)
 
 interface VacancySource {
     fun load(id: String): ImportedJob

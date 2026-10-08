@@ -69,3 +69,18 @@ test("partial evidence is visible in both languages and valid cards remain usabl
   await page.getByRole("combobox", { name: "Språk" }).selectOption("en");
   await expect(page.getByText(/Some AI suggestions/)).toBeVisible();
 });
+
+test("advertisement retry can select Gemini without refetching source and displays the actual result model",async({page})=>{
+ const groq={provider:"Groq",model:"openai/gpt-oss-20b"},gemini={provider:"Gemini",model:"gemini-3.5-flash"};
+ const original={token:"b".repeat(64),selections:[groq]},alternative={token:"c".repeat(64),selections:[gemini]};const options=[{approval:original,available:true},{approval:alternative,available:true}];
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:groq,DOCUMENT_EXTRACTION:groq,PROFILE_SUMMARY:groq,PERSONAL_MATCH:groq},documents:original,documentExcerpt:original,matching:original,job:original,options:{documents:options,documentExcerpt:options,matching:options,job:options}}}));
+ let calls=0;
+ await page.route("**/api/jobs/requirements",r=>{
+  calls++;if(calls===1)return r.fulfill({status:429,headers:{"Retry-After":"968"},json:{code:"AI_RATE_LIMITED"}});
+  expect(r.request().postDataJSON()).toEqual({text:source,locale:"nb",aiApproval:alternative.token});return r.fulfill({json:{...result,aiSelection:gemini}});
+ });
+ await page.goto("/jobs/analyze");await page.getByRole("button",{name:"Lim inn tekst",exact:true}).click();await page.getByRole("textbox",{name:"Stillingsannonse"}).fill(source);await page.getByRole("button",{name:"Analyser",exact:true}).click();
+ await page.getByRole("button",{name:"Prøv med Gemini",exact:true}).click();expect(calls).toBe(1);
+ await expect(page.getByRole("textbox",{name:"Stillingsannonse"})).toHaveValue(source);await page.getByRole("button",{name:"Analyser",exact:true}).click();
+ await expect(page.locator(".ai-identity").filter({hasText:"Brukt i analysen"})).toContainText("Gemini · gemini-3.5-flash");expect(calls).toBe(2);
+});

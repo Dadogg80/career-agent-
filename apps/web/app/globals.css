@@ -258,6 +258,14 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 /* Document review prioritizes source selection and compact, editable drafts. */
 .profile-section-navigation { position: sticky; top: 0; z-index: 10; background: var(--background); padding: 1rem 0; }
 .profile-section-buttons, .competency-filter-row { display:flex; gap:.5rem; flex-wrap:wrap; }
+.document-review-navigation { display:flex; gap:.5rem; flex-wrap:wrap; margin:1rem 0; }
+.document-source-coverage { padding:1rem; border:1px solid var(--border); border-radius:12px; margin-bottom:1.25rem; }
+.document-source-coverage > summary, .competency-contributions > summary { cursor:pointer; font-weight:600; }
+.document-source-coverage .document-source-grid { margin-top:.75rem; }
+.competency-contribution { margin-top:.75rem; }
+.competency-contribution + .competency-contribution { border-top:1px solid var(--border); padding-top:.75rem; }
+.competency-contribution > p:not(.hint) { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.competency-skill-card { overflow-wrap:anywhere; }
 .full-document-workflow { display:grid; gap:1.25rem; margin:1rem 0; }
 .document-source-grid, .profile-summary-grid, .career-draft-grid, .competency-proposal-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
 .source-review-tile { min-width:0; border:1px solid var(--border); border-radius:12px; padding:1rem; }
@@ -282,3 +290,28 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 .document-review-header p { min-width:0; max-width:100%; overflow-wrap:anywhere; }
 .consent-row { display:flex; align-items:flex-start; gap:.65rem; line-height:1.6; margin:1rem 0; }
 .consent-row input { flex-shrink:0; width:1rem; height:1rem; margin-top:.2rem; accent-color:var(--primary); }
+
+.ai-identity { display:flex; align-items:center; flex-wrap:wrap; gap:.4rem; margin:.55rem 0; }
+.ai-identity > small { color:var(--muted-foreground); font-size:.75rem; }
+.ai-identity-chip { max-width:100%; gap:.3rem; font-size:.72rem; font-weight:500; padding:.3rem .55rem; }
+.ai-identity-chip span { overflow-wrap:anywhere; }
+.ai-gemini { border-color:#b6b9e7; background:#f5f4ff; color:#4f458b; }
+.ai-groq { border-color:#c6d9cd; background:#f2f7f3; color:#245542; }
+.ai-choice { display:flex; align-items:center; flex-wrap:wrap; gap:.75rem; margin:.6rem 0; }
+.ai-choice details { max-width:100%; }
+.ai-choice summary { display:flex; align-items:center; gap:.35rem; cursor:pointer; font-size:.75rem; color:var(--muted-foreground); }
+.ai-choice-options { display:flex; flex-direction:column; gap:.4rem; margin:.5rem 0; }
+.ai-choice-options button { height:auto; text-align:left; white-space:normal; overflow-wrap:anywhere; }
+.ai-activity { display:flex; align-items:center; gap:.75rem; padding:.8rem 1rem; margin:.8rem 0; border:1px solid var(--border); border-radius:.8rem; background:var(--muted); color:var(--foreground); }
+.ai-activity-icon { display:grid; place-items:center; flex-shrink:0; width:2.2rem; height:2.2rem; border-radius:.65rem; background:var(--background); color:var(--primary); }
+.ai-activity-icon svg { animation:ai-activity-spin 1.3s linear infinite; }
+.ai-activity[data-waiting=true] .ai-activity-icon svg { animation:ai-activity-pulse 2s ease-in-out infinite; }
+.ai-activity strong { display:block; font-size:.85rem; font-weight:500; }
+.ai-activity small { display:block; margin-top:.2rem; color:var(--muted-foreground); font-size:.75rem; }
+.ai-activity-dots { display:flex; gap:.25rem; margin-left:auto; flex-shrink:0; }
+.ai-activity-dots i { width:.3rem; height:.3rem; border-radius:50%; background:var(--primary); animation:ai-activity-pulse 1.2s ease-in-out infinite; }
+.ai-activity-dots i:nth-child(2) { animation-delay:.15s; }
+.ai-activity-dots i:nth-child(3) { animation-delay:.3s; }
+@keyframes ai-activity-spin { to { transform:rotate(360deg); } }
+@keyframes ai-activity-pulse { 50% { opacity:.35; } }
+@media(prefers-reduced-motion:reduce) { .ai-activity-icon svg,.ai-activity-dots i { animation:none!important; } }

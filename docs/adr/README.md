@@ -36,3 +36,5 @@ Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert i
 - [0024 Whole-document career review](0024-whole-document-career-review.md) — accepted local pilot; bounded owned progress, editable sourced drafts and incremental career-entry evidence.
 
 - [0025 Explicit AI providers and recipient-bound approvals](0025-explicit-ai-providers-and-approval.md) — accepted local pilot; Gemini routing, explicit recipients and safe continuation.
+
+- [0026 Approved AI provider recovery](0026-approved-ai-provider-recovery.md) — accepted local pilot; request-local selection, retained progress, renewed private consent and actual model attribution.

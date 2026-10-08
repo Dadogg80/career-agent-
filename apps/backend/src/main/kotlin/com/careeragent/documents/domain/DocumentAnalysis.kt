@@ -14,4 +14,4 @@ data class DocumentAnalysis(val id: UUID, val locale: String, val provider: Stri
     val summary: List<CompetencySummary>, val suggestions: List<CompetencySuggestion>,
     val inputCharacters: Int, val sourceCharacters: Int, val partial: Boolean, val omittedItems: Int,
     val createdAt: OffsetDateTime, val documents: List<AnalysisDocument> = emptyList(),
-    val profile: List<ProfileSummaryDraft> = emptyList(), val careerEntries: List<CareerHistoryDraft> = emptyList())
+    val profile: List<ProfileSummaryDraft> = emptyList(), val careerEntries: List<CareerHistoryDraft> = emptyList(), val aiSelections: List<com.careeragent.ai.application.AiSelection> = emptyList())
