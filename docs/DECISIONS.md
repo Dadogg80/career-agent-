@@ -146,3 +146,8 @@ Queued owner requests: automatic document-grounded profile population, automatic
 ## 2026-10-08 — Documentary profile population and compact review
 
 Accepted owner requests are implemented in ADR 0027: separate documentary/personal basis, atomic automatic literal imports and history drafts, persistent processed/pending queue, newest saved candidate presentation, automatic bounded matching evidence, explained percentages and inline personal clarification. This supersedes the queued status above for these specific capabilities, not the full semantic knowledge-model roadmap. No additional AI call is made for review decisions, local list recovery, presentation reads or initial evidence planning.
+
+
+## 2026-10-08 — One skill card and independent contribution review
+
+Owner-requested: consolidate the profile's repeated skill cards across contexts, using combined existing descriptions, preserving individual evidence and edit/review operations. No AI call or destructive record merge is needed for this presentation. Keep confirmed and draft content visibly separate. Extend ADR 0027 with independent manual-contribution identities, durable source blockers and conservative legacy review recovery; do not let a shared source quotation collapse unrelated decisions. Flash-Lite 3.5 is supported and passed the synthetic pipeline; retain configured defaults and renew approval when task models change. Antigravity is not a selectable model ID in this application's generateContent adapter.

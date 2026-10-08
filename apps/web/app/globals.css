@@ -365,3 +365,28 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 .candidate-section > p { white-space:pre-wrap; margin:.75rem 0; font-size:.85rem; }
 .full-document-workflow { min-width:0; grid-template-columns:minmax(0,1fr); }
 .full-document-workflow > *, .review-queue-toolbar, .review-queue-list { min-width:0; }
+
+/* Grouped profile skills retain individual evidence and review actions. */
+.claim-group-help { margin:12px 0 18px; }
+.claim-group-count { display:flex; align-items:center; gap:6px; font-size:12px; color:#617569; }
+.claim-group-statuses { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:12px 0; }
+[data-group-status="CONFIRMED"] { background:#e4efdf; color:#315f27; }
+[data-group-status="DRAFT"] { background:#f8efd9; color:#7b5e24; }
+.claim-group-summary { max-height:220px; overflow-y:auto; overscroll-behavior:contain; padding:4px 12px 4px 0; scrollbar-width:thin; }
+.claim-group-summary:focus-visible { outline:2px solid #3f846d; outline-offset:3px; border-radius:4px; }
+.claim-group-summary section+section { margin-top:14px; padding-top:12px; border-top:1px solid #edf0e8; }
+.claim-group-summary h4 { font-size:11px; font-weight:650; color:#617569; margin-bottom:10px; }
+.claim-group-summary ul { display:grid; gap:10px; padding:0; list-style:none; }
+.claim-group-summary p { font-size:13px; line-height:1.65; white-space:pre-wrap; overflow-wrap:anywhere; }
+.claim-group-summary li>span { display:block; font-size:11px; color:#728477; margin-top:3px; overflow-wrap:anywhere; }
+.claim-group-contexts { display:flex; align-items:flex-start; gap:7px; font-size:11px; color:#617569; line-height:1.5; margin:14px 0 10px; overflow-wrap:anywhere; }
+.claim-group-contexts svg { flex-shrink:0; margin-top:2px; }
+.claim-group-contributions>summary { display:flex; justify-content:space-between; gap:10px; cursor:pointer; }
+.claim-group-contributions[open]>summary svg { transform:rotate(180deg); }
+.claim-group-contribution-list { max-height:440px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
+.claim-group-contribution-list>section { padding:16px 0; }
+.claim-group-contribution-list>section+section { border-top:1px solid #edf0e8; }
+.claim-group-contribution-list strong { font-size:12px; color:#42594a; overflow-wrap:anywhere; }
+
+.claim-single>.claim-statement { display:block; -webkit-line-clamp:unset; max-height:180px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; padding-right:8px; }
+.claim-single>.claim-statement:focus-visible { outline:2px solid #3f846d; outline-offset:3px; border-radius:4px; }

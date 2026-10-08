@@ -23,3 +23,10 @@ Read the newest owned saved document synthesis for the profile presentation. New
 ## Consequences and limits
 
 V13 migrates existing confirmed claims to USER basis, enforces action/basis combinations and adds owner-constrained ledger links. Legacy runs default to proposals-only. Existing reviewed facts, sources, job snapshots and deletion disclosures remain intact. The full knowledge graph, semantic alias/conflict reconciliation, complete responsibility inventory and bounded AI repair loop remain separate increments. Neither processed character coverage nor recovered labels guarantees discovery of every competency. Private documents and provider fixtures stay outside Git.
+
+
+## 2026-10-08 refinement after PR #18
+
+V14 separates literal source imports from manual contribution review and source blockers. Review fingerprints include the original suggestion statement so different contributions sharing a quotation cannot overwrite each other's resolution. Source fingerprints remain independent of generated wording to preserve edited/rejected/deleted facts across reanalysis. Existing ambiguous links are retained conservatively as blockers; exact owned historical source-linked contribution revisions reconnect legacy decisions without a model call. Deleted legacy manual contributions without retained content cannot be assigned to an arbitrary new proposal.
+
+The profile groups all matching skills into one presentation card across contexts. Conservative known spelling aliases are presentation-only; React and React Native, C/C++/C# remain distinct. Repeated statement text shares a summary row with every context retained. Confirmed and draft explanations have separate sections; rejected items stay outside the active explanation. Each original contribution keeps its independent ID, source evidence and revision actions. This is consolidation of existing wording, not a new AI-generated synthesis or the full semantic knowledge graph.

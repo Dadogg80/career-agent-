@@ -1,5 +1,7 @@
 "use client";
 import { ClaimEvidence } from "./claim-evidence";
+import { ClaimGroupCard } from "./claim-group-card";
+import { claimGroups } from "../lib/claim-groups";
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Check, X, History, Trash2, Search, ShieldCheck, ClipboardCheck, Files } from "lucide-react";
@@ -74,7 +76,9 @@ export function ClaimPanel({ locale, csrfToken, onAuthRequired }: { locale: Loca
   async function reload() { close(); setNotice(null); await list.refetch(); }
   function submit(event: FormEvent) { event.preventDefault(); if (change.isPending || !modal) return; if (modal.kind === "create") change.mutate({ kind: "create", content: draft }); else if (modal.kind === "edit") change.mutate({ kind: "edit", content: draft, claim: modal.claim }); }
   function message(error: Error | null) { return error ? t.errors[error.message as keyof typeof t.errors] ?? t.errors.CLAIM_UNAVAILABLE : null; }
-  const visible = (list.data ?? []).filter(claim => (filter === "ALL" || claim.status === filter) && `${claim.skill} ${claim.statement} ${claim.context} ${claim.sourceNote}`.toLocaleLowerCase(locale).includes(search.toLocaleLowerCase(locale)));
+  const groups = claimGroups((list.data ?? []).filter(claim => filter === "ALL" || claim.status === filter))
+    .filter(group => `${group.label} ${group.claims.map(claim => `${claim.skill} ${claim.statement} ${claim.context} ${claim.sourceNote}`).join(" ")}`.toLocaleLowerCase(locale).includes(search.toLocaleLowerCase(locale)));
+  const visible = groups.flatMap(group => group.claims);
   const reviewable = visible.filter(claim => ["UNVERIFIED", "INFERRED"].includes(claim.status));
   function startReview() {
     if (!reviewable.length || change.isPending) return;
@@ -91,7 +95,7 @@ export function ClaimPanel({ locale, csrfToken, onAuthRequired }: { locale: Loca
     else { setReviewQueue(null); setModal(null); setReviewFinished(true); }
   }
   const stats = [
-    { label: locale === "nb" ? "Kompetanseområder" : "Distinct skills", value: new Set((list.data ?? []).filter(c => c.status !== "REJECTED").map(c => c.skill.toLocaleLowerCase(locale).trim())).size, icon: Files },
+    { label: locale === "nb" ? "Kompetanseområder" : "Distinct skills", value: claimGroups((list.data ?? []).filter(c => c.status !== "REJECTED")).length, icon: Files },
     { label: locale === "nb" ? "Bekreftede opplysninger" : "Confirmed statements", value: (list.data ?? []).filter(c => c.status === "CONFIRMED").length, icon: ShieldCheck },
     { label: locale === "nb" ? "Trenger gjennomgang" : "Needs review", value: (list.data ?? []).filter(c => ["UNVERIFIED", "INFERRED"].includes(c.status)).length, icon: ClipboardCheck },
   ];
@@ -112,8 +116,9 @@ export function ClaimPanel({ locale, csrfToken, onAuthRequired }: { locale: Loca
     {list.data && <><div className="competency-stats">{stats.map(stat => <div key={stat.label}><stat.icon size={20}/><strong>{stat.value}</strong><span>{stat.label}</span></div>)}</div>
       {reviewable.length > 0 && <div className="guided-review-start"><div><h3>{locale === "nb" ? "La oss avklare erfaringen din" : "Let’s review your experience"}</h3><p>{locale === "nb" ? "Ett synlig forslag om gangen. Les bidrag og kilde, og velg det som stemmer." : "One visible proposal at a time. Read the contribution and source, then choose what is accurate."}</p></div><Button onClick={startReview} disabled={change.isPending}><ClipboardCheck size={17}/>{locale === "nb" ? `Gjennomgå ${reviewable.length} forslag` : `Review ${reviewable.length} proposals`}</Button></div>}
       <div className="competency-search"><Search size={18}/><Input aria-label={locale === "nb" ? "Søk i kompetanse" : "Search competencies"} placeholder={locale === "nb" ? "Søk etter kompetanse, prosjekt eller kilde …" : "Search skills, projects or sources …"} value={search} onChange={event => setSearch(event.target.value)}/></div>
-      <div className="claim-filters" aria-label={t.count}><Button variant={filter === "ALL" ? "default" : "outline"} size="sm" aria-pressed={filter === "ALL"} onClick={() => setFilter("ALL")}>{t.all} ({list.data.length})</Button>{(Object.keys(t.statuses) as ClaimStatus[]).map(status => <Button key={status} size="sm" variant={filter === status ? "default" : "outline"} aria-pressed={filter === status} onClick={() => setFilter(status)}>{t.statuses[status]} ({list.data!.filter(claim => claim.status === status).length})</Button>)}</div>
-      {visible.length === 0 ? <p className="hint">{list.data.length ? t.emptyFilter : t.empty}</p> : <div className="claim-grid">{visible.map(claim => <article key={claim.id} className="claim-tile" aria-label={claim.skill}><div className="claim-heading"><h3>{claim.skill}</h3><Badge variant="outline" data-claim-status={claim.status}>{claim.confirmationBasis==="DOCUMENT"?(locale==="nb"?"Dokumentert":"Document-backed"):t.statuses[claim.status]}</Badge></div><p className="claim-statement">{claim.statement}</p><p className="hint">{claim.context}</p><details><summary>{t.sourceNote}</summary><p className="claim-statement-full">{claim.statement}</p><p className="claim-source">{claim.sourceNote}</p>{claim.sourceQuote && <blockquote className="claim-source">{claim.sourceQuote}</blockquote>}<p className="hint">{t.revision}: {claim.revision}</p><ClaimEvidence id={claim.id} locale={locale}/></details>{actions(claim)}</article>)}</div>}
+      <div className="claim-filters" aria-label={t.count}><Button variant={filter === "ALL" ? "default" : "outline"} size="sm" aria-pressed={filter === "ALL"} onClick={() => setFilter("ALL")}>{t.all} ({claimGroups(list.data).length})</Button>{(Object.keys(t.statuses) as ClaimStatus[]).map(status => <Button key={status} size="sm" variant={filter === status ? "default" : "outline"} aria-pressed={filter === status} onClick={() => setFilter(status)}>{t.statuses[status]} ({claimGroups(list.data!.filter(claim => claim.status === status)).length})</Button>)}</div>
+      <p className="hint claim-group-help">{locale === "nb" ? `${groups.length} kompetanseområder · ${visible.length} bidrag. Samme kompetanse samles i én boks; bekreftet grunnlag og utkast vises separat. Åpne boksen for kilder og redigering.` : `${groups.length} skills · ${visible.length} contributions. Each skill has one card, with confirmed evidence and drafts shown separately. Open a card for sources and editing.`}</p>
+      {visible.length === 0 ? <p className="hint">{list.data.length ? t.emptyFilter : t.empty}</p> : <div className="claim-grid">{groups.map(group => <ClaimGroupCard key={group.key} group={group} locale={locale} actions={actions}/>)}</div>}
     </>}
     <p className="hint mt-5">{t.aiBoundary}</p><Button variant="ghost" size="sm" onClick={() => void reload()} disabled={change.isPending}>{t.reload}</Button>
     <Dialog open={!!modal} onOpenChange={value => { if (!value) close(); }}><DialogContent className="claim-dialog" closeLabel={t.close}><DialogHeader><DialogTitle>{modalTitle}</DialogTitle><DialogDescription>{modal?.kind === "edit" ? t.editNotice : modal?.kind === "confirm" ? t.confirmNotice : modal?.kind === "reject" ? t.rejectNotice : modal?.kind === "delete" ? t.deleteNotice : modal?.kind === "create" ? t.sourceHint : t.byYou}</DialogDescription></DialogHeader>

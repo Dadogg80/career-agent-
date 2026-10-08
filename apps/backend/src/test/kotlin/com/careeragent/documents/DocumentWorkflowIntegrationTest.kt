@@ -262,6 +262,34 @@ class DocumentWorkflowIntegrationTest {
         mvc.perform(post("$path/${fresh["id"].asText()}/claims").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(input(0,true,true)))).andExpect(status().isBadRequest)
         mvc.perform(get("$path/${fresh["id"].asText()}").with(caller(profile()))).andExpect(status().isNotFound)
     }
+    @Test fun `distinct contributions sharing a source retain independent decisions across automatic reanalysis`() {
+        val user=profile();val doc=upload(user)
+        val descriptions=listOf("Built Kotlin APIs.","Maintained Kotlin services.")
+        `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenReturn(json.writeValueAsString(mapOf(
+            "competencies" to descriptions.map { mapOf("skills" to listOf("Kotlin"),"description" to it,"category" to "TECHNOLOGY","evidenceIds" to listOf(2),"contextId" to 0,"context" to "Example AS") },
+            "profile" to emptyList<Any>(),"history" to emptyList<Any>())))
+        val first=next(user,post(user,path,body(listOf(doc))))
+        assertThat(first["analysis"]["suggestions"].size()).isEqualTo(2)
+        val endpoint="$path/${first["id"].asText()}"
+        fun input(index:Int,confirm:Boolean,reject:Boolean=false)=mapOf("revision" to first["revision"].asLong(),"index" to index,"skill" to "Kotlin",
+            "statement" to first["analysis"]["suggestions"][index]["statement"].asText(),"context" to "Example AS","confirm" to confirm,"reject" to reject)
+        val confirmed=post(user,"$endpoint/claims",input(0,true))
+        val partial=json.readTree(mvc.perform(get(endpoint).with(caller(user))).andExpect(status().isOk).andReturn().response.contentAsString)
+        assertThat(partial["analysis"]["suggestions"][0]["reviewState"].asText()).isEqualTo("CONFIRMED")
+        assertThat(partial["analysis"]["suggestions"][1]["reviewState"].isNull).isTrue()
+        val rejected=post(user,"$endpoint/claims",input(1,false,true))
+        assertThat(rejected["id"]).isNotEqualTo(confirmed["id"])
+        val fresh=next(user,post(user,path,body(listOf(doc))+mapOf("populateProfile" to true)))
+        assertThat(fresh["analysis"]["suggestions"].map { it["reviewState"].asText() }).containsExactly("CONFIRMED","REJECTED")
+        mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$.length()").value(2))
+        // Legacy records have no ledger; exact historical contributions still reconnect independently.
+        jdbc.update("DELETE FROM document_profile_import WHERE claim_id IN (?::uuid,?::uuid)",confirmed["id"].asText(),rejected["id"].asText())
+        mvc.perform(get("$path/${fresh["id"].asText()}").with(caller(user))).andExpect(status().isOk).andExpect(jsonPath("$.analysis.suggestions[0].reviewState").value("CONFIRMED"))
+            .andExpect(jsonPath("$.analysis.suggestions[1].reviewState").value("REJECTED"))
+        val restored=next(user,post(user,path,body(listOf(doc))+mapOf("populateProfile" to true)))
+        assertThat(restored["analysis"]["suggestions"].map { it["reviewState"].asText() }).containsExactly("CONFIRMED","REJECTED")
+        mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$.length()").value(2))
+    }
     @Test fun `automatic documentary import does not treat C as an explicit mention inside C plus plus or C sharp`() {
         val user=profile();val source="## Example AS\nTeknologi: C++, C#\nAdditional source text.";val doc=upload(user,source)
         `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION)))

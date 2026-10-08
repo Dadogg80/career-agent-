@@ -67,3 +67,8 @@ PR #16 merged at `5c18439265e6fa2b9852b1a16c631d5ba7be6dc7`; both Foundation che
 ## Document population and matching continuation — 2026-10-08
 
 PR #17 is verified merged at `922c6171d32af654d99100625b94670a2d479ac3` with both Foundation checks successful. Current branch is `feat/document-profile-population`; follow ADR 0027. The owner explicitly authorized automatic documentary facts, sourced history/profile drafts, easier approval with processed items outside the pending queue, automatic matching evidence, explained percentages and inline personal clarification. Documentary CONFIRMED facts must preserve literal evidence and DOCUMENT basis; personal attestation uses USER basis. Generated prose is not documentary confirmation. Preserve edited/rejected/deleted targets across reanalysis. Retain explicit recipient/model-bound AI approval and no silent provider switching. Test and prepare a new PR; do not assume authorization to merge this subsequent branch.
+
+
+## Consolidated profile skill continuation — 2026-10-08
+
+PR #18 is verified merged at `5c896707202678e7fde339a994787654007ab0f2` with both Foundation checks successful. Current branch is `fix/competency-review-identity`: owner-requested one-card-per-skill profile presentation with preserved contribution/source/review identity; repair independent review keys under ADR 0027. Grouping must not merge factual status or overwrite source evidence. Gemini 3.5 Flash-Lite passed the bounded synthetic extraction/profile pipeline; configured defaults remain unchanged. Test and prepare a new PR without assuming authorization to merge it.
