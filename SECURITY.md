@@ -123,3 +123,7 @@ Owned run state now stores original-text snapshots and approved previews in Post
 ## Gemini local-pilot processing
 
 Gemini credentials are backend-only GEMINI_API_KEY and travel in x-goog-api-key, not URLs or frontend code. Per-analysis consent names Google/Gemini and is checked against a task/provider/model snapshot. Stored Groq approvals cannot silently authorize Google. JSON and source checks remain mandatory; outputs never auto-confirm competencies/history. Synthetic verification precedes recipient-approved private document testing. Current Google terms include an EEA unpaid-service data-use exception; this does not establish zero retention, EU-only processing or SaaS compliance. See docs/GEMINI_SETUP.md.
+
+## Request-local AI provider recovery — 2026-10-08
+
+The owner authorized explicit alternate-provider recovery. Private fingerprints cover tasks, recipients and configured models, and provider changes require renewed per-analysis consent. Selection cannot change global defaults or arbitrary endpoints. The owned provider-switch endpoint enforces CSRF, source ownership, revision checks and processing leases. It preserves approved sources and prior evidence; changed previews cannot silently resume an old source selection. Stored results record actual successful contributors. Availability exposes only whether backend key bindings exist, not their contents or provider account details. No paid upgrades or secret rotation are performed.

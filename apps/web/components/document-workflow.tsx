@@ -1,10 +1,10 @@
 "use client";
 
-import { useAiConfiguration } from "../lib/use-ai-configuration";
+import { useAiChoice } from "../lib/use-ai-configuration";
 import { aiRecipients } from "../lib/ai-configuration";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, FileText, Pause, Play, Sparkles } from "lucide-react";
+import { FileText, Pause, Play, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -20,20 +20,24 @@ import type { DocumentDetail } from "../lib/documents";
 import type { CompetencySuggestion, CareerDraft } from "../lib/document-analysis";
 import type { Locale } from "../lib/translations";
 
+import { AiActivity, AiChoice, AiIdentity } from "./ai-identity";
+import { CompetencyProposalGroups } from "./competency-proposal-groups";
+
 const base = "/api/profile/me/documents/workflow";
 export function DocumentWorkflow({ scope, documents, locale, csrfToken, onAuthRequired }: {
   scope: string; documents: DocumentDetail[]; locale: Locale; csrfToken: string; onAuthRequired: () => void;
 }) {
   const nb = locale === "nb"; const cache = useQueryClient();
-  const configuration=useAiConfiguration(); const approval=configuration.data?.documents; const recipients=aiRecipients(approval);
+  const choice=useAiChoice("documents"); const {configuration,approval}=choice; const recipients=aiRecipients(approval);
   const [previews, setPreviews] = useState(() => documents.map(d => ({documentId:d.document.id, text:d.text, included:!!d.text.trim()})));
-  const [consent, setConsent] = useState(false);
+  const [consent, setConsent] = useState(false); const consentInput=useRef<HTMLInputElement>(null);
   useEffect(()=>setConsent(false),[approval?.token]); const [run, setRun] = useState<DocumentRun | null>(null);
   const [active, setActive] = useState(false); const control = useRef<{stop:boolean; abort:AbortController} | null>(null);
   const [retryUntil,setRetryUntil]=useState(0);
   const [now, setNow] = useState(Date.now()); const [filter, setFilter] = useState("ALL"); const [search,setSearch]=useState("");
   const [review, setReview] = useState<{index:number; draft:CompetencySuggestion} | null>(null);
   const [history, setHistory] = useState<CareerDraft | null>(null); const [confirmed, setConfirmed] = useState(false);
+  const [resultSection,setResultSection]=useState<"competencies"|"profile"|"history">("competencies");
   const [notice, setNotice] = useState<string | null>(null); const [saved, setSaved] = useState<string[]>([]);
   useEffect(() => { const timer=setInterval(()=>setNow(Date.now()),1000); return ()=> { clearInterval(timer); if(control.current){control.current.stop=true;control.current.abort.abort();} }; }, []);
   async function request(path:string, method="GET", body?:unknown, signal?:AbortSignal):Promise<unknown> {
@@ -46,8 +50,11 @@ export function DocumentWorkflow({ scope, documents, locale, csrfToken, onAuthRe
   }});
   const current=run ?? latest.data ?? null;
   const analysis=current?.analysis;
-  const wait=Math.max(0,Math.ceil((Math.max(current?.nextAt?Date.parse(current.nextAt):0,retryUntil)-now)/1000));
+  const savedPlan=current?.plannedSelections?.length?current.plannedSelections:current?.aiApproval===configuration.data?.documents.token?configuration.data?.documents.selections:choice.options.find(o=>o.approval.token===current?.aiApproval)?.approval.selections;
+  const changingProvider=!!current?.aiApproval && !!approval && current.aiApproval!==approval.token;
+  const wait=changingProvider?0:Math.max(0,Math.ceil((Math.max(current?.nextAt?Date.parse(current.nextAt):0,retryUntil)-now)/1000));
   const selected=previews.filter(p=>p.included && p.text.trim()).map(({documentId,text})=>({documentId,text}));
+  const matchesSavedPreview=!current?.approvedDocuments || current.approvedDocuments.length===selected.length && current.approvedDocuments.every(d=>selected.some(p=>p.documentId===d.documentId && p.text===d.text));
   const size=selected.reduce((sum,p)=>sum+p.text.length,0);
   function remember(value:unknown):DocumentRun { if(!isDocumentRun(value))throw new Error("DOCUMENT_UNAVAILABLE");setRun(value);cache.setQueryData(["private-document-workflow",scope],value);return value; }
   const process=useMutation({retry:false,mutationFn:async(fresh:boolean)=>{
@@ -57,7 +64,9 @@ export function DocumentWorkflow({ scope, documents, locale, csrfToken, onAuthRe
     try {
       let next:DocumentRun;
       if(fresh){setSaved([]);next=remember(await request(base,"POST",{scope,documents:selected,locale,consent,aiApproval:approval?.token},session.abort.signal));}
-      else {if(!current)throw new Error("DOCUMENT_UNAVAILABLE");next=remember(await request(`${base}/${current.id}`,"GET",undefined,session.abort.signal));}
+      else {if(!current)throw new Error("DOCUMENT_UNAVAILABLE");next=remember(await request(`${base}/${current.id}`,"GET",undefined,session.abort.signal));
+        if(!matchesSavedPreview)throw new Error("DOCUMENT_ANALYSIS_CONFLICT");
+        if(next.aiApproval!==approval.token && !(next.aiApproval==null && recipients==="Groq"))next=remember(await request(`${base}/${next.id}/provider`,"POST",{revision:next.revision,consent,aiApproval:approval.token},session.abort.signal));}
       while(!session.stop && next.status!=="COMPLETED") {
         // Waiting is genuine quota pacing. Never retry a rejected provider call automatically.
         while(!session.stop && next.nextAt && Date.parse(next.nextAt)>Date.now())await new Promise(resolve=>setTimeout(resolve,250));
@@ -92,7 +101,8 @@ export function DocumentWorkflow({ scope, documents, locale, csrfToken, onAuthRe
   const issue=error?.name==="AbortError"?null:error?.message ?? current?.issue;
   const names=new Map(documents.map(d=>[d.document.id,d.document.originalName]));
   const languages=new Map(documents.map(d=>[d.document.id,d.document.language]));
-  const groups=Object.entries(Object.groupBy((analysis?.suggestions??[]).map((draft,index)=>({draft,index})).filter(({draft})=>(filter==="ALL" || (draft.category??"OTHER")===filter) && `${draft.skill} ${draft.context} ${draft.statement}`.toLocaleLowerCase(locale).includes(search.trim().toLocaleLowerCase(locale))),({draft})=>draft.context));
+  const proposals=(analysis?.suggestions??[]).map((draft,index)=>({draft,index})).filter(({draft})=>(filter==="ALL" || (draft.category??"OTHER")===filter) && `${draft.skill} ${draft.context} ${draft.statement}`.toLocaleLowerCase(locale).includes(search.trim().toLocaleLowerCase(locale)));
+
   return <div className="full-document-workflow">
     <div className="document-flow-heading"><div><Badge>{nb?"Dokumenter → din profil":"Documents → your profile"}</Badge><h3>{nb?"La dokumentene gjøre grunnarbeidet":"Let your documents do the groundwork"}</h3><p className="hint">{nb?"Vi leser hele grunnlaget og lager redigerbare forslag. Du kontrollerer hva som faktisk beskriver deg.":"We read the entire source selection and draft editable proposals. You decide what accurately describes you."}</p></div></div>
     <Card><CardHeader><h3 className="flex items-center gap-2"><FileText size={18}/>{nb?"Dokumentgrunnlag":"Document sources"}</h3><p className="hint">{nb?"Åpne for å kontrollere teksten eller fjerne private opplysninger. Innholdet behandles automatisk i mindre deler; du trenger ikke dele det selv.":"Open to review text or remove private details. Processing uses smaller portions automatically; you do not need to split documents."}</p></CardHeader><CardContent>
@@ -102,26 +112,40 @@ export function DocumentWorkflow({ scope, documents, locale, csrfToken, onAuthRe
         <Textarea lang={languages.get(p.documentId)} aria-label={`${nb?"Tekst som sendes fra":"Text sent from"} ${names.get(p.documentId)}`} rows={8} maxLength={60000} value={p.text} disabled={active} onChange={e=>{setConsent(false);setPreviews(previews.map((v,i)=>i===index?{...v,text:e.target.value}:v));}}/>
       </details>)}</div>
       <p className="hint mt-3">{selected.length} {nb?"dokumenter valgt":"documents selected"} · {size.toLocaleString(locale)} {nb?"tegn. Originalene beholdes. Forslagene lagres privat og er ubekreftet.":"characters. Originals are retained. Drafts are stored privately and remain unverified."}</p>
-      <label className="consent-row"><input type="checkbox" checked={consent} disabled={active || !approval} onChange={e=>setConsent(e.target.checked)}/>{nb?`Jeg godkjenner at valgt tekst sendes til ${recipients} for denne analysen`:`I approve sending the selected text to ${recipients} for this analysis`}</label>
-      <p className="hint">{approval?.selections.map(s=>`${s.provider} · ${s.model}`).join(" / ") ?? (nb?"Henter AI-oppsett …":"Loading AI configuration …")}</p>{(configuration.isError || issue==="AI_APPROVAL_CHANGED") && <Button variant="outline" onClick={()=>void configuration.refetch()}>{nb?"Hent AI-oppsett på nytt":"Refresh AI configuration"}</Button>}
+      <label className="consent-row"><input ref={consentInput} type="checkbox" checked={consent} disabled={active || !approval} onChange={e=>setConsent(e.target.checked)}/>{nb?`Jeg godkjenner at valgt tekst sendes til ${recipients} for denne analysen`:`I approve sending the selected text to ${recipients} for this analysis`}</label>
+      <AiChoice approval={approval} options={choice.options} choose={choice.choose} disabled={active} locale={locale}/>{(configuration.isError || issue==="AI_APPROVAL_CHANGED") && <Button variant="outline" onClick={()=>void configuration.refetch()}>{nb?"Hent AI-oppsett på nytt":"Refresh AI configuration"}</Button>}
+      {current && !matchesSavedPreview && <p className="hint">{nb?"Tekstutvalget er endret. Start en ny analyse, eller hent det godkjente utvalget fra den lagrede analysen.":"The text selection changed. Start a new analysis, or restore the approved selection from the saved run."} <Button size="sm" variant="ghost" disabled={active} onClick={()=>{const approved=new Map(current.approvedDocuments?.map(d=>[d.documentId,d.text]));setPreviews(previews.map(p=>({...p,included:approved.has(p.documentId),text:approved.get(p.documentId)??p.text})));setConsent(false);}}>{nb?"Hent lagret tekstutvalg":"Restore saved text selection"}</Button></p>}
       <div className="claim-actions"><Button disabled={!approval || !consent || size<40 || wait>0 || active || save.isPending || latest.isPending} onClick={()=>process.mutate(true)}><Sparkles size={16}/>{current?nb?"Start ny analyse":"Start new analysis":nb?"Bygg profil fra dokumentene":"Build profile from documents"}</Button>
-        {current && current.status!=="COMPLETED" && !active && <Button variant="outline" disabled={!approval || !consent || (current.aiApproval?current.aiApproval!==approval.token:recipients!=="Groq") || wait>0 || save.isPending} onClick={()=>process.mutate(false)}><Play size={16}/>{nb?"Fortsett lagret analyse":"Continue saved analysis"}</Button>}
+        {current && current.status!=="COMPLETED" && !active && <Button variant="outline" disabled={!approval || !consent || !matchesSavedPreview || wait>0 || save.isPending} onClick={()=>process.mutate(false)}><Play size={16}/>{nb?"Fortsett lagret analyse":"Continue saved analysis"}</Button>}
         {active && <Button variant="outline" onClick={stop}><Pause size={16}/>{nb?"Stopp etter dette kallet":"Stop after this call"}</Button>}</div>
     </CardContent></Card>
-    {current && <div className="document-run-status" role="status"><div><strong>{current.status==="COMPLETED"?(nb?"Gjennomgangen er klar":"Review ready"):active?(wait?nb?"Venter på neste kall":"Waiting for next call":nb?"Leser dokumentgrunnlaget":"Reading document sources"):nb?"Fremdriften er lagret":"Progress saved"}</strong><span>{current.completedBatches} / {current.totalBatches} {nb?"behandlingstrinn":"processing steps"}{wait>0?` · ${retryWaitLabel(wait)}`:""}</span></div><progress aria-label={nb?"Dokumentanalyse":"Document analysis"} max={current.totalBatches} value={current.completedBatches}/><p className="hint">{analysis?.inputCharacters.toLocaleString(locale)} / {analysis?.sourceCharacters.toLocaleString(locale)} {nb?"kildetegn behandlet. Tekstdekning betyr ikke at AI har funnet all kompetanse.":"source characters processed. Text coverage does not mean AI found every competency."}</p></div>}
-    {issue && <Alert><AlertDescription>{failure(issue)}</AlertDescription></Alert>}
+    {active && <AiActivity waiting={wait>0} label={wait>0?(nb?"Kort pause mellom AI-kall":"Pausing between AI calls"):(nb?"Venter på AI-svar …":"Waiting for the AI response …")} detail={wait>0?retryWaitLabel(wait):(nb?"Dokumentene leses, og kildebaserte forslag lagres underveis.":"Reading document evidence and saving source-backed drafts along the way.")}/>}
+    {!active && wait>0 && <AiActivity waiting label={current?.issue==="AI_RATE_LIMITED"?(nb?"Venter på ledig AI-kvote":"Waiting for available AI quota"):(nb?"Kort pause mellom AI-kall":"Pausing between AI calls")} detail={retryWaitLabel(wait)}/>}
+    {current && <div className="document-run-status" role="status"><AiIdentity selections={savedPlan} provider={savedPlan?undefined:current.analysis.provider} locale={locale} label={active?(nb?"Kjører med":"Running with"):(nb?"Lagret kjøreplan":"Saved run plan")}/><div><strong>{current.status==="COMPLETED"?(nb?"Gjennomgangen er klar":"Review ready"):active?(wait?nb?"Venter på neste kall":"Waiting for next call":nb?"Leser dokumentgrunnlaget":"Reading document sources"):nb?"Fremdriften er lagret":"Progress saved"}</strong><span>{current.completedBatches} / {current.totalBatches} {nb?"behandlingstrinn":"processing steps"}{wait>0?` · ${retryWaitLabel(wait)}`:""}</span></div><progress aria-label={nb?"Dokumentanalyse":"Document analysis"} max={current.totalBatches} value={current.completedBatches}/><p className="hint">{analysis?.inputCharacters.toLocaleString(locale)} / {analysis?.sourceCharacters.toLocaleString(locale)} {nb?"kildetegn behandlet. Tekstdekning betyr ikke at AI har funnet all kompetanse.":"source characters processed. Text coverage does not mean AI found every competency."}</p></div>}
+    {issue && <Alert><AlertDescription>{changingProvider?(nb?"Ny leverandør valgt. Godkjenn mottakeren og fortsett; lagrede forslag beholdes.":"New provider selected. Approve the recipient and continue; saved drafts are retained."):failure(issue)}{!active && !changingProvider && choice.alternative && ["AI_RATE_LIMITED","AI_UNAVAILABLE","AI_INVALID_RESULT","AI_ACCESS_DENIED"].includes(issue) && <Button size="sm" variant="outline" className="mt-3" onClick={()=>{choice.choose(choice.alternative!.approval.token);setConsent(false);process.reset();consentInput.current?.scrollIntoView({block:"center",behavior:"smooth"});}}>{nb?"Prøv med":"Try with"} {choice.alternative.approval.selections[0].provider}</Button>}</AlertDescription></Alert>}
     {notice && <p role="status">{notice}</p>}
     {analysis && <>
-      <div className="document-results-heading"><h3>{nb?"Din dokumentbaserte profil":"Your document-based profile"}</h3><Badge variant="outline">{nb?"AI-utkast · kontroller før bruk":"AI draft · review before use"}</Badge></div>
+      <AiIdentity selections={analysis.aiSelections} provider={analysis.aiSelections?.length?undefined:analysis.inputCharacters>0?analysis.provider:undefined} locale={locale} label={analysis.aiSelections?.length?(nb?"Brukt i resultatet":"Used in this result"):(nb?"Lagret leverandør":"Recorded provider")}/><div className="document-results-heading"><h3>{nb?"Din dokumentbaserte profil":"Your document-based profile"}</h3><Badge variant="outline">{nb?"AI-utkast · kontroller før bruk":"AI draft · review before use"}</Badge></div>
       {analysis.partial && <p className="hint">{nb?"Grunnlaget er delvis behandlet eller redigert. Det som mangler, er ikke et kompetansegap.":"Sources are partly processed or edited. Missing information is not a skill gap."}</p>}
+      <nav className="document-review-navigation" aria-label={nb?"Gjennomgå dokumentforslag":"Review document proposals"}>{([
+        ["competencies",nb?"Kompetanse":"Competencies",analysis.suggestions.length],
+        ["profile",nb?"Profilsammendrag":"Profile summary",analysis.profile?.length??0],
+        ["history",nb?"Karrierehistorikk":"Career history",analysis.careerEntries?.length??0],
+      ] as const).map(([section,label,count])=><Button key={section} variant={resultSection===section?"default":"outline"} aria-label={label} aria-pressed={resultSection===section} aria-controls={`document-results-${section}`} onClick={()=>setResultSection(section)}>{label}<Badge variant="outline">{count}</Badge></Button>)}</nav>
+      <details className="document-source-coverage"><summary>{nb?"Se behandling per dokument":"View processing by document"}</summary><p className="hint">{nb?"Dette viser tekstmengde og antall forslag, ikke en garanti for at all kompetanse er funnet.":"This shows processed text and proposal counts, not a guarantee that every competency was found."}</p><div className="document-source-grid">{analysis.documents.map(doc=><div key={doc.documentId} className="source-review-tile"><strong>{doc.originalName}</strong><p>{doc.inputCharacters.toLocaleString(locale)} {nb?"tegn behandlet":"characters processed"} · {doc.sourceCharacters.toLocaleString(locale)} {nb?"tegn i originalteksten":"characters in original text"}</p><p className="hint">{analysis.suggestions.filter(draft=>draft.documentId===doc.documentId || draft.additionalSources?.some(source=>source.documentId===doc.documentId)).length} {nb?"kompetanseforslag med kilde her":"competency proposals citing this source"}</p></div>)}</div></details>
+      <div id="document-results-profile" hidden={resultSection!=="profile"}>
       <div className="profile-summary-grid">{(analysis.profile??[]).map((item,index)=><SummaryDraft key={`${current!.id}-${index}-${item.kind}`} label={profileLabels[locale][item.kind as keyof typeof profileLabels.nb]} text={item.text} quote={item.quote} source={names.get(item.documentId)??""} language={analysis.locale} sourceLanguage={languages.get(item.documentId)??locale} additionalSources={(item.additionalSources??[]).map(source=>({quote:source.quote,source:names.get(source.documentId)??"",language:languages.get(source.documentId)??locale}))} locale={locale} disabled={active || save.isPending || current!.status!=="COMPLETED"} onSave={text=>save.mutate({kind:"summary",body:{revision:current!.revision,index,text}})}/>)}</div>
       {!analysis.profile?.length && <p className="hint">{nb?"Sammendraget fylles ut når vi har kildegrunnlag. Utdanning og interesser legges bare til når dokumentene beskriver dem.":"A summary appears when source evidence is available. Education and interests require explicit document evidence."}</p>}
+      </div><div id="document-results-history" hidden={resultSection!=="history"}>
       <div className="document-results-heading"><h3>{nb?"Arbeid, prosjekter og utdanning":"Employment, projects and education"}</h3><Badge variant="outline">{analysis.careerEntries?.length??0}</Badge></div>
       <div className="career-draft-grid">{(analysis.careerEntries??[]).map(draft=><Card key={draft.key}><CardContent className="pt-5"><Badge variant="outline">{entryKinds[locale][draft.content.kind]}</Badge><h4>{draft.content.title}</h4><p>{draft.content.organization}{draft.content.client?` · ${draft.content.client}`:""}</p><p className="hint">{draft.periodText || (nb?"Periode ikke oppgitt":"Period not stated")}</p><p lang={analysis.locale}>{draft.content.description}</p><Button variant="outline" size="sm" disabled={active || save.isPending} onClick={()=>{setHistory(draft);setConfirmed(false);save.reset();}}>{saved.includes(`entry:${draft.key}`)?nb?"Se igjen":"Review again":nb?"Kontroller og legg til historikk":"Review and add history"}</Button></CardContent></Card>)}</div>
+      </div><div id="document-results-competencies" hidden={resultSection!=="competencies"}>
       <div className="document-results-heading"><h3>{nb?"Kompetanseforslag":"Competency proposals"}</h3><Badge variant="outline">{analysis.suggestions.length}</Badge></div>
       <Input aria-label={nb?"Søk i AI-forslag":"Search AI proposals"} placeholder={nb?"Søk etter kompetanse, firma eller prosjekt …":"Search skills, company or project …"} value={search} onChange={e=>setSearch(e.target.value)}/>
       <div className="competency-filter-row" aria-label={nb?"Kompetansekategorier":"Competency categories"}>{["ALL",...Object.keys(categoryLabels[locale])].map(category=><Button key={category} size="sm" variant={filter===category?"default":"outline"} aria-pressed={filter===category} onClick={()=>setFilter(category)}>{category==="ALL"?nb?"Alle":"All":categoryLabels[locale][category as keyof typeof categoryLabels.nb]}</Button>)}</div>
-      {groups.map(([context,items])=><section key={context} className="competency-context-group"><h4>{context}</h4><div className="competency-proposal-grid">{items?.map(({draft,index})=><Card key={`${index}-${draft.skill}`}><CardContent className="pt-5"><div className="claim-heading"><h4>{draft.skill}</h4>{saved.includes(`claim:${index}`)?<Check size={16}/>:<Badge variant="outline">{nb?"Ubekreftet":"Unverified"}</Badge>}</div><p lang={analysis.locale}>{draft.statement}</p><p className="hint">{names.get(draft.documentId??"")}{draft.additionalSources?.length?` + ${draft.additionalSources.length}`:""}</p><Button variant="outline" size="sm" disabled={active || save.isPending} onClick={()=>{setReview({index,draft:{...draft}});setConfirmed(false);save.reset();}}>{nb?"Se gjennom":"Review"}</Button></CardContent></Card>)}</div></section>)}
+      <p className="hint">{nb?"Samme kompetanse samles per firma/prosjekt. Hvert bidrag beholdes og bekreftes separat.":"The same skill is grouped per company/project. Each contribution is retained and confirmed separately."}</p>
+      <CompetencyProposalGroups proposals={proposals} names={names} locale={locale} language={analysis.locale} saved={saved} disabled={active || save.isPending} onReview={(index,draft)=>{setReview({index,draft:{...draft}});setConfirmed(false);save.reset();}}/>
+      </div>
       {!!analysis.omittedItems && <p className="hint">{analysis.omittedItems} {nb?"forslag manglet kontrollerbart grunnlag eller overskred grensene. Kildeteksten er bevart.":"proposals lacked verifiable evidence or exceeded limits. Source text is retained."}</p>}
     </>}
     <Sheet open={!!review || !!history} onOpenChange={open=>{if(!open && !save.isPending){setReview(null);setHistory(null);save.reset();}}}><SheetContent className="document-draft-sheet" closeLabel={nb?"Lukk":"Close"}><SheetHeader><SheetTitle>{nb?"Kontroller opplysningen":"Review this information"}</SheetTitle><SheetDescription>{nb?"AI har fylt ut et utkast. Rett teksten slik at den beskriver din egen erfaring. Kilden beholdes.":"AI has filled a draft. Edit it to describe your own experience accurately. Evidence is retained."}</SheetDescription></SheetHeader>

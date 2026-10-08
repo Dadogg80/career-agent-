@@ -36,6 +36,8 @@ class FinnImportTest {
         val job = browser().parse(url, response())
         assertEquals("Backend engineer - Example", job.title)
         assertEquals("GROQ_BROWSER_EXCERPT", job.sourceType)
+        assertEquals("Groq",job.aiSelection?.provider)
+        assertEquals("openai/gpt-oss-20b",job.aiSelection?.model)
         assertFalse(job.text.contains("HALLUCINATED")); assertFalse(job.text.contains("PRIVATE"))
         assertTrue(job.text.contains("Du må kunne Kotlin")); assertFalse(job.text.contains("L3:"))
     }

@@ -1,3 +1,4 @@
+import { validAiApprovalField } from "../../../../lib/ai-configuration";
 import { retryAfterSeconds as parseRetryAfter } from "../../../../lib/retry-after";
 import { safeAnalysisReason } from "../../../../lib/analysis-workflow";
 import { isExtraction } from "../../../../lib/job-requirements";
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
   if (!request.headers.get("content-type")?.startsWith("application/json")) {
     return Response.json({ code: "INVALID_INPUT" }, { status: 400 });
   }
-  let input: { text: string; locale: string };
+  let input: { text: string; locale: string; aiApproval?:string };
   try {
     const reader = request.body?.getReader();
     if (!reader) throw new Error("Missing body");
@@ -31,10 +32,11 @@ export async function POST(request: Request) {
       chunks.push(part.value);
     }
     const value = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+    if(!validAiApprovalField(value))throw new Error("Invalid selection");
     if (typeof value.text !== "string" || value.text.trim().length < 40 || value.text.length > 15000 || !["nb", "en"].includes(value.locale)) {
       throw new Error("Invalid input");
     }
-    input = { text: value.text, locale: value.locale };
+    input = { text: value.text, locale: value.locale, ...(value.aiApproval?{aiApproval:value.aiApproval}:{}) };
   } catch {
     return Response.json({ code: "INVALID_INPUT" }, { status: 400 });
   }
@@ -46,12 +48,12 @@ export async function POST(request: Request) {
     });
     const value: unknown = await response.json();
     if (!response.ok) {
-      const codes = ["INVALID_INPUT", "AI_NOT_CONFIGURED", "AI_ACCESS_DENIED", "AI_RATE_LIMITED", "AI_BUSY", "AI_BUDGET_REACHED", "AI_INVALID_RESULT", "AI_UNAVAILABLE"];
+      const codes = ["INVALID_INPUT", "AI_NOT_CONFIGURED", "AI_APPROVAL_CHANGED", "AI_ACCESS_DENIED", "AI_RATE_LIMITED", "AI_BUSY", "AI_BUDGET_REACHED", "AI_INVALID_RESULT", "AI_UNAVAILABLE"];
       const code = value && typeof value === "object" && "code" in value && codes.includes(String(value.code)) ? value.code : "AI_UNAVAILABLE";
       const seconds = Number(response.headers.get("retry-after"));
       const retryAfterSeconds = response.status === 429 ? parseRetryAfter(seconds) : undefined;
       const reason = value && typeof value === "object" && "reason" in value ? safeAnalysisReason(value.reason) : undefined;
-      return Response.json({ code, ...(reason ? { reason } : {}), ...(retryAfterSeconds ? { retryAfterSeconds } : {}) }, { headers: { "Cache-Control": "no-store", ...(retryAfterSeconds ? { "Retry-After": String(retryAfterSeconds) } : {}) }, status: [400, 429, 502, 503].includes(response.status) ? response.status : 503 });
+      return Response.json({ code, ...(reason ? { reason } : {}), ...(retryAfterSeconds ? { retryAfterSeconds } : {}) }, { headers: { "Cache-Control": "no-store", ...(retryAfterSeconds ? { "Retry-After": String(retryAfterSeconds) } : {}) }, status: [400,409,429,502,503].includes(response.status) ? response.status : 503 });
     }
     if (!isExtraction(value)) throw new Error("Invalid result");
     return Response.json(value, { headers: { "Cache-Control": "no-store" } });

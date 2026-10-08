@@ -54,7 +54,7 @@ class DocumentWorkflowIntegrationTest {
     private fun next(user:String,run:JsonNode)=post(user,"$path/${run["id"].asText()}/next",mapOf("revision" to run["revision"].asLong()))
     private fun output()=json.writeValueAsString(mapOf("competencies" to listOf(mapOf("skills" to listOf("Kotlin","PostgreSQL","InventedSkill"),"description" to "Utviklet API-er med Kotlin og PostgreSQL.","category" to "TECHNOLOGY","evidenceIds" to listOf(2),"contextId" to 0,"context" to "Example AS")),"profile" to listOf(mapOf("kind" to "EXPERIENCE","text" to "Utvikling av API-er.","evidenceIds" to listOf(2))),"history" to listOf(mapOf("kind" to "EMPLOYMENT","title" to "Senior Developer","organization" to "Example AS","client" to "","deliveryRole" to "","periodText" to "2021 – 2024","description" to "Utviklet API-er.","evidenceIds" to listOf(0,1,2)))))
     private fun stub(){`when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenAnswer { call -> if(call.getArgument<AiTask>(3)==AiTask.PROFILE_SUMMARY)"""{"profile":[{"kind":"PROFILE","text":"Erfaring med API-er, Kotlin og PostgreSQL.","evidenceIds":[0]}]}""" else output() }}
-    @Test fun `Gemini requires recipient approval and a changed provider cannot resume a saved run`() {
+    @Test fun `Gemini requires recipient approval and removing its availability prevents saved continuation`() {
         val user=profile();val doc=upload(user);val name="gemini-approval-test"
         environment.propertySources.addFirst(org.springframework.core.env.MapPropertySource(name,mapOf("AI_PROVIDER" to "gemini")))
         try {
@@ -72,10 +72,45 @@ class DocumentWorkflowIntegrationTest {
             assertThat(initial["aiApproval"].asText()).isEqualTo(config["documents"]["token"].asText())
             stub();val first=next(user,initial)
             environment.propertySources.remove(name)
+            environment.propertySources.addFirst(org.springframework.core.env.MapPropertySource(name,mapOf("GEMINI_API_KEY" to "")))
             mvc.perform(post("$path/${first["id"].asText()}/next").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("revision" to first["revision"].asLong()))))
                 .andExpect(status().isConflict).andExpect(jsonPath("$.code").value("AI_APPROVAL_CHANGED"))
             verify(model,times(1)).generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
             mvc.perform(get("$path/${first["id"].asText()}").with(caller(user))).andExpect(status().isOk).andExpect(jsonPath("$.completedBatches").value(1)).andExpect(jsonPath("$.analysis.provider").value("Gemini"))
+        } finally {environment.propertySources.remove(name)}
+    }
+    @Test fun `explicit Gemini switch keeps completed evidence and rejects missing consent stale revision and another owner`() {
+        val user=profile();val ids=listOf(upload(user),upload(user));stub()
+        val initial=post(user,path,body(ids));val first=next(user,initial)
+        `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenThrow(AiFailure("AI_RATE_LIMITED",429,968))
+        val paused=next(user,first)
+        val name="explicit-provider-switch"
+        environment.propertySources.addFirst(org.springframework.core.env.MapPropertySource(name,mapOf("GEMINI_API_KEY" to "fictional-test-key")))
+        try {
+            val config=json.readTree(mvc.perform(get("/api/ai/config")).andExpect(status().isOk).andReturn().response.contentAsString)
+            val alternative=config["options"]["documents"].first { it["approval"]["selections"].all { selection -> selection["provider"].asText()=="Gemini" } }
+            assertThat(alternative["available"].asBoolean()).isTrue()
+            assertThat(config.toString()).doesNotContain("fictional-test-key")
+            val endpoint="$path/${paused["id"].asText()}/provider"
+            val input=mapOf("revision" to paused["revision"].asLong(),"consent" to true,"aiApproval" to alternative["approval"]["token"].asText())
+            for((who,changes,expected) in listOf(Triple(user,mapOf("consent" to false),400),Triple(user,mapOf("revision" to 1),409),Triple(profile(),emptyMap(),404))) {
+                mvc.perform(post(endpoint).with(caller(who)).with(csrf()).contentType("application/json").content(json.writeValueAsString(input+changes))).andExpect(status().`is`(expected))
+            }
+            mvc.perform(post(endpoint).with(caller(user)).contentType("application/json").content(json.writeValueAsString(input))).andExpect(status().isForbidden)
+            val switched=post(user,endpoint,input)
+            assertThat(switched["completedBatches"]).isEqualTo(paused["completedBatches"])
+            assertThat(switched["analysis"]).isEqualTo(paused["analysis"])
+            assertThat(switched["approvedDocuments"]).isEqualTo(paused["approvedDocuments"])
+            assertThat(switched["approvedDocuments"][0]["text"].asText()).isEqualTo(text)
+            assertThat(switched["nextAt"].isNull).isTrue()
+            assertThat(switched["plannedSelections"][0]["provider"].asText()).isEqualTo("Gemini")
+            `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION),(any(AiSelection::class.java) ?: AiSelection("Gemini","gemini-3.5-flash")))).thenReturn(output())
+            val continued=next(user,switched)
+            assertThat(continued["completedBatches"].asInt()).isEqualTo(2)
+            assertThat(continued["analysis"]["suggestions"].size()).isEqualTo(2)
+            assertThat(continued["analysis"]["provider"].asText()).isEqualTo("Groq + Gemini")
+            assertThat(continued["analysis"]["aiSelections"].map { it["provider"].asText() }).containsExactly("Groq","Gemini")
+            verify(model,times(1)).generateJson(anyString(),anyString(),anyMap(),(eq(AiTask.DOCUMENT_EXTRACTION) ?: AiTask.DOCUMENT_EXTRACTION),(eq(AiSelection("Gemini","gemini-3.5-flash")) ?: AiSelection("Gemini","gemini-3.5-flash")))
         } finally {environment.propertySources.remove(name)}
     }
     @Test fun `whole-document planning covers every source character without requiring manual portions`() {

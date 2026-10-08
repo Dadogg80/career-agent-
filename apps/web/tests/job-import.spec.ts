@@ -38,12 +38,14 @@ test("mobile layout stays inside the viewport", async ({ page }) => {
 test("FINN direct analysis retains provenance in both languages", async ({ page }) => {
   const finn = "https://www.finn.no/job/ad/478077416";
   let analyzed = false;
-  await page.route("**/api/jobs/import", route => route.fulfill({ json: { sourceUrl: finn, title: "Backend engineer", text, retrievedAt: "2026-10-07T00:00:00Z", sourceType: "GROQ_BROWSER_EXCERPT" } }));
+  await page.route("**/api/jobs/import", route => route.fulfill({ json: { sourceUrl: finn, title: "Backend engineer", text, retrievedAt: "2026-10-07T00:00:00Z", sourceType: "GROQ_BROWSER_EXCERPT", aiSelection: {provider:"Groq",model:"openai/gpt-oss-20b"} } }));
   await page.route("**/api/jobs/requirements", route => { analyzed = true; return route.fulfill({ json: { facts: [], requirements: [] } }); });
   await page.goto("/jobs/analyze");
   await page.getByRole("textbox", { name: "Lenke til stillingsannonse" }).fill(finn);
   await page.getByRole("button", { name: "Analyser lenke", exact: true }).click();
   await expect(page.getByText(/Kildeutdrag via Groq/)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText("Groq · openai/gpt-oss-20b", {exact:true}).last()).toBeVisible();
+  await expect(page.getByText("Kildeinnhenting", {exact:true})).toBeVisible();
   await expect(page.getByRole("link", { name: "Åpne originalannonsen" })).toHaveAttribute("href", finn);
   await expect(page.getByText("Ingen eksplisitte krav ble funnet.")).toBeVisible();
   expect(analyzed).toBe(true);
@@ -134,4 +136,13 @@ test("rate limited analysis reuses fetched text after countdown without another 
   expect(imports).toBe(1);
   expect(analyses).toBe(2);
   await expect(page.getByRole("textbox", { name: "Lenke til stillingsannonse" })).toHaveValue(url);
+});
+
+// Browser retrieval and advertisement analysis have independent provider identities.
+test("source metadata rejects an analysis provider pretending to be the FINN browser", async()=>{
+ const {isImportedJob}=await import("../lib/job-import");
+ const source={sourceUrl:"https://www.finn.no/job/ad/478077416",title:"Engineer",text,retrievedAt:"2026-10-07T00:00:00Z",sourceType:"GROQ_BROWSER_EXCERPT"};
+ expect(isImportedJob({...source,aiSelection:{provider:"Groq",model:"openai/gpt-oss-20b"}})).toBe(true);
+ expect(isImportedJob({...source,aiSelection:{provider:"Gemini",model:"gemini-3.5-flash"}})).toBe(false);
+ expect(isImportedJob({...source,aiSelection:{provider:"Groq",model:"https://invalid.example/model?secret"}})).toBe(false);
 });

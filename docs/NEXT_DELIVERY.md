@@ -15,6 +15,8 @@ The owner explicitly authorized pushing this tested delivery and merging it to m
 
 Kafka, Temporal, pgvector and Redis are deferred until a concrete workload justifies them. Local integration tests require Docker; private workflows require the documented PostgreSQL/OIDC setup. Production identity, backups, deletion/export policy and external-provider privacy controls remain open before an external pilot.
 
-## Current resumed slice
+## Current priorities — 2026-10-08
 
-Whole-document analysis, editable candidate/history/competency drafts, compact profile sections, local PDF repair and task model configuration are implemented and tested on the unpublished branch. See [FULL_DOCUMENT_REVIEW.md](FULL_DOCUMENT_REVIEW.md). Live Groq quality comparison is still blocked by quota; defaults remain unchanged. Next product increments remain reviewed CV/application wording, interview preparation and later discovery. Publishing and merging are separate from local completion.
+PR #16 merged whole-document review and explicit Gemini routing. The related `feat/document-evidence-quality` increment adds mixed-layout reading, preserved employer context, compact competency/profile/history views, approved alternate-provider recovery and truthful animated activity/model identities. See [FULL_DOCUMENT_REVIEW.md](FULL_DOCUMENT_REVIEW.md) and ADR 0026 for scope and limits.
+
+The owner then prioritized extraction completeness and automatic documentary profile population: section inventory → independently checked individual competencies/context → targeted missing-evidence review → reconciliation → safe sourced profile/history registration. These improvements remain the next separate implementation increment. Dynamic candidate presentation follows it; automatic matching evidence selection, explainable percentage and inline clarification follow that shared evidence model. CV/application wording, interview preparation, discovery and external hosting remain later work. Provider recovery does not implement these queued capabilities or certify complete extraction.

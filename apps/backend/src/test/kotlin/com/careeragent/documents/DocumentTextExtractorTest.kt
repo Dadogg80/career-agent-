@@ -68,6 +68,44 @@ class DocumentTextExtractorTest {
         assertThat(text.indexOf("Sidebar context entry 5")).isLessThan(text.indexOf("Project contribution number 0"))
         for(row in 0..5) {assertThat(text).contains("Sidebar context entry $row","Project contribution number $row")}
     }
+    @Test fun `a skills grid does not split later full width employment paragraphs`() {
+        val output=ByteArrayOutputStream()
+        val description="Delivered reliable backend services and frontend applications for the whole organization."
+        PDDocument().use { document ->
+            document.addPage(PDPage())
+            PDPageContentStream(document,document.getPage(0)).use { stream ->
+                fun row(text:String,x:Float,y:Float) {
+                    stream.beginText();stream.setFont(PDType1Font(Standard14Fonts.FontName.HELVETICA),11f)
+                    stream.newLineAtOffset(x,y);stream.showText(text);stream.endText()
+                }
+                for (i in 0..4) {row("Frontend technology entry $i",30f,700f-i*22);row("Delivery responsibility item $i",320f,700f-i*22)}
+                row("WORK EXPERIENCE",30f,550f)
+                row("2021 - 2024",30f,525f);row("Example AS - Senior Developer",170f,525f)
+                row(description,30f,500f)
+                row("Built APIs with PostgreSQL and Docker across product teams.",30f,480f)
+            };document.save(output)
+        }
+        val text=extractor.extract(output.toByteArray(),"pdf")
+        assertThat(text).contains(description,"2021 - 2024 Example AS - Senior Developer",
+            "Built APIs with PostgreSQL and Docker across product teams.")
+        assertThat(text.indexOf("WORK EXPERIENCE")).isLessThan(text.indexOf(description))
+        assertThat(text.indexOf("Delivery responsibility item 4")).isLessThan(text.indexOf("WORK EXPERIENCE"))
+    }
+    @Test fun `a date column stays associated with its organization and role instead of becoming a separate column`() {
+        val output=ByteArrayOutputStream()
+        PDDocument().use { document ->
+            document.addPage(PDPage())
+            PDPageContentStream(document,document.getPage(0)).use { stream ->
+                for (i in 0..4) for ((text,x) in listOf("202${i} - 202${i+1}" to 30f,"Company $i - Developer $i" to 220f)) {
+                    stream.beginText();stream.setFont(PDType1Font(Standard14Fonts.FontName.HELVETICA),12f)
+                    stream.newLineAtOffset(x,700f-i*25);stream.showText(text);stream.endText()
+                }
+            };document.save(output)
+        }
+        val text=extractor.extract(output.toByteArray(),"pdf")
+        for(i in 0..4)assertThat(text).contains("202${i} - 202${i+1} Company $i - Developer $i")
+        assertThat(text.indexOf("Company 0")).isLessThan(text.indexOf("2021 - 2022"))
+    }
     @Test fun `UTF8 text and Markdown retain Norwegian company context and reject binary or invalid encodings`() {
         val text="## Example AS\nÅse bygget API-er med Kotlin og PostgreSQL."
         assertThat(extractor.extract(text.toByteArray(),"md")).isEqualTo(text)

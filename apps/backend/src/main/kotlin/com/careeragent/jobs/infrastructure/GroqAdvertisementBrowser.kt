@@ -131,7 +131,7 @@ class GroqAdvertisementBrowser(
                     .replace(Regex("\\*\\*([^\n]+?)\\*\\*"), "$1")
                 if (title.isBlank() || title.length > 300 || text.length < 100) continue
                 if (text.length > 15000) throw ImportFailure("SOURCE_TOO_LARGE", 413)
-                return ImportedJob(url, title, text, Instant.now().toString(), "GROQ_BROWSER_EXCERPT")
+                return ImportedJob(url, title, text, Instant.now().toString(), "GROQ_BROWSER_EXCERPT", com.careeragent.ai.application.AiSelection("Groq",model))
             }
             throw ImportFailure("SOURCE_NOT_AVAILABLE", 404)
         } catch (error: ImportFailure) { throw error }

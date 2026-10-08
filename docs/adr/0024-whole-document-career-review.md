@@ -1,6 +1,6 @@
 # ADR 0024: Bounded whole-document career review
 
-Status: Accepted delegated implementation decision for the resumed local pilot, 2026-10-08. Implemented on an unpublished feature branch.
+Status: Accepted delegated implementation decision for the resumed local pilot, 2026-10-08. Initial implementation merged in PR #16 on 2026-10-08.
 
 ## Problem
 
@@ -14,7 +14,7 @@ Use numbered source evidence and strict JSON to draft distinct explicit skill la
 
 Use shadcn review Sheets/cards and TanStack queries with no automatic mutation retries. Profile sections expose upload, competency and history without a long stacked page. Sources remain inspectable and original-language evidence remains unchanged. Conservative equality combines supporting quotes without merging different delivery contexts.
 
-Configure model selection by task with unchanged defaults until quality evaluation. Honor observed provider cooldown; do not switch models after quota rejection. Stable prefixes and safe usage logging support measured optimization.
+Configure model selection by task with unchanged defaults until quality evaluation. Honor observed provider cooldown; do not silently switch models after quota rejection. Explicitly approved recovery is added by ADR 0026. Stable prefixes and safe usage logging support measured optimization.
 
 ## Consequences
 

@@ -1,6 +1,7 @@
 package com.careeragent.ai.infrastructure
 
 import com.careeragent.ai.application.AiFailure
+import com.careeragent.ai.application.AiSelection
 import com.careeragent.ai.application.AiModel
 import com.careeragent.ai.application.AiTask
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -55,8 +56,8 @@ class GroqAiModel(
 
     override fun generateJson(system: String, user: String, schema: Map<String, Any>): String = generateJson(system,user,schema,AiTask.JOB_ANALYSIS)
 
-    internal fun requestBody(system:String,user:String,schema:Map<String,Any>,task:AiTask):Map<String,Any> {
-        val selected=when(task) { AiTask.JOB_ANALYSIS->jobModel; AiTask.DOCUMENT_EXTRACTION->documentModel; AiTask.PROFILE_SUMMARY->profileModel; AiTask.PERSONAL_MATCH->matchModel }.ifBlank { model }
+    internal fun requestBody(system:String,user:String,schema:Map<String,Any>,task:AiTask, explicitModel:String? = null):Map<String,Any> {
+        val selected=explicitModel ?: when(task) { AiTask.JOB_ANALYSIS->jobModel; AiTask.DOCUMENT_EXTRACTION->documentModel; AiTask.PROFILE_SUMMARY->profileModel; AiTask.PERSONAL_MATCH->matchModel }.ifBlank { model }
         // Only models verified by Groq's strict-JSON documentation can be configured here.
         if(selected !in setOf("openai/gpt-oss-20b","openai/gpt-oss-120b","qwen/qwen3.8-27b"))throw AiFailure("AI_NOT_CONFIGURED",503)
         val result=linkedMapOf<String,Any>("model" to selected,"reasoning_effort" to "low",
@@ -66,11 +67,16 @@ class GroqAiModel(
         if(selected.startsWith("openai/"))result["include_reasoning"]=false else result["reasoning_format"]="hidden"
         return result
     }
-    override fun generateJson(system: String, user: String, schema: Map<String, Any>, task:AiTask): String {
+    override fun generateJson(system: String, user: String, schema: Map<String, Any>, task:AiTask): String = generateJson(system,user,schema,task,null)
+    override fun generateJson(system: String, user: String, schema: Map<String, Any>, task:AiTask, selection:AiSelection): String {
+        if(selection.provider != "Groq") throw AiFailure("AI_NOT_CONFIGURED",503)
+        return generateJson(system,user,schema,task,selection.model)
+    }
+    private fun generateJson(system: String, user: String, schema: Map<String, Any>, task:AiTask, explicitModel:String?): String {
         val remaining = cooldown.remainingSeconds()
         if (remaining > 0) throw AiFailure("AI_RATE_LIMITED", 429, remaining)
         if (apiKey.isBlank()) throw AiFailure("AI_NOT_CONFIGURED", 503)
-        val body = requestBody(system,user,schema,task)
+        val body = requestBody(system,user,schema,task,explicitModel)
         val request = HttpRequest.newBuilder(URI.create("https://api.groq.com/openai/v1/chat/completions"))
             .timeout(Duration.ofSeconds(25))
             .header("Authorization", "Bearer $apiKey")

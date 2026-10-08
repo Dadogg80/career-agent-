@@ -345,3 +345,11 @@ As a jobseeker, I want employment, projects, education and certificates with the
 - As a pilot user, I see which AI recipient/model will receive my reviewed data and explicitly approve each new analysis. Backend and UI reject stale configuration approvals without sending to a new recipient.
 - As a returning user, I can inspect stored document progress after configuration changes; it never silently resumes with another provider.
 - As a job seeker, I receive explicit responsibilities/mentoring/release skills alongside technologies, retain original evidence and can edit drafts before confirming. Source-backed education/interests survive a shorter final summary.
+
+## AI recovery and provenance refinement — 2026-10-08
+
+As a pilot user, I can choose a configured alternate AI provider after a quota failure without restarting the app or discarding completed document work. Acceptance: the actual model/provider is shown before sending and with the result; private recipient changes clear consent; no hidden retries occur; owned run revision/source checks remain; a changed visible preview cannot send old text; prior result metadata is preserved; server cooldowns and overall budgets remain enforced. Backend-configured alternatives require backend-only keys. Missing model metadata is labeled honestly.
+
+As a document reviewer, I can switch between competencies, profile summary and career history. Repeated labels share context cards, while different contributions keep their own editable drafts and evidence.
+
+- As a candidate, I see an animated status while AI is responding and a distinct waiting state during quota/pacing delays. Acceptance: truthful labels, retained prior results, disabled duplicate submissions, reduced-motion support and independent source/analysis model identities.

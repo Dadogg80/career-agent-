@@ -67,3 +67,11 @@ GEMINI_LIVE_TEST=true GEMINI_MODEL=gemini-3.5-flash ./gradlew test --tests '*Gem
 It makes at most two model calls, checks explicit technologies/responsibilities, excludes unsupported Kafka/Kubernetes/Spring/idempotency, verifies source quotes/history and synthesizes the candidate profile. It is not an exhaustive semantic audit of real documents or a Groq-vs-Gemini benchmark.
 
 Official references checked on 2026-10-08: [models](https://ai.google.dev/gemini-api/docs/models), [structured output](https://ai.google.dev/gemini-api/docs/structured-output), [rate limits](https://ai.google.dev/gemini-api/docs/rate-limits), [thinking](https://ai.google.dev/gemini-api/docs/thinking), [keys](https://ai.google.dev/gemini-api/docs/api-key), [pricing](https://ai.google.dev/gemini-api/docs/pricing), [terms](https://ai.google.dev/gemini-api/terms).
+
+## In-app recovery without restarting
+
+Keep `GROQ_API_KEY` and `GEMINI_API_KEY` in the ignored backend `.env`. `AI_PROVIDER` and task/model variables still set defaults. With both keys loaded into the backend process, the UI offers configured alternatives in **Change**, plus **Try with Gemini** after a recoverable Groq failure. Adding a key for the first time still requires restarting the backend.
+
+For documents and personal matching, selecting another provider resets approval. Review the same private preview and approve the newly displayed recipient before continuing. Document recovery resumes the saved run at its next unfinished portion. The old result is retained and carries its original model metadata. The alternate provider can also be quota-limited; switching does not reset pilot budgets or promise success.
+
+FINN search still uses Groq/Exa. Gemini recovery applies to analysis of already received advertisement text, document extraction/profile synthesis and personal matching, not to fetching a FINN URL. No key is sent to the browser. Older saved results without model metadata show “model not recorded”.

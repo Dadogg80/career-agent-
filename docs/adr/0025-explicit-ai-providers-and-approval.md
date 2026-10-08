@@ -1,6 +1,6 @@
 # ADR 0025: Explicit AI providers and recipient-bound approvals
 
-Status: Accepted for the local pilot, 2026-10-08. Implementation is unpublished.
+Status: Accepted for the local pilot, 2026-10-08. Initial implementation merged in PR #16 on 2026-10-08. Explicit in-app provider recovery is added separately in ADR 0026.
 
 ## Context
 

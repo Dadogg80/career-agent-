@@ -136,3 +136,9 @@ The owner explicitly resumed the planned implementation and reiterated automatic
 ## 2026-10-08 — Gemini and related knowledge quality
 
 Accepted: Gemini adapter behind explicit task routing, recipient/model-bound private approval and independent cooldowns (ADR 0025). Gemini-specific first model is stable 3.5 Flash after synthetic pipeline verification; 3.8 Flash returned 503. Existing unset-provider behavior remains Groq. Prioritize whole-document/PDF quality → competency coverage/deduplication → profile/history presentation. Keep this continuation unpublished. No paid upgrades or automatic failover.
+
+## 2026-10-08 — Owner-directed provider recovery
+
+Accepted: allow a user to retry an AI operation with Gemini after a Groq quota failure through a compact dynamic provider/model control. Use renewed private recipient approval and preserve existing evidence/progress; no silent model rotation or budget bypass. Implemented in ADR 0026. Native Gemini FINN retrieval is not part of this change.
+
+Queued owner requests: automatic document-grounded profile population, automatic evidence selection for matching, explainable percentage scores, inline user clarification/confirmation and an incrementally refreshed AI presentation. The owner asked to distinguish document-confirmed facts from inferred skills. Current delivery retains explicit factual review; those domain/status changes are not yet implemented or claimed complete.

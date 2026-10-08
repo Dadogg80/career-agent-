@@ -63,11 +63,12 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
     }
 
     override fun generateJson(system: String, user: String, schema: Map<String, Any>) = generateJson(system, user, schema, AiTask.JOB_ANALYSIS)
-    override fun generateJson(system: String, user: String, schema: Map<String, Any>, task: AiTask): String {
+    override fun generateJson(system: String, user: String, schema: Map<String, Any>, task: AiTask): String = generateJson(system,user,schema,task,routing.selection(task))
+    override fun generateJson(system: String, user: String, schema: Map<String, Any>, task: AiTask, selection: AiSelection): String {
         if (apiKey.isBlank()) throw AiFailure("AI_NOT_CONFIGURED", 503)
         val remaining = cooldown.remainingSeconds()
         if (remaining > 0) throw AiFailure("AI_RATE_LIMITED", 429, remaining)
-        val selected = routing.selection(task)
+        val selected = selection
         if (selected.provider != "Gemini" || selected.model !in setOf("gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"))
             throw AiFailure("AI_NOT_CONFIGURED", 503)
         val request = HttpRequest.newBuilder(URI.create("https://generativelanguage.googleapis.com/v1beta/models/${selected.model}:generateContent"))

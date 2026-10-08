@@ -28,6 +28,12 @@ class DocumentWorkflowController(private val workflows:ObjectProvider<DocumentAn
         val documents=(input["documents"] as List<*>).map { item -> if(item !is Map<*,*> || item.keys!=setOf("documentId","text") || item["documentId"] !is String || item["text"] !is String)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400);DocumentExcerpt(id(item["documentId"] as String),item["text"] as String) }
         return response(workflow().start(identity(principal),scope(input["scope"] as String),documents,input["locale"] as String,input["consent"] as Boolean,input["aiApproval"] as? String))
     }
+    @PostMapping("/{runId}/provider",consumes=["application/json"])
+    fun provider(@AuthenticationPrincipal principal:OidcUser?,@PathVariable runId:String,@RequestBody input:Map<String,Any?>):Any {
+        keys(input,setOf("revision","consent","aiApproval"))
+        if(input["consent"] !is Boolean || input["aiApproval"] !is String) throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
+        return response(workflow().switchProvider(identity(principal),id(runId),revision(input),input["consent"] as Boolean,input["aiApproval"] as String))
+    }
     @GetMapping("/{runId}") fun progress(@AuthenticationPrincipal principal:OidcUser?,@PathVariable runId:String)=response(workflow().load(identity(principal),id(runId)))
     @PostMapping("/{runId}/next",consumes=["application/json"]) fun next(@AuthenticationPrincipal principal:OidcUser?,@PathVariable runId:String,@RequestBody input:Map<String,Any?>):Any {keys(input,setOf("revision"));return response(workflow().next(identity(principal),id(runId),revision(input)))}
     @PostMapping("/{runId}/entries",consumes=["application/json"]) fun importEntry(@AuthenticationPrincipal principal:OidcUser?,@PathVariable runId:String,@RequestBody input:Map<String,Any?>):Any {

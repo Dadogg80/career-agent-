@@ -13,4 +13,10 @@ class RoutedAiModel(private val routing: AiRouting, private val groq: GroqAiMode
             "Gemini" -> gemini.generateJson(system, user, schema, task)
             else -> groq.generateJson(system, user, schema, task)
         }
+    override fun generateJson(system: String, user: String, schema: Map<String, Any>, task: AiTask, selection: AiSelection): String =
+        when (selection.provider) {
+            "Gemini" -> gemini.generateJson(system,user,schema,task,selection)
+            "Groq" -> groq.generateJson(system,user,schema,task,selection)
+            else -> throw AiFailure("AI_NOT_CONFIGURED",503)
+        }
 }

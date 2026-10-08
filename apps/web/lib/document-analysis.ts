@@ -1,15 +1,16 @@
+import { isAiSelection, type AiSelection } from "./ai-configuration";
 import { claimId } from "./claims";
 import { validEntryContent, type EntryContent } from "./career-entries";
 export type CompetencySuggestion = { skill: string; statement: string; context: string; quote: string; documentId?: string | null; contextQuote?:string|null; additionalSources?: {documentId:string;quote:string}[]; category?:string; drafted?:boolean };
 export type ProfileDraft = {kind:string;text:string;documentId:string;quote:string;additionalSources?:{documentId:string;quote:string}[]};
 export type CareerDraft = {key:string;content:EntryContent;periodText:string;documentId:string;quote:string;additionalSources?:{documentId:string;quote:string}[]};
-export type DocumentAnalysis = { id: string; locale: "nb" | "en"; provider: "Groq" | "Gemini" | "Groq + Gemini" | "Gemini + Groq"; summary: { text: string; quote: string; documentId?: string | null }[]; suggestions: CompetencySuggestion[]; inputCharacters: number; sourceCharacters: number; partial: boolean; omittedItems: number; createdAt: string; documents: { documentId:string; originalName:string; inputCharacters:number; sourceCharacters:number }[]; profile?:ProfileDraft[];careerEntries?:CareerDraft[] };
+export type DocumentAnalysis = { id: string; locale: "nb" | "en"; provider: "Groq" | "Gemini" | "Groq + Gemini" | "Gemini + Groq"; summary: { text: string; quote: string; documentId?: string | null }[]; suggestions: CompetencySuggestion[]; inputCharacters: number; sourceCharacters: number; partial: boolean; omittedItems: number; createdAt: string; documents: { documentId:string; originalName:string; inputCharacters:number; sourceCharacters:number }[]; profile?:ProfileDraft[];careerEntries?:CareerDraft[]; aiSelections?:AiSelection[] };
 export function isDocumentAnalysis(value: unknown): value is DocumentAnalysis {
   if (!value || typeof value !== "object") return false;
   const d = value as Record<string, unknown>;
   const text = (value: unknown, max: number) => typeof value === "string" && value.trim().length > 0 && value.length <= max;
   const count = (value: unknown, min: number, max: number) => typeof value === "number" && Number.isInteger(value) && value >= min && value <= max;
-  return typeof d.id === "string" && claimId.test(d.id) && ["nb", "en"].includes(String(d.locale)) && ["Groq","Gemini","Groq + Gemini","Gemini + Groq"].includes(String(d.provider))
+  return (d.aiSelections===undefined || Array.isArray(d.aiSelections) && d.aiSelections.length<=10 && d.aiSelections.every(isAiSelection)) && typeof d.id === "string" && claimId.test(d.id) && ["nb", "en"].includes(String(d.locale)) && ["Groq","Gemini","Groq + Gemini","Gemini + Groq"].includes(String(d.provider))
     && typeof d.createdAt === "string" && Number.isFinite(Date.parse(d.createdAt)) && typeof d.partial === "boolean"
     && count(d.inputCharacters, 0, 1200000) && count(d.sourceCharacters, 1, 1200000) && count(d.omittedItems, 0, 200)
     && Array.isArray(d.documents) && d.documents.length <= 20 && d.documents.every(item => item && typeof item.documentId === "string" && claimId.test(item.documentId) && text(item.originalName,120) && count(item.inputCharacters,0,60000) && count(item.sourceCharacters,1,60000))
