@@ -41,7 +41,7 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
         if(state.sources.any { (id,text) -> documents.detail(identity,id).text != text }) throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
         return state
     }
-    fun start(identity: VerifiedIdentity, scope: String, excerpts: List<DocumentExcerpt>, locale: String, consent: Boolean, aiApproval: String? = null, populateProfile: Boolean = false): DocumentRunView {
+    fun start(identity: VerifiedIdentity, scope: String, excerpts: List<DocumentExcerpt>, locale: String, consent: Boolean, aiApproval: String? = null, populateProfile: Boolean = false, coverageReview: Boolean = false): DocumentRunView {
         if(!consent) throw DocumentFailure("DOCUMENT_AI_CONSENT_REQUIRED",400)
         val plan=routing.resolveApproval(aiApproval,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)
         val approval=plan.approval
@@ -54,7 +54,7 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
         val analysis=DocumentAnalysis(id,locale,approval.selections.map { it.provider }.distinct().joinToString(" + "),emptyList(),emptyList(),0,sources.values.sumOf { it.text.length },true,0,OffsetDateTime.now(),
             excerpts.map { AnalysisDocument(it.documentId,sources.getValue(it.documentId).document.originalName,0,sources.getValue(it.documentId).text.length) })
         val state=DocumentRunState(id,scope,1,locale,"RUNNING",sources.mapValues { it.value.text },approved,
-            DocumentAnalysisPlanner.batches(approved),0,null,null,analysis,approval.token,approval.selections,populateProfile)
+            DocumentAnalysisPlanner.batches(approved),0,null,null,analysis,approval.token,approval.selections,populateProfile,coverageReview=coverageReview)
         return runs.start(identity,state).view()
     }
     fun switchProvider(identity: VerifiedIdentity, id: UUID, revision: Long, consent: Boolean, aiApproval: String): DocumentRunView {
@@ -82,6 +82,15 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
         try {
             claimed=runs.claim(identity,id,revision) ?: return runs.load(identity,id).view()
             val state=checked(identity,claimed)
+            val pending=state.batches.getOrNull(state.completed)
+            if(pending?.repair==true) {
+                val coverage=DocumentEvidenceInventory.assess(state.approved,state.analysis)
+                if(coverage.missing.none { it.documentId==pending.documentId && it.start==pending.sourceStart }) {
+                    // Earlier follow-up may already represent this source: commit the skipped step without AI/budget use.
+                    return runs.finish(identity,state,state.copy(revision=state.revision+1,completed=state.completed+1,status="RUNNING",issue=null,nextAt=null,
+                        coverage=coverage.report(state.batches.count { it.repair }))).view()
+                }
+            }
             if(used.get() >= maxRequests) throw AiFailure("AI_BUDGET_REACHED",429)
             used.incrementAndGet()
             val extractor=DocumentDraftExtractor(ApprovedAiModel(model,routing,plan),mapper)
@@ -91,7 +100,8 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
                 val profile=extractor.summarize(state.analysis.profile,state.analysis.suggestions,state.locale,state.analysis.careerEntries)
                 checked(identity,state)
                 val analysis=state.analysis.copy(aiSelections=actual,provider=actual.map { it.provider }.distinct().joinToString(" + "),profile=profile,summary=profile.map { CompetencySummary(it.text.take(500),it.quote.take(600),it.documentId) })
-                return runs.finish(identity,state,state.copy(revision=state.revision+1,completed=state.completed+1,status="COMPLETED",issue=null,nextAt=null,analysis=analysis)).view()
+                return runs.finish(identity,state,state.copy(revision=state.revision+1,completed=state.completed+1,status="COMPLETED",issue=null,nextAt=null,analysis=analysis,
+                    coverage=if(state.coverageReview)DocumentEvidenceInventory.assess(state.approved,analysis).report(state.batches.count { it.repair }) else null)).view()
             }
             val batch=state.batches[state.completed]
             val raw=extractor.extract(batch,state.approved.getValue(batch.documentId),state.locale)
@@ -104,14 +114,18 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
             val career=(state.analysis.careerEntries+result.entries).groupBy { listOf(it.content.kind.name,normal(it.content.title),normal(it.content.organization),normal(it.content.client),it.periodText,normal(it.content.description),if(it.periodText.isBlank())it.documentId.toString() else "") }.values.map { group -> val first=group.first();first.copy(additionalSources=(first.additionalSources+group.drop(1).flatMap { listOf(CompetencySource(it.documentId,it.quote))+it.additionalSources }).distinct().take(100)) }
             val profile=(state.analysis.profile+result.profile).distinctBy { listOf(it.kind,normal(it.text),it.documentId.toString()) }
             val covered=state.batches.take(completed).groupBy { it.documentId }.mapValues { it.value.sumOf { batch -> batch.characters } }
-            val partial=completed < state.batches.size || state.approved.any { (source,text) -> text != state.sources[source] }
+            val partial=state.batches.take(completed).filterNot { it.repair }.sumOf { it.characters } < state.approved.values.sumOf { it.length } || state.approved.any { (source,text) -> text != state.sources[source] }
             val analysis=state.analysis.copy(aiSelections=actual,provider=actual.map { it.provider }.distinct().joinToString(" + "),summary=profile.take(20).map { CompetencySummary(it.text.take(500),it.quote.take(600),it.documentId) },
                 suggestions=suggestions.take(300),profile=profile.take(80),careerEntries=career.take(50),inputCharacters=maxOf(40,covered.values.sum()),partial=partial,
                 omittedItems=minOf(200,state.analysis.omittedItems+result.omitted+(raw.suggestions.size-result.suggestions.size)+(raw.profile.size-result.profile.size)+(raw.entries.size-result.entries.size)+maxOf(0,suggestions.size-300)+maxOf(0,career.size-50)+maxOf(0,profile.size-80)),
                 documents=state.analysis.documents.map { it.copy(inputCharacters=covered[it.documentId] ?: 0) })
+            val assessment=if(state.coverageReview && completed>=state.batches.count { !it.repair }) DocumentEvidenceInventory.assess(state.approved,analysis) else null
+            val repairs=if(assessment!=null && !state.repairScheduled)DocumentEvidenceInventory.repairBatches(assessment,state.approved) else emptyList()
+            val batches=state.batches+repairs
             return runs.finish(identity,state,state.copy(revision=state.revision+1,completed=completed,
-                status="RUNNING",issue=null,
-                nextAt=OffsetDateTime.now().plusSeconds((if(plan.tasks.getValue(if(completed==state.batches.size)AiTask.PROFILE_SUMMARY else AiTask.DOCUMENT_EXTRACTION).provider=="Gemini")geminiDelaySeconds else delaySeconds).coerceIn(0,300).toLong()),analysis=analysis)).view()
+                status="RUNNING",issue=null,batches=batches,repairScheduled=state.repairScheduled || assessment!=null,
+                coverage=assessment?.report(batches.count { it.repair }) ?: state.coverage,
+                nextAt=OffsetDateTime.now().plusSeconds((if(plan.tasks.getValue(if(completed==batches.size)AiTask.PROFILE_SUMMARY else AiTask.DOCUMENT_EXTRACTION).provider=="Gemini")geminiDelaySeconds else delaySeconds).coerceIn(0,300).toLong()),analysis=analysis)).view()
         } catch(error: AiFailure) {
             val state=claimed ?: throw error
             return runs.finish(identity,state,state.copy(revision=state.revision+1,status="PAUSED",issue=error.code,

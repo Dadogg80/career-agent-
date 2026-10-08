@@ -43,7 +43,7 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
             pieces.asSequence()
         }.filter { it.isNotBlank() }.map { Passage(it) }.toList()
         val input = mapper.writeValueAsString(mapOf("passages" to passages.mapIndexed { id, p -> mapOf("id" to id, "text" to p.text) }))
-        val output=model.generateJson(prompt(locale), input, schema(), AiTask.DOCUMENT_EXTRACTION)
+        val output=model.generateJson(prompt(locale)+(if(batch.repair) "\nThis is a targeted follow-up on source passages not represented in the earlier result. Capture their explicit responsibilities, achievements, history, education or interests. Do not invent facts to fill missing sections." else ""), input, schema(), AiTask.DOCUMENT_EXTRACTION)
         val parsed=try { parse(output,passages,batch.documentId,approved,locale) } catch(error: AiFailure) {
             val recovered=DocumentCompetencyInventory.recover(batch,approved,locale,emptyList())
             if(error.code!="AI_INVALID_RESULT" || recovered.isEmpty())throw error

@@ -4,7 +4,7 @@ Status checked against remote main on 2026-10-08; the owner authorized publishin
 
 ## Current status
 
-PR #18 merged the documentary-profile and matching slice at `5c896707202678e7fde339a994787654007ab0f2`; both Foundation checks passed. Literal document-backed competencies, saved history drafts, newest-analysis candidate presentation, explicit-list recovery, the persistent review queue, automatic matching evidence, explained percentages and inline clarification are merged. The new `fix/competency-review-identity` slice groups the profile into one card per skill while retaining contributions, sources and decisions; it also separates contribution review identity from literal source identity. PR #19 is verified merged at `5bc9a3e84ad46273c80b7e483906063c55af4956`. Gemini 3.5 Flash-Lite passed the synthetic extraction/profile pipeline; the owner accepted it as the Gemini document/profile default in the next `feat/gemini-lite-defaults` slice. Job/match Flash, provider defaults and explicit recipient approval remain unchanged. The full knowledge graph and semantic completeness/repair loop remain separate.
+Remote main `520bbe7` includes documentary profile imports, grouped skill cards, persistent review, candidate presentation, automatic matching evidence, explained percentages and inline clarification. PR #20 merged Gemini Lite document/profile defaults; the subsequent main commit adds explicit Flash/Lite model choices and isolated model cooldowns. Both merge checks and latest main Foundation CI succeeded. Current `feat/document-coverage-audit` work adds literal source inventories, missed-list recovery and one bounded targeted follow-up round with compact coverage UX. This slice is pending review/merge and does not implement the full knowledge graph or semantic completeness/conflict reconciliation.
 
 | Capability | Actual status |
 | --- | --- |
@@ -70,5 +70,5 @@ The priorities listed for that slice (document-grounded population, presentation
 ## Current delivery and next quality work
 
 - Current branch: ADR 0027, V13 documentary basis/owner ledger, atomic profile population, durable review decisions, compact counted queue, editable sourced candidate synthesis, matching automation/clarification and bounded advertisement readers.
-- Next: independent expected-evidence audit across the supplied document collection, full semantic section inventory and bounded targeted repair, relationship/date conflict reconciliation. Explicit-list recovery covers only named list items.
+- Next: independent expected-evidence audit across the supplied document collection, broader semantic section inventory and measured recall, relationship/date conflict reconciliation. ADR 0028 adds an initial lexical source inventory and bounded follow-up, not the full semantic repair loop. Explicit-list recovery covers only named list items.
 - Later: normalized reusable knowledge graph, broader model-quality comparison, advanced CV/discovery/interview features and online hosting. No paid infrastructure or automatic AI submission is introduced.

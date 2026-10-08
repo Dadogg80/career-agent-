@@ -159,3 +159,7 @@ The owner explicitly accepted Lite where suitable following synthetic extraction
 ## 2026-10-08 — Model selection and independent application cooldowns
 
 Accepted maintenance: expose Groq, Gemini 3.5 Flash and Gemini 3.5 Flash-Lite as explicit choices for supported AI tasks. Bind each choice to its existing approval fingerprint; private tasks still require renewed consent whenever the recipient/model changes. Keep cooldowns per provider/model and share each across features using that same model. This prevents one model's application cooldown from suppressing another model, without bypassing provider-enforced project/account quotas or changing retry/budget behavior.
+
+## 2026-10-08 — Source usage audit and bounded extraction follow-up
+
+Accepted under the resumed document-quality request: inventory explicit source passages and compare validated quotation links, locally recover missed named list items and use one disclosed bounded follow-up round for other missing evidence. Defaults apply only to new consented runs, with at most four calls/two per document, preserved provider/model approval and normal quotas. Show remaining excerpts without calling the result exhaustive or confirmed. ADR 0028 records heuristics and limits.

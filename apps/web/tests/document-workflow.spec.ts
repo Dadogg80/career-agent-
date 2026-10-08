@@ -23,7 +23,7 @@ test("full source is approved once and automatically sequenced; editable skills 
    if(method==="GET")return r.fulfill({json:saved});
    expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf");
    if(url.endsWith("/next")){calls++;saved=calls===1?run("RUNNING",2):run();return r.fulfill({json:saved});}
-   starts++;expect(r.request().postDataJSON()).toEqual({scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true,populateProfile:true,aiApproval:expect.stringMatching(/^[a-f0-9]{64}$/)});saved={...run("RUNNING",1),completedBatches:0,analysis:{...analysis,suggestions:[],profile:[],careerEntries:[],inputCharacters:0,partial:true}};return r.fulfill({json:saved});
+   starts++;expect(r.request().postDataJSON()).toEqual({scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true,populateProfile:true,coverageReview:true,aiApproval:expect.stringMatching(/^[a-f0-9]{64}$/)});saved={...run("RUNNING",1),completedBatches:0,analysis:{...analysis,suggestions:[],profile:[],careerEntries:[],inputCharacters:0,partial:true}};return r.fulfill({json:saved});
   }
   return r.fulfill({json:url.endsWith(id)?{document:doc,text}:[doc]});
  });
@@ -55,7 +55,7 @@ test("a long quota pause keeps proposals visible, survives reopening and never a
 test("workflow proxies reject anonymous reads, missing consent, spoofed ownership and cross-origin calls",async({request})=>{
  const path="/api/profile/me/documents/workflow";const body={scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true};
  expect((await request.get(`${path}?scope=${id}`)).status()).toBe(401);expect((await request.post(path,{data:{...body,consent:false}})).status()).toBe(400);
- expect((await request.post(path,{data:{...body,ownerId:second}})).status()).toBe(400);expect((await request.post(path,{data:body,headers:{Origin:"https://other.example"}})).status()).toBe(403);
+ expect((await request.post(path,{data:{...body,coverageReview:"true"}})).status()).toBe(400);expect((await request.post(path,{data:{...body,ownerId:second}})).status()).toBe(400);expect((await request.post(path,{data:body,headers:{Origin:"https://other.example"}})).status()).toBe(403);
  expect((await request.post(`${path}/${runId}/next`,{data:{revision:1,ownerId:second}})).status()).toBe(400);expect((await request.post(`${path}/${runId}/claims`,{data:{revision:1,index:0,skill:"Kotlin",statement:"Built APIs",context:"Example AS",confirm:true,status:"CONFIRMED"}})).status()).toBe(400);
 });
 
@@ -67,7 +67,7 @@ test("Gemini whole-document review names the recipient and binds sending to the 
   if(r.request().url().includes("/workflow")) {
    if(r.request().method()==="GET")return r.fulfill({json:stored});
    if(r.request().url().endsWith("/next")){nexts++;stored={...run(),analysis:{...analysis,provider:"Gemini"}};return r.fulfill({json:{...stored,aiApproval:token}});}
-   starts++;expect(r.request().postDataJSON()).toEqual({scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true,populateProfile:true,aiApproval:token});stored={...run("RUNNING",1),completedBatches:0};return r.fulfill({json:{...stored,aiApproval:token,analysis:{...analysis,provider:"Gemini"}}});
+   starts++;expect(r.request().postDataJSON()).toEqual({scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true,populateProfile:true,coverageReview:true,aiApproval:token});stored={...run("RUNNING",1),completedBatches:0};return r.fulfill({json:{...stored,aiApproval:token,analysis:{...analysis,provider:"Gemini"}}});
   }
   return r.fulfill({json:r.request().url().endsWith(id)?{document:doc,text}:[doc]});
  });
@@ -188,4 +188,53 @@ test("competency review is a persistent queue with direct approval, drafts and r
  await outer.getByRole("button",{name:"Lukk",exact:true}).click();await page.getByRole("button",{name:"Analyser dokumentet",exact:true}).click();await expect(waiting).toContainText("87");
  await page.setViewportSize({width:390,height:844});expect(await outer.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
  await waiting.scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/career-review-queue-mobile.png",fullPage:false});expect(decisions).toBe(3);expect(aiCalls).toBe(0);
+});
+
+test("source coverage shows bounded follow-up and literal missing passages without claiming completeness",async({page})=>{
+ await profile(page);
+ const selection={provider:"Gemini",model:"gemini-3.5-flash-lite"};const token="b".repeat(64);const approval={token,selections:[selection]};
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:selection,DOCUMENT_EXTRACTION:selection,PROFILE_SUMMARY:selection,PERSONAL_MATCH:selection},documents:approval,documentExcerpt:approval,matching:approval}}));
+ const source=text+"\nMentored two developers and coordinated releases.";
+ let saved:Record<string,unknown>|null=null,calls=0;
+ let finishRepair:()=>void=()=>{};
+ const heldRepair=new Promise<void>(resolve=>{finishRepair=resolve;});
+ const report={detected:2,represented:1,remaining:1,limited:false,repairCalls:1,passages:[{documentId:id,kind:"DELIVERY",sourceStart:text.length+1,quote:"Mentored two developers and coordinated releases."}]};
+ await page.route("**/api/profile/me/documents**",async r=>{
+  const url=r.request().url();
+  if(url.includes("workflow")){
+   if(r.request().method()==="GET")return r.fulfill({json:saved});
+   if(!url.endsWith("/next")){
+    expect(r.request().postDataJSON().coverageReview).toBe(true);expect(r.request().postDataJSON().aiApproval).toBe(token);
+    saved={...run("RUNNING",1),completedBatches:0,coverageReview:true,phase:"SOURCE",aiApproval:token,plannedSelections:[selection]};return r.fulfill({json:saved});
+   }
+   calls++;
+   if(calls===2)await heldRepair;
+   saved={...run(calls===3?"COMPLETED":"RUNNING",calls+1),aiApproval:token,plannedSelections:[selection],analysis:{...analysis,provider:"Gemini",aiSelections:[selection]},coverageReview:true,completedBatches:calls,totalBatches:3,phase:calls===1?"REPAIR":calls===2?"SUMMARY":"COMPLETED",coverage:calls===1?report:{...report,represented:2,remaining:0,passages:[]}};
+   return r.fulfill({json:saved});
+  }
+  return r.fulfill({json:url.endsWith(id)?{document:doc,text:source}:[doc]});
+ });
+ await open(page);const sheet=page.locator(".document-workspace-sheet");
+ await expect(sheet).toContainText("opptil fire ekstra AI-kall");
+ await sheet.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Gemini for denne analysen"}).check();
+ await sheet.getByRole("checkbox",{name:"Kontroller passasjer som kan være oversett"}).uncheck();
+ await expect(sheet.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Gemini for denne analysen"})).not.toBeChecked();
+ await sheet.getByRole("checkbox",{name:"Kontroller passasjer som kan være oversett"}).check();
+ await sheet.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Gemini for denne analysen"}).check();
+ await sheet.getByRole("button",{name:"Bygg profil fra dokumentene",exact:true}).click();
+ try{
+  await expect(sheet).toContainText("Går gjennom mulige mangler");
+  const check=sheet.locator(".document-coverage");await expect(check).toContainText("1 kan trenge gjennomgang");
+  await check.locator("summary").click();await expect(check).toContainText("Mentored two developers and coordinated releases.");
+  await expect(check).toContainText("ikke en garanti");
+  await check.scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/career-coverage-desktop.png"});
+ }finally{finishRepair();}
+ await expect(sheet.getByText("Gjennomgangen er klar",{exact:true})).toBeVisible();
+ await expect(sheet.locator(".document-coverage")).toContainText("0 kan trenge gjennomgang");
+ await expect(sheet).toContainText("Gemini · gemini-3.5-flash-lite");expect(calls).toBe(3);
+ await sheet.getByRole("button",{name:"Lukk",exact:true}).click();await open(page);
+ await expect(sheet.locator(".document-coverage")).toContainText("2 passasjer med kilde i resultatet");expect(calls).toBe(3);
+ await page.setViewportSize({width:390,height:844});
+ await sheet.locator(".document-coverage").scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/career-coverage-mobile.png"});
+ const bounds=await sheet.evaluate(el=>({width:el.clientWidth,scroll:el.scrollWidth}));expect(bounds.scroll).toBeLessThanOrEqual(bounds.width+1);
 });

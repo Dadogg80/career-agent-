@@ -131,3 +131,7 @@ The owner authorized explicit alternate-provider recovery. Private fingerprints 
 ## Documentary population and explicit review
 
 V13 stores documentary versus personal confirmation basis separately. Only internal source-validated import can create DOCUMENT basis; public claim bodies cannot set status, owner or basis. Automatic profile population is a visible analysis option, committed with source progress under owner locking. Existing user edits/rejections/deletions survive reanalysis. Manual approve/draft/reject actions use owned, CSRF-protected endpoints and an owner-constrained resolution ledger. These actions do not send data to AI. Profile synthesis rendering is read-only; new AI processing still needs recipient/model-specific approval. Saved source quotations and earlier job snapshots retain the existing deletion disclosures.
+
+## Bounded source follow-up (ADR 0028)
+
+New-run approval may include a disclosed maximum of four additional source-follow-up calls with the selected recipient/model. Follow-up reads only the same owned approved text and retains exact source validation, CSRF, revisions, budgets and cooldowns. Embedded instructions remain source data. The optional flag cannot extend an older stored run; provider changes require renewed approval. Stored coverage excerpts are private run content, rendered as inert text and subject to the existing ownership and source-deletion rules. Local audit originals, manifests and extracted outputs stay outside Git; no private content is added to diagnostics.
