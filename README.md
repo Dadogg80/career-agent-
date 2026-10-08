@@ -60,7 +60,7 @@ Merged PR #14 added opt-in Groq analysis of one document or all readable uploade
 
 ## Improved competency workspace
 
-Search recorded competencies by skill/project/source and filter their review status. Document review uses full editable previews and sequential owned progress; manual source portions are no longer required in the primary workspace. Source-backed competencies, profile summaries and career history have separate result views. Exact repeated skill labels share company/project cards while different contributions retain their individual evidence and edit controls. Read-only document checks and explicitly requested local OCR remain available. See [whole-document review](docs/FULL_DOCUMENT_REVIEW.md) and [CV import](docs/CV_IMPORT.md) for source limits and Mac setup.
+Search recorded competencies by skill/project/source and filter their review status. Document review uses full editable previews and sequential owned progress; manual source portions are no longer required in the primary workspace. Source-backed competencies, profile summaries and career history have separate result views. The profile groups repeated skills across projects/documents into one card with combined existing explanations; confirmed evidence and drafts stay separate. Expand the card for each original contribution, source and edit/review controls. Document extraction proposals retain their company/project grouping. Read-only document checks and explicitly requested local OCR remain available. See [whole-document review](docs/FULL_DOCUMENT_REVIEW.md) and [CV import](docs/CV_IMPORT.md) for source limits and Mac setup.
 
 ## Local job library and matching
 
@@ -68,7 +68,7 @@ The current branch adds owned saved advertisement snapshots and a searchable lib
 
 ### Whole-document review and Groq optimization
 
-The current unpublished branch adds automatic document portions, editable sourced profile/history/competency drafts and section-based profile navigation. See [the workflow and limits](docs/FULL_DOCUMENT_REVIEW.md) and [Groq documentation findings/configuration](docs/GROQ_OPTIMIZATION.md). Model defaults remain unchanged pending live quality comparison.
+Merged PR #18 includes automatic document portions, editable sourced profile/history/competency drafts, documentary population and section-based profile navigation. See [the workflow and limits](docs/FULL_DOCUMENT_REVIEW.md) and [Groq documentation findings/configuration](docs/GROQ_OPTIMIZATION.md). Model defaults remain unchanged pending live quality comparison.
 
 ## Opt-in Gemini analysis
 
@@ -76,4 +76,4 @@ This delivery adds Gemini behind explicit task routing; publication and merge ar
 
 ## Latest delivery and AI recovery
 
-The Gemini/whole-document continuation was merged in [PR #16](https://github.com/Dadogg80/career-agent-/pull/16) on 2026-10-08. The related evidence-quality branch adds compact result sections, improved mixed PDF reading and explicit in-app provider recovery. With both backend keys configured, choose **Try with Gemini** after a Groq quota failure, review/approve the new recipient and continue the saved work. Actual provider/model badges retain older result attribution. FINN retrieval remains Groq/Exa; budgets and account quotas still apply. See [ADR 0026](docs/adr/0026-approved-ai-provider-recovery.md).
+The Gemini/whole-document continuation was merged in [PR #16](https://github.com/Dadogg80/career-agent-/pull/16) on 2026-10-08. The evidence-quality improvements merged in PR #17; PR #18 added documentary profile population and matching UX. The current follow-up consolidates profile skill cards and protects independent review decisions. With both backend keys configured, choose **Try with Gemini** after a Groq quota failure, review/approve the new recipient and continue the saved work. Actual provider/model badges retain older result attribution. FINN retrieval remains Groq/Exa; budgets and account quotas still apply. See [ADR 0026](docs/adr/0026-approved-ai-provider-recovery.md).

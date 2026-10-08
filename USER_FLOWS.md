@@ -380,3 +380,10 @@ Inspect complete document previews → choose automatic profile population → a
 Open competencies → default pending queue with a count → approve directly, edit a prefilled draft, set aside as draft or reject → item leaves pending and appears in the corresponding counted view. Expand source evidence as needed. Reopen or analyze again → current saved decisions remain; edited/rejected/deleted information is not restored automatically. Processed analysis wording may differ from later profile edits; use the linked profile record for current content.
 
 Open saved job → Vurder personlig match → relevant confirmed evidence is preselected within limits → optionally adjust → approve displayed recipient → AI comparison and documented coverage percentage with calculation. Clarify an unresolved criterion inline with your own experience → explicitly confirm and save to profile → reassess through fresh recipient approval. No automatic AI call follows clarification. Advertisement prose has bounded keyboard-accessible scrolling.
+
+
+## One profile card per competency
+
+Open **Your competencies** → one card per normalized skill across projects/documents → inspect the combined existing explanations, with confirmed evidence and drafts in separate sections → expand contributions for exact sources, editing and individual review/history/delete. Identical explanation text appears once in the summary with every context retained. Rejected contributions remain inspectable but do not enter the active summary. Search matches the skill group and retains its related contributions; status filters count distinct skills. Grouping makes no AI call and changes no claim status. Editing/review affects only the selected saved claim.
+
+Manual review identity includes the original contribution description. Two contributions sharing a skill/context/quotation keep independent decisions. Exact historical owned source-linked reviews can reconnect without the new ledger; ambiguous old deletion links block recreation without hiding unrelated proposals.

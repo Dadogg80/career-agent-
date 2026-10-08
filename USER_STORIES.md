@@ -361,3 +361,10 @@ As a document reviewer, I can switch between competencies, profile summary and c
 - As a candidate, I can approve, edit, save as draft or reject directly, with expandable exact evidence and a compact responsive list. My edits and decisions survive reanalysis.
 - As a candidate, I see the newest saved AI presentation with actual provider/model attribution; viewing my profile does not trigger another provider request.
 - As a candidate, matching preselects confirmed evidence, explains its requirement-coverage percentage, and lets me clarify missing evidence inline and explicitly save my own answer.
+
+
+## Consolidated competency presentation
+
+- As a candidate, I see one profile card for Next.js even when several documents/projects mention it. Acceptance: combined existing explanations, repeated text deduplicated, context/source details retained and no undisclosed AI request.
+- As a candidate, I see confirmed evidence separately from drafts in a mixed-status competency. Editing one contribution resets only its own confirmation. Rejected wording stays outside the active summary.
+- As a candidate, confirming a contribution does not approve a different contribution merely because both use the same skill, company and quotation. Decisions survive reopening and automatic reanalysis.

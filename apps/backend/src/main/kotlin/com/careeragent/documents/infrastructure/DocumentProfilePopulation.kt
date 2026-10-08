@@ -21,19 +21,27 @@ class DocumentProfilePopulation(private val jdbc: JdbcTemplate, private val clai
         if(normal(draft.context) in setOf("kontekst ikke oppgitt","context not stated"))draft.documentId.toString() else ""))
     private fun entryKey(draft:CareerHistoryDraft)=draft.content.let { c -> fingerprint(listOf(c.kind.name,c.title,c.organization,c.client,c.deliveryRole,draft.periodText,
         if(draft.periodText.isBlank())draft.documentId.toString() else "")) }
-    fun linkClaim(owner:UUID,draft:CompetencySuggestion,target:UUID)=link(owner,"CLAIM",claimKey(draft),target)
+    // Source identity survives AI rewording; review identity distinguishes separate contributions.
+    private fun reviewKey(draft: CompetencySuggestion) = fingerprint(listOf("REVIEW", claimKey(draft), draft.statement))
+    private fun blockerKey(draft: CompetencySuggestion) = fingerprint(listOf("SOURCE_BLOCKER", claimKey(draft)))
+    fun linkClaim(owner: UUID, draft: CompetencySuggestion, target: UUID) {
+        link(owner, "CLAIM", reviewKey(draft), target, "REVIEW")
+        link(owner, "CLAIM", blockerKey(draft), target, "SOURCE_BLOCKER")
+    }
     fun linkEntry(owner:UUID,draft:CareerHistoryDraft,target:UUID)=link(owner,"ENTRY",entryKey(draft),target)
-    private fun link(owner:UUID,kind:String,key:String,target:UUID) {
-        jdbc.update("INSERT INTO document_profile_import(owner_id,kind,fingerprint,claim_id,entry_id) VALUES(?,?,?,?,?) ON CONFLICT(owner_id,kind,fingerprint) DO UPDATE SET claim_id=EXCLUDED.claim_id,entry_id=EXCLUDED.entry_id",
-            owner,kind,key,if(kind=="CLAIM")target else null,if(kind=="ENTRY")target else null)
+    private fun link(owner:UUID,kind:String,key:String,target:UUID,purpose:String="DOCUMENT") {
+        jdbc.update("INSERT INTO document_profile_import(owner_id,kind,fingerprint,claim_id,entry_id,purpose) VALUES(?,?,?,?,?,?) ON CONFLICT(owner_id,kind,fingerprint) DO UPDATE SET claim_id=EXCLUDED.claim_id,entry_id=EXCLUDED.entry_id,purpose=EXCLUDED.purpose",
+            owner,kind,key,if(kind=="CLAIM")target else null,if(kind=="ENTRY")target else null,purpose)
     }
     fun decorate(identity:VerifiedIdentity,owner:UUID,state:DocumentRunState):DocumentRunState {
-        val ledger=jdbc.query("SELECT kind,fingerprint,claim_id,entry_id FROM document_profile_import WHERE owner_id=?",
-            { r,_ -> (r.getString(1) to r.getString(2)) to Previous(r.getObject(if(r.getString(1)=="CLAIM")3 else 4,UUID::class.java)) },owner).toMap()
-        if(ledger.isEmpty())return state
+        val ledger=jdbc.query("SELECT kind,fingerprint,claim_id,entry_id,purpose FROM document_profile_import WHERE owner_id=?",
+            { r,_ -> (r.getString(1) to r.getString(2)) to Previous(r.getObject(if(r.getString(1)=="CLAIM")3 else 4,UUID::class.java),r.getString(5)) },owner).toMap()
         val allClaims=claims.list(identity).associateBy { it.id };val allEntries=entries.list(identity).associateBy { it.id }
+        val legacy = legacyReviews(owner)
         val skills=state.analysis.suggestions.map { draft ->
-            val link=ledger["CLAIM" to claimKey(draft)] ?: return@map draft
+            val reviewed = ledger["CLAIM" to reviewKey(draft)] ?: legacy[reviewKey(draft)]
+            val source = ledger["CLAIM" to claimKey(draft)]?.takeIf { it.purpose == "DOCUMENT" && ledger["CLAIM" to blockerKey(draft)] == null }
+            val link = reviewed ?: source ?: return@map draft.copy(profileClaimId=null, reviewState=null)
             val claim=allClaims[link.target]
             val status=if(claim==null)"REMOVED" else if(claim.status==ClaimStatus.CONFIRMED && claim.confirmationBasis==ConfirmationBasis.DOCUMENT)"DOCUMENTED"
                 else when(claim.status){ClaimStatus.CONFIRMED->"CONFIRMED";ClaimStatus.REJECTED->"REJECTED";else->"DRAFT"}
@@ -46,10 +54,19 @@ class DocumentProfilePopulation(private val jdbc: JdbcTemplate, private val clai
         }
         return state.copy(analysis=state.analysis.copy(suggestions=skills,careerEntries=history))
     }
-    private data class Previous(val target: UUID?)
+    private data class Previous(val target: UUID?, val purpose: String = "REVIEW")
+    /** Reconnect pre-ledger reviews only through an exact historical contribution and owned source. */
+    private fun legacyReviews(owner: UUID): Map<String, Previous> = jdbc.query(
+        """SELECT claim_id,skill,statement,context,source_document_id,source_quote
+           FROM competency_claim_revision WHERE recorded_by=? AND action<>'DOCUMENT_IMPORT'
+           AND source_document_id IS NOT NULL AND source_quote IS NOT NULL""",
+        { r, _ -> reviewKey(CompetencySuggestion(r.getString(2),r.getString(3),r.getString(4),r.getString(6),r.getObject(5,UUID::class.java))) to r.getObject(1,UUID::class.java) }, owner
+    ).groupBy({ it.first }, { it.second }).mapNotNull { (key, ids) ->
+        ids.distinct().singleOrNull()?.let { key to Previous(it) }
+    }.toMap()
     private fun previous(owner: UUID, kind: String, key: String): Previous? = jdbc.query(
-        "SELECT claim_id,entry_id FROM document_profile_import WHERE owner_id=? AND kind=? AND fingerprint=?",
-        { r, _ -> Previous(r.getObject(if(kind=="CLAIM") 1 else 2,UUID::class.java)) },owner,kind,key).singleOrNull()
+        "SELECT claim_id,entry_id,purpose FROM document_profile_import WHERE owner_id=? AND kind=? AND fingerprint=?",
+        { r, _ -> Previous(r.getObject(if(kind=="CLAIM") 1 else 2,UUID::class.java),r.getString(3)) },owner,kind,key).singleOrNull()
     private fun remember(owner: UUID, kind: String, key: String, target: UUID) {
         jdbc.update("INSERT INTO document_profile_import(owner_id,kind,fingerprint,claim_id,entry_id) VALUES(?,?,?,?,?)",
             owner,kind,key,if(kind=="CLAIM")target else null,if(kind=="ENTRY")target else null)
@@ -61,6 +78,7 @@ class DocumentProfilePopulation(private val jdbc: JdbcTemplate, private val clai
     fun populate(identity: VerifiedIdentity, owner: UUID, state: DocumentRunState): DocumentRunState {
         val knownClaims=claims.list(identity).toMutableList()
         val knownEntries=entries.list(identity).toMutableList()
+        val legacy = legacyReviews(owner)
         var limited=state.populationLimited
         val suggestions=state.analysis.suggestions.map { draft ->
             val document=draft.documentId ?: return@map draft
@@ -68,8 +86,16 @@ class DocumentProfilePopulation(private val jdbc: JdbcTemplate, private val clai
             if(Regex("(?iu)\\b(?:not|never|without|no experience|ikke|aldri|mangler|ønsker|planlegger)\\b").containsMatchIn(draft.quote)) return@map draft
             val source=CompetencySource(document,draft.quote)
             val original=name(owner,source) ?: return@map draft
+            val reviewed = previous(owner,"CLAIM",reviewKey(draft)) ?: legacy[reviewKey(draft)]
+            if (reviewed != null) {
+                reviewed.target?.let { linkClaim(owner,draft,it) }
+                return@map draft.copy(profileClaimId=knownClaims.find { it.id==reviewed.target }?.id)
+            }
+            // A manual source decision blocks automatic recreation, but not other review items.
+            if (previous(owner,"CLAIM",blockerKey(draft)) != null) return@map draft.copy(profileClaimId=null,reviewState=null)
             val key=claimKey(draft)
             val previous=previous(owner,"CLAIM",key)
+            if (previous?.purpose == "LEGACY") return@map draft.copy(profileClaimId=null,reviewState=null)
             if(previous!=null) {
                 val claim=knownClaims.find { it.id==previous.target }
                 // Edited, rejected or deleted information is never restored by another analysis.

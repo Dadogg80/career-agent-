@@ -4,7 +4,7 @@ Status checked against remote main on 2026-10-08; the owner authorized publishin
 
 ## Current status
 
-PR #17 merged the document evidence/provider-recovery slice at `922c6171d32af654d99100625b94670a2d479ac3`; both Foundation checks passed. The new `feat/document-profile-population` continuation implements literal document-backed profile imports, saved history drafts, newest-analysis candidate presentation, explicit-list coverage recovery, a persistent compact review queue, automatic matching evidence planning, explained requirement percentages and inline personal clarification. This is branch implementation pending review/merge, not a main release. Provider routing and per-run recipient approval remain unchanged. The full knowledge graph and semantic completeness/repair loop remain separate.
+PR #18 merged the documentary-profile and matching slice at `5c896707202678e7fde339a994787654007ab0f2`; both Foundation checks passed. Literal document-backed competencies, saved history drafts, newest-analysis candidate presentation, explicit-list recovery, the persistent review queue, automatic matching evidence, explained percentages and inline clarification are merged. The new `fix/competency-review-identity` slice groups the profile into one card per skill while retaining contributions, sources and decisions; it also separates contribution review identity from literal source identity. This new slice is pending review/merge. Gemini 3.5 Flash-Lite passed the synthetic extraction/profile pipeline; defaults and explicit recipient approval remain unchanged. The full knowledge graph and semantic completeness/repair loop remain separate.
 
 | Capability | Actual status |
 | --- | --- |
@@ -24,8 +24,8 @@ PR #17 merged the document evidence/provider-recovery slice at `922c6171d32af654
 | Whole-document sourced profile/competency/history review | Merged in PR #16; explicit per-run approval and factual confirmation |
 | Task-specific model configuration and safe token/cache usage logging | Merged in PR #16; default unchanged, synthetic Gemini validation passed |
 | PDF character-spacing/column repair | Merged in PR #17; locally checked against seven unique private documents |
-| Documentary profile imports, history drafts and persistent review queue | Implemented on current branch (ADR 0027), pending review/merge |
-| Candidate presentation, automatic matching evidence, percentages and inline clarification | Implemented on current branch; newest-analysis synthesis, deterministic coverage |
+| Documentary profile imports, history drafts and persistent review queue | Merged in PR #18 (ADR 0027) |
+| Candidate presentation, automatic matching evidence, percentages and inline clarification | Merged in PR #18; newest-analysis synthesis, deterministic coverage |
 | Adjacent-skill inference, full normalized employment/project graph | Not implemented |
 | Owned saved job snapshots and searchable library | Merged in the tested local pilot |
 | Approved personal requirement-to-claim matching | Merged in the tested local pilot |

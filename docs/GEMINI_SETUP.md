@@ -38,7 +38,7 @@ AI_PROFILE_PROVIDER=gemini
 GEMINI_MODEL=gemini-3.5-flash
 ```
 
-Supported Gemini text models in this first adapter are stable Flash 3.5/3.6/3.7/3.8 and Flash-Lite 3.5/3.1. Availability in model listing is not generation readiness or quality certification. Only 3.5 Flash has passed the actual synthetic document extraction/profile pipeline in this instance. 3.8 Flash generation returned 503, so the Gemini-specific default is 3.5 Flash. Groq defaults remain unchanged. No `latest` alias, Pro preview, paid Search grounding, explicit remote cache, uploaded remote files or native PDF/URL Context is enabled.
+Supported Gemini text models in this first adapter are stable Flash 3.5/3.6/3.7/3.8 and Flash-Lite 3.5/3.1. Availability in model listing is not generation readiness or quality certification. Both 3.5 Flash and 3.5 Flash-Lite have passed the actual synthetic document extraction/profile pipeline in this instance. The Flash-Lite check made two synthetic calls (1,952 total tokens), returned 11 competency proposals, two history drafts and six sourced profile sections, and excluded explicitly unsupported technologies. This is a small fixture check, not exhaustive real-CV validation or a rate-limit guarantee. 3.8 Flash generation returned 503, so the Gemini-specific default is 3.5 Flash. Groq defaults remain unchanged. No `latest` alias, Pro preview, paid Search grounding, explicit remote cache, uploaded remote files or native PDF/URL Context is enabled.
 
 FINN retrieval still uses Groq Browser Search/Exa independently. Selecting Gemini analysis does not remove that source quota. Pasted text bypasses retrieval. When analysis uses Gemini, the frontend skips the Groq-to-Groq ten-second pacing pause. Document workflows use `DOCUMENT_GEMINI_BATCH_DELAY_SECONDS` (default 5, bounded 0..300) for the next Gemini step; Groq keeps `DOCUMENT_AI_BATCH_DELAY_SECONDS` (default 65). Neither delay guarantees capacity.
 
@@ -48,7 +48,7 @@ FINN retrieval still uses Groq Browser Search/Exa independently. Selecting Gemin
 
 Changing recipient/model resets approval on the client and is checked again by the backend before sending. Workflow approval is persisted, so changing configuration cannot silently migrate a stored run to a new provider. Old clients/runs without a fingerprint may use their explicitly approved Groq recipient only; Gemini requires the current fingerprint. Existing sourced drafts remain available for review after a configuration change.
 
-All output remains unverified until the user explicitly confirms it. JSON Schema does not prove facts. Source passages, literal technologies, nearby employer/project evidence and exact quotation checks are unchanged. Broader responsibilities receive literal source labels and editable explanatory descriptions. Final synthesis includes career-history evidence and preserves already sourced profile sections when synthesis omits them.
+Generated wording remains unverified until the user explicitly confirms it. Optional documentary population can register literal source assertions with DOCUMENT basis under ADR 0027; that is distinct from personal USER confirmation. JSON Schema does not prove facts. Source passages, literal technologies, nearby employer/project evidence and exact quotation checks are unchanged. Broader responsibilities receive literal source labels and editable explanatory descriptions. Final synthesis includes career-history evidence and preserves already sourced profile sections when synthesis omits them.
 
 Gemini uses the stateless `generateContent` endpoint with its key in a header, separate instructions/data, JSON Schema and low thinking. Output budgets include thinking and must leave room for complete structured results. Blocked, truncated, empty and malformed responses keep prior work. 429 records the longest usable bounded header/RetryInfo wait in a Gemini-specific cooldown, without retry loops or provider switching. Invalid configuration, access denial, outages and rejected output stay distinct internally. UI recovery text explains preserved information.
 
@@ -75,3 +75,17 @@ Keep `GROQ_API_KEY` and `GEMINI_API_KEY` in the ignored backend `.env`. `AI_PROV
 For documents and personal matching, selecting another provider resets approval. Review the same private preview and approve the newly displayed recipient before continuing. Document recovery resumes the saved run at its next unfinished portion. The old result is retained and carries its original model metadata. The alternate provider can also be quota-limited; switching does not reset pilot budgets or promise success.
 
 FINN search still uses Groq/Exa. Gemini recovery applies to analysis of already received advertisement text, document extraction/profile synthesis and personal matching, not to fetching a FINN URL. No key is sent to the browser. Older saved results without model metadata show “model not recorded”.
+
+
+## Optional Flash-Lite task split
+
+The existing adapter supports `gemini-3.5-flash-lite` for structured output. To choose it for document extraction and profile summaries, add these task overrides to the ignored backend `.env` and restart the backend:
+
+```dotenv
+AI_DOCUMENT_PROVIDER=gemini
+AI_PROFILE_PROVIDER=gemini
+GEMINI_DOCUMENT_MODEL=gemini-3.5-flash-lite
+GEMINI_PROFILE_MODEL=gemini-3.5-flash-lite
+```
+
+Other task defaults remain unchanged; matching can keep 3.5 Flash. An existing approved run does not silently change model: inspect and approve the displayed new selection before further private processing. Active project/tier/model quotas must be checked in AI Studio; a larger context window is not the rate limit, and model splitting cannot guarantee capacity. Antigravity is not a generateContent model ID and cannot be substituted into these variables. The current integration uses the Gemini API directly. See [the official Flash-Lite model](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite) and [rate-limit documentation](https://ai.google.dev/gemini-api/docs/rate-limits).

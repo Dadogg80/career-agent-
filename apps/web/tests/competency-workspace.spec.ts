@@ -33,7 +33,7 @@ test("competency search combines context with status filters and separates confi
   await page.goto("/career/profile"); await page.getByRole("button", {name:"Din kompetanse",exact:true}).click();
   const panel = page.locator("#profile-competencies");
   await expect(panel.locator(".competency-stats")).toContainText("Kompetanseområder");
-  await expect(panel.getByRole("article")).toHaveCount(3);
+  await expect(panel.getByRole("article")).toHaveCount(2);
   await panel.getByRole("textbox", { name:"Søk i kompetanse", exact:true }).fill("Bank project");
   await expect(panel.getByRole("article")).toHaveCount(2);
   await panel.getByRole("button", { name:"Bekreftet (1)", exact:true }).click();
@@ -41,7 +41,7 @@ test("competency search combines context with status filters and separates confi
   await panel.getByRole("textbox", { name:"Søk i kompetanse", exact:true }).fill("no match");
   await expect(panel.getByText("Ingen opplysninger i denne kategorien.", { exact:true })).toBeVisible();
   await panel.getByRole("textbox", { name:"Søk i kompetanse", exact:true }).fill("");
-  await panel.getByRole("button", { name:"Alle (3)", exact:true }).click();
+  await panel.getByRole("button", { name:"Alle (2)", exact:true }).click();
   await page.screenshot({ path:"/tmp/competency-workspace-desktop.png", fullPage:true });
   await page.setViewportSize({ width:390, height:844 });
   expect(await page.evaluate(() => window.document.documentElement.scrollWidth <= innerWidth)).toBe(true);
