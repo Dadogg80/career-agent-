@@ -372,3 +372,11 @@ Load the non-secret AI configuration → show recipients and models beside the e
 ## Approved provider recovery — 2026-10-08
 
 AI quota/failure → retain result and source → Try with alternate configured provider → update compact provider/model identity → clear private consent → review approved source selection → approve new recipient → continue unfinished document portion or retry matching/public extraction. No request runs merely because a provider is selected. Public extraction reuses received text. A changed document preview requires a new run or explicit restoration of saved text. FINN retrieval remains Groq/Exa.
+
+## Profile population and compact review queue (ADR 0027)
+
+Inspect complete document previews → choose automatic profile population → approve displayed AI recipients → sequential analysis saves literal documented competencies and unverified history. The newest saved synthesis appears in the profile. Explicit technology lists are checked locally for omitted labels without extra AI calls.
+
+Open competencies → default pending queue with a count → approve directly, edit a prefilled draft, set aside as draft or reject → item leaves pending and appears in the corresponding counted view. Expand source evidence as needed. Reopen or analyze again → current saved decisions remain; edited/rejected/deleted information is not restored automatically. Processed analysis wording may differ from later profile edits; use the linked profile record for current content.
+
+Open saved job → Vurder personlig match → relevant confirmed evidence is preselected within limits → optionally adjust → approve displayed recipient → AI comparison and documented coverage percentage with calculation. Clarify an unresolved criterion inline with your own experience → explicitly confirm and save to profile → reassess through fresh recipient approval. No automatic AI call follows clarification. Advertisement prose has bounded keyboard-accessible scrolling.

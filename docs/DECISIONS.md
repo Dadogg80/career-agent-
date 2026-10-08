@@ -142,3 +142,7 @@ Accepted: Gemini adapter behind explicit task routing, recipient/model-bound pri
 Accepted: allow a user to retry an AI operation with Gemini after a Groq quota failure through a compact dynamic provider/model control. Use renewed private recipient approval and preserve existing evidence/progress; no silent model rotation or budget bypass. Implemented in ADR 0026. Native Gemini FINN retrieval is not part of this change.
 
 Queued owner requests: automatic document-grounded profile population, automatic evidence selection for matching, explainable percentage scores, inline user clarification/confirmation and an incrementally refreshed AI presentation. The owner asked to distinguish document-confirmed facts from inferred skills. Current delivery retains explicit factual review; those domain/status changes are not yet implemented or claimed complete.
+
+## 2026-10-08 — Documentary profile population and compact review
+
+Accepted owner requests are implemented in ADR 0027: separate documentary/personal basis, atomic automatic literal imports and history drafts, persistent processed/pending queue, newest saved candidate presentation, automatic bounded matching evidence, explained percentages and inline personal clarification. This supersedes the queued status above for these specific capabilities, not the full semantic knowledge-model roadmap. No additional AI call is made for review decisions, local list recovery, presentation reads or initial evidence planning.

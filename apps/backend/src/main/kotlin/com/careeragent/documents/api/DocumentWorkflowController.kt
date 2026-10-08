@@ -20,13 +20,14 @@ class DocumentWorkflowController(private val workflows:ObjectProvider<DocumentAn
     private fun scope(value:String)=if(value=="collection")value else id(value).toString()
     private fun keys(input:Map<String,Any?>,keys:Set<String>) {if(input.keys!=keys)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)}
     private fun revision(input:Map<String,Any?>):Long {val r=input["revision"];if(r !is Int && r !is Long)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400);return (r as Number).toLong()}
-    @GetMapping fun latest(@AuthenticationPrincipal principal:OidcUser?,@RequestParam scope:String)=response(mapOf("run" to workflow().latest(identity(principal),scope(scope))))
+    @GetMapping fun latest(@AuthenticationPrincipal principal:OidcUser?,@RequestParam scope:String)=response(mapOf("run" to workflow().latest(identity(principal),(if(scope=="profile")scope else scope(scope)))))
     @PostMapping(consumes=["application/json"]) fun start(@AuthenticationPrincipal principal:OidcUser?,@RequestBody input:Map<String,Any?>):Any {
-        keys(input.filterKeys { it!="aiApproval" },setOf("scope","documents","locale","consent"))
+        keys(input.filterKeys { it!="aiApproval" && it!="populateProfile" },setOf("scope","documents","locale","consent"))
+        if(input.containsKey("populateProfile") && input["populateProfile"] !is Boolean)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
         if(input.containsKey("aiApproval") && input["aiApproval"] !is String)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
         if(input["scope"] !is String || input["locale"] !is String || input["consent"] !is Boolean || input["documents"] !is List<*>)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
         val documents=(input["documents"] as List<*>).map { item -> if(item !is Map<*,*> || item.keys!=setOf("documentId","text") || item["documentId"] !is String || item["text"] !is String)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400);DocumentExcerpt(id(item["documentId"] as String),item["text"] as String) }
-        return response(workflow().start(identity(principal),scope(input["scope"] as String),documents,input["locale"] as String,input["consent"] as Boolean,input["aiApproval"] as? String))
+        return response(workflow().start(identity(principal),scope(input["scope"] as String),documents,input["locale"] as String,input["consent"] as Boolean,input["aiApproval"] as? String,input["populateProfile"] as? Boolean ?: false))
     }
     @PostMapping("/{runId}/provider",consumes=["application/json"])
     fun provider(@AuthenticationPrincipal principal:OidcUser?,@PathVariable runId:String,@RequestBody input:Map<String,Any?>):Any {
@@ -44,9 +45,10 @@ class DocumentWorkflowController(private val workflows:ObjectProvider<DocumentAn
         return response(workflow().importEntry(identity(principal),id(runId),id(key),content,input["confirm"] as Boolean))
     }
     @PostMapping("/{runId}/claims",consumes=["application/json"]) fun importClaim(@AuthenticationPrincipal principal:OidcUser?,@PathVariable runId:String,@RequestBody input:Map<String,Any?>):Any {
-        keys(input,setOf("revision","index","skill","statement","context","confirm"))
+        keys(input.filterKeys {it!="reject"},setOf("revision","index","skill","statement","context","confirm"))
+        if(input.containsKey("reject") && input["reject"] !is Boolean || input["reject"]==true && input["confirm"]==true)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
         if(input["index"] !is Int || input["skill"] !is String || input["statement"] !is String || input["context"] !is String || input["confirm"] !is Boolean)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
-        return response(workflow().importClaim(identity(principal),id(runId),revision(input),input["index"] as Int,input["skill"] as String,input["statement"] as String,input["context"] as String,input["confirm"] as Boolean))
+        return response(workflow().importClaim(identity(principal),id(runId),revision(input),input["index"] as Int,input["skill"] as String,input["statement"] as String,input["context"] as String,input["confirm"] as Boolean,input["reject"] as? Boolean ?: false))
     }
     @ExceptionHandler(com.careeragent.profile.application.ClaimFailure::class) fun claimFailure(error:com.careeragent.profile.application.ClaimFailure)=org.springframework.http.ResponseEntity.status(error.status).header("Cache-Control","no-store").body(mapOf("code" to error.code))
     @PutMapping("/{runId}/summary",consumes=["application/json"]) fun summary(@AuthenticationPrincipal principal:OidcUser?,@PathVariable runId:String,@RequestBody input:Map<String,Any?>):Any {

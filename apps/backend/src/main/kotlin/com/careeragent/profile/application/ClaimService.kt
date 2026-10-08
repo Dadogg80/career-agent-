@@ -10,6 +10,7 @@ interface ClaimRepository {
     fun list(identity: VerifiedIdentity): List<CompetencyClaim>
     fun evidence(identity: VerifiedIdentity, id: UUID): List<ClaimEvidence>
     fun create(identity: VerifiedIdentity, content: ClaimContent): CompetencyClaim
+    fun importDocumentFact(identity: VerifiedIdentity, content: ClaimContent): CompetencyClaim
     fun edit(identity: VerifiedIdentity, id: UUID, content: ClaimContent, revision: Long): CompetencyClaim
     fun review(identity: VerifiedIdentity, id: UUID, decision: ReviewDecision, revision: Long): CompetencyClaim
     fun history(identity: VerifiedIdentity, id: UUID): ClaimHistory
@@ -22,6 +23,15 @@ class ClaimService(private val claims: ClaimRepository) {
     fun evidence(identity: VerifiedIdentity, id: UUID) = claims.evidence(identity, id)
     fun list(identity: VerifiedIdentity) = claims.list(identity)
     fun create(identity: VerifiedIdentity, content: ClaimContent) = claims.create(identity, validated(content))
+    /** Internal import: documentary confirmation applies to the literal source, never generated wording. */
+    fun importDocumentFact(identity: VerifiedIdentity, content: ClaimContent): CompetencyClaim {
+        val checked = validated(content)
+        val quote = checked.sourceQuote
+        if (checked.sourceDocumentId == null || quote == null || checked.statement != quote.trim() ||
+            !Regex("(?<![\\p{L}\\p{N}_+#])" + Regex.escape(checked.skill) + "(?![\\p{L}\\p{N}_+#])", RegexOption.IGNORE_CASE).containsMatchIn(quote))
+            throw ClaimFailure("CLAIM_INVALID", 400)
+        return claims.importDocumentFact(identity, checked)
+    }
     fun edit(identity: VerifiedIdentity, id: UUID, content: ClaimContent, revision: Long): CompetencyClaim {
         checkRevision(revision)
         return claims.edit(identity, id, validated(content), revision)

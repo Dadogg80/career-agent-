@@ -37,13 +37,13 @@ export function JobOverview({ facts, locale, sourceLocale, fallbackText, sourceT
     <div className="employer-overview-grid">
       <Card className="employer-card">
         <CardHeader><div className="overview-card-heading"><Building2 size={18} aria-hidden="true"/><h5>{t.company}</h5></div><p className="hint">{t.source}</p></CardHeader>
-        <CardContent>{narrative("COMPANY").length ? paragraphs(narrative("COMPANY")) : <p className="hint">{t.missing}</p>}</CardContent>
+        <CardContent><div className="advertisement-section-reader" role="region" aria-label={t.company} tabIndex={0}>{narrative("COMPANY").length ? paragraphs(narrative("COMPANY")) : <p className="hint">{t.missing}</p>}</div></CardContent>
       </Card>
       <div className="employer-sections">
         {sections.filter(section => section.kind === "ROLE" || narrative(section.kind).length).map(section => <Card key={section.kind} className="employer-section">
           <details open={section.kind === "ROLE"}>
             <summary><span>{section.label}</span><ChevronDown size={18} aria-hidden="true"/></summary>
-            <CardContent>{narrative(section.kind).length ? paragraphs(narrative(section.kind)) : section.kind === "ROLE" && fallbackText ? <p className="employer-excerpt fallback-advertisement" lang={sourceLocale}>{fallbackText}</p> : <p className="hint">{t.missing}</p>}</CardContent>
+            <CardContent><div className="advertisement-section-reader" role="region" aria-label={section.label} tabIndex={0}>{narrative(section.kind).length ? paragraphs(narrative(section.kind)) : section.kind === "ROLE" && fallbackText ? <p className="employer-excerpt fallback-advertisement" lang={sourceLocale}>{fallbackText}</p> : <p className="hint">{t.missing}</p>}</div></CardContent>
           </details>
         </Card>)}
       </div>

@@ -43,7 +43,14 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
             pieces.asSequence()
         }.filter { it.isNotBlank() }.map { Passage(it) }.toList()
         val input = mapper.writeValueAsString(mapOf("passages" to passages.mapIndexed { id, p -> mapOf("id" to id, "text" to p.text) }))
-        return parse(model.generateJson(prompt(locale), input, schema(), AiTask.DOCUMENT_EXTRACTION), passages, batch.documentId, approved, locale)
+        val output=model.generateJson(prompt(locale), input, schema(), AiTask.DOCUMENT_EXTRACTION)
+        val parsed=try { parse(output,passages,batch.documentId,approved,locale) } catch(error: AiFailure) {
+            val recovered=DocumentCompetencyInventory.recover(batch,approved,locale,emptyList())
+            if(error.code!="AI_INVALID_RESULT" || recovered.isEmpty())throw error
+            return Result(recovered,emptyList(),emptyList(),1)
+        }
+        val recovered=DocumentCompetencyInventory.recover(batch,approved,locale,parsed.suggestions)
+        return parsed.copy(suggestions=parsed.suggestions+recovered)
     }
     internal fun parse(output: String, passages: List<Passage>, documentId: UUID, source: String, locale: String): Result {
         val root = try { mapper.readTree(output) } catch (_: Exception) { throw AiFailure("AI_INVALID_RESULT",502) }
@@ -65,7 +72,7 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
             }
             require(quote.length <= 1000 && source.contains(quote)); return quote
         }
-        fun literal(label: String, quote: String) = Regex("(?<![\\p{L}\\p{N}_])" + Regex.escape(label) + "(?![\\p{L}\\p{N}_])",RegexOption.IGNORE_CASE).find(quote)?.value
+        fun literal(label: String, quote: String) = Regex("(?<![\\p{L}\\p{N}_+#])" + Regex.escape(label) + "(?![\\p{L}\\p{N}_+#])",RegexOption.IGNORE_CASE).find(quote)?.value
         fun <T> read(block: () -> T): T? = try { block() } catch (_: IllegalArgumentException) { omitted++; null }
         val competencies = root["competencies"].flatMap { node -> read {
             val quote = selected(node); require(quote.length <= 600)

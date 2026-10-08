@@ -15,7 +15,7 @@ import java.util.UUID
 class JdbcClaimRepository(private val jdbc: JdbcTemplate) : ClaimRepository {
     private val mapper = RowMapper { row, _ -> CompetencyClaim(
         row.getObject("id", UUID::class.java), row.getString("skill"), row.getString("statement"), row.getString("context"), row.getString("source_note"),
-        ClaimStatus.valueOf(row.getString("status")), row.getLong("revision"), row.getObject("created_at", OffsetDateTime::class.java), row.getObject("updated_at", OffsetDateTime::class.java), row.getObject("source_document_id", UUID::class.java), row.getString("source_quote"),
+        ClaimStatus.valueOf(row.getString("status")), row.getLong("revision"), row.getObject("created_at", OffsetDateTime::class.java), row.getObject("updated_at", OffsetDateTime::class.java), row.getObject("source_document_id", UUID::class.java), row.getString("source_quote"), ConfirmationBasis.valueOf(row.getString("confirmation_basis")),
     ) }
     private fun owner(identity: VerifiedIdentity, lock: Boolean = false): UUID = jdbc.query(
         """SELECT u.id FROM app_user u JOIN career_profile p ON p.owner_id = u.id
@@ -29,13 +29,13 @@ class JdbcClaimRepository(private val jdbc: JdbcTemplate) : ClaimRepository {
         if (claim.revision != revision) throw ClaimFailure("CLAIM_CONFLICT", 409)
     }
     private fun record(owner: UUID, claim: CompetencyClaim, action: ClaimAction) {
-        jdbc.update("""INSERT INTO competency_claim_revision(claim_id, revision, recorded_by, skill, statement, context, source_note, status, action, source_document_id, source_quote)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", claim.id, claim.revision, owner, claim.skill, claim.statement, claim.context, claim.sourceNote, claim.status.name, action.name, claim.sourceDocumentId, claim.sourceQuote)
+        jdbc.update("""INSERT INTO competency_claim_revision(claim_id, revision, recorded_by, skill, statement, context, source_note, status, action, source_document_id, source_quote, confirmation_basis)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", claim.id, claim.revision, owner, claim.skill, claim.statement, claim.context, claim.sourceNote, claim.status.name, action.name, claim.sourceDocumentId, claim.sourceQuote, claim.confirmationBasis.name)
     }
 
     @Transactional(readOnly = true)
     override fun list(identity: VerifiedIdentity): List<CompetencyClaim> = jdbc.query(
-        "SELECT * FROM competency_claim WHERE owner_id = ? ORDER BY created_at DESC, id LIMIT 100", mapper, owner(identity),
+        "SELECT * FROM competency_claim WHERE owner_id = ? ORDER BY created_at DESC, id LIMIT 500", mapper, owner(identity),
     )
 
     private fun normalized(value: String) = java.text.Normalizer.normalize(value,java.text.Normalizer.Form.NFC).trim().replace(Regex("(?U)\\s+")," ").lowercase(java.util.Locale.ROOT)
@@ -59,7 +59,7 @@ class JdbcClaimRepository(private val jdbc: JdbcTemplate) : ClaimRepository {
         val knownContext=normalized(content.context) !in setOf("kontekst ikke oppgitt","context not stated")
         val existing=jdbc.query("SELECT * FROM competency_claim WHERE owner_id=?",mapper,owner).firstOrNull { normalized(it.skill)==normalized(content.skill) && normalized(it.statement)==normalized(content.statement) && normalized(it.context)==normalized(content.context) && (knownContext || it.sourceDocumentId==content.sourceDocumentId && it.sourceNote==content.sourceNote) }
         if(existing!=null) { attach(owner,existing.id,content);return existing }
-        if (jdbc.queryForObject("SELECT COUNT(*) FROM competency_claim WHERE owner_id = ?", Long::class.java, owner)!! >= 100) throw ClaimFailure("CLAIM_LIMIT", 409)
+        if (jdbc.queryForObject("SELECT COUNT(*) FROM competency_claim WHERE owner_id = ?", Long::class.java, owner)!! >= 500) throw ClaimFailure("CLAIM_LIMIT", 409)
         val id = UUID.randomUUID()
         jdbc.update("""INSERT INTO competency_claim(id, owner_id, skill, statement, context, source_note, status, revision, source_document_id, source_quote)
             VALUES (?, ?, ?, ?, ?, ?, 'UNVERIFIED', 1, ?, ?)""", id, owner, content.skill, content.statement, content.context, content.sourceNote, content.sourceDocumentId, content.sourceQuote)
@@ -68,10 +68,33 @@ class JdbcClaimRepository(private val jdbc: JdbcTemplate) : ClaimRepository {
     }
 
     @Transactional
+    override fun importDocumentFact(identity: VerifiedIdentity, content: ClaimContent): CompetencyClaim {
+        val owner = owner(identity, true)
+        val existing = jdbc.query("SELECT * FROM competency_claim WHERE owner_id=?", mapper, owner).firstOrNull {
+            normalized(it.skill)==normalized(content.skill) && normalized(it.statement)==normalized(content.statement) &&
+                normalized(it.context)==normalized(content.context) &&
+                (normalized(content.context) !in setOf("kontekst ikke oppgitt", "context not stated") || it.sourceDocumentId==content.sourceDocumentId)
+        }
+        // Import cannot change a previously edited/reviewed claim or its evidence.
+        if (existing != null) {
+            if (existing.status==ClaimStatus.CONFIRMED && existing.confirmationBasis==ConfirmationBasis.DOCUMENT && existing.revision==1L)
+                attach(owner, existing.id, content)
+            return existing
+        }
+        if (jdbc.queryForObject("SELECT COUNT(*) FROM competency_claim WHERE owner_id=?", Long::class.java, owner)!! >= 500)
+            throw ClaimFailure("CLAIM_LIMIT",409)
+        val id=UUID.randomUUID()
+        jdbc.update("INSERT INTO competency_claim(id,owner_id,skill,statement,context,source_note,status,revision,source_document_id,source_quote,confirmation_basis) VALUES(?,?,?,?,?,?,'CONFIRMED',1,?,?,'DOCUMENT')",
+            id,owner,content.skill,content.statement,content.context,content.sourceNote,content.sourceDocumentId,content.sourceQuote)
+        attach(owner,id,content)
+        return current(owner,id).also { record(owner,it,ClaimAction.DOCUMENT_IMPORT) }
+    }
+
+    @Transactional
     override fun edit(identity: VerifiedIdentity, id: UUID, content: ClaimContent, revision: Long): CompetencyClaim {
         val owner = owner(identity, true)
         expected(current(owner, id), revision)
-        jdbc.update("""UPDATE competency_claim SET skill = ?, statement = ?, context = ?, source_note = ?, status = ?, revision = revision + 1,
+        jdbc.update("""UPDATE competency_claim SET skill = ?, statement = ?, context = ?, source_note = ?, confirmation_basis = 'NONE', status = ?, revision = revision + 1,
             updated_at = CURRENT_TIMESTAMP WHERE owner_id = ? AND id = ? AND revision = ?""", content.skill, content.statement, content.context, content.sourceNote, ClaimPolicy.afterContentEdit().name, owner, id, revision)
         return current(owner, id).also { record(owner, it, ClaimAction.CONTENT_EDIT) }
     }
@@ -81,8 +104,8 @@ class JdbcClaimRepository(private val jdbc: JdbcTemplate) : ClaimRepository {
         val owner = owner(identity, true)
         val claim = current(owner, id)
         expected(claim, revision)
-        val (status, action) = try { ClaimPolicy.review(claim.status, decision) } catch (_: IllegalArgumentException) { throw ClaimFailure("CLAIM_REVIEW_INVALID", 400) }
-        jdbc.update("UPDATE competency_claim SET status = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE owner_id = ? AND id = ? AND revision = ?", status.name, owner, id, revision)
+        val (status, action) = try { ClaimPolicy.review(if(claim.confirmationBasis==ConfirmationBasis.DOCUMENT && decision==ReviewDecision.CONFIRM) ClaimStatus.UNVERIFIED else claim.status, decision) } catch (_: IllegalArgumentException) { throw ClaimFailure("CLAIM_REVIEW_INVALID", 400) }
+        jdbc.update("UPDATE competency_claim SET status = ?, confirmation_basis = ?, revision = revision + 1, updated_at = CURRENT_TIMESTAMP WHERE owner_id = ? AND id = ? AND revision = ?", status.name, if(status==ClaimStatus.CONFIRMED) "USER" else "NONE", owner, id, revision)
         return current(owner, id).also { record(owner, it, action) }
     }
 
@@ -94,7 +117,7 @@ class JdbcClaimRepository(private val jdbc: JdbcTemplate) : ClaimRepository {
             WHERE c.owner_id = ? AND c.id = ? ORDER BY r.revision DESC LIMIT 20""", { row, _ -> ClaimRevision(
             row.getLong("revision"), row.getString("skill"), row.getString("statement"), row.getString("context"), row.getString("source_note"),
             ClaimStatus.valueOf(row.getString("status")), ClaimAction.valueOf(row.getString("action")), row.getObject("recorded_at", OffsetDateTime::class.java),
-            sourceDocumentId = row.getObject("source_document_id", UUID::class.java), sourceQuote = row.getString("source_quote"),
+            sourceDocumentId = row.getObject("source_document_id", UUID::class.java), sourceQuote = row.getString("source_quote"), confirmationBasis = ConfirmationBasis.valueOf(row.getString("confirmation_basis")),
         ) }, owner, id)
         val total = jdbc.queryForObject("SELECT COUNT(*) FROM competency_claim_revision WHERE claim_id = ? AND recorded_by = ?", Long::class.java, id, owner)!!
         return ClaimHistory(items, total)

@@ -132,11 +132,11 @@ class ClaimSecurityIntegrationTest {
 
     @Test fun `the local claim limit rejects excess entries without extra history`() {
         val user = profile(); val identity = VerifiedIdentity(issuer, user)
-        repeat(100) { claims.create(identity, ClaimContent("Kotlin", "Built a service", "Synthetic project $it", "Manual recollection")) }
-        assertThat(claims.list(identity)).hasSize(100)
+        repeat(500) { claims.create(identity, ClaimContent("Kotlin", "Built a service", "Synthetic project $it", "Manual recollection")) }
+        assertThat(claims.list(identity)).hasSize(500)
         assertThatThrownBy { claims.create(identity, ClaimContent("Extra", "Built another service", "Synthetic", "Manual")) }
             .isInstanceOfSatisfying(ClaimFailure::class.java) { assertThat(it.code).isEqualTo("CLAIM_LIMIT") }
-        assertThat(claims.list(identity)).hasSize(100)
+        assertThat(claims.list(identity)).hasSize(500)
     }
 
     companion object {

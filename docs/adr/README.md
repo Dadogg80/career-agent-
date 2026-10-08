@@ -38,3 +38,5 @@ Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert i
 - [0025 Explicit AI providers and recipient-bound approvals](0025-explicit-ai-providers-and-approval.md) — accepted local pilot; Gemini routing, explicit recipients and safe continuation.
 
 - [0026 Approved AI provider recovery](0026-approved-ai-provider-recovery.md) — accepted local pilot; request-local selection, retained progress, renewed private consent and actual model attribution.
+
+- [0027 — Documentary profile population and persistent review queue](0027-document-profile-population-and-review-queue.md)

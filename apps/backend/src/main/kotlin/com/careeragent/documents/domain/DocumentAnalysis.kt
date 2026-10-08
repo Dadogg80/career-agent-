@@ -5,9 +5,9 @@ import java.util.UUID
 
 data class CompetencySummary(val text: String, val quote: String, val documentId: UUID? = null)
 data class CompetencySource(val documentId: UUID, val quote: String)
-data class CompetencySuggestion(val skill: String, val statement: String, val context: String, val quote: String, val documentId: UUID? = null, val additionalSources: List<CompetencySource> = emptyList(), val contextQuote: String? = null, val category: String = "OTHER", val drafted: Boolean = false)
+data class CompetencySuggestion(val skill: String, val statement: String, val context: String, val quote: String, val documentId: UUID? = null, val additionalSources: List<CompetencySource> = emptyList(), val contextQuote: String? = null, val category: String = "OTHER", val drafted: Boolean = false, val recovered: Boolean = false, val profileClaimId: UUID? = null, val reviewState: String? = null)
 data class ProfileSummaryDraft(val kind: String, val text: String, val documentId: UUID, val quote: String, val additionalSources: List<CompetencySource> = emptyList())
-data class CareerHistoryDraft(val key: UUID, val content: com.careeragent.profile.domain.CareerEntryContent, val periodText: String, val documentId: UUID, val quote: String, val additionalSources: List<CompetencySource> = emptyList())
+data class CareerHistoryDraft(val key: UUID, val content: com.careeragent.profile.domain.CareerEntryContent, val periodText: String, val documentId: UUID, val quote: String, val additionalSources: List<CompetencySource> = emptyList(), val profileEntryId: UUID? = null, val reviewState: String? = null)
 data class AnalysisDocument(val documentId: UUID, val originalName: String, val inputCharacters: Int, val sourceCharacters: Int)
 data class DocumentExcerpt(val documentId: UUID, val text: String)
 data class DocumentAnalysis(val id: UUID, val locale: String, val provider: String,

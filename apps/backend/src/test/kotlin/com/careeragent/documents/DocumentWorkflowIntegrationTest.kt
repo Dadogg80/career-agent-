@@ -182,6 +182,94 @@ class DocumentWorkflowIntegrationTest {
         mvc.perform(get("$path/${run["id"].asText()}").with(caller(user))).andExpect(status().isNotFound)
         verifyNoInteractions(model)
     }
+    @Test fun `automatic population preserves literal documentary basis and fills editable history without replay writes`() {
+        val user=profile();val ids=listOf(upload(user),upload(user));stub()
+        val initial=post(user,path,body(ids)+mapOf("populateProfile" to true))
+        val first=next(user,initial)
+        assertThat(first["populateProfile"].asBoolean()).isTrue()
+        val list=json.readTree(mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(status().isOk).andReturn().response.contentAsString)
+        assertThat(list.size()).isEqualTo(2)
+        assertThat(list.map { it["confirmationBasis"].asText() }).containsOnly("DOCUMENT")
+        assertThat(list.map { it["status"].asText() }).containsOnly("CONFIRMED")
+        assertThat(list.map { it["statement"].asText() }).containsOnly("Built APIs using Kotlin and PostgreSQL.")
+        assertThat(list.toString()).doesNotContain("Utviklet API-er")
+        val history=json.readTree(mvc.perform(get("/api/profile/me/entries").with(caller(user))).andReturn().response.contentAsString)
+        assertThat(history.size()).isEqualTo(1)
+        assertThat(history[0]["status"].asText()).isEqualTo("UNVERIFIED")
+        assertThat(history[0]["content"]["startMonth"].isNull).isTrue()
+        assertThat(next(user,initial)).isEqualTo(first)
+        val complete=next(user,next(user,first))
+        assertThat(complete["status"].asText()).isEqualTo("COMPLETED")
+        assertThat(complete["analysis"]["suggestions"].all { it["profileClaimId"].isTextual }).isTrue()
+        mvc.perform(get("$path?scope=profile").with(caller(user))).andExpect(status().isOk).andExpect(jsonPath("$.run.id").value(initial["id"].asText()))
+        mvc.perform(get("$path?scope=profile").with(caller(profile()))).andExpect(jsonPath("$.run").isEmpty)
+        val kotlin=list.first { it["skill"].asText()=="Kotlin" }
+        mvc.perform(get("/api/profile/me/claims/${kotlin["id"].asText()}/evidence").with(caller(user))).andExpect(jsonPath("$.length()").value(2))
+        val kotlinIndex=complete["analysis"]["suggestions"].indexOfFirst { it["skill"].asText()=="Kotlin" }
+        val attested=post(user,"$path/${complete["id"].asText()}/claims",mapOf("revision" to complete["revision"].asLong(),"index" to kotlinIndex,"skill" to "Kotlin","statement" to kotlin["statement"].asText(),"context" to kotlin["context"].asText(),"confirm" to true))
+        assertThat(attested["id"]).isEqualTo(kotlin["id"])
+        assertThat(attested["confirmationBasis"].asText()).isEqualTo("USER")
+        val fresh=post(user,path,body(ids)+mapOf("populateProfile" to true));next(user,fresh)
+        mvc.perform(get("/api/profile/me/claims/${kotlin["id"].asText()}/history").with(caller(user))).andExpect(jsonPath("$.total").value(2))
+        mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$.length()").value(2))
+        mvc.perform(get("/api/profile/me/entries").with(caller(user))).andExpect(jsonPath("$.length()").value(1))
+    }
+    @Test fun `another automatic analysis does not restore deleted rejected or edited profile information`() {
+        val user=profile();val doc=upload(user);stub()
+        val first=next(user,post(user,path,body(listOf(doc))+mapOf("populateProfile" to true)))
+        val suggestions=first["analysis"]["suggestions"]
+        val rejected=suggestions[0]["profileClaimId"].asText();val deleted=suggestions[1]["profileClaimId"].asText()
+        post(user,"/api/profile/me/claims/$rejected/review",mapOf("decision" to "REJECT","revision" to 1))
+        mvc.perform(delete("/api/profile/me/claims/$deleted").with(caller(user)).with(csrf()).contentType("application/json").content("""{"revision":1}""")).andExpect(status().isNoContent)
+        val entry=first["analysis"]["careerEntries"][0]["profileEntryId"].asText()
+        val content=json.convertValue(first["analysis"]["careerEntries"][0]["content"],Map::class.java)+mapOf("description" to "My reviewed contribution","sourceNote" to "Personal review")
+        mvc.perform(put("/api/profile/me/entries/$entry").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("revision" to 1,"content" to content)))).andExpect(status().isOk)
+        val repeated=next(user,post(user,path,body(listOf(doc))+mapOf("populateProfile" to true)))
+        mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$.length()").value(1)).andExpect(jsonPath("$[0].status").value("REJECTED"))
+        mvc.perform(get("/api/profile/me/entries").with(caller(user))).andExpect(jsonPath("$.length()").value(1)).andExpect(jsonPath("$[0].content.description").value("My reviewed contribution"))
+        assertThat(repeated["analysis"]["suggestions"][1]["profileClaimId"].isNull).isTrue()
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM document_profile_import WHERE claim_id IS NULL AND kind='CLAIM'",Long::class.java)).isGreaterThanOrEqualTo(1L)
+    }
+    @Test fun `invalid structured response recovers explicit list items without inventing AI history or another call`() {
+        val user=profile();val source="## Example AS\nSenior Developer\nTeknologi: Kotlin, PostgreSQL, React Native"
+        val doc=upload(user,source)
+        `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenReturn("{\"unexpected\":true}")
+        val initial=post(user,path,mapOf("scope" to "collection","documents" to listOf(mapOf("documentId" to doc,"text" to source)),"locale" to "nb","consent" to true,"populateProfile" to true))
+        val first=next(user,initial)
+        assertThat(first["status"].asText()).isEqualTo("RUNNING")
+        assertThat(first["analysis"]["suggestions"].map { it["skill"].asText() }).containsExactly("Kotlin","PostgreSQL","React Native")
+        assertThat(first["analysis"]["suggestions"].all { it["recovered"].asBoolean() }).isTrue()
+        assertThat(first["analysis"]["careerEntries"].size()).isZero()
+        verify(model,times(1)).generateJson(anyString(),anyString(),anyMap(),(eq(AiTask.DOCUMENT_EXTRACTION) ?: AiTask.DOCUMENT_EXTRACTION))
+    }
+    @Test fun `review decisions stay outside pending proposals after reopening and another analysis`() {
+        val user=profile();val doc=upload(user);stub()
+        val first=next(user,post(user,path,body(listOf(doc))))
+        val endpoint="$path/${first["id"].asText()}"
+        fun input(index:Int,confirm:Boolean,reject:Boolean=false)=mapOf("revision" to first["revision"].asLong(),"index" to index,
+            "skill" to first["analysis"]["suggestions"][index]["skill"].asText(),"statement" to first["analysis"]["suggestions"][index]["statement"].asText(),"context" to "Example AS","confirm" to confirm,"reject" to reject)
+        val confirmed=post(user,"$endpoint/claims",input(0,true))
+        post(user,"$endpoint/claims",input(1,false,true))
+        val reloaded=json.readTree(mvc.perform(get(endpoint).with(caller(user))).andExpect(status().isOk).andReturn().response.contentAsString)
+        assertThat(reloaded["analysis"]["suggestions"].map { it["reviewState"].asText() }).containsExactly("CONFIRMED","REJECTED")
+        assertThat(reloaded["revision"]).isEqualTo(first["revision"])
+        verify(model,times(1)).generateJson(anyString(),anyString(),anyMap(),(eq(AiTask.DOCUMENT_EXTRACTION) ?: AiTask.DOCUMENT_EXTRACTION))
+        val fresh=next(user,post(user,path,body(listOf(doc))))
+        assertThat(fresh["analysis"]["suggestions"].map { it["reviewState"].asText() }).containsExactly("CONFIRMED","REJECTED")
+        val changed=mapOf("revision" to confirmed["revision"].asLong(),"skill" to "Kotlin","statement" to "My corrected contribution","context" to "Example AS","sourceNote" to "Reviewed by me")
+        mvc.perform(put("/api/profile/me/claims/${confirmed["id"].asText()}").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(changed))).andExpect(status().isOk)
+        mvc.perform(get("$path/${fresh["id"].asText()}").with(caller(user))).andExpect(jsonPath("$.analysis.suggestions[0].reviewState").value("DRAFT"))
+        mvc.perform(post("$path/${fresh["id"].asText()}/claims").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(input(0,true,true)))).andExpect(status().isBadRequest)
+        mvc.perform(get("$path/${fresh["id"].asText()}").with(caller(profile()))).andExpect(status().isNotFound)
+    }
+    @Test fun `automatic documentary import does not treat C as an explicit mention inside C plus plus or C sharp`() {
+        val user=profile();val source="## Example AS\nTeknologi: C++, C#\nAdditional source text.";val doc=upload(user,source)
+        `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION)))
+            .thenReturn("""{"competencies":[{"skills":["C","C++"],"description":"Listed technologies","category":"TECHNOLOGY","evidenceIds":[1],"contextId":0,"context":"Example AS"}],"profile":[],"history":[]}""")
+        val state=next(user,post(user,path,mapOf("scope" to "collection","documents" to listOf(mapOf("documentId" to doc,"text" to source)),"locale" to "nb","consent" to true,"populateProfile" to true)))
+        assertThat(state["analysis"]["suggestions"].map { it["skill"].asText() }).doesNotContain("C").contains("C++","C#")
+        mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$.length()").value(2))
+    }
     companion object {
         private val storage=Files.createTempDirectory("career-workflow-test-")
         @Container @JvmStatic val postgres=PostgreSQLContainer<Nothing>("postgres@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826")
