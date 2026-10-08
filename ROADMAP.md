@@ -25,6 +25,7 @@ Status checked against remote main on 2026-10-07. Deliver small tested increment
 | Reviewed CV selection, preview and immutable standard DOCX/PDF export | Implemented on the unpublished local branch; verified with real local identity/storage and automated checks |
 | Manual application cases, exact approved CV references, history and follow-up dates | Implemented on the unpublished local branch; verified with real local identity/storage and automated checks |
 | Local advertisement recovery, richer received text, UTF-8 TXT/Markdown and conservative multi-source deduplication | Implemented locally; verified with real local identity/storage and automated checks |
+| Source-selected document competencies, context proof and local original/text/quote check | Implemented locally; current validation recorded in DEVELOPMENT_LOG.md; unpublished |
 | Automatic CV rewriting, discovery, interview/academy/analytics and browser submission | Not implemented |
 
 The previous delivery scope was the three deliveries already listed: ad overview, competency review and initial CV import. Saved jobs/matching were excluded from that earlier delivery; the latest instruction authorizes progressing through the local pilot workflow without pushing yet. The owner subsequently added AI competency summarization across uploaded documents before merge. Upload/extraction remain local; a separately approved Groq call creates stored source-backed suggestions, and an explicit user save creates UNVERIFIED claims. See docs/CV_IMPORT.md and the actual validation in docs/DEVELOPMENT_LOG.md.

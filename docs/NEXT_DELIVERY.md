@@ -8,8 +8,9 @@ Keep this work local and unpublished until the owner requests a push. Follow [TE
 
 ## Subsequent coherent increments
 
-1. Use pilot feedback to improve source completeness, document coverage, CV selection and recovery. Add broader Norwegian/English AI quality evaluation before treating suggestions as consistently comprehensive.
-2. Add market discovery/scheduling only after checking source-access and reuse terms, freshness, deduplication and the pilot budget. Introduce events only where these workloads need decoupling.
-3. Extend interview/follow-up assistance and controlled browser preparation, with explicit approval for consequential actions. Academy/analytics and external multi-user hosting remain later milestones.
+1. Validate actual pilot documents and strengthen Norwegian/English source selection, context proof and recovery. The current slice adds read-only local document checks and source-selected AI proposals; see ADR 0023 and DEVELOPMENT_LOG.md.
+2. Add source-backed CV wording and application drafts, with visible before/after and explicit factual review. This is separate from the existing approved standard-template export and remains pending.
+3. Add interview preparation using the exact approved/recorded CV and application materials, with no invented examples. This remains pending.
+4. Add market discovery/scheduling only after checking source-access/reuse terms, freshness, deduplication and budget. Controlled browser preparation, academy/analytics and external hosting remain later milestones.
 
 Kafka, Temporal, pgvector and Redis are deferred until a concrete workload justifies them. Local integration tests require Docker; private workflows require the documented PostgreSQL/OIDC setup. Production identity, backups, deletion/export policy and external-provider privacy controls remain open before an external pilot.

@@ -119,3 +119,7 @@ Accepted explicit UX direction: the pilot needs a public landing page, dedicated
 ## Local pilot recovery, evidence and materials — 2026-10-08
 
 Accepted under the owner's autonomous pilot instruction: received source text takes priority over successful AI structuring; use labelled local fallback without extra provider calls. Extend evidence imports with bounded UTF-8 TXT/Markdown, conservatively deduplicate identical experience while preserving sources/company context, and expose long-document windows with approval per call. Standard CV export and manual application cases follow the owner's earlier template/local-hosting decisions. These features do not introduce paid services, automatically confirm competencies or submit applications. See ADRs 0021/0022.
+
+## Source-selected competencies and local document checks — 2026-10-07
+
+Accepted under the owner's request to test actual uploaded evidence: separate literal document extraction from generative writing. The model selects numbered evidence; the application supplies source wording, validates skill labels and nearby same-document context proof, and exposes unknown associations. Reopened old suggestions obey this presentation rule without altering saved claims. Add a read-only original/text/quote check and smaller optional detail windows, without provider retries, automatic confirmation, paid services or publication. See ADR 0023. A green technical check never claims semantic or exhaustive correctness.

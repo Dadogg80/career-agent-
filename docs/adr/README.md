@@ -30,3 +30,5 @@ Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert i
 
 - [0021 Reviewed standard CVs and application materials](0021-reviewed-standard-cv-and-application-materials.md) — accepted local pilot.
 - [0022 Source-first recovery and document evidence](0022-source-first-recovery-and-document-evidence.md) — accepted local pilot.
+
+- [0023 Source-selected document competencies](0023-source-selected-document-competencies.md) — accepted local pilot; numbered evidence, context proof and read-only checks.

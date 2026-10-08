@@ -339,3 +339,22 @@ flowchart TD
 ```
 
 Provider failure keeps received advertisement/document text and any valid same-source result. Explicit headings and labelled practical fields can be organized locally, visibly labelled as such. All remaining text stays readable; missing facts are never invented.
+
+## Actual document verification
+
+```mermaid
+flowchart TD
+  A[Owned document workspace] --> B[Check documents: local only]
+  B --> C[Original integrity and fresh text reading]
+  B --> D[Stored AI quote checks]
+  C --> E[Pass, review or missing state with explanation]
+  D --> E
+  E --> F[Open original and text]
+  F --> G[Select reviewed full excerpt or smaller detail part]
+  G --> H[Explicit consent for one AI selection call]
+  H --> I[Literal proposals and context proof or unknown]
+  I --> J[User edits and saves UNVERIFIED]
+  J --> K[Separate confirmation of current revision]
+```
+
+Technical checks do not certify semantics or completeness. Provider failures keep previous usable results; no automatic call or confirmation follows the check.

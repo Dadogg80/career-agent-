@@ -48,10 +48,20 @@ class DocumentSecurityIntegrationTest {
             .andExpect(status().isOk).andExpect(header().string("Cache-Control", "no-store")).andExpect(jsonPath("$.ownerId").doesNotExist()).andExpect(jsonPath("$.isMaster").value(false)).andReturn()
         return json.readTree(result.response.contentAsString)["id"].asText()
     }
+    @Test fun `document checks verify owned originals text and existing evidence without modifying data or calling AI`() {
+        val user=profile();val other=profile();val id=upload(user,"project.md","Example AS: Built APIs with Kotlin for internal services.".toByteArray())
+        val path="$path/check"
+        mvc.perform(post(path).with(caller(user)).contentType("application/json").content("{}")).andExpect(status().isForbidden)
+        mvc.perform(post(path).with(caller(user)).with(csrf()).contentType("application/json").content("""{"ownerId":"spoofed"}""")).andExpect(status().isBadRequest)
+        mvc.perform(post(path).with(caller(other)).with(csrf()).contentType("application/json").content("{}")).andExpect(jsonPath("$.documents.length()").value(0))
+        mvc.perform(post(path).with(caller(user)).with(csrf()).contentType("application/json").content("{}")).andExpect(status().isOk).andExpect(header().string("Cache-Control","no-store")).andExpect(jsonPath("$.documents[0].documentId").value(id)).andExpect(jsonPath("$.documents[0].checks[0].code").value("ORIGINAL_UNCHANGED")).andExpect(jsonPath("$.documents[0].checks[1].code").value("TEXT_READABLE")).andExpect(jsonPath("$.documents[0].checks[2].code").value("NOT_ANALYZED")).andExpect(jsonPath("$.documents[0].text").doesNotExist())
+        mvc.perform(get("${this.path}/$id").with(caller(user))).andExpect(jsonPath("$.text").value("Example AS: Built APIs with Kotlin for internal services."))
+        verifyNoInteractions(ai)
+    }
     @Test fun `combined analysis groups repeated company experience and saving attaches both evidence sources`() {
         val user=profile();val first=upload(user,"cv.md","Example AS: Built APIs with Kotlin for internal services.".toByteArray());val second=upload(user,"project.txt","Example AS: Built APIs with Kotlin for internal services.".toByteArray())
-        val item=mapOf("skill" to "Kotlin","statement" to "Built APIs with Kotlin","context" to "Example AS","quote" to "Built APIs with Kotlin")
-        `when`(ai.generateJson(anyString(),anyString(),anyMap())).thenReturn(json.writeValueAsString(mapOf("summary" to emptyList<Any>(),"suggestions" to listOf(item+("documentId" to first),item+("documentId" to second)))))
+        val item=mapOf("skill" to "Kotlin","statement" to "Example AS: Built APIs with Kotlin for internal services.","context" to "Example AS","quote" to "Example AS: Built APIs with Kotlin for internal services.")
+        `when`(ai.generateJson(anyString(),anyString(),anyMap())).thenReturn(json.writeValueAsString(mapOf("summary" to emptyList<Any>(),"suggestions" to listOf(0,1).map { mapOf("skill" to "Kotlin", "evidenceId" to it, "contextId" to it, "context" to "Example AS") })))
         val request=mapOf("locale" to "nb","consent" to true,"documents" to listOf(mapOf("documentId" to first,"text" to "Example AS: Built APIs with Kotlin for internal services."),mapOf("documentId" to second,"text" to "Example AS: Built APIs with Kotlin for internal services.")))
         val response=mvc.perform(post("$path/analysis").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(request))).andExpect(status().isOk).andExpect(jsonPath("$.suggestions.length()").value(1)).andExpect(jsonPath("$.suggestions[0].additionalSources.length()").value(1)).andReturn()
         val analysis=json.readTree(response.response.contentAsString)["id"].asText()
@@ -94,7 +104,7 @@ class DocumentSecurityIntegrationTest {
         // Simulate extraction persisted by the previous main-body-only reader.
         jdbc.update("UPDATE career_document SET extracted_text = ? WHERE id = ?", body, UUID.fromString(id))
         mvc.perform(post("$path/$id/claims").with(caller(user)).with(csrf()).contentType("application/json").content("""{"skill":"Kotlin","statement":"Built APIs","context":"Project","quote":"Built APIs with Kotlin"}""")).andExpect(status().isOk)
-        val valid = """{"summary":[{"text":"Kotlin APIs","quote":"Built APIs with Kotlin"}],"suggestions":[]}"""
+        val valid = """{"summary":[{"evidenceId":0}],"suggestions":[]}"""
         `when`(ai.generateJson(anyString(), anyString(), anyMap())).thenReturn(valid)
         mvc.perform(post("$path/$id/analysis").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("text" to body,"locale" to "nb","consent" to true)))).andExpect(status().isOk)
         val reread = post("$path/$id/reread").contentType("application/json").content("""{"ocr":false}""")
@@ -112,7 +122,7 @@ class DocumentSecurityIntegrationTest {
         val user = profile(); val body = "Built APIs with Kotlin for a synthetic project."; val id = upload(user, bytes=DocumentFixture.docx(body))
         `when`(ai.generateJson(anyString(), anyString(), anyMap())).thenAnswer {
             jdbc.update("UPDATE career_document SET extracted_text = ? WHERE id = ?", "Different source after rereading", UUID.fromString(id))
-            """{"summary":[{"text":"Kotlin APIs","quote":"Built APIs with Kotlin"}],"suggestions":[]}"""
+            """{"summary":[{"evidenceId":0}],"suggestions":[]}"""
         }
         mvc.perform(post("$path/$id/analysis").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("text" to body,"locale" to "nb","consent" to true)))).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("DOCUMENT_ANALYSIS_CONFLICT"))
         mvc.perform(get("$path/$id/analysis").with(caller(user))).andExpect(jsonPath("$.analysis").isEmpty)
@@ -164,7 +174,7 @@ class DocumentSecurityIntegrationTest {
         val user = profile(); val id = upload(user, bytes = DocumentFixture.docx(text))
         mvc.perform(get("$path/$id/analysis").with(caller(user))).andExpect(status().isOk).andExpect(jsonPath("$.analysis").isEmpty)
         verifyNoInteractions(ai)
-        val output = """{"summary":[{"text":"API development","quote":"Built APIs with Kotlin"}],"suggestions":[{"skill":"Kotlin","statement":"Built APIs","context":"Synthetic project","quote":"Built APIs with Kotlin"}]}"""
+        val output = """{"summary":[{"evidenceId":0}],"suggestions":[{"skill":"Kotlin","evidenceId":0,"contextId":-1,"context":""}]}"""
         `when`(ai.generateJson(anyString(), anyString(), anyMap())).thenReturn(output)
         val request = json.writeValueAsString(mapOf("text" to text, "locale" to "nb", "consent" to true))
         val response = mvc.perform(post("$path/$id/analysis").with(caller(user)).with(csrf()).contentType("application/json").content(request)).andExpect(status().isOk)
@@ -186,9 +196,7 @@ class DocumentSecurityIntegrationTest {
         val user = profile(); val firstText = "Built APIs with Kotlin for a synthetic project."; val secondText = "Completed a PostgreSQL course with a synthetic certificate."
         val first = upload(user, bytes = DocumentFixture.docx(firstText)); val second = upload(user, "course.docx", DocumentFixture.docx(secondText))
         upload(user, "scan.pdf", DocumentFixture.pdf(""))
-        val output = json.writeValueAsString(mapOf("summary" to listOf(mapOf("text" to "Kotlin API experience", "quote" to "Built APIs with Kotlin", "documentId" to first)), "suggestions" to listOf(
-            mapOf("skill" to "PostgreSQL", "statement" to "Completed a PostgreSQL course", "context" to "Course", "quote" to "Completed a PostgreSQL course", "documentId" to second),
-            mapOf("skill" to "Invented source", "statement" to "Built APIs", "context" to "Wrong document", "quote" to "Built APIs with Kotlin", "documentId" to second))))
+        val output = """{"summary":[{"evidenceId":0}],"suggestions":[{"skill":"PostgreSQL","evidenceId":1,"contextId":-1,"context":""},{"skill":"Invented source","evidenceId":1,"contextId":-1,"context":""}]}"""
         `when`(ai.generateJson(anyString(), anyString(), anyMap())).thenReturn(output)
         val body = json.writeValueAsString(mapOf("documents" to listOf(mapOf("documentId" to first, "text" to firstText), mapOf("documentId" to second, "text" to secondText)), "locale" to "en", "consent" to true))
         val result = mvc.perform(post("$path/analysis").with(caller(user)).with(csrf()).contentType("application/json").content(body)).andExpect(status().isOk)

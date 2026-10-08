@@ -126,3 +126,17 @@ test("long source windows preserve opening company context and require new conse
  await page.goto("/career/profile");await page.getByRole("button",{name:"Se tekst og legg til kompetanse",exact:true}).click();await page.getByRole("checkbox",{name:"Jeg vil sende teksten over til Groq for denne analysen",exact:true}).check();await page.getByRole("button",{name:/^Del 2 · /}).click();
  await expect(page.getByRole("checkbox",{name:"Jeg vil sende teksten over til Groq for denne analysen",exact:true})).not.toBeChecked();const selected=await page.getByRole("textbox",{name:"Tekst som sendes til Groq",exact:true}).inputValue();expect(selected.length).toBeLessThanOrEqual(12000);expect(selected).toContain("Firma: Example AS");expect(calls).toBe(0);
 });
+
+
+test("detail parts are available before the full input limit and employer evidence is inspectable", async({page})=>{
+ const text="Project: Example AS\n"+"Built Kotlin APIs for internal services.\n".repeat(145);
+ const document={...docs[0],language:"en",mediaType:"text/markdown",originalName:"project.md",textCharacters:text.length};
+ const stored={...result,summary:[],suggestions:[{skill:"Kotlin",statement:"Built Kotlin APIs for internal services.",context:"Example AS",contextQuote:"Project: Example AS",quote:"Built Kotlin APIs for internal services."}],sourceCharacters:text.length,inputCharacters:text.length};let calls=0;
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
+ await page.route("**/api/profile/me",r=>r.fulfill({json:{id:first,displayName:"Fictional Pilot",preferredLanguage:"nb",revision:1}}));
+ await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[]}));
+ await page.route("**/api/profile/me/documents**",r=>{if(r.request().url().endsWith("/analysis")){if(r.request().method()==="POST")calls++;return r.fulfill({json:stored});}return r.fulfill({json:r.request().url().endsWith(first)?{document,text}:[document]});});
+ await page.goto('/career/profile');await page.getByRole('button',{name:'Se tekst og legg til kompetanse',exact:true}).click();const dialog=page.getByRole('dialog');
+ const proposals=dialog.getByRole('region',{name:'Kompetanseforslag',exact:true});await proposals.locator('summary').click();await expect(proposals).toContainText('Kontekst fra dokumentet');await expect(proposals.locator('blockquote').last()).toHaveText('Project: Example AS');await expect(proposals.locator('p[lang="en"]').first()).toHaveText('Built Kotlin APIs for internal services.');
+ await dialog.getByRole('checkbox').check();await dialog.getByRole('button',{name:/^Del 2/}).click();await expect(dialog.getByRole('checkbox')).not.toBeChecked();const preview=await dialog.getByLabel('Tekst som sendes til Groq',{exact:true}).inputValue();expect(preview.length).toBeLessThanOrEqual(4000);expect(calls).toBe(0);
+});

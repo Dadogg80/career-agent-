@@ -101,3 +101,7 @@ The local pilot now implements owner-scoped CareerEntry records for employment, 
 `CvVersion` is a draft/approved immutable content snapshot of current confirmed claim/history revisions, user-entered identity and optional owned saved job. Approved `CvArtifact` stores format, private object ID, size and SHA-256. Stale drafts cannot approve. `ApplicationCase` tracks a saved job, status/revision/history and an approved CV. Once a submission date is recorded, its CV/date/text are immutable. This is the user's archive, not external delivery proof.
 
 `ClaimEvidence` captures each owned document quotation plus statement/context at attachment time. Conservative equality in skill/statement/context reuses a claim without changing confirmation status. Different employers/projects remain separate; unknown contexts remain separated across documents. Document deletion removes the pointer but retains the quoted evidence snapshot.
+
+## Document evidence selection and checks
+
+CompetencySuggestion optionally retains contextQuote: the nearby literal header supporting its employer/project label. Statement/summary wording is source-selected; unknown context stays unknown. A bounded DocumentCheckReport records a timestamp and each owned document's original, text and existing individual/combined quotation check states. It is transient technical evidence, not confirmation or a completeness score. Saved claims/history are not retroactively modified by presentation revalidation.

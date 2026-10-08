@@ -5,6 +5,7 @@ import com.careeragent.ai.application.AiModel
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import org.slf4j.LoggerFactory
 import java.net.InetSocketAddress
 import java.net.ProxySelector
 import java.net.URI
@@ -20,6 +21,7 @@ class GroqAiModel(
     @Value("\${GROQ_MODEL:openai/gpt-oss-20b}") private val model: String,
     private val cooldown: GroqCooldown,
 ) : AiModel {
+    private val logger = LoggerFactory.getLogger(javaClass)
     private val client: HttpClient = HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(5))
         .version(HttpClient.Version.HTTP_1_1)
@@ -69,7 +71,10 @@ class GroqAiModel(
             .build()
         try {
             val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-            providerFailure(response.statusCode(), response.body(), response.headers().firstValue("retry-after").orElse(null))?.let { throw it }
+            providerFailure(response.statusCode(), response.body(), response.headers().firstValue("retry-after").orElse(null))?.let {
+                logger.warn("groq_request_failed status={} category={}", response.statusCode(), it.code)
+                throw it
+            }
             val json = mapper.readTree(response.body())
             val choice = json.path("choices").path(0)
             if (choice.path("finish_reason").asText() != "stop") throw AiFailure("AI_INVALID_RESULT", 502, reason = "OUTPUT_INCOMPLETE")
@@ -81,8 +86,9 @@ class GroqAiModel(
         } catch (e: InterruptedException) {
             Thread.currentThread().interrupt()
             throw AiFailure("AI_UNAVAILABLE", 503)
-        } catch (_: Exception) {
+        } catch (error: Exception) {
             // Never expose credentials, provider payloads, or input text through error messages.
+            logger.warn("groq_transport_failed category={}", if (error is java.net.http.HttpTimeoutException) "TIMEOUT" else "NETWORK_OR_RESPONSE")
             throw AiFailure("AI_UNAVAILABLE", 503)
         }
     }

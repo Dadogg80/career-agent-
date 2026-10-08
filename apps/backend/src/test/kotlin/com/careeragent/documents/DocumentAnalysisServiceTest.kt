@@ -34,27 +34,55 @@ class DocumentAnalysisServiceTest {
     }
     @Test fun `twenty concise sourced proposals are accepted without silently imposing the previous ten item cap`() {
         val mapper = jacksonObjectMapper()
-        val suggestions = (1..20).map { mapOf("skill" to "Listed skill $it", "statement" to "Document lists Kotlin", "context" to "Skill list", "quote" to "Built APIs with Kotlin") }
+        val suggestions = (1..20).map { mapOf("skill" to "Skill$it", "statement" to "Built Skill$it APIs", "context" to "Skill list", "quote" to "Built Skill$it APIs") }
+        val source = (1..21).joinToString("\n") { "Built Skill$it APIs" }
         fun output(items: List<Map<String,String>>) = mapper.writeValueAsString(mapOf("summary" to emptyList<String>(), "suggestions" to items))
-        assertThat(service.parse(output(suggestions), text, text).second).hasSize(20)
-        val extra = suggestions + suggestions.first().plus("skill" to "Extra skill")
-        assertThat(service.parse(output(extra), text, text).second).hasSize(20)
-        assertThat(service.parse(output(extra), text, text).third).isEqualTo(1)
+        assertThat(service.parse(output(suggestions), source, source).second).hasSize(20)
+        val extra = suggestions + mapOf("skill" to "Skill21", "statement" to "Built Skill21 APIs", "context" to "Skill list", "quote" to "Built Skill21 APIs")
+        assertThat(service.parse(output(extra), source, source).second).hasSize(20)
+        assertThat(service.parse(output(extra), source, source).third).isEqualTo(1)
     }
     @Test fun `quotes must exist in both the original and approved preview and valid items survive omissions`() {
         val result = service.parse(valid, text, text)
-        assertThat(result.first.single().text).isEqualTo("API development")
+        assertThat(result.first.single().text).isEqualTo("Built APIs with Kotlin")
         val partial = valid.replace("API development", "Ignored").replaceFirst("Built APIs with Kotlin", "Invented Kafka")
         assertThat(service.parse(partial, text, text).third).isEqualTo(1)
         val failure = catchThrowable { service.parse(valid, "Only unrelated text remains after redaction", text) } as AiFailure
         assertThat(failure.reason).isEqualTo("NO_SUPPORTED_ITEMS")
         assertThatThrownBy { service.parse(valid, text, "Unrelated original") }.isInstanceOf(AiFailure::class.java)
     }
+    @Test fun `a valid quote cannot turn paraphrased inventions or unrelated technologies into candidate experience`() {
+        val source="Introduction\n\nProject: Example AS\nBuilt APIs with Kotlin.\nProject: Other AS\nBuilt Next.js interfaces."
+        val json="""{"summary":[{"text":"Expert in Kafka and leadership","quote":"Built APIs with Kotlin"}],"suggestions":[{"skill":"Kotlin","statement":"Led production Kafka migrations with Kotlin","context":"Example AS","contextQuote":"Project: Example AS","quote":"Built APIs with Kotlin"},{"skill":"NestJS","statement":"Built NestJS APIs","context":"Other AS","contextQuote":"Project: Other AS","quote":"Built Next.js interfaces"}]}"""
+        val result=service.parse(json,source,source)
+        assertThat(result.first.single().text).isEqualTo("Built APIs with Kotlin")
+        assertThat(result.second).hasSize(1)
+        assertThat(result.second.single().statement).isEqualTo("Built APIs with Kotlin")
+        assertThat(result.second.single().context).isEqualTo("Example AS")
+        assertThat(result.second.single().contextQuote).isEqualTo("Project: Example AS")
+        assertThat(result.third).isEqualTo(1)
+        val missing=json.replace("Project: Example AS","Invented employer")
+        assertThat(service.parse(missing,source,source).second.single().context).isEqualTo("Example AS")
+        assertThat(service.parse(missing,source,source).second.single().contextQuote).isEqualTo("Project: Example AS")
+        val redacted=source.replace("Project: Example AS", "Redacted heading")
+        assertThat(service.parse(missing,redacted,source).second.single().context).isEqualTo("Kontekst ikke oppgitt")
+        assertThat(service.parse(json.replace("\"context\":\"Example AS\"", "\"context\":\"ample\""),source,source).second.single().context).isEqualTo("Kontekst ikke oppgitt")
+        val wrongProject=json.replace("Built APIs with Kotlin","Built Next.js interfaces").replace("\"skill\":\"Kotlin\"","\"skill\":\"Next.js\"")
+        assertThat(service.parse(wrongProject,source,source).second.first().context).isEqualTo("Kontekst ikke oppgitt")
+    }
     @Test fun `malformed root schema and unknown fields are rejected without payload disclosure`() {
         for (bad in listOf("not JSON", valid.replace("\"summary\":", "\"ownerId\":\"spoofed\",\"summary\":"))) {
             assertThatThrownBy { service.parse(bad, text, text) }.isInstanceOf(AiFailure::class.java).hasMessage("AI_INVALID_RESULT")
         }
         assertThat(service.parse("""{"summary":[],"suggestions":[]}""", text, text).first).isEmpty()
+    }
+    @Test fun `a long project section keeps its explicit heading while another project blocks recovery`() {
+        val body = "Detailed project description. ".repeat(65)
+        val source = "Project: Example AS\n$body\nBuilt APIs with Kotlin."
+        val output = """{"summary":[],"suggestions":[{"skill":"Kotlin","statement":"Built APIs","context":"Example AS","contextQuote":"wrong ID","quote":"Built APIs with Kotlin"}]}"""
+        assertThat(service.parse(output,source,source).second.single().contextQuote).isEqualTo("Project: Example AS")
+        val other = source.replace("Built APIs", "Project: Other AS\nBuilt APIs")
+        assertThat(service.parse(output,other,other).second.single().context).isEqualTo("Kontekst ikke oppgitt")
     }
     @Test fun `one malformed item never suppresses valid evidence and empty context is honestly unknown`() {
         val invalid = valid.replace("\"Kotlin\"", "true")
@@ -74,6 +102,16 @@ class DocumentAnalysisServiceTest {
         assertThatThrownBy { service.analyze(identity, id, "x".repeat(12001), "nb", true) }.hasMessage("DOCUMENT_AI_INPUT_INVALID")
         assertThatThrownBy { service.analyzeCollection(identity, listOf(DocumentExcerpt(id, text), DocumentExcerpt(id, text)), "nb", true) }.hasMessage("DOCUMENT_AI_INPUT_INVALID")
         verifyNoInteractions(model, repository)
+    }
+    @Test fun `older stored analyses reopen with source wording and unknown context instead of unsupported paraphrases`() {
+        `when`(docs.detail(identity,id)).thenReturn(source())
+        val stored=DocumentAnalysis(UUID.randomUUID(),"nb","Groq",listOf(CompetencySummary("Kafka leadership","Built APIs with Kotlin")),listOf(CompetencySuggestion("Kotlin","Led Kafka migrations","Unrelated company","Built APIs with Kotlin")),text.length,text.length,false,0,OffsetDateTime.now())
+        `when`(repository.load(identity,id)).thenReturn(stored)
+        val reopened=service.load(identity,id)!!
+        assertThat(reopened.summary.single().text).isEqualTo("Built APIs with Kotlin")
+        assertThat(reopened.suggestions.single().statement).isEqualTo("Built APIs with Kotlin")
+        assertThat(reopened.suggestions.single().context).isEqualTo("Kontekst ikke oppgitt")
+        verifyNoInteractions(model)
     }
     @Test fun `one model call per attempt concurrency is bounded and failures release the permit`() {
         `when`(docs.detail(identity, id)).thenReturn(source())

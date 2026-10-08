@@ -151,3 +151,7 @@ The profile module now owns typed reviewed career entries and revision history i
 ## Local pilot CV and application modules
 
 `cv` owns standard draft/artifact generation and approval. `applications` owns manual application cases and material references. Both use authenticated private proxies, PostgreSQL owner locks/revisions and owned foreign keys. Original document storage is reused for generated artifacts; failed deletion is journaled and retried by CSRF-protected POST. No new event broker/workflow engine is introduced. Advertisement text can be organized locally from explicit headings/labelled fields without an AI call. Document evidence is stored separately from deduplicated claim wording. See ADRs 0021/0022 and the feature guides for bounds and remaining production work.
+
+## Source-selected document knowledge (ADR 0023)
+
+Reviewed text is encoded as bounded numbered literal passages. Groq selects evidence IDs, skill labels and optional same-document header context; application code supplies source wording and validates source membership, literal skill boundaries and nearby section proof. The original API/storage result shape stays compatible through optional contextQuote. Older results are revalidated on read without rewriting claims/history. Read-only owned document checks compare original size/hash, fresh local extraction and stored quotation support without a provider call or database write. Green checks never certify interpretation/completeness.
