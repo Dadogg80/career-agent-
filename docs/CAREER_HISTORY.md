@@ -17,3 +17,7 @@ The profile includes a collapsible career-history section with compact grouped c
 ## Verification
 
 Real PostgreSQL integration checks cover ownership by issuer/subject, authentication and CSRF, spoofed status, date validation, explicit review, edit reset, concurrent revisions, history and deletion. Browser checks cover actual role/client display, unknown periods, separate confirmation, editing/history, mobile/English deletion and private-proxy validation. See the development log for current suite counts. CV export is not implemented merely by recording these entries.
+
+## Document-prepared history
+
+The current branch adds editable AI-prepared history drafts from approved documents. Users review prefilled employer, client, role, contribution and period fields, then save unverified or explicitly confirm. Each import retains owned source quotations tied to entry revisions; document deletion detaches references but retains disclosed quotes. A Document sources dialog exposes them. Unknown month precision is preserved. The full normalized employment/project graph remains pending.

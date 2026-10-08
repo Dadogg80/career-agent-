@@ -11,6 +11,8 @@ export type DiagnosticEvent = {
   stage: AnalysisStage;
   state: StageState;
   details: {
+    provider?: "Groq" | "Gemini";
+    model?: string;
     endpoint?: "/api/jobs/import" | "/api/jobs/requirements";
     httpStatus?: number;
     durationMs?: number;

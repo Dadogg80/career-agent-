@@ -21,7 +21,8 @@ class PersonalMatchController(private val services: ObjectProvider<PersonalMatch
  private fun id(value: String) = try { UUID.fromString(value).also { require(it.toString() == value.lowercase()) } } catch (_: Exception) { throw SavedJobFailure("MATCH_INPUT_INVALID", 400) }
  @GetMapping fun load(@AuthenticationPrincipal principal: OidcUser?, @PathVariable jobId: String) = ResponseEntity.ok().header("Cache-Control", "no-store").body(mapOf("analysis" to service().load(identity(principal), id(jobId))))
  @PostMapping(consumes = ["application/json"]) fun analyze(@AuthenticationPrincipal principal: OidcUser?, @PathVariable jobId: String, @RequestBody input: Map<String, Any?>): ResponseEntity<*> {
-  if (input.keys != setOf("text", "claims", "locale", "consent")) throw SavedJobFailure("MATCH_INPUT_INVALID", 400)
+  if (input.filterKeys { it!="aiApproval" }.keys != setOf("text", "claims", "locale", "consent")) throw SavedJobFailure("MATCH_INPUT_INVALID", 400)
+  if(input.containsKey("aiApproval") && input["aiApproval"] !is String)throw SavedJobFailure("MATCH_INPUT_INVALID",400)
   val selections = input["claims"] as? List<*> ?: throw SavedJobFailure("MATCH_INPUT_INVALID", 400)
   if (selections.any { it !is Map<*, *> || it.keys != setOf("id", "revision") }) throw SavedJobFailure("MATCH_INPUT_INVALID", 400)
   val request = try { mapper.convertValue(input, MatchRequest::class.java) } catch (_: Exception) { throw SavedJobFailure("MATCH_INPUT_INVALID", 400) }

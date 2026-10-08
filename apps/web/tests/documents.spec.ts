@@ -27,7 +27,7 @@ test("upload retains the source, selecting a CV quote creates an unverified clai
   await expect(card).toBeVisible(); expect(uploads).toBe(1);
   await card.getByRole("button", { name:"Bruk som master-CV", exact:true }).click();
   await expect(card.getByText("Master-CV", { exact:true })).toBeVisible();
-  await card.getByRole("button", { name:"Se tekst og legg til kompetanse", exact:true }).click();
+  await card.getByRole("button", { name:"Analyser dokumentet", exact:true }).click();
   const dialog = page.getByRole("dialog"); const source = dialog.getByRole("textbox", { name:"Tekst hentet fra dokumentet", exact:true });
   await dialog.locator(".manual-source-tools > summary").click();
   await expect(source).toHaveValue(text);
@@ -37,11 +37,11 @@ test("upload retains the source, selecting a CV quote creates an unverified clai
   await dialog.getByRole("textbox", { name:"Kompetanse", exact:true }).fill("Kotlin");
   await dialog.getByRole("textbox", { name:"Prosjekt eller arbeidsforhold", exact:true }).fill("Synthetic project");
   await dialog.getByRole("button", { name:"Lagre som ubekreftet kompetanse", exact:true }).click();
-  await expect(page.getByRole("article", { name:"Kotlin", exact:true }).locator('[data-claim-status="UNVERIFIED"]')).toBeVisible();
+  await page.getByRole("button", {name:"Din kompetanse",exact:true}).click(); await expect(page.getByRole("article", { name:"Kotlin", exact:true }).locator('[data-claim-status="UNVERIFIED"]')).toBeVisible();
   expect(await page.evaluate(() => window.document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path:"/tmp/career-profile-documents-mobile.png", fullPage:true });
   await page.getByRole("combobox", { name:"Språk", exact:true }).selectOption("en");
-  await card.getByRole("button", { name:"Delete", exact:true }).click(); expect(deletes).toBe(0);
+  await page.getByRole("button", {name:"Documents and AI profile",exact:true}).click(); await card.getByRole("button", { name:"Delete", exact:true }).click(); expect(deletes).toBe(0);
   await expect(dialog).toContainText("Competencies and history you created are retained");
   await dialog.getByRole("button", { name:"Permanently delete document", exact:true }).click();
   await expect(page.getByText("Build your document sources. Start with your CV, then add certificates and employment attestations.", { exact:true })).toBeVisible(); expect(deletes).toBe(1);
@@ -62,5 +62,5 @@ test("Markdown competency evidence is readable, does not offer master-CV selecti
  await page.route("**/api/profile/me/documents**",r=>{if(r.request().method()==="POST"){uploaded=true;return r.fulfill({json:document});}if(r.request().url().endsWith("/analysis"))return r.fulfill({json:{analysis:null}});return r.fulfill({json:r.request().url().endsWith(id)?{document,text:source}:uploaded?[document]:[]});});
  await page.goto("/career/profile");await page.getByLabel("Dokumentfil",{exact:true}).setInputFiles({name:"project.md",mimeType:"text/markdown",buffer:Buffer.from(source)});await page.getByRole("button",{name:"Last opp dokument",exact:true}).click();
  await expect(page.getByRole("article",{name:"project.md",exact:true})).toBeVisible();await expect(page.getByRole("button",{name:"Bruk som master-CV",exact:true})).toHaveCount(0);
- await page.getByRole("button",{name:"Se tekst og legg til kompetanse",exact:true}).click();await expect(page.getByRole("textbox",{name:"Tekst som sendes til Groq",exact:true})).toHaveValue(source);
+ await page.getByRole("button",{name:"Analyser dokumentet",exact:true}).click();await page.locator(".source-review-tile > summary").click(); await expect(page.getByRole("textbox",{name:"Tekst som sendes fra project.md",exact:true})).toHaveValue(source);
 });

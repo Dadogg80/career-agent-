@@ -16,7 +16,7 @@ test("matching shares only selected confirmed revisions after separate approval 
  await page.route("**/api/profile/me/jobs**",r => {
   if (r.request().url().endsWith("/match")) {
    if (r.request().method() === "GET") return r.fulfill({json:stored});
-   calls++; expect(r.request().postDataJSON()).toEqual({text,claims:[{id:claimId,revision:2}],locale:"nb",consent:true});
+   calls++; expect(r.request().postDataJSON()).toEqual({text,claims:[{id:claimId,revision:2}],locale:"nb",consent:true,aiApproval:expect.stringMatching(/^[a-f0-9]{64}$/)});
    expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf"); stored = result; return r.fulfill({json:result});
   }
   return r.fulfill({json:[job]});
@@ -59,4 +59,52 @@ test("matching proxy rejects missing approval spoofed statements owner injection
  expect((await request.post(path,{data:{...input,claims:[{id:claimId,revision:2,statement:"Invented"}]}})).status()).toBe(400);
  expect((await request.post(path,{data:{...input,ownerId:claimId}})).status()).toBe(400);
  expect((await request.post(path,{data:input,headers:{Origin:"https://unrelated.example"}})).status()).toBe(403);
+});
+
+test("daily quota keeps matching blocked beyond five minutes and preserves the earlier assessment", async ({ page }) => {
+ let calls = 0;
+ await page.route("**/api/auth/session", r => r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
+ await page.route("**/api/profile/me/claims", r => r.fulfill({json:[confirmed]}));
+ await page.route("**/api/profile/me/jobs**", r => {
+  if (r.request().url().endsWith("/match")) {
+   if (r.request().method() === "GET") return r.fulfill({json:result});
+   calls++; return r.fulfill({status:429,headers:{"Retry-After":"968"},json:{code:"AI_RATE_LIMITED"}});
+  }
+  return r.fulfill({json:[job]});
+ });
+ await page.goto("/jobs/saved");
+ await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();
+ const sheet = page.getByRole("dialog");
+ await sheet.getByRole("button",{name:"Velg grunnlag for personlig matching",exact:true}).click();
+ await sheet.locator(".match-claim").getByRole("checkbox").check();
+ await sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Groq for denne matchingen"}).check();
+ await page.clock.install();
+ const submit = sheet.getByRole("button",{name:"Analyser personlig match",exact:true}); await submit.click();
+ await expect(sheet).toContainText("16 min 8 s");
+ await expect(sheet.locator(".workflow-notice")).toContainText("Den tidligere vurderingen er beholdt");
+ await expect(sheet.locator(".match-result")).toBeVisible();
+ await page.clock.fastForward(300000); await expect(submit).toBeDisabled(); expect(calls).toBe(1);
+ await page.clock.fastForward(668000); await expect(submit).toBeEnabled(); expect(calls).toBe(1);
+});
+
+test("Gemini matching rejects stale approval without retrying and allows explicit reapproval after refresh",async({page})=>{
+ const first="a".repeat(64),second="b".repeat(64);let token=first;let attempts=0;
+ await page.route("**/api/ai/config",r=>{const selection={provider:"Gemini",model:token===first?"gemini-3.5-flash":"gemini-3.7-flash"};const approval={token,selections:[selection]};return r.fulfill({json:{tasks:{JOB_ANALYSIS:selection,DOCUMENT_EXTRACTION:selection,PROFILE_SUMMARY:selection,PERSONAL_MATCH:selection},documents:approval,documentExcerpt:approval,matching:approval}});});
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"test-csrf"}}));
+ await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[confirmed]}));
+ await page.route("**/api/profile/me/jobs**",r=>{
+  if(r.request().url().endsWith("/match")) {
+   if(r.request().method()==="GET")return r.fulfill({json:null});
+   attempts++;expect(r.request().postDataJSON()).toEqual({text,claims:[{id:claimId,revision:2}],locale:"nb",consent:true,aiApproval:attempts===1?first:second});
+   if(attempts===1){token=second;return r.fulfill({status:409,json:{code:"AI_APPROVAL_CHANGED"}});}
+   return r.fulfill({json:{...result,provider:"Gemini",model:"gemini-3.7-flash"}});
+  }
+  return r.fulfill({json:[job]});
+ });
+ await page.goto("/jobs/saved");await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();const sheet=page.getByRole("dialog");
+ await sheet.getByRole("button",{name:"Velg grunnlag for personlig matching",exact:true}).click();await expect(sheet).toContainText("Gemini · gemini-3.5-flash");
+ await sheet.locator(".match-claim").getByRole("checkbox").check();const consent=sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for denne matchingen"});const submit=sheet.getByRole("button",{name:"Analyser personlig match",exact:true});
+ await consent.check();await submit.click();await expect(sheet).toContainText("Ingen data er sendt med den gamle godkjenningen.");expect(attempts).toBe(1);
+ await sheet.getByRole("button",{name:"Hent AI-oppsett på nytt",exact:true}).click();await expect(sheet).toContainText("Gemini · gemini-3.7-flash");await expect(consent).not.toBeChecked();await expect(submit).toBeDisabled();expect(attempts).toBe(1);
+ await consent.check();await submit.click();await expect(sheet.locator(".match-result")).toContainText("Gemini");expect(attempts).toBe(2);
 });

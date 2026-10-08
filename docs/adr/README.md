@@ -32,3 +32,7 @@ Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert i
 - [0022 Source-first recovery and document evidence](0022-source-first-recovery-and-document-evidence.md) — accepted local pilot.
 
 - [0023 Source-selected document competencies](0023-source-selected-document-competencies.md) — accepted local pilot; numbered evidence, context proof and read-only checks.
+
+- [0024 Whole-document career review](0024-whole-document-career-review.md) — accepted local pilot; bounded owned progress, editable sourced drafts and incremental career-entry evidence.
+
+- [0025 Explicit AI providers and recipient-bound approvals](0025-explicit-ai-providers-and-approval.md) — accepted local pilot; Gemini routing, explicit recipients and safe continuation.

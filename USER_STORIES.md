@@ -1,6 +1,6 @@
 # User stories
 
-Status: Working stories. US-23 is implemented for a bounded local test on feat/job-requirements. The original profile/matching stories are not complete. P0 targets the first useful delivery, P1 the proposed complete MVP and P2 later improvements. Acceptance criteria are requirements; the development log records actual validation.
+Status: Working stories. The merged local pilot includes bounded advertisement analysis plus optional owned profile/documents, saved jobs, approved matching, standard CV export and manual application tracking. This does not complete every original profile/matching requirement. P0 targets the first useful delivery, P1 the proposed complete MVP and P2 later improvements. Acceptance criteria are requirements; the development log records actual validation.
 
 ## Current pilot slice
 
@@ -13,6 +13,8 @@ As a jobseeker, I want to paste a public advertisement and inspect AI-extracted 
 - Retain input on error and mark results as stale after source edits.
 - Explain external Groq processing before submission. Do not persist data or generate a candidate score.
 - Limit input, output, concurrent inference and attempts; do not enable a paid fallback.
+- Retain valid source-backed items if another AI item has invalid fields or exceeds limits; preserve citation validation and bounded result sizes.
+- Preserve long provider quota delays through backend, proxies and UI; do not shorten a daily-quota wait to five minutes. Keep source text and previous usable results without automatic retries or extra repair calls.
 - A real browser call must reach the backend through the proxy; tests with no configured key must make no provider calls.
 
 This slice does not replace the persistence, ownership or matching requirements of US-04/US-05.
@@ -329,3 +331,17 @@ As a jobseeker, I want employment, projects, education and certificates with the
 
 - **US46 — Check my actual evidence:** locally check owned originals, text reproducibility and existing AI quotation support without another model call or writes. Show distinct intact/missing/OCR/partial/unsupported states with text and accessible indicators, then open the document for inspection. A passing technical check must not imply semantic or exhaustive correctness.
 - **US47 — Source-selected competencies:** suggestions use original wording and a skill label found in their own quote. Show nearby same-document context proof or unknown context; preserve course/list limitations and require separate user confirmation. Invalid items cannot turn an unrelated valid quote into invented experience. Older results reopen safely without rewriting confirmed claims.
+
+## Resumed document/profile slice
+
+- As a candidate, I approve full documents once and the system handles portions automatically. Acceptance: full editable previews, no manual part selection, source coverage and resumable owned progress.
+- As a candidate, I review distinct explicit technologies and contributions grouped by supported company/project. Acceptance: editable AI descriptions, exact multi-source evidence, conservative deduplication, search/category filters and no automatic confirmation.
+- As a candidate, I receive prefilled employment/project/education drafts and supported profile summaries. Acceptance: unknown dates/interests remain unknown, user edits and confirms explicitly, and career-entry evidence remains revision-linked.
+- As a candidate, I reach documents, competencies and career history through clear profile sections. Acceptance: dashboard links select the destination and mobile review fits the screen.
+- As a candidate, I retain useful work on provider failure. Acceptance: saved portions remain visible, full cooldown is respected, no automatic retry/model switch and explicit continuation.
+
+## AI provider integration
+
+- As a pilot user, I see which AI recipient/model will receive my reviewed data and explicitly approve each new analysis. Backend and UI reject stale configuration approvals without sending to a new recipient.
+- As a returning user, I can inspect stored document progress after configuration changes; it never silently resumes with another provider.
+- As a job seeker, I receive explicit responsibilities/mentoring/release skills alongside technologies, retain original evidence and can edit drafts before confirming. Source-backed education/interests survive a shorter final summary.

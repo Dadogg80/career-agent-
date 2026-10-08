@@ -1,6 +1,8 @@
 "use client";
+import { retryAfterSeconds as parseRetryAfter, retryWaitLabel } from "../lib/retry-after";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useAiConfiguration } from "../lib/use-ai-configuration";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowRight, ArrowUpRight, FileText, Link2, Search, ShieldCheck, LoaderCircle } from "lucide-react";
 import { Button } from "./ui/button";
@@ -37,13 +39,14 @@ async function post(path: string, input: unknown, signal?: AbortSignal) {
     const retryAfter = Number(value?.retryAfterSeconds ?? response.headers.get("retry-after"));
     const code = typeof value?.code === "string" && Object.hasOwn(jobTranslations.nb.errors, value.code) ? value.code : "AI_UNAVAILABLE";
     const providerRateLimit = ["AI_RATE_LIMITED", "SOURCE_RATE_LIMITED"].includes(code);
-    throw new RequestFailure(code, response.status === 429 && providerRateLimit ? Math.min(300, Math.max(1, Math.ceil(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : 60))) : undefined, response.status, durationMs, safeAnalysisReason(value?.reason));
+    throw new RequestFailure(code, response.status === 429 && providerRateLimit ? (parseRetryAfter(retryAfter) ?? 60) : undefined, response.status, durationMs, safeAnalysisReason(value?.reason));
   }
   return { value: value as unknown, httpStatus: response.status, durationMs };
 }
 
 export function JobAnalyzer({ locale }: { locale: Locale }) {
   const t = jobTranslations[locale];
+  const configuration=useAiConfiguration(); const selection=configuration.data?.tasks.JOB_ANALYSIS;
   const [ready, setReady] = useState(false);
   const mounted = useRef(false);
   const controller = useRef<AbortController | null>(null);
@@ -107,7 +110,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
   const [result, setResult] = useState<{ requirements: Requirement[]; facts: JobFact[]; omittedItems: number; source: string; locale: Locale; imported: ImportedJob | null; analysisFailed?: boolean; refreshFailed?: boolean } | null>(null);
   const extraction = useMutation({ mutationFn: async (input: { text: string; locale: Locale; imported: ImportedJob | null }) => {
     if (input.text.trim().length < 40) throw new Error("INVALID_INPUT");
-    setPhase("analysis"); record("analysis", "running", { endpoint: "/api/jobs/requirements", characters: input.text.length });
+    setPhase("analysis"); record("analysis", "running", { endpoint: "/api/jobs/requirements", characters: input.text.length, provider:selection?.provider, model:selection?.model });
     const response = await post("/api/jobs/requirements", { text: input.text, locale: input.locale }, controller.current?.signal);
     if (!isExtraction(response.value)) throw new RequestFailure("AI_INVALID_RESULT", undefined, response.httpStatus, response.durationMs);
     return { requirements: response.value.requirements, facts: response.value.facts, omittedItems: response.value.omittedItems ?? 0, source: input.text, locale: input.locale, imported: input.imported, httpStatus: response.httpStatus, durationMs: response.durationMs };
@@ -147,7 +150,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
     if (!mounted.current) return;
     setImported(job); setText(job.text);
     record("source", "success", { endpoint: "/api/jobs/import", httpStatus, durationMs, characters: job.text.length, sourceType: job.sourceType ?? "NAV_API" });
-    if (job.sourceType === "GROQ_BROWSER_EXCERPT") nextAnalysisAt.current = Date.now() + analysisDelaySeconds * 1000;
+    nextAnalysisAt.current = job.sourceType === "GROQ_BROWSER_EXCERPT" && selection?.provider !== "Gemini" ? Date.now() + analysisDelaySeconds * 1000 : 0;
     await continueAnalysis({ text: job.text, locale: resultLocale, imported: job });
   } });
   const pending = phase === "source" || phase === "wait" || phase === "analysis";
@@ -181,7 +184,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
   const outdated = result !== null && result.source !== text;
   return (
     <section className="workspace" aria-labelledby="analyzer-title">
-      <div className="workspace-heading"><div><h2 id="analyzer-title">{t.title}</h2><p>{t.description}</p></div><Badge variant="outline">{locale === "nb" ? "Kildebasert AI" : "Sourced AI"}</Badge></div>
+      <div className="workspace-heading"><div><h2 id="analyzer-title">{t.title}</h2><p>{t.description}</p></div><Badge variant="outline">{locale === "nb" ? `Kildebasert AI${selection?` · ${selection.provider}`:""}` : `Sourced AI${selection?` · ${selection.provider}`:""}`}</Badge></div>
       <div className={`analysis-grid ${result ? "has-result" : ""}`}>
         <Card className={`input-card ${result && !result.analysisFailed && mode === "url" ? "completed-input" : ""}`}><CardHeader><p className="step-label">{t.inputStep}</p>
           <div className="mode-picker" aria-label={locale === "nb" ? "Inndatametode" : "Input method"}>
@@ -202,9 +205,9 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
           {!ready && <p role="status" className="hint">{t.starting}</p>}
           <noscript><p className="notice">{t.javascriptRequired}</p></noscript>
           {error && !result?.analysisFailed && !result?.refreshFailed && (error.startsWith("SOURCE_") || error.startsWith("AI_") || error === "NETWORK_ERROR" ? <WorkflowNotice code={error} locale={locale} onPaste={mode === "url" ? () => changeMode("text") : undefined}/> : <Alert variant="destructive" role="alert" className="feedback"><AlertDescription>{t.errors[error as keyof typeof t.errors] ?? t.errors.AI_UNAVAILABLE}</AlertDescription></Alert>)}
-          {retryIn > 0 && <p role="status" className="notice">{t.retryWait} {retryIn} {t.seconds}</p>}
+          {retryIn > 0 && <p role="status" className="notice">{t.retryWait} {retryIn >= 60 ? retryWaitLabel(retryIn) : `${retryIn} ${t.seconds}`}</p>}
           {phase === "cancelled" && <p role="status" className="hint">{t.cancelled}</p>}
-          <div className="privacy-note"><ShieldCheck size={18}/><p>{t.privacy}</p></div>
+          <div className="privacy-note"><ShieldCheck size={18}/><p>{t.privacy.replace("sender teksten til Groq", `sender teksten til ${selection?.provider ?? "valgt AI-leverandør"}`).replace("sends its text to Groq", `sends its text to ${selection?.provider ?? "the configured AI provider"}`)}</p></div>
         </CardContent></Card>
         <div className="result-panel">
           <p className="step-label">{t.resultStep}</p>

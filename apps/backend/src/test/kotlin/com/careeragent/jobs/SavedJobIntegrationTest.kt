@@ -50,6 +50,12 @@ class SavedJobIntegrationTest {
   mvc.perform(get("$path/$id").with(caller(user))).andExpect(status().isOk)
   verifyNoInteractions(ai)
  }
+ @Test fun `partial results with many omitted items can still be saved and reopened`() {
+  val user = profile(); val id = save(user, content() + ("omittedItems" to 188))
+  mvc.perform(get("$path/$id").with(caller(user))).andExpect(status().isOk)
+   .andExpect(jsonPath("$.content.omittedItems").value(188)).andExpect(jsonPath("$.content.requirements[0].label").value("Kotlin"))
+  verifyNoInteractions(ai)
+ }
  @Test fun `subjects issuers anonymous requests CSRF and ownership injection cannot access other saved jobs`() {
   val user = profile(); val other = profile(); profile(user, "https://other.example.test"); val id = save(user)
   mvc.perform(get(path)).andExpect(status().isUnauthorized)
@@ -90,7 +96,7 @@ class SavedJobIntegrationTest {
   mvc.perform(post(match).with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(matchInput(foreign)))).andExpect(status().isBadRequest)
   mvc.perform(get(match).with(caller(other))).andExpect(status().isNotFound)
   verifyNoInteractions(ai)
-  `when`(ai.generateJson(anyString(), anyString(), anyMap())).thenAnswer { invocation ->
+  `when`(ai.generateJson(anyString(), anyString(), anyMap(), (any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))).thenAnswer { invocation ->
    val sent = json.readTree(invocation.getArgument<String>(1))
    assertThat(sent["confirmedClaims"].size()).isEqualTo(1)
    assertThat(sent["confirmedClaims"][0]["id"].asText()).isEqualTo(claim)
@@ -100,15 +106,15 @@ class SavedJobIntegrationTest {
   }
   mvc.perform(post(match).with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(matchInput(claim)))).andExpect(status().isOk).andExpect(jsonPath("$.assessments[0].classification").value("STRONG")).andExpect(jsonPath("$.stale").value(false))
   mvc.perform(get(match).with(caller(user))).andExpect(jsonPath("$.analysis.claims[0].revision").value(2)).andExpect(jsonPath("$.analysis.assessments[0].evidence[0].claimId").value(claim))
-  verify(ai, times(1)).generateJson(anyString(),anyString(),anyMap())
+  verify(ai, times(1)).generateJson(anyString(),anyString(),anyMap(),(any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))
   mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$.length()").value(2))
  }
  @Test fun `evidence changes during matching cannot publish stale results and reopening marks prior result stale`() {
   val user = profile(); val id = save(user); val claim = claim(user); val path = "$path/$id/match"; val input = json.writeValueAsString(matchInput(claim))
-  `when`(ai.generateJson(anyString(),anyString(),anyMap())).thenReturn(output(claim))
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),(any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))).thenReturn(output(claim))
   val first = mvc.perform(post(path).with(caller(user)).with(csrf()).contentType("application/json").content(input)).andExpect(status().isOk).andReturn()
   val firstId = json.readTree(first.response.contentAsString)["id"].asText()
-  `when`(ai.generateJson(anyString(),anyString(),anyMap())).thenAnswer {
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),(any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))).thenAnswer {
    jdbc.update("UPDATE competency_claim SET revision = revision + 1, status = 'UNVERIFIED' WHERE id = ?::uuid",claim)
    output(claim)
   }

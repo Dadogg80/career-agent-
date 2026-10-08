@@ -25,8 +25,9 @@ open class DocumentAnalysisController(private val services: ObjectProvider<Docum
     @GetMapping open fun load(@AuthenticationPrincipal principal: OidcUser?, @PathVariable documentId: String?) = response(mapOf("analysis" to service().load(identity(principal), id(documentId!!))))
     @PostMapping(consumes = ["application/json"])
     open fun analyze(@AuthenticationPrincipal principal: OidcUser?, @PathVariable documentId: String?, @RequestBody input: Map<String, Any?>): ResponseEntity<*> {
-        if (input.keys != setOf("text", "locale", "consent") || input["text"] !is String || input["locale"] !is String || input["consent"] !is Boolean) throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID", 400)
-        return response(service().analyze(identity(principal), id(documentId!!), input["text"] as String, input["locale"] as String, input["consent"] as Boolean))
+        if (input.filterKeys { it!="aiApproval" }.keys != setOf("text", "locale", "consent") || input["text"] !is String || input["locale"] !is String || input["consent"] !is Boolean) throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID", 400)
+        if(input.containsKey("aiApproval") && input["aiApproval"] !is String)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
+        return response(service().analyze(identity(principal), id(documentId!!), input["text"] as String, input["locale"] as String, input["consent"] as Boolean,input["aiApproval"] as? String))
     }
     @ExceptionHandler(DocumentFailure::class) fun rejected(error: DocumentFailure) = ResponseEntity.status(error.status).header("Cache-Control", "no-store").body(mapOf("code" to error.code))
     @ExceptionHandler(AiFailure::class) fun failed(error: AiFailure): ResponseEntity<*> {

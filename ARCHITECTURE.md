@@ -1,6 +1,6 @@
 # Arkitekturgrunnlag
 
-Status: Target architecture with an implemented welcome page, status proxy, and a bounded Groq advertisement extraction flow in jobs/ai. Private-data modules and PostgreSQL remain design. See the [ADR index](docs/adr/README.md) and [pilot test guide](docs/TESTING_PILOT.md).
+Status: The local pilot implements Next.js/TanStack/shadcn UI, Kotlin/Spring REST, optional PostgreSQL/Flyway and OIDC/PKCE, owned documents/claims/career history, saved advertisements, approved matching, standard CV export and manual application tracking. The current unpublished branch adds database-backed sequential document review and task-specific AI configuration. The complete target architecture below includes future workloads; see the [ADR index](docs/adr/README.md) and [pilot test guide](docs/TESTING_PILOT.md).
 
 ## Systemgrenser
 
@@ -155,3 +155,14 @@ The profile module now owns typed reviewed career entries and revision history i
 ## Source-selected document knowledge (ADR 0023)
 
 Reviewed text is encoded as bounded numbered literal passages. Groq selects evidence IDs, skill labels and optional same-document header context; application code supplies source wording and validates source membership, literal skill boundaries and nearby section proof. The original API/storage result shape stays compatible through optional contextQuote. Older results are revalidated on read without rewriting claims/history. Read-only owned document checks compare original size/hash, fresh local extraction and stored quotation support without a provider call or database write. Green checks never certify interpretation/completeness.
+
+
+## Bounded document orchestration
+
+The browser submits approved full previews once, then dispatches one private `/documents/workflow/{id}/next` step at a time. PostgreSQL stores progress; revision replay, owner locks and a short processing lease protect against duplicate calls/imports. Successful steps persist usable drafts. Provider rejection pauses progress and preserves the full reported cooldown. Closing the UI stops further dispatch; reopening requires explicit continuation. An in-flight request can finish and save its result. This is a local-pilot workflow, not a background queue or Temporal implementation.
+
+Stable task prompts/schema precede variable numbered evidence. `AiTask` selects a configurable provider model; current defaults remain unchanged. Strict JSON validates shape, independent evidence checks validate literal provenance, and user review determines factual confirmation. No model can directly modify authoritative career history. See [GROQ_OPTIMIZATION.md](docs/GROQ_OPTIMIZATION.md).
+
+## Explicit AI provider routing
+
+The local pilot now routes the existing AiModel port by task to Groq or Gemini. Recipient/model preview fingerprints protect private approvals and persisted workflow continuation. Retrieval stays a separate source adapter; no provider-switch retry loop or agent swarm is introduced. See [ADR 0025](docs/adr/0025-explicit-ai-providers-and-approval.md) and [Gemini setup](docs/GEMINI_SETUP.md).

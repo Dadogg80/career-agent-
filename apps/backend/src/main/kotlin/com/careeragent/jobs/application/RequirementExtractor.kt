@@ -3,6 +3,7 @@ package com.careeragent.jobs.application
 import com.careeragent.ai.application.AiFailure
 import com.careeragent.ai.application.AiModel
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.JsonNode
 import org.springframework.stereotype.Service
 import org.slf4j.LoggerFactory
 import java.text.Normalizer
@@ -53,40 +54,45 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
         try {
             val root = try { mapper.readTree(result) } catch (_: Exception) { throw AiFailure("AI_INVALID_RESULT", 502, reason = "MALFORMED_JSON") }
             val items = root.path("requirements")
-            if (!items.isArray || items.size() > 12) throw IllegalArgumentException()
-            var omittedItems = 0
-            val requirements = items.mapNotNull { item ->
-                val label = item.path("label")
-                val quote = item.path("quote")
-                val kind = item.path("kind")
-                if (!label.isTextual || label.asText().isBlank() || label.asText().length > 200 ||
-                    !quote.isTextual || quote.asText().isBlank() || quote.asText().length > 600 || !kind.isTextual
-                ) throw IllegalArgumentException()
-                val classification = RequirementKind.valueOf(kind.asText())
-                if (!normalize(text).contains(normalize(quote.asText()))) {
-                    omittedItems++
-                    return@mapNotNull null
-                }
-                ExtractedRequirement(label.asText(), classification, quote.asText())
-            }
             val factItems = root.path("facts")
-            if (!factItems.isArray || factItems.size() > 10) throw IllegalArgumentException()
-            val facts = factItems.mapNotNull { item ->
-                val label = item.path("label")
-                val value = item.path("value")
-                val quote = item.path("quote")
-                if (!label.isTextual || label.asText().isBlank() || label.asText().length > 100 ||
-                    !value.isTextual || value.asText().isBlank() || value.asText().length > 500 ||
-                    !quote.isTextual || quote.asText().isBlank() || quote.asText().length > 1000) throw IllegalArgumentException()
-                val classification = JobFactKind.valueOf(item.path("kind").asText())
-                if (!normalize(text).contains(normalize(quote.asText()))) {
-                    omittedItems++
-                    return@mapNotNull null
-                }
-                JobFact(classification, label.asText(), value.asText(), quote.asText())
+            if (!root.isObject || !items.isArray || !factItems.isArray) throw IllegalArgumentException()
+            val source = normalize(text)
+            val omissions = linkedMapOf<String, Int>()
+            fun omit(reason: String, count: Int = 1) {
+                if (count > 0) omissions[reason] = (omissions[reason] ?: 0) + count
             }
+            val requirements = mutableListOf<ExtractedRequirement>()
+            val facts = mutableListOf<JobFact>()
+            // Inspect a bounded number of items; a bad item must not discard other supported content.
+            for (item in items.take(128)) {
+                val label = item.boundedText("label", 200)
+                val quote = item.boundedText("quote", 600)
+                val kind = RequirementKind.entries.find { it.name == item.path("kind").textValue() }
+                when {
+                    label == null || quote == null || kind == null -> omit("INVALID_REQUIREMENT_FIELDS")
+                    !source.contains(normalize(quote)) -> omit("UNSUPPORTED_REQUIREMENT_QUOTE")
+                    requirements.size >= 12 -> omit("REQUIREMENT_LIMIT")
+                    else -> requirements.add(ExtractedRequirement(label, kind, quote))
+                }
+            }
+            omit("INSPECTION_LIMIT", (items.size() - 128).coerceAtLeast(0))
+            for (item in factItems.take(128)) {
+                val label = item.boundedText("label", 100)
+                val value = item.boundedText("value", 500)
+                val quote = item.boundedText("quote", 1000)
+                val kind = JobFactKind.entries.find { it.name == item.path("kind").textValue() }
+                when {
+                    label == null || value == null || quote == null || kind == null -> omit("INVALID_FACT_FIELDS")
+                    !source.contains(normalize(quote)) -> omit("UNSUPPORTED_FACT_QUOTE")
+                    facts.size >= 10 -> omit("FACT_LIMIT")
+                    else -> facts.add(JobFact(kind, label, value, quote))
+                }
+            }
+            omit("INSPECTION_LIMIT", (factItems.size() - 128).coerceAtLeast(0))
+            val omittedItems = omissions.values.sum()
             if (omittedItems > 0) {
-                logger.warn("Job analysis omitted unsupported evidence: count={}", omittedItems)
+                // Categories/counts only: no advertisement, contact details or provider payload.
+                logger.warn("Job analysis items omitted: count={} categories={}", omittedItems, omissions)
                 if (requirements.isEmpty() && facts.isEmpty()) throw AiFailure("AI_INVALID_RESULT", 502, reason = "NO_SUPPORTED_ITEMS")
             }
             return RequirementExtraction(requirements, facts, omittedItems)
@@ -96,6 +102,13 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
             logger.warn("Job analysis rejected: code=AI_INVALID_RESULT")
             throw AiFailure("AI_INVALID_RESULT", 502, reason = "INVALID_STRUCTURE")
         }
+    }
+
+    private fun JsonNode.boundedText(field: String, maxLength: Int): String? {
+        if (!isObject) return null
+        val value = path(field)
+        if (!value.isTextual) return null
+        return value.textValue().takeIf { it.isNotBlank() && it.length <= maxLength }
     }
 
     private fun normalize(text: String) = Normalizer.normalize(text, Normalizer.Form.NFC).replace(Regex("(?U)\\s+"), " ").trim()

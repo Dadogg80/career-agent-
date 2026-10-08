@@ -31,3 +31,12 @@ Docker recommendation: native frontend/backend, PostgreSQL in Compose when intro
 ## Source-import default (ADR 0015)
 
 The initial local import processes DOCX/PDF without external AI and uses user-selected excerpts. The owner explicitly authorized opt-in local Groq summaries of reviewed document excerpts, including combined analysis (ADR 0016). External-provider contracts/transfer/retention controls remain open before outside users. Q-007 still concerns backup/retention/account deletion and broader rollout; explicit per-document/per-claim deletion now exists with visible retained-quote semantics. This does not block the authorized single local pilot import.
+
+
+## Knowledge-model review — 2026-10-08
+
+The [relational proposal](CAREER_KNOWLEDGE_MODEL_PROPOSAL.md) is partially applied through revision-linked career-entry evidence and owned analysis progress. The owner resumed this specific feature slice; full catalog/context/conflict migrations and new retention policies remain separate decisions. The authorized local workflow preserves existing deletion disclosures. Task configuration is implemented with unchanged defaults. Live model quality, account-level quota interactions, source-term compliance, historical artifact retention and broader privacy/export/deletion policy remain open before expansion.
+
+## Gemini follow-up
+
+Gemini 3.5 Flash is verified on synthetic extraction/profile data only. Still open: account-specific quotas, real-document semantic coverage after recipient-specific approval, normalized aliases/context conflict review, native PDF and FINN URL Context quality, and production data processing/retention. 3.8 Flash generation was unavailable in this instance. No model/key rotation is planned.

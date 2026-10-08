@@ -116,7 +116,7 @@ class DocumentAnalysisServiceTest {
     @Test fun `one model call per attempt concurrency is bounded and failures release the permit`() {
         `when`(docs.detail(identity, id)).thenReturn(source())
         val entered = CountDownLatch(1); val release = CountDownLatch(1)
-        `when`(model.generateJson(anyString(), anyString(), anyMap())).thenAnswer { entered.countDown(); check(release.await(5, TimeUnit.SECONDS)); throw AiFailure("AI_RATE_LIMITED", 429, 2) }
+        `when`(model.generateJson(anyString(), anyString(), anyMap(), (eq(AiTask.DOCUMENT_EXTRACTION) ?: AiTask.DOCUMENT_EXTRACTION))).thenAnswer { entered.countDown(); check(release.await(5, TimeUnit.SECONDS)); throw AiFailure("AI_RATE_LIMITED", 429, 2) }
         val pool = Executors.newSingleThreadExecutor()
         try {
             val first = pool.submit<Throwable> { catchThrowable { service.analyze(identity, id, text, "nb", true) } }
@@ -125,7 +125,7 @@ class DocumentAnalysisServiceTest {
             release.countDown(); assertThat(first.get(5, TimeUnit.SECONDS)).hasMessage("AI_RATE_LIMITED")
             assertThatThrownBy { service.analyze(identity, id, text, "nb", true) }.hasMessage("AI_RATE_LIMITED")
             assertThatThrownBy { service.analyze(identity, id, text, "nb", true) }.hasMessage("AI_BUDGET_REACHED")
-            verify(model, times(2)).generateJson(anyString(), anyString(), anyMap())
+            verify(model, times(2)).generateJson(anyString(), anyString(), anyMap(), (eq(AiTask.DOCUMENT_EXTRACTION) ?: AiTask.DOCUMENT_EXTRACTION))
             verifyNoInteractions(repository)
         } finally { release.countDown(); pool.shutdownNow() }
     }

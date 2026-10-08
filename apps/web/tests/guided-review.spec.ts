@@ -19,7 +19,7 @@ test("guided review shows sources and requires one explicit decision per proposa
   claims = claims.map(c => c.id === selected.id ? { ...c, status: input.decision === "CONFIRM" ? "CONFIRMED" : "REJECTED", revision: c.revision + 1 } : c);
   return r.fulfill({ json: claims.find(c => c.id === selected.id) });
  });
- await page.goto("/career/profile"); await page.getByRole("button", { name: "Gjennomgå 3 forslag", exact: true }).click();
+ await page.goto("/career/profile"); await page.getByRole("button", {name:"Din kompetanse",exact:true}).click(); await page.getByRole("button", { name: "Gjennomgå 3 forslag", exact: true }).click();
  const dialog = page.getByRole("dialog");
  await expect(dialog.locator("blockquote")).toHaveText("Implemented Kotlin"); expect(writes).toEqual([]);
  await dialog.getByRole("button", { name: "Stemmer · Bekreft min erfaring", exact: true }).click();
@@ -42,7 +42,7 @@ test("review respects visible filtering and keeps a conflicting proposal open wi
   if (r.request().method() === "GET") return r.fulfill({ json: [proposal("1", "Kotlin"), proposal("2", "React")] });
   writes++; return r.fulfill({ status: 409, json: { code: "CLAIM_CONFLICT" } });
  });
- await page.goto("/career/profile"); await page.getByRole("combobox", { name: "Språk", exact: true }).selectOption("en");
+ await page.goto("/career/profile"); await page.getByRole("button", {name:"Din kompetanse",exact:true}).click(); await page.getByRole("combobox", { name: "Språk", exact: true }).selectOption("en");
  await page.getByRole("textbox", { name: "Search competencies", exact: true }).fill("Kotlin");
  await page.getByRole("button", { name: "Review 1 proposals", exact: true }).click();
  const dialog = page.getByRole("dialog"); await expect(dialog.getByRole("heading", { name: "React", exact: true })).toHaveCount(0);

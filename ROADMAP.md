@@ -4,6 +4,8 @@ Status checked against remote main on 2026-10-08; the owner authorized publishin
 
 ## Current status
 
+The owner resumed the document/profile slice after the knowledge-model review. On `feat/full-document-career-review`, complete-source sequential analysis, editable sourced competency/history/profile drafts, section-based profile navigation, PDF tracking/column handling and configurable task models are implemented and locally tested. Defaults remain GPT OSS 20B because the live quality comparison was blocked by Groq quota. This branch is not pushed or merged; the prior pause is superseded for this specific scope. The full normalized knowledge graph and later roadmap capabilities remain separate.
+
 | Capability | Actual status |
 | --- | --- |
 | Next.js + Kotlin/Spring Boot, Norwegian default / English | Implemented and merged |
@@ -19,6 +21,9 @@ Status checked against remote main on 2026-10-08; the owner authorized publishin
 | Competency search/status dashboard, wider document review Sheet, improved source coverage and local rereading/OCR | Implemented and locally validated on feat/competency-workspace; ready for the authorized delivery merge |
 | Reviewed typed career history, role/client distinction and revision review | Implemented on the local branch; real PostgreSQL and browser checks |
 | Public landing, dedicated sign-in, workspace overview and responsive navigation | Implemented on the local branch; production/development browser regression checks completed |
+| Whole-document sourced profile/competency/history review | Implemented and tested on the unpublished current branch; explicit per-run approval and factual confirmation |
+| Task-specific model configuration and safe token/cache usage logging | Implemented locally; default model unchanged, live quality comparison pending |
+| PDF character-spacing/column repair | Implemented and tested locally, including the six supplied private test documents |
 | Adjacent-skill inference, full normalized employment/project graph | Not implemented |
 | Owned saved job snapshots and searchable library | Implemented on current local branch; verified in the integrated local pilot |
 | Approved personal requirement-to-claim matching | Implemented on current local branch; verified in the integrated local pilot |
@@ -49,3 +54,7 @@ Automatic job discovery/digests → interview/follow-up → browser application 
 ## Completion discipline
 
 Update stories/flows, decisions, security and the development log. Published branches remain pending until an actual authorized merge is verified. Local tests do not establish GitHub Actions execution or fresh-task cloud restoration. Production identity, provider/source terms, account export/deletion, retention, backup and object storage remain unresolved before external rollout.
+
+## Current Gemini continuation — 2026-10-08
+
+Implemented locally: explicit Groq/Gemini task routing, recipient/model-bound private approval, persisted run protection, Gemini cooldown and sanitized token logging. Stable 3.5 Flash passed synthetic extraction/profile checks; 3.8 Flash generation returned 503. The related document-quality slice adds explicit responsibility coverage and prevents final synthesis from erasing already sourced profile sections. Real-document Gemini quality remains pending recipient-approved testing. Next: measured document coverage/PDF reading → conservative competency reconciliation → profile/history UX. Native Gemini PDF/URL retrieval, full normalized catalog/conflict model and later discovery/interview/browser/academy features remain separate.

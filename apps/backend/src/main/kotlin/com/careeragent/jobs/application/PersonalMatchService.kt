@@ -23,7 +23,7 @@ interface PersonalMatchRepository {
 @Profile("persistence")
 class PersonalMatchService(private val jobs: SavedJobRepository, private val claims: ClaimRepository,
     private val results: PersonalMatchRepository, private val model: AiModel, private val mapper: ObjectMapper,
-    @Value("\${MATCH_AI_MAX_REQUESTS:10}") private val maxRequests: Int) {
+    @Value("\${MATCH_AI_MAX_REQUESTS:10}") private val maxRequests: Int, private val routing: AiRouting = AiRouting()) {
     private val permit = Semaphore(1); private val used = AtomicInteger()
     fun load(identity: VerifiedIdentity, jobId: UUID): PersonalMatch? {
         jobs.get(identity, jobId)
@@ -33,6 +33,7 @@ class PersonalMatchService(private val jobs: SavedJobRepository, private val cla
     }
     fun analyze(identity: VerifiedIdentity, jobId: UUID, request: MatchRequest): PersonalMatch {
         if (!request.consent) throw SavedJobFailure("MATCH_CONSENT_REQUIRED", 400)
+        routing.requireApproval(request.aiApproval,AiTask.PERSONAL_MATCH)
         if (request.locale !in setOf("nb", "en") || request.text.trim().length < 40 || request.text.length > 12000 || request.claims.isEmpty() || request.claims.size > 30 || request.claims.map { it.id }.distinct().size != request.claims.size) throw SavedJobFailure("MATCH_INPUT_INVALID", 400)
         val job = jobs.get(identity, jobId)
         // Edited previews may omit whole source passages, never introduce new ad content.
@@ -52,9 +53,9 @@ class PersonalMatchService(private val jobs: SavedJobRepository, private val cla
         try {
             if (used.get() >= maxRequests) throw AiFailure("AI_BUDGET_REACHED", 429)
             used.incrementAndGet()
-            val output = model.generateJson(prompt(request.locale), mapper.writeValueAsString(mapOf("advertisement" to request.text, "requirements" to requirements, "confirmedClaims" to selected)), schema)
+            val output = model.generateJson(prompt(request.locale), mapper.writeValueAsString(mapOf("advertisement" to request.text, "requirements" to requirements, "confirmedClaims" to selected)), schema, com.careeragent.ai.application.AiTask.PERSONAL_MATCH)
             val parsed = parse(output, job.content.requirements.size, requirements.map { it["index"] as Int }.toSet(), selected, request.locale)
-            return results.save(identity, jobId, PersonalMatch(UUID.randomUUID(), request.locale, OffsetDateTime.now(), parsed.first, selected, parsed.second, characters))
+            return results.save(identity, jobId, PersonalMatch(UUID.randomUUID(), request.locale, OffsetDateTime.now(), parsed.first, selected, parsed.second, characters, provider=routing.selection(AiTask.PERSONAL_MATCH).provider,model=routing.selection(AiTask.PERSONAL_MATCH).model))
         } finally { permit.release() }
     }
     internal fun parse(output: String, count: Int, included: Set<Int>, claims: List<MatchClaim>, locale: String): Pair<List<RequirementMatch>, Int> {

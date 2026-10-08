@@ -9,3 +9,5 @@ data class CareerEntryContent(val kind: EntryKind, val title: String, val organi
     val ongoing: Boolean, val description: String, val sourceNote: String)
 data class CareerEntry(val id: UUID, val content: CareerEntryContent, val status: ClaimStatus,
     val revision: Long, val createdAt: OffsetDateTime, val updatedAt: OffsetDateTime)
+
+data class CareerEntryEvidence(val revision:Long,val documentId:UUID?,val originalName:String,val quote:String,val periodText:String)

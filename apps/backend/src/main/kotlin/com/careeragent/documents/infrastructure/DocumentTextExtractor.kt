@@ -3,7 +3,6 @@ package com.careeragent.documents.infrastructure
 import com.careeragent.documents.application.DocumentFailure
 import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException
 import org.apache.pdfbox.Loader
-import org.apache.pdfbox.text.PDFTextStripper
 import org.springframework.stereotype.Component
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -72,17 +71,7 @@ class DocumentTextExtractor {
         return Loader.loadPDF(bytes).use { document ->
             if (document.isEncrypted) throw DocumentFailure("DOCUMENT_ENCRYPTED", 400)
             if (document.numberOfPages > 100) throw DocumentFailure("DOCUMENT_TOO_LARGE", 413)
-            val result = StringBuilder()
-            val writer = object : java.io.Writer() {
-                override fun write(chars: CharArray, offset: Int, length: Int) {
-                    if (result.length + length > 60000) throw DocumentFailure("DOCUMENT_TOO_LARGE", 413)
-                    result.append(chars, offset, length)
-                }
-                override fun flush() {}
-                override fun close() {}
-            }
-            PDFTextStripper().apply { sortByPosition = true }.writeText(document, writer)
-            result.toString()
+            ReadablePdfText.extract(document)
         }
     }
 }

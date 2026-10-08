@@ -1,6 +1,6 @@
 # Domenemodell
 
-Status: The broader model remains a design. Identity/basic profile are merged; this branch implements owned competency claims/revisions and source documents. Normalized Employment, Project, Skill taxonomy, applications and personal matching remain future work.
+Status: The merged local pilot includes identity/basic profile, owned claims/revisions and source documents, reviewed typed career history, saved jobs, approved personal matching, standard CV export and manual application tracking. Normalized concepts, reusable evidence, structured claim/context links, conflicts and clarification questions remain proposals. See the [incremental knowledge-model proposal](docs/CAREER_KNOWLEDGE_MODEL_PROPOSAL.md). The owner resumed the document/profile slice. The current branch implements technical analysis progress and revision-linked career-entry document evidence; normalized skill concepts, claim-context relationships, conflicts and clarification remain staged proposals.
 
 ## Eierskap
 
@@ -105,3 +105,16 @@ The local pilot now implements owner-scoped CareerEntry records for employment, 
 ## Document evidence selection and checks
 
 CompetencySuggestion optionally retains contextQuote: the nearby literal header supporting its employer/project label. Statement/summary wording is source-selected; unknown context stays unknown. A bounded DocumentCheckReport records a timestamp and each owned document's original, text and existing individual/combined quotation check states. It is transient technical evidence, not confirmation or a completeness score. Saved claims/history are not retroactively modified by presentation revalidation.
+
+
+## Whole-document review subset (ADR 0024)
+
+`DocumentRunState` belongs to the authenticated profile owner and one scope (a document or a selected collection). It stores immutable source snapshots, approved previews, ordered bounded batches, optimistic revision, provider pacing, issue and lease. It is technical progress, never candidate truth. New runs replace the latest run in that scope. Retrying an already committed revision returns progress without another AI call. Original-text changes or document deletion invalidate affected runs and analysis snapshots.
+
+`ProfileSummaryDraft` contains a supported kind, editable AI wording and exact evidence references. `CareerHistoryDraft` includes prefilled typed entry content and literal period text. `CompetencySuggestion` may contain editable AI wording, a category, supported literal skill label and multiple source quotes. Missing interests, dates and context remain unknown. Explicit owner import creates an UNVERIFIED claim/entry; an additional explicit confirmation can be submitted in the same review action. Editing established content still resets confirmation through existing revision rules.
+
+`CareerEntryEvidence` records owner, entry and revision, source document/name, quote, literal period and timestamp. Entry/document foreign keys enforce matching ownership. Deleting the source detaches the document reference while retaining disclosed quotations; deleting the entry removes its evidence/revisions. This is an incremental source-link implementation, not the proposed generalized reusable evidence graph.
+
+## AI approval snapshots
+
+AiSelection identifies a configured provider and model per task. AiApprovalPreview binds the tasks and selections to a non-secret fingerprint. A DocumentRun persists this approval snapshot; changing provider/model cannot authorize continuation implicitly. This is separate from authentication, source Evidence and factual Claim confirmation. PersonalMatch stores its generating provider/model; old records retain their Groq default.

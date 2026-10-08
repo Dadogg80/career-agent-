@@ -89,7 +89,7 @@ test("failed automatic analysis keeps retrieved text for manual retry", async ({
   await page.goto("/jobs/analyze");
   await page.getByRole("textbox", { name: "Lenke til stillingsannonse" }).fill(url);
   await page.getByRole("button", { name: "Analyser lenke", exact: true }).click();
-  await expect(page.locator(".workflow-notice")).toContainText("trenger en liten pause");
+  await expect(page.locator(".workflow-notice")).toContainText("venter på tilgjengelig AI-kvote");
   await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await expect(page.getByRole("textbox", { name: "Stillingsannonse", exact: true })).toHaveValue(text);
 });

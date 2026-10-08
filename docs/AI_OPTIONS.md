@@ -4,6 +4,14 @@ Status: Historical comparison. Groq is now selected for the bounded public-adver
 
 ## Alternativer
 
+### Observed pilot quotas and proposed task-specific models — 2026-10-08
+
+The owner's Groq console screenshot lists GPT OSS 20B, GPT OSS 120B and Qwen 3.8 27B as text/reasoning candidates. Its displayed limits for these models are 30 requests/minute, 1,000 requests/day, 8,000 tokens/minute and 200,000 tokens/day. This records the supplied account view, not a timeless public free-tier guarantee or proof of independent aggregate account quotas. The reported 20B token/day rejection requests approximately 16 minutes of waiting; a 10-second pause cannot address it.
+
+Proposed experiment: retain 20B for short advertisement extraction; compare 120B on complex document extraction, reviewed personal matching and CV wording; evaluate Qwen vision only when locally extracted/scanned text is insufficient. Verify actual API IDs, strict structured-output support, Browser Search eligibility and Norwegian/source-grounded quality for each task before changing defaults. Voice models do not address present document/advertisement workflows.
+
+Task-specific selection can distribute legitimate work if model quotas are independent, but cannot create unlimited capacity. Prefer source/result reuse and small relevant inputs. Do not implement automatic model/key rotation after 429 or assume a larger model has a larger quota. Task-specific routing is now configurable on the current unpublished branch; all unset tasks retain the existing configured model. A live comparison was blocked by quota, so 120B/Qwen defaults are not activated. See [GROQ_OPTIMIZATION.md](GROQ_OPTIMIZATION.md).
+
 | Alternativ | Mulig fordel | Forbehold |
 | --- | --- | --- |
 | Gemini Developer API | Har tilbudt gratis API-kvoter og sterke generalistmodeller; kandidat for norsk/engelsk og strukturert analyse. | Kontroller dagens kvoter, tilgjengelige modeller, geografisk tilgang og datavilkår. Ikke anta gratis behandling av private CV-er er akseptabelt. |
@@ -25,3 +33,7 @@ Ingen automatisk betalt fallback. Kvotefeil skal bevare arbeidet og tillate retr
 - [Gemini API-vilkår](https://ai.google.dev/gemini-api/terms)
 - [Groq rate limits](https://console.groq.com/docs/rate-limits)
 - [Groq databehandling](https://console.groq.com/docs/your-data)
+
+## Gemini integration — 2026-10-08
+
+The owner authorized opt-in Gemini integration. Stable 3.5 Flash passed the actual synthetic document-extraction/profile pipeline; 3.8 Flash model listing succeeded but generation returned 503. Keep Groq defaults when no provider is configured. Model distribution is explicit per task, without automatic quota failover. No owner documents were sent to Google during integration. See [Gemini setup](GEMINI_SETUP.md). Earlier candidate-only descriptions are superseded for this local slice; comparative real-document quality remains open.

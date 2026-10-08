@@ -25,8 +25,15 @@ export function ProfileWorkspace({ locale }: { locale: Locale }) {
   const t = translations[locale]; const cache = useQueryClient();
   const [name, setName] = useState(""); const [language, setLanguage] = useState<Locale>("nb");
   const [loginFailed, setLoginFailed] = useState(false);
+  const [section, setSection] = useState<"documents"|"competencies"|"history">("documents");
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [claimExpired, setClaimExpired] = useState(false);
+  useEffect(() => {
+    const selectLinkedSection = () => setSection(window.location.hash === "#profile-competencies" ? "competencies" : window.location.hash === "#profile-career-history" ? "history" : "documents");
+    selectLinkedSection();
+    window.addEventListener("hashchange", selectLinkedSection);
+    return () => window.removeEventListener("hashchange", selectLinkedSection);
+  }, []);
   useEffect(() => { setLoginFailed(new URLSearchParams(window.location.search).get("login") === "failed"); }, []);
   const session = useQuery({ queryKey: ["private-session"], gcTime: 0, refetchOnReconnect: false, queryFn: async () => {
     const value = await readJson(await fetch("/api/auth/session", { cache: "no-store" }));
@@ -68,5 +75,5 @@ export function ProfileWorkspace({ locale }: { locale: Locale }) {
 
       </>}
       {session.isError && <Button variant="outline" onClick={() => void session.refetch()}>{t.reload}</Button>}
-    </CardContent></Card>{loggedIn && !expired && profile.data && session.data && <><nav className="career-jump-links" aria-label={locale === "nb" ? "Profilområder" : "Profile sections"}><Button variant="outline" asChild><a href="#profile-competencies">{locale === "nb" ? "Din kompetanse" : "Your competencies"}</a></Button><Button variant="outline" asChild><a href="#profile-documents">{locale === "nb" ? "Dokumentgrunnlag" : "Document sources"}</a></Button></nav><ClaimPanel locale={locale} csrfToken={session.data.csrfToken} onAuthRequired={() => setClaimExpired(true)}/><CareerEntryPanel locale={locale} csrfToken={session.data.csrfToken} onAuthRequired={() => setClaimExpired(true)}/><DocumentPanel locale={locale} csrfToken={session.data.csrfToken} onAuthRequired={() => setClaimExpired(true)}/></>}</section>;
+    </CardContent></Card>{loggedIn && !expired && profile.data && session.data && <><div className="profile-section-navigation"><p className="hint">{locale === "nb" ? "Start med dokumentene. Vi foreslår kompetanse og historikk; du kontrollerer innholdet." : "Start with documents. We propose competencies and career history; you review the content."}</p><nav aria-label={locale === "nb" ? "Profilområder" : "Profile sections"} className="profile-section-buttons">{(["documents","competencies","history"] as const).map(key=><Button key={key} aria-pressed={section===key} aria-controls={`profile-section-${key}`} variant={section===key?"default":"outline"} onClick={()=>setSection(key)}>{key === "documents" ? locale === "nb" ? "Dokumenter og AI-profil" : "Documents and AI profile" : key === "competencies" ? locale === "nb" ? "Din kompetanse" : "Your competencies" : locale === "nb" ? "Arbeid og utdanning" : "Career history"}</Button>)}</nav></div><div id="profile-section-documents" hidden={section!=="documents"}><DocumentPanel locale={locale} csrfToken={session.data.csrfToken} onAuthRequired={() => setClaimExpired(true)}/></div><div id="profile-section-competencies" hidden={section!=="competencies"}><ClaimPanel locale={locale} csrfToken={session.data.csrfToken} onAuthRequired={() => setClaimExpired(true)}/></div><div id="profile-section-history" hidden={section!=="history"}><CareerEntryPanel locale={locale} csrfToken={session.data.csrfToken} onAuthRequired={() => setClaimExpired(true)}/></div></>}</section>;
 }

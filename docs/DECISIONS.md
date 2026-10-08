@@ -4,6 +4,10 @@ Confirmed records explicit user requirements; recommendations record design prop
 
 ## Bekreftede føringer
 
+### Knowledge-model review and maintenance — 2026-10-08
+
+The owner supplied a review explicitly requesting a pause in document/profile feature implementation and a relational knowledge-model proposal before further implementation. The [proposal](CAREER_KNOWLEDGE_MODEL_PROPOSAL.md) covers schema, aggregates, staged migration, legacy compatibility, scoped confirmations, source conflicts and deletion. Its policies and schema remain PROPOSED, not accepted or implemented. Unfinished full-document/PDF experiments are unpublished. Existing advertisement analysis and quota-handling defects are separately authorized maintenance. Per-capability model selection is a possible next experiment, not an implemented automatic fallback or a confirmed independent-quota strategy.
+
 | ID | Føring | Grunnlag og konsekvens |
 | --- | --- | --- |
 | D-001 | Ingen applikasjonsimplementasjon før klarsignal. | Opprinnelig instruksjon. Klarsignal til første lille implementasjon er nå gitt; se D-012. |
@@ -123,3 +127,12 @@ Accepted under the owner's autonomous pilot instruction: received source text ta
 ## Source-selected competencies and local document checks — 2026-10-07
 
 Accepted under the owner's request to test actual uploaded evidence: separate literal document extraction from generative writing. The model selects numbered evidence; the application supplies source wording, validates skill labels and nearby same-document context proof, and exposes unknown associations. Reopened old suggestions obey this presentation rule without altering saved claims. Add a read-only original/text/quote check and smaller optional detail windows, without provider retries, automatic confirmation, paid services or publication. See ADR 0023. A green technical check never claims semantic or exhaustive correctness.
+
+
+## Resumed document/profile review — 2026-10-08
+
+The owner explicitly resumed the planned implementation and reiterated automatic whole-document processing, prefilled career history, editable AI summaries/competencies, improved profile navigation, PDF readability, model configuration and the incremental domain model. Accepted implementation scope is ADR 0024. Keep existing disclosed source-deletion semantics, per-run provider consent and explicit factual confirmation. Task model overrides are implemented but defaults remain unchanged pending live quality comparison; there is no automatic quota fallback. The full proposed domain schema is not accepted wholesale. The latest development instruction to defer publishing remains in effect for this branch.
+
+## 2026-10-08 — Gemini and related knowledge quality
+
+Accepted: Gemini adapter behind explicit task routing, recipient/model-bound private approval and independent cooldowns (ADR 0025). Gemini-specific first model is stable 3.5 Flash after synthetic pipeline verification; 3.8 Flash returned 503. Existing unset-provider behavior remains Groq. Prioritize whole-document/PDF quality → competency coverage/deduplication → profile/history presentation. Keep this continuation unpublished. No paid upgrades or automatic failover.
