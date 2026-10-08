@@ -367,7 +367,7 @@ Upload and read locally → inspect full previews → approve selected documents
 
 ## Provider-aware document and matching review
 
-Load the non-secret AI configuration → show recipients and models beside the editable preview → obtain explicit approval → send the matching fingerprint → retain progress and source-backed drafts. A changed recipient/model requires a refreshed configuration and new approval/run; previous suggestions remain reviewable. Whole-document analysis also includes career-history sources in final synthesis and retains already sourced profile sections.
+Load the non-secret AI configuration (Gemini document/profile defaults: 3.5 Flash-Lite; job/match: 3.5 Flash, unless explicitly overridden) → show recipients and models beside the editable preview → obtain explicit approval → send the matching fingerprint → retain progress and source-backed drafts. A changed recipient/model requires a refreshed configuration and new approval/run; previous suggestions remain reviewable. Whole-document analysis also includes career-history sources in final synthesis and retains already sourced profile sections.
 
 ## Approved provider recovery — 2026-10-08
 

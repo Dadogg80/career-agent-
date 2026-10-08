@@ -14,8 +14,9 @@ import java.util.UUID
 @EnabledIfEnvironmentVariable(named="GEMINI_LIVE_TEST", matches="true")
 class GeminiLiveTest {
     @Test fun `synthetic document yields explicit technologies sourced history and a grounded profile`() {
-        val selected=System.getenv("GEMINI_MODEL") ?: "gemini-3.5-flash"
-        val config=AiRouting(MockEnvironment().withProperty("AI_PROVIDER","gemini").withProperty("GEMINI_MODEL",selected))
+        val selected=System.getenv("GEMINI_MODEL") ?: "gemini-3.5-flash-lite"
+        val config=AiRouting(MockEnvironment().withProperty("AI_PROVIDER","gemini")
+            .withProperty("GEMINI_DOCUMENT_MODEL",selected).withProperty("GEMINI_PROFILE_MODEL",selected))
         val mapper=jacksonObjectMapper()
         val extractor=DocumentDraftExtractor(GeminiAiModel(mapper,System.getenv("GEMINI_API_KEY") ?: "",config),mapper)
         val source="""Example AS

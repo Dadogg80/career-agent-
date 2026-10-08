@@ -342,7 +342,7 @@ As a jobseeker, I want employment, projects, education and certificates with the
 
 ## AI provider integration
 
-- As a pilot user, I see which AI recipient/model will receive my reviewed data and explicitly approve each new analysis. Backend and UI reject stale configuration approvals without sending to a new recipient.
+- As a pilot user, I see which AI recipient/model will receive my reviewed data and explicitly approve each new analysis. Backend and UI reject stale configuration approvals without sending to a new recipient or model. Gemini document/profile tasks use Flash-Lite defaults with task overrides; moving a stored Flash plan to Lite requires renewed approval.
 - As a returning user, I can inspect stored document progress after configuration changes; it never silently resumes with another provider.
 - As a job seeker, I receive explicit responsibilities/mentoring/release skills alongside technologies, retain original evidence and can edit drafts before confirming. Source-backed education/interests survive a shorter final summary.
 

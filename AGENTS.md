@@ -72,3 +72,7 @@ PR #17 is verified merged at `922c6171d32af654d99100625b94670a2d479ac3` with bot
 ## Consolidated profile skill continuation — 2026-10-08
 
 PR #18 is verified merged at `5c896707202678e7fde339a994787654007ab0f2` with both Foundation checks successful. Current branch is `fix/competency-review-identity`: owner-requested one-card-per-skill profile presentation with preserved contribution/source/review identity; repair independent review keys under ADR 0027. Grouping must not merge factual status or overwrite source evidence. Gemini 3.5 Flash-Lite passed the bounded synthetic extraction/profile pipeline; configured defaults remain unchanged. Test and prepare a new PR without assuming authorization to merge it.
+
+## Gemini Lite defaults — 2026-10-08
+
+PR #19 is verified merged at `5bc9a3e84ad46273c80b7e483906063c55af4956`; continue on `feat/gemini-lite-defaults` from that main. The owner explicitly accepted Lite where suitable: Gemini document extraction/profile synthesis use `gemini-3.5-flash-lite` independently of the general `GEMINI_MODEL`; explicit task overrides still win. Gemini job/match retain Flash and the general model fallback. Unset providers still select Groq. Renew recipient/model-bound approval when a stored Flash run moves to Lite; preserve original saved result metadata. Test and prepare a new PR without merging it automatically.
