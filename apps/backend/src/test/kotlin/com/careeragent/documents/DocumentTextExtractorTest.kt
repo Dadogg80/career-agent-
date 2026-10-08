@@ -39,6 +39,35 @@ object DocumentFixture {
 }
 class DocumentTextExtractorTest {
     private val extractor = DocumentTextExtractor()
+    @Test fun `letter tracking does not manufacture spaces inside words and real spaces survive`() {
+        val output = ByteArrayOutputStream()
+        PDDocument().use { document ->
+            document.addPage(PDPage())
+            PDPageContentStream(document, document.getPage(0)).use { stream ->
+                stream.beginText(); stream.setFont(PDType1Font(Standard14Fonts.FontName.HELVETICA), 12f)
+                stream.setCharacterSpacing(2f); stream.newLineAtOffset(30f,700f)
+                stream.showText("Project description: clinician-facing cloud delivery")
+                stream.endText()
+            }; document.save(output)
+        }
+        assertThat(extractor.extract(output.toByteArray(),"pdf")).isEqualTo("Project description: clinician-facing cloud delivery")
+    }
+    @Test fun `repeated column gutter separates sidebar text from project paragraphs without dropping words`() {
+        val output = ByteArrayOutputStream()
+        PDDocument().use { document ->
+            document.addPage(PDPage())
+            PDPageContentStream(document, document.getPage(0)).use { stream ->
+                for (row in 0..5) for ((text,x) in listOf("Sidebar context entry $row" to 30f,"Project contribution number $row" to 300f)) {
+                    stream.beginText(); stream.setFont(PDType1Font(Standard14Fonts.FontName.HELVETICA),12f)
+                    stream.newLineAtOffset(x,700f-row*25); stream.showText(text); stream.endText()
+                }
+            }; document.save(output)
+        }
+        val text=extractor.extract(output.toByteArray(),"pdf")
+        assertThat(text).contains("Sidebar context entry 0\nSidebar context entry 1", "Project contribution number 0\nProject contribution number 1")
+        assertThat(text.indexOf("Sidebar context entry 5")).isLessThan(text.indexOf("Project contribution number 0"))
+        for(row in 0..5) {assertThat(text).contains("Sidebar context entry $row","Project contribution number $row")}
+    }
     @Test fun `UTF8 text and Markdown retain Norwegian company context and reject binary or invalid encodings`() {
         val text="## Example AS\nÅse bygget API-er med Kotlin og PostgreSQL."
         assertThat(extractor.extract(text.toByteArray(),"md")).isEqualTo(text)
