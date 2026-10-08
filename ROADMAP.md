@@ -4,7 +4,7 @@ Status checked against remote main on 2026-10-08; the owner authorized publishin
 
 ## Current status
 
-Remote main `ccae0ed` includes documentary profile imports, grouped skill cards, persistent review, candidate presentation, automatic matching evidence, explained percentages and inline clarification. PR #20 added Gemini Lite document/profile defaults; explicit Flash/Lite model choices and isolated cooldowns remain available across supported tasks. PR #21 merged literal source inventories, missed-list recovery and bounded follow-up with compact coverage UX; push/PR/main Foundation checks passed. Current `fix/document-context-and-periods` corrects nested literal context and local-format month endpoints. The generalized relationship/conflict model and semantic completeness measurement remain pending.
+Remote main `f0223f5` includes documentary profile imports, grouped skill cards, persistent review, candidate presentation, automatic matching evidence, explained percentages and inline clarification. PRs #20–22 add selectable Flash/Lite models, source inventories, bounded follow-up and corrected context/date precision. PR #23 adds revision-aware sourced competency-to-career relationships (ADR 0029); its Foundation checks passed. Current `feat/document-semantic-benchmark` adds an offline reviewed-fact evaluator and corrects named-list recovery across automatic portions. Full semantic judging, generalized relationships and conflict reconciliation remain pending.
 
 | Capability | Actual status |
 | --- | --- |
@@ -26,6 +26,8 @@ Remote main `ccae0ed` includes documentary profile imports, grouped skill cards,
 | PDF character-spacing/column repair | Merged in PR #17; locally checked against seven unique private documents |
 | Documentary profile imports, history drafts and persistent review queue | Merged in PR #18 (ADR 0027) |
 | Candidate presentation, automatic matching evidence, percentages and inline clarification | Merged in PR #18; newest-analysis synthesis, deterministic coverage |
+| Revision-aware competency-to-career links and compact review | Merged in PR #23 (ADR 0029) |
+| Offline expected-fact benchmark and cross-portion list recovery | Implemented on the current branch; pending review/merge |
 | Adjacent-skill inference, full normalized employment/project graph | Not implemented |
 | Owned saved job snapshots and searchable library | Merged in the tested local pilot |
 | Approved personal requirement-to-claim matching | Merged in the tested local pilot |
@@ -75,6 +77,14 @@ The priorities listed for that slice (document-grounded population, presentation
 
 ## Structured context delivery — 2026-10-08
 
-PR #22 is merged with successful Foundation checks. The `feat/competency-career-context` delivery implements ADR 0029: one owner/revision-scoped relationship table, exact unique documentary linking during approved population, explicit link/review/unlink controls and a compact searchable career picker. Existing record statuses and job/CV snapshots are unchanged.
+PR #22 is merged with successful Foundation checks. The merged PR #23 implements ADR 0029: one owner/revision-scoped relationship table, exact unique documentary linking during approved population, explicit link/review/unlink controls and a compact searchable career picker. Existing record statuses and job/CV snapshots are unchanged.
 
 Next priorities remain semantic expected-evidence benchmarking, explicit company/project/date conflict handling and measured extraction improvements. The normalized catalog and broader knowledge model are still proposed; this delivery does not complete them. Flash Lite remains an available choice for all four supported analysis tasks.
+
+## Expected-fact quality delivery — 2026-10-08
+
+The current continuation measures independently selected competencies, responsibilities, employer/project attribution, career month precision and substantive profile terms against recorded results. Counts distinguish captured, missing, wrong-context, wrong-field and unsupported-evidence findings. This is a developer benchmark, separate from the in-app source-usage panel; it never spends AI quota. A separately enabled synthetic Gemini check uses the same evaluator.
+
+A failing regression demonstrated local list-state loss when a long skills section crossed automatic portions. Recovery now carries source section state locally, emits complete rows once and preserves global/employer boundaries. Existing approved workflow persistence and review rules remain. No extra AI calls, schema migration or model changes are needed.
+
+Next: collect recipient-approved recorded model outputs against independently reviewed private checklists, use measured misses for targeted extraction improvements, then add explicit employer/project/date conflict review. The evaluator checks the chosen expectations and literal evidence; it does not prove every competency or every generated description is correct.

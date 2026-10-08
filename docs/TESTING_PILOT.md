@@ -1,6 +1,6 @@
 # Test the local career pilot
 
-Status: the pilot foundation is merged through selectable AI models and per-model cooldowns. The ADR 0028 document coverage continuation is a separate PR. Check the actual GitHub PR/branch state before synchronizing; a Git operation does not restart local services. Use the repository's actual installed branch/version and [RUNNING.md](RUNNING.md) for startup; Codex credentials/installations are not copied to your Mac.
+Status: the pilot foundation is merged through selectable AI models and per-model cooldowns. Source coverage and structured career context are merged through PR #23. The expected-fact quality continuation is a separate PR. Check the actual GitHub PR/branch state before synchronizing; a Git operation does not restart local services. Use the repository's actual installed branch/version and [RUNNING.md](RUNNING.md) for startup; Codex credentials/installations are not copied to your Mac.
 
 ## Prerequisites
 
@@ -42,4 +42,42 @@ Keep originals and the independent expected-evidence JSON manifest outside Git. 
 LOCAL_DOCUMENT_AUDIT_MANIFEST=/tmp/private-document-audit.json ./gradlew test --tests '*PrivateDocumentInventoryAuditTest'
 ```
 
-This checks actual local reading, exact passage offsets and list recovery without provider calls. It is not a semantic AI recall benchmark. Keep any assertion output that includes expected private phrases outside shared artifacts.
+This checks actual local reading, exact passage offsets and whole-source versus automatic-portion list recovery without provider calls. It is not a semantic AI recall benchmark. Keep any assertion output that includes expected private phrases outside shared artifacts.
+
+## Offline recorded-result benchmark
+
+`DocumentExtractionBenchmark` is a developer test utility. It compares independently reviewed expectations with a recorded `DocumentAnalysis` JSON object (the `analysis` object in a saved workflow response, without the enclosing run). It makes no network request or database write. A successful provider HTTP response is not a passing benchmark. Missing expected facts, wrong context/fields and unsupported literal evidence fail the optional audit. Unlisted supported facts are not penalized. Generated descriptions still require semantic/user review.
+
+Store originals, recorded analysis and the checklist **outside the repository**. Select expectations by reading the source independently, before inspecting model output. The manifest shape is:
+
+```json
+{
+  "documents": [{"id": "00000000-0000-4000-8000-000000000001", "path": "/private/synthetic.md"}],
+  "analysisPath": "/private/recorded-analysis.json",
+  "expected": [{
+    "id": "skill-1", "kind": "COMPETENCY",
+    "documentId": "00000000-0000-4000-8000-000000000001",
+    "quote": "Technology: Kotlin, PostgreSQL",
+    "fields": {"skill": "Kotlin", "context": "Example AS", "category": "TECHNOLOGY"},
+    "contextQuote": "Project: Example AS"
+  }]
+}
+```
+
+Use the actual recorded document IDs. Every expected quote must occur exactly in the freshly extracted source; choose the smallest excerpt that identifies the expected fact. For repeated wording, include the associated exact `contextQuote`. `fields` selects the structured values to require; whitespace/case normalize without removing punctuation.
+
+- `COMPETENCY`: required `skill`; optional `context`, `category`. Labels must occur literally in expected evidence. Different responsibility labels need separate expectations even when they share a paragraph.
+- `HISTORY`: required `kind`, `title`, `organization`; optional `client`, `deliveryRole`, `periodText`, `startMonth`, `endMonth`, `ongoing`. Use an empty string for an unknown month and preserve year-only precision. Title and organization must occur in expected evidence.
+- `PROFILE`: required `kind` and nonempty `proseTerms` array of independently expected phrases in the output language. Evidence use alone cannot satisfy a substantive summary. This phrase check does not judge all generated meaning.
+
+Run from `apps/backend` with JDK 21:
+
+```bash
+LOCAL_DOCUMENT_BENCHMARK_MANIFEST=/private/benchmark.json ./gradlew test --tests '*PrivateDocumentSemanticAuditTest'
+```
+
+The printed report contains aggregate counts, not document names, quotations or paths. Keep all private inputs and detailed test artifacts local. Passing recall applies only to the selected expectations; `unsupportedEvidence` validates literal source/label support, not every generated statement. The normal synthetic regression suite also demonstrates a fully cited paragraph with missing skills, wrong employers, cross-document borrowing, punctuation-sensitive labels, invented month precision and vague profile prose.
+
+The existing explicitly enabled `GEMINI_LIVE_TEST=true` check additionally measures the synthetic expected-fact checklist against its selected `GEMINI_MODEL`; default tests skip it. Do not set either private manifest to an owner file for that live check: the live fixture is always synthetic. Real-document provider comparison requires separately approved recipient/model-bound analysis in the app, then local recorded-result evaluation.
+
+In the managed proxy-backed cloud only, Java HTTPS may need the already trusted system CA store: append `-Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts` to inherited `JAVA_TOOL_OPTIONS` when that file exists. Keep TLS verification enabled and inherited proxy credentials intact. This is an environment runtime setting; do not copy it to a Mac without that truststore. A provider HTTP 503 leaves the optional live check failed/unverified even when offline regression tests pass.

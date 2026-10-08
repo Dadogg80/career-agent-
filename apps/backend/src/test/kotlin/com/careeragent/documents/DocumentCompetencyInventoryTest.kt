@@ -45,4 +45,29 @@ class DocumentCompetencyInventoryTest {
         assertThat(result.first { it.skill=="PostgreSQL" }.context).isEqualTo("Other AS")
         assertThat(result.first { it.skill=="MongoDB" }.context).isEqualTo("Context not stated")
     }
+    @Test fun `a skills section crossing automatic portions recovers every literal item exactly once`() {
+        val source="Project: Atlas\nFrontend:\n"+(1..100).joinToString("\n") { "FrameworkTechnology$it, PlatformRuntime$it, LibraryPackage$it" }+"\nEducation\n2020 Example College"
+        val batches=DocumentAnalysisPlanner.batches(mapOf(id to source))
+        assertThat(batches).hasSizeGreaterThan(1)
+        val result=batches.flatMap { DocumentCompetencyInventory.recover(it,source,"en",emptyList()) }
+        assertThat(result.map { it.skill }).containsExactlyElementsOf((1..100).flatMap { listOf("FrameworkTechnology$it","PlatformRuntime$it","LibraryPackage$it") })
+        assertThat(result).allMatch { it.context=="Atlas" && it.contextQuote=="Project: Atlas" && source.contains(it.quote) }
+    }
+    @Test fun `continued list recovery respects an intervening global boundary and does not borrow a project`() {
+        val source="Project: Atlas\nFrontend:\n"+(1..100).joinToString("\n") { "FrameworkTechnology$it, PlatformRuntime$it, LibraryPackage$it" }+"\nCore competencies\nBackend:\nKotlin, PostgreSQL\nInterests\nCycling, hiking"
+        val result=DocumentAnalysisPlanner.batches(mapOf(id to source)).flatMap { DocumentCompetencyInventory.recover(it,source,"en",emptyList()) }
+        assertThat(result.filter { it.skill in setOf("Kotlin","PostgreSQL") }).allMatch { it.context=="Context not stated" }
+        assertThat(result.map { it.skill }).doesNotContain("Cycling","hiking")
+    }
+    @Test fun `a source row split across portions is emitted only when its complete literal quote is available`() {
+        val row="FrameworkTechnology, PlatformRuntime, LibraryPackage"
+        val source="Frontend:\n$row\nEducation\n2020 Example College"
+        val end=source.indexOf("PlatformRuntime")+5
+        val first=AnalysisBatch(id,source.substring(0,end),end)
+        val second=AnalysisBatch(id,source.substring(end),source.length-end,end)
+        assertThat(DocumentCompetencyInventory.recover(first,source,"en",emptyList())).isEmpty()
+        val recovered=DocumentCompetencyInventory.recover(second,source,"en",emptyList())
+        assertThat(recovered.map { it.skill }).containsExactly("FrameworkTechnology","PlatformRuntime","LibraryPackage")
+        assertThat(recovered.map { it.quote }).containsOnly(row)
+    }
 }

@@ -54,6 +54,28 @@ class DocumentWorkflowIntegrationTest {
     private fun next(user:String,run:JsonNode)=post(user,"$path/${run["id"].asText()}/next",mapOf("revision" to run["revision"].asLong()))
     private fun output()=json.writeValueAsString(mapOf("competencies" to listOf(mapOf("skills" to listOf("Kotlin","PostgreSQL","InventedSkill"),"description" to "Utviklet API-er med Kotlin og PostgreSQL.","category" to "TECHNOLOGY","evidenceIds" to listOf(2),"contextId" to 0,"context" to "Example AS")),"profile" to listOf(mapOf("kind" to "EXPERIENCE","text" to "Utvikling av API-er.","evidenceIds" to listOf(2))),"history" to listOf(mapOf("kind" to "EMPLOYMENT","title" to "Senior Developer","organization" to "Example AS","client" to "","deliveryRole" to "","periodText" to "2021 – 2024","description" to "Utviklet API-er.","evidenceIds" to listOf(0,1,2)))))
     private fun stub(){`when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenAnswer { call -> if(call.getArgument<AiTask>(3)==AiTask.PROFILE_SUMMARY)"""{"profile":[{"kind":"PROFILE","text":"Erfaring med API-er, Kotlin og PostgreSQL.","evidenceIds":[0]}]}""" else output() }}
+    @Test fun `a complete approved list is populated across source portions without duplicate imports or extra AI calls`() {
+        val user=profile()
+        val source="Project: Atlas\nFrontend:\n"+(1..70).joinToString("\n") { "FrameworkTechnologyVersion$it, PlatformRuntimeIntegrationTool$it" }
+        val doc=upload(user,source)
+        val planned=com.careeragent.documents.application.DocumentAnalysisPlanner.batches(mapOf(UUID.fromString(doc) to source))
+        assertThat(planned).hasSizeGreaterThan(1)
+        `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION)))
+            .thenReturn("""{"competencies":[],"profile":[],"history":[]}""")
+        var run=post(user,path,mapOf("scope" to doc,"documents" to listOf(mapOf("documentId" to doc,"text" to source)),"locale" to "nb","consent" to true,"populateProfile" to true))
+        repeat(planned.size) { run=next(user,run) }
+        assertThat(run["analysis"]["inputCharacters"].asInt()).isEqualTo(source.length)
+        assertThat(run["analysis"]["suggestions"].size()).isEqualTo(140)
+        assertThat(run["analysis"]["suggestions"].map { it["context"].asText() }).containsOnly("Atlas")
+        val saved=json.readTree(mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(status().isOk).andReturn().response.contentAsString)
+        assertThat(saved.size()).isEqualTo(140)
+        assertThat(saved.map { it["status"].asText() }).containsOnly("CONFIRMED")
+        assertThat(saved.map { it["confirmationBasis"].asText() }).containsOnly("DOCUMENT")
+        assertThat(saved.map { it["skill"].asText() }).contains("FrameworkTechnologyVersion70","PlatformRuntimeIntegrationTool70")
+        post(user,"$path/${run["id"].asText()}/next",mapOf("revision" to run["revision"].asLong()-1))
+        assertThat(json.readTree(mvc.perform(get("/api/profile/me/claims").with(caller(user))).andReturn().response.contentAsString).size()).isEqualTo(140)
+        verify(model,times(planned.size)).generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
+    }
     @Test fun `local month dates and nested headings populate owned history and skill context with literal evidence`() {
         val user=profile();val period="08.2023 – 01.2026"
         val source="## Example AS\nSenior Developer $period\n### Frontend:\nBuilt APIs using Kotlin and PostgreSQL."

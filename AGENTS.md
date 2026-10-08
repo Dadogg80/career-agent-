@@ -88,3 +88,7 @@ PR #21 is verified merged at `ccae0ed53ef10bb74b5c12c36dd8599dbda60731`; push/PR
 ## Structured context continuation — 2026-10-08
 
 PR #22 is verified merged at `182c22ca71dff1776258e81ebd222af8e82a530e`; push/PR/main Foundation checks passed. Continue on `feat/competency-career-context`, ADR 0029, with one owner-scoped revision-aware relationship table. Automatic links require a unique untouched career entry and exact shared documentary evidence; explicit review/removal preserves factual statuses and survives reanalysis. Existing job/CV snapshots, provider choices (including Flash Lite), AI approvals and source-deletion policy remain unchanged. This is a small domain slice, not the full proposed graph/conflict model. Test and prepare a PR; no automatic merge authorization.
+
+## Expected-fact benchmark continuation — 2026-10-08
+
+PR #23 is verified merged at `f0223f51cb18271f753fbe28b05343cbebf9bf53`; both pre-merge Foundation checks succeeded. Continue on `feat/document-semantic-benchmark` with a developer-only offline expected-fact evaluator and a demonstrated skills-list continuation correction. Independently select expectations; measure facts, context, explicit date precision and profile substance separately from quotation usage. Recorded private analyses/checklists/originals remain outside Git. No automatic provider calls, new table, default/model change or user review reset. Full semantic judging and company/project/date conflict reconciliation remain future increments. Test and prepare a PR; do not merge it automatically.
