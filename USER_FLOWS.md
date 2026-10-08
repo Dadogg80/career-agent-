@@ -399,3 +399,7 @@ New document analysis → inspect competency context from the surrounding litera
 Approved document profile processing → create a relationship only when one untouched career entry has exact shared documentary proof → keep the career entry's draft status → open Work and projects on the competency contribution to inspect employer/project, period, client and source. Ambiguous evidence leaves the relationship unset.
 
 Choose Link to work or a project → search existing history → choose an entry explicitly → record USER relationship basis without confirming factual content. Remove a relationship → hide it from the active overview → preserve the decision across new document processing. Editing either factual record marks mismatched relationships for review; confirmation-only revisions preserve matching content. Conflicts retain the displayed information and require reloading. Viewing and changing relationships are local operations without AI calls.
+
+## Long skills sections across automatic portions
+
+Approve a complete document as usual → portions are handled automatically → local list recovery retains preceding section state across a portion boundary → complete literal list rows are recovered once, with the same source employer/project rules → supported findings follow existing profile population/review. A global or education/interests boundary ends the previous list/context. No extra consent, user-managed splitting or AI call is introduced. The developer expected-fact benchmark remains outside the user-facing coverage panel.

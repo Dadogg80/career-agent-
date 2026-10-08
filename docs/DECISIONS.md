@@ -171,3 +171,9 @@ Accepted extraction correction within the resumed source-quality work: technical
 ## 2026-10-08 — Revision-aware competency career context
 
 Accepted small domain increment within the resumed document/profile work: add owned revision-linked competency/career events with exact unique shared documentary proof, explicit owner association/removal, tombstones and read-time stale checks (ADR 0029). Relationship decisions never change factual confirmation, do not require AI calls and do not rewrite existing job/CV snapshots. Broad conflict/catalog normalization remains proposed.
+
+## 2026-10-08 — Offline expected-fact measurements and list continuity
+
+Accepted small quality slice after verified PR #23: use a developer-only evaluator against independently chosen source-backed expectations rather than interpreting passage usage as competency recall. Match individual labels without collapsing punctuation-sensitive technologies; check employer/project fields, source identity, explicit month precision and reviewed prose terms independently. Additional source links can satisfy the same fact only for that linked document. Count unsupported literal evidence separately; uncatalogued output is not automatically unsupported. The evaluator does not judge every assertion in generated prose.
+
+Replay local list-section state for normal approved portions and emit each full source row in the portion containing its end. This restores list recovery after a boundary without transmitting more data, adding calls or changing profile review. Existing budgets, output limits, recipient approval, provider defaults and source retention remain unchanged. A local test manifest and recorded analysis need no new production table/API. Private originals/results/checklists stay outside Git.

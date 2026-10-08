@@ -381,3 +381,8 @@ As a document reviewer, I can switch between competencies, profile summary and c
 - As a candidate, a unique supported documentary relationship is populated automatically; a matching company label alone or ambiguous same-company entries cannot select a relationship.
 - As a candidate, I can search saved history, explicitly link it, review a stale link or remove it. Acceptance: factual confirmation is unchanged, version conflicts retain information, and reanalysis respects removal.
 - As a candidate, source deletion preserves existing quoted proof with a clear deleted-original label, while deleting the competency or career target deletes its relationship events.
+
+## Expected-fact extraction quality
+
+- As a candidate, I want a long skills section to remain intact when automatic processing divides my document. Acceptance: complete named list labels survive later portions, each source row is recovered once, unrelated company/education/interests sections do not acquire the preceding context, and approved profile population persists later findings without additional AI calls.
+- As a developer, I need independently reviewed expected facts to expose omissions that quotation-usage counts cannot show. Acceptance: recorded outputs are measured for individual competencies, employer/project attribution, career date precision and selected substantive profile terms, with unsupported literal evidence counted separately. Private manifests/results remain outside Git; normal tests use fictional fixtures and make no provider calls.

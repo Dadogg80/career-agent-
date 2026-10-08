@@ -15,7 +15,11 @@ internal object DocumentCompetencyInventory {
         val headers=DocumentAnalysisPlanner.headers(source)
         var inList=false
         var position=batch.sourceStart
-        Regex("[^\\r\\n]+").findAll(batch.text).forEach { line ->
+        // A normal portion may start halfway through a list. Replay only local section state;
+        // emit full source rows whose end belongs to this portion, never the carried context prefix.
+        val sourceEnd=if(batch.characters>0) minOf(source.length,batch.sourceStart+batch.characters) else null
+        val scan=sourceEnd?.let { source.substring(0,it) } ?: batch.text
+        Regex("[^\\r\\n]+").findAll(scan).forEach { line ->
             val text=line.value.trim()
             val heading=text.trimStart('#',' ').trimEnd(':')
             if(section.matches(heading)) {inList=true;return@forEach}
@@ -27,7 +31,9 @@ internal object DocumentCompetencyInventory {
                 if(text.isNotEmpty()){inList=false}
                 return@forEach
             }
-            val at=source.indexOf(line.value,position)
+            val at=if(sourceEnd!=null)line.range.first else source.indexOf(line.value,position)
+            if(sourceEnd!=null && (line.range.last < batch.sourceStart || sourceEnd<source.length &&
+                line.range.last==sourceEnd-1 && source[sourceEnd] !in "\r\n"))return@forEach
             if(at<0 || text.length>600)return@forEach
             position=at+line.value.length
             val proof=DocumentAnalysisPlanner.contextHeader(headers,at)?.second

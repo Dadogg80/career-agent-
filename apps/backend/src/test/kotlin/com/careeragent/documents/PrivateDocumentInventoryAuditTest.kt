@@ -1,6 +1,7 @@
 package com.careeragent.documents
 
 import com.careeragent.documents.application.DocumentCompetencyInventory
+import com.careeragent.documents.application.DocumentAnalysisPlanner
 import com.careeragent.documents.application.DocumentEvidenceInventory
 import com.careeragent.documents.domain.AnalysisBatch
 import com.careeragent.documents.infrastructure.DocumentTextExtractor
@@ -32,6 +33,10 @@ class PrivateDocumentInventoryAuditTest {
             assertThat(inventory.size).describedAs("Document %s relevant passages",index+1).isGreaterThanOrEqualTo(item["minimumPassages"].asInt())
             assertThat(inventory).allMatch { text.substring(it.start,it.start+it.quote.length)==it.quote }
             val lists=DocumentCompetencyInventory.recover(AnalysisBatch(id,text,text.length),text,"en",emptyList())
+            val portions=DocumentAnalysisPlanner.batches(mapOf(id to text)).flatMap { DocumentCompetencyInventory.recover(it,text,"en",emptyList()) }
+            assertThat(portions.map { listOf(it.skill,it.context,it.quote) }.distinct())
+                .describedAs("Document %s automatic portions preserve complete-source list recovery",index+1)
+                .containsExactlyInAnyOrderElementsOf(lists.map { listOf(it.skill,it.context,it.quote) }.distinct())
             item["expectedListedSkills"].forEach { skill ->
                 assertThat(lists.map { it.skill.lowercase() }).describedAs("Document %s explicit list recovery",index+1).contains(skill.asText().lowercase())
             }
