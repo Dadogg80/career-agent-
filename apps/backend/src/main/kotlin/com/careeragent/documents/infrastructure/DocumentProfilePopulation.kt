@@ -14,7 +14,7 @@ import java.util.UUID
 /** Called under the owner's lock in the same transaction as saved document progress. */
 @Component
 @Profile("persistence")
-class DocumentProfilePopulation(private val jdbc: JdbcTemplate, private val claims: ClaimService, private val entries: CareerEntryService) {
+class DocumentProfilePopulation(private val jdbc: JdbcTemplate, private val claims: ClaimService, private val entries: CareerEntryService, private val contexts: ClaimContextService) {
     private fun normal(value: String) = Normalizer.normalize(value, Normalizer.Form.NFC).trim().replace(Regex("(?U)\\s+"), " ").lowercase(Locale.ROOT)
     private fun fingerprint(parts: List<String>) = MessageDigest.getInstance("SHA-256").digest(parts.joinToString("\u0000") { normal(it) }.toByteArray()).joinToString("") { "%02x".format(it) }
     private fun claimKey(draft:CompetencySuggestion)=fingerprint(listOf(draft.skill,draft.context,draft.quote,
@@ -134,6 +134,7 @@ class DocumentProfilePopulation(private val jdbc: JdbcTemplate, private val clai
             if(entry.revision==1L)attachEntrySources(owner,entry,draft)
             draft.copy(profileEntryId=entry.id)
         }
+        contexts.linkDocumentFacts(identity,suggestions.mapNotNull { it.profileClaimId }.toSet())
         return state.copy(populationLimited=limited,analysis=state.analysis.copy(suggestions=suggestions,careerEntries=history))
     }
     private fun attachClaimSources(identity: VerifiedIdentity,owner: UUID,claim: CompetencyClaim,draft: CompetencySuggestion) {

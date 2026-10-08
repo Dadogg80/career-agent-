@@ -1,5 +1,6 @@
 "use client";
 import { ClaimEvidence } from "./claim-evidence";
+import { ClaimCareerLinks } from "./claim-career-context";
 import { ClaimGroupCard } from "./claim-group-card";
 import { claimGroups } from "../lib/claim-groups";
 import { useState, type FormEvent } from "react";
@@ -69,6 +70,7 @@ export function ClaimPanel({ locale, csrfToken, onAuthRequired }: { locale: Loca
     setNotice(command.kind === "create" ? existing ? "existing" : "created" : command.kind === "edit" ? "changed" : command.kind === "delete" ? "deleted" : "reviewed");
     cache.removeQueries({ queryKey: ["private-claim-history"] });
     await cache.invalidateQueries({ queryKey: ["private-claims"] });
+    await cache.invalidateQueries({ queryKey: ["private-claim-context"] });
     if (reviewQueue && command.kind !== "create") advanceReview(command.claim.id);
   } });
   function open(value: Modal) { setReviewQueue(null); setReviewFinished(false); change.reset(); setNotice(null); setModal(value); setDraft(value.kind === "edit" ? { skill: value.claim.skill, statement: value.claim.statement, context: value.claim.context, sourceNote: value.claim.sourceNote } : empty); }
@@ -118,7 +120,7 @@ export function ClaimPanel({ locale, csrfToken, onAuthRequired }: { locale: Loca
       <div className="competency-search"><Search size={18}/><Input aria-label={locale === "nb" ? "Søk i kompetanse" : "Search competencies"} placeholder={locale === "nb" ? "Søk etter kompetanse, prosjekt eller kilde …" : "Search skills, projects or sources …"} value={search} onChange={event => setSearch(event.target.value)}/></div>
       <div className="claim-filters" aria-label={t.count}><Button variant={filter === "ALL" ? "default" : "outline"} size="sm" aria-pressed={filter === "ALL"} onClick={() => setFilter("ALL")}>{t.all} ({claimGroups(list.data).length})</Button>{(Object.keys(t.statuses) as ClaimStatus[]).map(status => <Button key={status} size="sm" variant={filter === status ? "default" : "outline"} aria-pressed={filter === status} onClick={() => setFilter(status)}>{t.statuses[status]} ({claimGroups(list.data!.filter(claim => claim.status === status)).length})</Button>)}</div>
       <p className="hint claim-group-help">{locale === "nb" ? `${groups.length} kompetanseområder · ${visible.length} bidrag. Samme kompetanse samles i én boks; bekreftet grunnlag og utkast vises separat. Åpne boksen for kilder og redigering.` : `${groups.length} skills · ${visible.length} contributions. Each skill has one card, with confirmed evidence and drafts shown separately. Open a card for sources and editing.`}</p>
-      {visible.length === 0 ? <p className="hint">{list.data.length ? t.emptyFilter : t.empty}</p> : <div className="claim-grid">{groups.map(group => <ClaimGroupCard key={group.key} group={group} locale={locale} actions={actions}/>)}</div>}
+      {visible.length === 0 ? <p className="hint">{list.data.length ? t.emptyFilter : t.empty}</p> : <div className="claim-grid">{groups.map(group => <ClaimGroupCard key={group.key} group={group} locale={locale} actions={actions} careerLinks={claim => <ClaimCareerLinks claim={claim} locale={locale} csrfToken={csrfToken} onAuthRequired={onAuthRequired}/>}/>)}</div>}
     </>}
     <p className="hint mt-5">{t.aiBoundary}</p><Button variant="ghost" size="sm" onClick={() => void reload()} disabled={change.isPending}>{t.reload}</Button>
     <Dialog open={!!modal} onOpenChange={value => { if (!value) close(); }}><DialogContent className="claim-dialog" closeLabel={t.close}><DialogHeader><DialogTitle>{modalTitle}</DialogTitle><DialogDescription>{modal?.kind === "edit" ? t.editNotice : modal?.kind === "confirm" ? t.confirmNotice : modal?.kind === "reject" ? t.rejectNotice : modal?.kind === "delete" ? t.deleteNotice : modal?.kind === "create" ? t.sourceHint : t.byYou}</DialogDescription></DialogHeader>

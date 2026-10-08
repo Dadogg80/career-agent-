@@ -374,3 +374,10 @@ As a document reviewer, I can switch between competencies, profile summary and c
 
 - As a candidate, technical subsections retain a supported employer/project context without inheriting unrelated global or peer sections. Acceptance: exact heading evidence remains inspectable and employer boundaries hold for repeated wording.
 - As a candidate, explicit month dates from my documents prefill career history correctly. Acceptance: local/ISO formats preserve endpoint positions, year precision does not invent months, original wording is retained and existing records are unchanged.
+
+## Structured career context
+
+- As a candidate, I can see which employment/project supports an individual competency contribution, including employer, client, period, draft status and exact source proof, without creating another skill card.
+- As a candidate, a unique supported documentary relationship is populated automatically; a matching company label alone or ambiguous same-company entries cannot select a relationship.
+- As a candidate, I can search saved history, explicitly link it, review a stale link or remove it. Acceptance: factual confirmation is unchanged, version conflicts retain information, and reanalysis respects removal.
+- As a candidate, source deletion preserves existing quoted proof with a clear deleted-original label, while deleting the competency or career target deletes its relationship events.

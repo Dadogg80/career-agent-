@@ -150,3 +150,7 @@ After updating/rebuilding this branch, use Min profil → CV og dokumenter → O
 ## Optional local scan reading
 
 V5 applies automatically on backend restart. Existing originals do not need reuploading: choose **Les originalen på nytt** in their review Sheet. For image-only PDF pages, install free Tesseract on the Mac backend (`brew install tesseract`); Norwegian OCR additionally uses `brew install tesseract-lang` and `DOCUMENT_OCR_LANGUAGES=nor+eng` in `apps/backend/.env`. Restart Java after changing its environment/PATH. OCR is explicitly selected, local, limited to ten pages and requires text review before a separate AI call. It is optional for ordinary text-based PDF/DOCX. See CV_IMPORT.md.
+
+## Competency career relationships
+
+After merging ADR 0029, rebuild/restart the backend and frontend using the existing commands above. With persistence enabled, Flyway applies V15 automatically; keep the existing PostgreSQL volume. No new dependency, API key, Docker service or AI setting is required. In My profile → Your competencies, open Work and projects on a contribution. Approved document processing populates only uniquely supported links; existing data is not backfilled at startup. Use the searchable picker for explicit associations, and review links marked stale after editing.

@@ -69,6 +69,12 @@ The priorities listed for that slice (document-grounded population, presentation
 
 ## Current delivery and next quality work
 
-- Current branch: ADR 0027, V13 documentary basis/owner ledger, atomic profile population, durable review decisions, compact counted queue, editable sourced candidate synthesis, matching automation/clarification and bounded advertisement readers.
+- Merged foundation: ADR 0027, V13 documentary basis/owner ledger, atomic profile population, durable review decisions, compact counted queue, editable sourced candidate synthesis, matching automation/clarification and bounded advertisement readers. PRs #21–22 add source-usage checks, nested context preservation and explicit month normalization. The current relationship delivery is listed below.
 - Next: broader semantic expected-evidence inventory and measured recall, relationship/date conflict reconciliation. The initial independent local reading/list audit across seven supplied originals passed without provider calls. ADR 0028 adds an initial lexical source inventory and bounded follow-up, not the full semantic repair loop. Explicit-list recovery covers only named list items.
 - Later: normalized reusable knowledge graph, broader model-quality comparison, advanced CV/discovery/interview features and online hosting. No paid infrastructure or automatic AI submission is introduced.
+
+## Structured context delivery — 2026-10-08
+
+PR #22 is merged with successful Foundation checks. The `feat/competency-career-context` delivery implements ADR 0029: one owner/revision-scoped relationship table, exact unique documentary linking during approved population, explicit link/review/unlink controls and a compact searchable career picker. Existing record statuses and job/CV snapshots are unchanged.
+
+Next priorities remain semantic expected-evidence benchmarking, explicit company/project/date conflict handling and measured extraction improvements. The normalized catalog and broader knowledge model are still proposed; this delivery does not complete them. Flash Lite remains an available choice for all four supported analysis tasks.
