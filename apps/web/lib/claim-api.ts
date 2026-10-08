@@ -1,10 +1,10 @@
 import { localRequest, privateBase, sessionHeaders, privateResponse, smallJson, mappedPrivateError } from "./private-api";
-import { claimId, isClaim, isClaimList, isClaimHistory, validClaimContent } from "./claims";
-type Operation = "list" | "create" | "edit" | "review" | "history" | "delete";
+import { claimId, isClaim, isClaimList, isClaimHistory, isClaimEvidence, validClaimContent } from "./claims";
+type Operation = "list" | "create" | "edit" | "review" | "history" | "evidence" | "delete";
 export async function claimProxy(request: Request, operation: Operation, id?: string) {
   if (!localRequest(request)) return privateResponse({ code: "ACCESS_DENIED" }, undefined, 403);
   if (id !== undefined && !claimId.test(id)) return privateResponse({ code: "CLAIM_INVALID" }, undefined, 400);
-  const write = !["list", "history"].includes(operation);
+  const write = !["list", "history", "evidence"].includes(operation);
   let body: Record<string, unknown> | undefined;
   if (write) {
     try {
@@ -19,13 +19,13 @@ export async function claimProxy(request: Request, operation: Operation, id?: st
   }
   try {
     const headers = sessionHeaders(request); if (write) headers.set("content-type", "application/json");
-    const suffix = operation === "review" ? "/review" : operation === "history" ? "/history" : "";
+    const suffix = operation === "review" ? "/review" : operation === "history" ? "/history" : operation === "evidence" ? "/evidence" : "";
     const method = operation === "edit" ? "PUT" : operation === "delete" ? "DELETE" : write ? "POST" : "GET";
     const upstream = await fetch(`${privateBase()}/api/profile/me/claims${id ? `/${id}` : ""}${suffix}`, { method, headers, ...(write ? { body: JSON.stringify(body) } : {}), cache: "no-store", redirect: "manual", signal: AbortSignal.timeout(10000) });
     if (operation === "delete" && upstream.status === 204) return privateResponse(null, upstream);
     const value: unknown = await upstream.json();
     if (!upstream.ok) return privateResponse(mappedPrivateError(value), upstream, [400, 401, 403, 404, 409, 503].includes(upstream.status) ? upstream.status : 503);
-    const valid = operation === "list" ? isClaimList(value) : operation === "history" ? isClaimHistory(value) : isClaim(value);
+    const valid = operation === "list" ? isClaimList(value) : operation === "history" ? isClaimHistory(value) : operation === "evidence" ? isClaimEvidence(value) : isClaim(value);
     if (!valid) throw new Error("Invalid response");
     return privateResponse(value, upstream);
   } catch { return privateResponse({ code: "CLAIM_UNAVAILABLE" }); }

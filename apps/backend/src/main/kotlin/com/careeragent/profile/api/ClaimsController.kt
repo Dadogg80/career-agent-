@@ -32,6 +32,7 @@ class ClaimsController(private val services: ObjectProvider<ClaimService>) {
         return ClaimContent(text("skill"), text("statement"), text("context"), text("sourceNote"))
     }
     private fun <T> response(value: T) = ResponseEntity.ok().header("Cache-Control", "no-store").body(value)
+    @GetMapping("/{claimId}/evidence") fun evidence(@AuthenticationPrincipal principal: OidcUser?, @PathVariable claimId: String) = response(service().evidence(identity(principal),id(claimId)))
     @GetMapping fun list(@AuthenticationPrincipal principal: OidcUser?) = response(service().list(identity(principal)))
     @PostMapping(consumes = ["application/json"])
     fun create(@AuthenticationPrincipal principal: OidcUser?, @RequestBody input: Map<String, Any?>): ResponseEntity<CompetencyClaim> {

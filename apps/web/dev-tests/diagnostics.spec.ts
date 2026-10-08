@@ -23,7 +23,7 @@ test("right-side diagnostics show actual source, stages and sanitized console ev
     analyses++; await analysisGate;
     await route.fulfill({ json: { facts: [], requirements: [{ label: "Kotlin", kind: "REQUIRED", quote: "Du må ha erfaring med Kotlin og PostgreSQL." }] } });
   });
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   await page.clock.install(); await page.clock.pauseAt(new Date(Date.now() + 1000));
   const panel = page.locator(".analysis-diagnostics");
   await expect(panel.locator(".diagnostic-body")).not.toBeVisible();
@@ -69,7 +69,7 @@ test("red diagnostic light retains HTTP error and cooldown without automatic ret
   await page.route("**/api/jobs/requirements", route => {
     calls++; return route.fulfill({ status: 429, headers: { "Retry-After": "16" }, json: { code: "AI_RATE_LIMITED", retryAfterSeconds: 16 } });
   });
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   await page.clock.install(); await page.clock.pauseAt(new Date(Date.now() + 1000));
   await page.getByRole("button", { name: "Utviklerdiagnostikk", exact: true }).click();
   await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
@@ -97,7 +97,7 @@ test("failed URL retrieval is a warning with its actual code and preserves the l
   });
   await page.route("**/api/status", route => route.fulfill({ json: { status: "UP" } }));
   await page.route("**/api/jobs/import", route => route.fulfill({ status: 422, json: { code: "SOURCE_INVALID" } }));
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   await page.getByRole("textbox", { name: "Lenke til stillingsannonse" }).fill(url);
   await page.getByRole("button", { name: "Analyser lenke", exact: true }).click();
   await page.getByRole("button", { name: "Utviklerdiagnostikk", exact: true }).click();
@@ -113,7 +113,7 @@ test("diagnostic edge tab supports keyboard opening, Escape and a narrow viewpor
   await page.route("**/api/status", route => route.fulfill({ json: { status: "UP" } }));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   const tab = page.getByRole("button", { name: "Utviklerdiagnostikk", exact: true });
   await expect(tab).toBeVisible();
   const bounds = await tab.boundingBox();
@@ -134,7 +134,7 @@ test("analysis rejection shows its safe category and the received source without
   page.on("console", async message => { if (message.text().startsWith("[Career Agent]") && message.type() === "warning") failures.push(await message.args()[1].jsonValue()); });
   await page.route("**/api/status", route => route.fulfill({ json: { status:"UP" } }));
   await page.route("**/api/jobs/requirements", route => route.fulfill({ status:502, json:{ code:"AI_INVALID_RESULT", reason:"NO_SUPPORTED_ITEMS", failed_generation:"PRIVATE_PROVIDER_PAYLOAD" } }));
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   await page.getByRole("button", { name:"Lim inn tekst", exact:true }).click();
   await page.getByRole("textbox", { name:"Stillingsannonse", exact:true }).fill(source);
   await page.getByRole("button", { name:"Analyser", exact:true }).click();

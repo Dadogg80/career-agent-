@@ -246,3 +246,115 @@ flowchart TD
 ```
 
 Unreadable scans are visibly excluded; long documents share a bounded excerpt budget. Reanalysis does not change saved claims. A source upload/deletion clears the combined summary. No original binaries, filenames or other profile content enter the provider prompt; private source previews are not advertisement diagnostics.
+
+## Competency workspace and document recovery (ADR 0017)
+
+```mermaid
+flowchart TD
+    Profile[Saved profile] --> Dashboard[Search competencies / filter review status]
+    Profile --> Library[Documents with readable-text counts]
+    Library --> Review[Open right-side source review Sheet]
+    Review --> Read{Need better text?}
+    Read -->|DOCX or text PDF| Reread[Reread immutable original locally]
+    Read -->|Textless PDF page| OCR[Explicit local OCR with limits]
+    OCR -->|Unavailable or failed| Keep[Retain original and previous source; show recovery guidance]
+    Reread --> Changed{Text changed?}
+    OCR --> Changed
+    Changed -->|Yes| Invalidate[Invalidate old analyses; preserve claims and originals]
+    Changed -->|No| Retain[Retain existing analyses]
+    Invalidate --> Preview[Review distributed source selection / focus a document]
+    Retain --> Preview
+    Preview --> Consent[Approve reviewed excerpts]
+    Consent --> AI[One bounded AI call, up to twenty proposals]
+    AI --> Source[Inspect actual source quote and edit proposal]
+    Source --> Save[Explicit save as UNVERIFIED]
+    Save --> Dashboard
+```
+
+Regular uploads do not invoke OCR or AI. OCR is optional and cannot promise complete reading of mixed text/image layouts. Distributed excerpts include later passages but remain limited; source selection and another approved call can target missing sections. Whitespace changes never authorize changed words. Saved claims remain separate from replaceable AI suggestion snapshots.
+
+## Local job library and personal matching
+
+```mermaid
+flowchart TD
+  Analysis[Received advertisement and analysis] --> Save[Sign in and save snapshot]
+  Save --> Library[Search and reopen saved jobs]
+  Library --> Preview[Select confirmed evidence and source excerpt]
+  Preview --> Approve{Approve this Groq analysis}
+  Approve -->|Yes| Match[One bounded requirement comparison]
+  Approve -->|No| Library
+  Match --> Review[Inspect reason, quotes and clarification]
+  Match -->|Failure| Retain[Keep previous result and manual retry]
+  Review --> Change[Profile evidence changes]
+  Change --> Stale[Mark previous assessment stale]
+  Review --> CV[Next: approve a CV version]
+```
+
+
+## Implemented local pilot entry and career history
+
+```mermaid
+flowchart TD
+    A[Public landing] --> B[Dedicated sign-in]
+    A --> G[Guest advertisement analysis]
+    B --> C{Local identity and persistence ready?}
+    C -->|No| D[Setup explanation and guest analysis]
+    C -->|Yes| E[Existing OIDC and PKCE]
+    E -->|Success| F[Owned workspace overview]
+    E -->|Failure| B
+    F --> H{Basic profile saved?}
+    H -->|No| I[Save basic profile]
+    H -->|Yes| J[Review actual counts and next action]
+    J --> K[Competencies and source documents]
+    J --> L[Saved advertisements and approved matching]
+    K --> M[Career entry draft: UNVERIFIED]
+    M --> N[Separate review of current revision]
+    N --> O[CONFIRMED or REJECTED]
+    O -->|Edit| M
+    F --> P[CSRF sign-out and clear private caches]
+    P --> B
+```
+
+The root page now explains the product; public analysis is `/jobs/analyze`. Configured anonymous visits to private work areas lead to `/login` before private components mount. Missing setup provides actionable guidance instead. The backend still enforces every private request. The overview makes no model call and cannot infer missing competencies from failed reads. CV versions/export and case tracking remain subsequent work.
+
+## Reviewed local pilot application flow
+
+```mermaid
+flowchart TD
+  A[Landing page] --> B[Dedicated sign-in]
+  B --> C[Workspace overview]
+  C --> D[Upload document and inspect local text]
+  D --> E[Preview excerpts and approve optional AI call]
+  E --> F[Source-backed proposals with company context]
+  F --> G[Save selected proposals as unverified]
+  G --> H[Review each point: confirm, reject or skip]
+  H --> I[Analyze and save a job]
+  I --> J[Optional approved personal matching]
+  J --> K[Select confirmed experience for CV draft]
+  K --> L[Preview and explicitly approve DOCX and PDF]
+  L --> M[Create application case]
+  M --> N[Submit externally yourself]
+  N --> O[Confirm exact CV, date and text in archive]
+  O --> P[Track interviews, notes and follow-up]
+```
+
+Provider failure keeps received advertisement/document text and any valid same-source result. Explicit headings and labelled practical fields can be organized locally, visibly labelled as such. All remaining text stays readable; missing facts are never invented.
+
+## Actual document verification
+
+```mermaid
+flowchart TD
+  A[Owned document workspace] --> B[Check documents: local only]
+  B --> C[Original integrity and fresh text reading]
+  B --> D[Stored AI quote checks]
+  C --> E[Pass, review or missing state with explanation]
+  D --> E
+  E --> F[Open original and text]
+  F --> G[Select reviewed full excerpt or smaller detail part]
+  G --> H[Explicit consent for one AI selection call]
+  H --> I[Literal proposals and context proof or unknown]
+  I --> J[User edits and saves UNVERIFIED]
+  J --> K[Separate confirmation of current revision]
+```
+
+Technical checks do not certify semantics or completeness. Provider failures keep previous usable results; no automatic call or confirmation follows the check.

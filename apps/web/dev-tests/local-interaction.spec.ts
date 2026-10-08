@@ -6,10 +6,12 @@ const text = "Vi søker en utvikler. Du må ha erfaring med Kotlin og PostgreSQL
 for (const host of ["localhost", "127.0.0.1"]) {
   test(`${host} supports interactive modes and URL analysis without document navigation`, async ({ page }) => {
     const errors: string[] = [];
+    const duplicateKeys: string[] = [];
     const navigations: string[] = [];
     let imports = 0;
     let analyses = 0;
     page.on("pageerror", error => errors.push(error.message));
+    page.on("console", message => { if (message.text().includes("same key")) duplicateKeys.push(message.text()); });
     page.on("request", request => { if (request.isNavigationRequest()) navigations.push(request.url()); });
     await page.route("**/api/status", route => route.fulfill({ json: { application: "career-agent", status: "UP" } }));
     await page.route("**/api/jobs/import", route => {
@@ -23,7 +25,7 @@ for (const host of ["localhost", "127.0.0.1"]) {
       expect(route.request().postDataJSON().text).toBe(text);
       return route.fulfill({ json: { facts: [], requirements: [{ label: "Kotlin", kind: "REQUIRED", quote: "Du må ha erfaring med Kotlin og PostgreSQL." }] } });
     });
-    await page.goto(`http://${host}:13001`);
+    await page.goto(`http://${host}:13001/jobs/analyze`);
     await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
     await expect(page.getByRole("textbox", { name: "Stillingsannonse", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Bruk lenke", exact: true }).click();
@@ -36,12 +38,13 @@ for (const host of ["localhost", "127.0.0.1"]) {
     expect(analyses).toBe(1);
     expect(navigations).toHaveLength(1);
     expect(errors).toEqual([]);
+    expect(duplicateKeys).toEqual([]);
   });
 }
 
 test("development assets allow explicit loopback origins and reject unrelated origins", async ({ page, request }) => {
   await page.route("**/api/status", route => route.fulfill({ json: { status: "UP" } }));
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   const asset = await page.locator('script[src^="/_next/"]').first().getAttribute("src");
   expect(asset).toBeTruthy();
   for (const host of ["localhost", "127.0.0.1"]) {

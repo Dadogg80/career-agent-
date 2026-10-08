@@ -262,16 +262,70 @@ The diagnostic surface is a hidden, nonmodal right-side shadcn Sheet with a visi
 
 ## US-29 — Review my own competency statements
 
-Implemented on this branch, PR merge pending. As the pilot I can create a competency with own contribution, context and source; inspect and separately confirm/reject it; edit it back to UNVERIFIED; inspect prior revision snapshots; and permanently delete it and all history. Expected revisions prevent stale confirmation. Other identities/issuers cannot access it. INFERRED creation and automatic discovery remain future work.
+Merged in PR #14. As the pilot I can create a competency with own contribution, context and source; inspect and separately confirm/reject it; edit it back to UNVERIFIED; inspect prior revision snapshots; and permanently delete it and all history. Expected revisions prevent stale confirmation. Other identities/issuers cannot access it. INFERRED creation and automatic discovery remain future work.
 
 ## US-30 — Import an original CV and source my competencies
 
-Implemented local slice on this branch, PR merge pending. Upload bounded DOCX/PDF, choose nb/en document language, retain/download identical original bytes, select a master and inspect local extracted text. Selecting an exact excerpt and describing my contribution creates a source-linked UNVERIFIED claim for subsequent review. Upload itself makes no AI call; optional reviewed-preview AI analysis is described in US-32. Malformed, encrypted, oversized and scanned documents have honest outcomes. Deletion requires approval and explains retained claim source quotes. OCR, automatic confirmation, layout-preserving generation and production storage remain outside this slice.
+Initial local slice merged in PR #14. Upload bounded DOCX/PDF, choose nb/en document language, retain/download identical original bytes, select a master and inspect local extracted text. Selecting an exact excerpt and describing my contribution creates a source-linked UNVERIFIED claim for subsequent review. Upload itself makes no AI call; optional reviewed-preview AI analysis is described in US-32. Malformed, encrypted, oversized and scanned documents have honest outcomes. Deletion requires approval and explains retained claim source quotes. Optional local OCR extends this slice under US-34. Automatic confirmation, arbitrary layout-preserving generation and production storage remain future work.
 
 ## US-31 — Read an advertisement even when AI structuring fails
 
-Implemented on this branch, PR merge pending. After source retrieval succeeds, AI failure still shows the title/link and received source text; a manual retry reuses that source. A successful analysis groups employer text, role/applicant/offers, stable practical metadata slots and existing requirement filters. Narrative text uses source wording, not AI-written marketing summaries. Unknown contact details are explicit; no names are invented. Opening details makes no model calls. Both languages and mobile/desktop layouts are covered.
+Merged in PR #14. After source retrieval succeeds, AI failure still shows the title/link and received source text; a manual retry reuses that source. A successful analysis groups employer text, role/applicant/offers, stable practical metadata slots and existing requirement filters. Narrative text uses source wording, not AI-written marketing summaries. Unknown contact details are explicit; no names are invented. Opening details makes no model calls. Both languages and mobile/desktop layouts are covered.
 
 ## US-32 — Summarize competencies across my uploaded documents
 
 As the pilot I can choose a single document or all readable CVs/attestations/certificates, inspect/edit what will be sent, approve one bounded Groq call and reopen a privately stored source-backed competency summary. Every proposal identifies its actual source quote/document. Missing text and limited excerpts are visible; mismatched quotes are omitted rather than invented. Suggestions do not change my profile until I explicitly review/edit/save an UNVERIFIED claim; confirmation remains separate. Failures preserve the preview and previous analysis with manual retry and quota feedback. Upload/deletion invalidates combined summaries. Other subjects/issuers cannot read or analyze my sources. Norwegian/English and mobile presentation are supported.
+
+## US-33 — Find and review competencies without losing the evidence
+
+As the pilot I can see active skill-label, confirmed-statement and pending-review counts; search skill/contribution/project/source; combine search with status filters; inspect exact evidence/full statements and retain revision controls. Documents show extracted text counts. A wide right-side review Sheet presents source approval and AI results in separate columns on desktop, stacked on mobile. Search AI proposals independently. Profile settings collapse after setup, while keyboard and Norwegian/English access remain available. Counts describe recorded data, never proficiency or confidence.
+
+## US-34 — Recover missing document text and understand AI coverage
+
+As the pilot I can reread an already uploaded immutable original using the improved Word/PDF reader. For textless PDF pages I can explicitly request local OCR, with clear installation/language/size/timeout errors. OCR makes no AI call and needs review before AI approval. Changed extraction clears stale analyses while preserving original files and existing claim history; in-flight stale AI saves fail. Long previews use distributed passages with fair redistribution; I can focus a document or select beginning/middle/end and inspect the limited coverage. A single approved analysis can provide up to twenty proposals; it never creates confirmed skills automatically. Unsupported layouts/scans and excerpts remain visible limitations.
+
+## Authorized local-pilot continuation
+
+- US-035: As a signed-in candidate, save received advertisements and their analyses, search/reopen their exact snapshots, and explicitly delete one without another provider call. Ownership, CSRF, bounded evidence and source caveats must remain.
+- US-036: As a candidate, preview selected confirmed competencies and advertisement passages, approve sharing for each match, see explained requirement-level relevance/evidence/questions, and reopen stored assessments without another call. Undocumented skills remain unknown; changed evidence marks the assessment stale and cannot silently update it.
+
+
+## Local pilot entry and orientation
+
+### US-39 — Understand the product before entering (P0)
+
+As a jobseeker, I want a clear landing page and dedicated sign-in so I understand the product and do not need to discover authentication inside profile settings.
+
+- Landing describes actual features and provides sign-in and guest-analysis paths.
+- Public entry, error/setup explanations and workspace navigation support Norwegian and English.
+- Existing OIDC/PKCE returns to the overview; failure returns to sign-in. No new password store or arbitrary redirect target.
+- Anonymous private entry does not fetch private data or display a writable profile. Backend still enforces ownership and CSRF.
+- Shared sign-out clears private query/mutation caches and leaves the workspace.
+
+### US-40 — Know my next action (P0)
+
+As a jobseeker, I want an overview of my actual saved information and a useful next step so I can make progress without interpreting the application architecture.
+
+- Show confirmed/unreviewed competencies and saved advertisements from actual owned records.
+- Missing profile leads to profile creation; unreviewed content leads to review. Failed reads are unknown, not zero.
+- No automatic AI call, score, fake interview, discovery digest or submission status.
+- Persistent named navigation and an accessible mobile Sheet preserve working routes, keyboard focus and responsive reading.
+
+### US-41 — Record reviewed career history (P0)
+
+As a jobseeker, I want employment, projects, education and certificates with their own timeline so a future CV can reflect formal titles, actual work and clients accurately.
+
+- Separate organization, client, formal title and delivery role; optional dates stay unknown.
+- Save as UNVERIFIED, separately confirm/reject, reset confirmation on edit and retain revision history.
+- Require ownership, saved profile, CSRF and expected revisions. Deletion is explicit.
+- This first typed subset does not claim a complete relational career graph or CV export.
+
+## Local pilot additions
+
+- **US42 — Reviewed CV export:** choose current confirmed claim/history revisions, preview all selected content, approve a standard DOCX/PDF version and download the same immutable files later. Originals remain unchanged; stale drafts cannot approve.
+- **US43 — Exact application archive:** create/reopen a case for a saved job, choose its approved CV, explicitly record submitted date/text, track status/history and follow-up without sending anything externally. Foreign ownership, stale revisions and deletion of referenced materials are rejected.
+- **US44 — Useful source recovery:** read complete received sections and remaining text when Groq fails; local heading/field organization is labelled and does not invent missing information.
+- **US45 — Multi-source competency evidence:** import PDF/DOCX/TXT/Markdown, preview/approve bounded AI summaries, inspect each long-document part, consolidate exact repeated experience with all validated supporting sources, keep company/project contexts distinct and confirm experience separately.
+
+- **US46 — Check my actual evidence:** locally check owned originals, text reproducibility and existing AI quotation support without another model call or writes. Show distinct intact/missing/OCR/partial/unsupported states with text and accessible indicators, then open the document for inspection. A passing technical check must not imply semantic or exhaustive correctness.
+- **US47 — Source-selected competencies:** suggestions use original wording and a skill label found in their own quote. Show nearby same-document context proof or unknown context; preserve course/list limitations and require separate user confirmation. Invalid items cannot turn an unrelated valid quote into invented experience. Older results reopen safely without rewriting confirmed claims.

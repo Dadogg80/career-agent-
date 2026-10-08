@@ -44,7 +44,7 @@ npm ci
 npm run dev -- --hostname 127.0.0.1
 ```
 
-Use `127.0.0.1` consistently, including the browser. Defaults are frontend port 3000, backend 8080 and identity 8081. Open **Min profil / My profile**, select **Logg inn / Sign in**, and use username `pilot`. Read `PILOT_LOGIN_PASSWORD` from your own `.env.identity` locally in VS Code. The separate administrator is `local-admin`; the application never needs its password.
+Use `127.0.0.1` consistently, including the browser. Defaults are frontend port 3000, backend 8080 and identity 8081. Open the application landing page, select **Logg inn / Sign in**, then **Fortsett til sikker innlogging / Continue to secure sign-in**, and use username `pilot`. A successful login opens `/dashboard`; create or edit the basic profile through **Min profil / My profile**. Read `PILOT_LOGIN_PASSWORD` from your own `.env.identity` locally in VS Code. The separate administrator is `local-admin`; the application never needs its password.
 
 Save a name and preferred profile language. Reload to check persistence. Two tabs editing the same revision produce a conflict rather than silently overwriting; **Hent lagret versjon / Load saved version** explicitly replaces the draft. UI language selection and the saved profile language are separate settings. No private profile information is sent to Groq or diagnostic logs.
 

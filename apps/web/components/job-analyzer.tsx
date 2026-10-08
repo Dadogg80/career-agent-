@@ -9,6 +9,8 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
+import { WorkflowNotice } from "./workflow-notice";
+import { SaveJob } from "./save-job";
 import { JobOverview } from "./job-overview";
 import { RequirementResults } from "./requirement-results";
 import { isExtraction, type Requirement, type JobFact } from "../lib/job-requirements";
@@ -74,7 +76,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
     running.current = true;
     controller.current = new AbortController();
     run.current = { id: crypto.randomUUID(), started: performance.now() };
-    setEvents([]); setResult(null); setPacedRun(false); importing.reset(); extraction.reset();
+    setEvents([]); setResult(previous => previous?.source === text && (mode === "text" || matchesImportedUrl()) ? previous : null); setPacedRun(false); importing.reset(); extraction.reset();
   }
   const [cooldownUntil, setCooldownUntil] = useState(0);
   const [retryIn, setRetryIn] = useState(0);
@@ -102,7 +104,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
   const [text, setText] = useState("");
   const [imported, setImported] = useState<ImportedJob | null>(null);
   const [resultRevision, setResultRevision] = useState(0);
-  const [result, setResult] = useState<{ requirements: Requirement[]; facts: JobFact[]; omittedItems: number; source: string; locale: Locale; imported: ImportedJob | null; analysisFailed?: boolean } | null>(null);
+  const [result, setResult] = useState<{ requirements: Requirement[]; facts: JobFact[]; omittedItems: number; source: string; locale: Locale; imported: ImportedJob | null; analysisFailed?: boolean; refreshFailed?: boolean } | null>(null);
   const extraction = useMutation({ mutationFn: async (input: { text: string; locale: Locale; imported: ImportedJob | null }) => {
     if (input.text.trim().length < 40) throw new Error("INVALID_INPUT");
     setPhase("analysis"); record("analysis", "running", { endpoint: "/api/jobs/requirements", characters: input.text.length });
@@ -112,7 +114,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
   }, onError: (error, input) => {
     failed(error, "analysis");
     if (mounted.current && !controller.current?.signal.aborted && input.text.trim()) {
-      setResult({ requirements: [], facts: [], omittedItems: 0, source: input.text, locale: input.locale, imported: input.imported, analysisFailed: true });
+      setResult(previous => previous && previous.source === input.text && !previous.analysisFailed ? { ...previous, refreshFailed: true } : { requirements: [], facts: [], omittedItems: 0, source: input.text, locale: input.locale, imported: input.imported, analysisFailed: true });
       setResultRevision(revision => revision + 1);
     }
   }, onSuccess: ({ httpStatus, durationMs, ...value }) => {
@@ -199,7 +201,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
           </form>}
           {!ready && <p role="status" className="hint">{t.starting}</p>}
           <noscript><p className="notice">{t.javascriptRequired}</p></noscript>
-          {error && <Alert variant="destructive" role="alert" className="feedback"><AlertDescription>{t.errors[error as keyof typeof t.errors] ?? t.errors.AI_UNAVAILABLE}</AlertDescription></Alert>}
+          {error && !result?.analysisFailed && !result?.refreshFailed && (error.startsWith("SOURCE_") || error.startsWith("AI_") || error === "NETWORK_ERROR" ? <WorkflowNotice code={error} locale={locale} onPaste={mode === "url" ? () => changeMode("text") : undefined}/> : <Alert variant="destructive" role="alert" className="feedback"><AlertDescription>{t.errors[error as keyof typeof t.errors] ?? t.errors.AI_UNAVAILABLE}</AlertDescription></Alert>)}
           {retryIn > 0 && <p role="status" className="notice">{t.retryWait} {retryIn} {t.seconds}</p>}
           {phase === "cancelled" && <p role="status" className="hint">{t.cancelled}</p>}
           <div className="privacy-note"><ShieldCheck size={18}/><p>{t.privacy}</p></div>
@@ -208,14 +210,15 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
           <p className="step-label">{t.resultStep}</p>
           {!result && pending && <AnalysisProgress phase={phase} seconds={waitIn} locale={locale} pasted={mode === "text"} paused={pacedRun} onCancel={() => controller.current?.abort()} />}
           {!result && !pending && <Card className="empty-state"><CardContent><div className="empty-icon"><FileText size={30}/></div><h3>{t.emptyTitle}</h3><p>{t.emptyDescription}</p><div className="empty-preview" aria-hidden="true"><span/><span/><span/></div></CardContent></Card>}
+          {result && pending && <AnalysisProgress phase={phase} seconds={waitIn} locale={locale} pasted={mode === "text"} paused={pacedRun} onCancel={() => controller.current?.abort()}/>}
           {result && <section aria-labelledby="results-title" lang={result.locale}>
             <h3 id="results-title">{result.imported?.title ?? t.results}</h3>{result.imported && <a className="hint underline" href={result.imported.sourceUrl} target="_blank" rel="noopener noreferrer">{t.sourceLink}<ArrowUpRight size={14} className="inline" /></a>}<p className="hint">{t.review}</p>{result.imported?.sourceType === "GROQ_BROWSER_EXCERPT" && <p className="notice">{t.browserSource}</p>}
             {result.omittedItems > 0 && <p className="notice" role="status">{t.partialEvidence} ({result.omittedItems})</p>}
             {outdated && <Alert variant="destructive" role="alert"><AlertDescription>{t.outdated}</AlertDescription></Alert>}
             {result.locale !== locale && <p className="hint">{t.otherLanguage}</p>}
-            {result.analysisFailed && <p className="notice" role="status">{locale === "nb" ? "Annonsen er tilgjengelig nedenfor. Automatisk strukturering feilet; krav og praktiske opplysninger er ikke ferdig sortert. Du kan lese kildeutdraget nå og prøve analysen igjen." : "The advertisement is available below. Automatic structuring failed; requirements and practical details have not been sorted. Read the source excerpt now or retry the analysis."}</p>}
-            <JobOverview facts={result.facts} locale={locale} sourceLocale={result.locale} fallbackText={result.analysisFailed ? result.source : undefined} />
-            {!result.analysisFailed && <RequirementResults key={resultRevision} requirements={result.requirements} source={result.source} locale={locale} resultLocale={result.locale} browserExcerpt={result.imported?.sourceType === "GROQ_BROWSER_EXCERPT"} outdated={outdated} />}
+            {(result.analysisFailed || result.refreshFailed) && <WorkflowNotice code={error ?? "AI_INVALID_RESULT"} locale={locale} retained previous={!!result.refreshFailed}/> }
+            <SaveJob key={`save-${resultRevision}`} disabled={outdated || pending} content={{ title: result.imported?.title.slice(0, 200) ?? (locale === "nb" ? "Stillingsannonse" : "Job advertisement"), text: result.source, locale: result.locale, sourceUrl: result.imported?.sourceUrl ?? null, sourceType: result.imported?.sourceType ?? (result.imported ? "NAV_API" : "PASTED_TEXT"), retrievedAt: result.imported?.retrievedAt ?? null, requirements: result.requirements, facts: result.facts, omittedItems: result.omittedItems }}/><JobOverview locallyOrganized={!!result.analysisFailed} sourceText={result.source} facts={result.facts} locale={locale} sourceLocale={result.locale} fallbackText={result.analysisFailed ? result.source : undefined} />
+            {!result.analysisFailed && <RequirementResults key={`requirements-${resultRevision}`} requirements={result.requirements} source={result.source} locale={locale} resultLocale={result.locale} browserExcerpt={result.imported?.sourceType === "GROQ_BROWSER_EXCERPT"} outdated={outdated} />}
             <details className="source-evidence"><summary>{t.evidence}</summary><p className="hint">{t.sourceTitle}</p>{result.imported && <p><a href={result.imported.sourceUrl} target="_blank" rel="noopener noreferrer">{t.sourceLink}</a> · {t.retrieved}: {new Date(result.imported.retrievedAt).toLocaleString(locale === "nb" ? "nb-NO" : "en-US")}</p>}<pre>{result.source}</pre></details>
           </section>}
         </div>

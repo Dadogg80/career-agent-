@@ -81,3 +81,27 @@ CareerDocument holds owner, original filename/media type/size/hash, declared nb/
 ## DocumentAnalysis (ADR 0016)
 
 DocumentAnalysis is an owned suggestion snapshot, not candidate truth. It records an ID, language/provider/time, bounded summary and competency suggestions, source quotes/document IDs, input/source character counts, partial coverage and omitted evidence count. Individual results are linked to their document; the combined result belongs to the verified profile owner and lists included documents. Only explicit user saving creates a CompetencyClaim, always UNVERIFIED, with an AI-assisted CV source note and retained exact quote. Successful reanalysis replaces the latest suggestion snapshot, not claims/history. Creating/deleting a document invalidates the combined snapshot; individual results cascade on document deletion.
+
+## Document reading provenance
+
+CareerDocument now exposes derived textCharacters and extractionMethod (TEXT/OCR). TEXT means local extraction; OCR means at least one previously textless PDF page was recognized locally, potentially mixed with normal text pages. Neither method proves completeness or factual correctness. Rereading never changes original bytes/hash/name or already created claims/revisions. Changing stored extracted text clears analyses; in-flight saves compare their source snapshot. Retained historical claim quotes may describe an earlier extraction of the same immutable original.
+
+The competency dashboard counts distinct non-rejected labels and recorded statement statuses; it does not estimate skill level/confidence or merge evidence into a canonical Skill aggregate. Reviewed suggestions still become UNVERIFIED source-linked claims only by explicit save.
+
+## Saved job and matching subset (ADR 0018)
+
+SavedJob stores an immutable user-owned received-source snapshot and structured analysis. Same content/analysis reuses an ID, changed source/analysis creates a new snapshot. No source identity/republication authenticity is implied. PersonalMatch records requirement-index judgments with attributed selected CONFIRMED claim snapshots/revisions. Missing evidence is unknown; invalid evidence cannot support a strong match. Changes to selected current claims make the latest result stale; model completion cannot overwrite with changed evidence. Matching is an assessment, never candidate truth or a confirmed gap.
+
+## Reviewed local career-entry subset
+
+The local pilot now implements owner-scoped CareerEntry records for employment, projects, education and certifications. Titles, organizations, optional clients/actual delivery roles and optional month values preserve role/context distinctions. This typed JSON-backed subset precedes a full normalized employment/client/project model. Separate review, revisions and source notes follow the claim principle; edits reset confirmation. See docs/CAREER_HISTORY.md. CV artifact creation remains separate.
+
+## Pilot CV and application records
+
+`CvVersion` is a draft/approved immutable content snapshot of current confirmed claim/history revisions, user-entered identity and optional owned saved job. Approved `CvArtifact` stores format, private object ID, size and SHA-256. Stale drafts cannot approve. `ApplicationCase` tracks a saved job, status/revision/history and an approved CV. Once a submission date is recorded, its CV/date/text are immutable. This is the user's archive, not external delivery proof.
+
+`ClaimEvidence` captures each owned document quotation plus statement/context at attachment time. Conservative equality in skill/statement/context reuses a claim without changing confirmation status. Different employers/projects remain separate; unknown contexts remain separated across documents. Document deletion removes the pointer but retains the quoted evidence snapshot.
+
+## Document evidence selection and checks
+
+CompetencySuggestion optionally retains contextQuote: the nearby literal header supporting its employer/project label. Statement/summary wording is source-selected; unknown context stays unknown. A bounded DocumentCheckReport records a timestamp and each owned document's original, text and existing individual/combined quotation check states. It is transient technical evidence, not confirmation or a completeness score. Saved claims/history are not retroactively modified by presentation revalidation.

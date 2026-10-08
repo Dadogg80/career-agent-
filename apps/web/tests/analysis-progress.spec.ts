@@ -10,7 +10,7 @@ test("FINN waits ten seconds before analysis and does not duplicate requests", a
   await page.route("**/api/jobs/requirements", route => { analyses++; return route.fulfill({ json: { facts: [], requirements: [{ label: "Kotlin", kind: "REQUIRED", quote: "Du må ha erfaring med Kotlin og PostgreSQL." }] } }); });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1000));
   await page.getByRole("textbox", { name: "Lenke til stillingsannonse" }).fill(url);
@@ -33,7 +33,7 @@ test("stopping a pause preserves the source and a retry respects the remaining p
   let analyses = 0;
   await page.route("**/api/jobs/import", route => { imports++; return route.fulfill({ json: { sourceUrl: url, title: "Utvikler", text, retrievedAt: "2026-10-07T00:00:00Z", sourceType: "GROQ_BROWSER_EXCERPT" } }); });
   await page.route("**/api/jobs/requirements", route => { analyses++; return route.fulfill({ json: { facts: [], requirements: [] } }); });
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   await page.clock.install(); await page.clock.pauseAt(new Date(Date.now() + 1000));
   await page.getByRole("combobox", { name: "Språk" }).selectOption("en");
   await page.getByRole("textbox", { name: "Job advertisement link" }).fill(url);
@@ -55,11 +55,11 @@ test("failed retrieval never schedules analysis", async ({ page }) => {
   let analyses = 0;
   await page.route("**/api/jobs/import", route => route.fulfill({ status: 502, json: { code: "SOURCE_NOT_AVAILABLE" } }));
   await page.route("**/api/jobs/requirements", route => { analyses++; return route.fulfill({ json: { facts: [], requirements: [] } }); });
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   await page.clock.install(); await page.clock.pauseAt(new Date(Date.now() + 1000));
   await page.getByRole("textbox", { name: "Lenke til stillingsannonse" }).fill(url);
   await page.getByRole("button", { name: "Analyser lenke", exact: true }).click();
-  await expect(page.getByRole("region", { name: "Analyser en stillingsannonse" }).getByRole("alert")).toContainText("kontrollerbart utdrag");
+  await expect(page.locator(".workflow-notice")).toContainText("Vi har ikke fått et lesbart utdrag");
   await page.clock.fastForward(60000);
   expect(analyses).toBe(0);
 });

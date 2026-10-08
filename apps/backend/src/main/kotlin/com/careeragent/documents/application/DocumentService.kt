@@ -2,6 +2,7 @@ package com.careeragent.documents.application
 
 import com.careeragent.documents.domain.*
 import com.careeragent.documents.infrastructure.DocumentTextExtractor
+import com.careeragent.documents.infrastructure.LocalPdfOcr
 import com.careeragent.profile.application.*
 import com.careeragent.profile.domain.*
 import org.springframework.context.annotation.Profile
@@ -18,12 +19,13 @@ interface DocumentRepository {
     fun create(identity: VerifiedIdentity, id: UUID, name: String, mediaType: String, size: Long, hash: String, text: String, language: String): CareerDocument
     fun selectMaster(identity: VerifiedIdentity, id: UUID): CareerDocument
     fun delete(identity: VerifiedIdentity, id: UUID)
+    fun replaceText(identity: VerifiedIdentity, id: UUID, text: String, method: String): DocumentDetail
 }
 @Service
 @Profile("persistence")
 class DocumentService(private val repository: DocumentRepository, private val storage: DocumentStorage,
     private val extractor: DocumentTextExtractor, private val claims: ClaimService,
-    private val analyses: DocumentAnalysisRepository) {
+    private val analyses: DocumentAnalysisRepository, private val ocr: LocalPdfOcr) {
     private val permit = Semaphore(1)
     fun list(identity: VerifiedIdentity) = repository.list(identity)
     fun detail(identity: VerifiedIdentity, id: UUID) = repository.detail(identity, id)
@@ -35,18 +37,28 @@ class DocumentService(private val repository: DocumentRepository, private val st
         if (bytes.isEmpty() || bytes.size > 5242880) throw DocumentFailure("DOCUMENT_TOO_LARGE", 413)
         if (language !in setOf("nb", "en") || name.length !in 1..120 || name.any { it.isISOControl() || it in "/\\\"" }) throw DocumentFailure("DOCUMENT_INVALID", 400)
         val extension = name.substringAfterLast('.', "").lowercase()
-        if (extension !in setOf("docx", "pdf")) throw DocumentFailure("DOCUMENT_TYPE", 400)
+        if (extension !in setOf("docx", "pdf", "txt", "md")) throw DocumentFailure("DOCUMENT_TYPE", 400)
         repository.list(identity)
         if (!permit.tryAcquire()) throw DocumentFailure("DOCUMENT_BUSY", 429)
         try {
             val text = extractor.extract(bytes, extension)
             val id = UUID.randomUUID(); val hash = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
             storage.put(id, bytes)
-            try { return repository.create(identity, id, name, if (extension == "pdf") "application/pdf" else "application/vnd.openxmlformats-officedocument.wordprocessingml.document", bytes.size.toLong(), hash, text, language) }
+            try { return repository.create(identity, id, name, when(extension) { "pdf" -> "application/pdf"; "docx" -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"; "md" -> "text/markdown"; else -> "text/plain" }, bytes.size.toLong(), hash, text, language) }
             catch (error: Exception) { storage.delete(id); throw error }
         } finally { permit.release() }
     }
     fun selectMaster(identity: VerifiedIdentity, id: UUID) = repository.selectMaster(identity, id)
+    fun reread(identity: VerifiedIdentity, id: UUID, useOcr: Boolean): DocumentDetail {
+        val (document, bytes) = original(identity, id)
+        if (useOcr && document.mediaType != "application/pdf") throw DocumentFailure("DOCUMENT_TYPE", 400)
+        if (!permit.tryAcquire()) throw DocumentFailure("DOCUMENT_BUSY", 429)
+        try {
+            val result = if (useOcr) ocr.extract(bytes) else com.careeragent.documents.infrastructure.ReadDocument(extractor.extract(bytes, when(document.mediaType) { "application/pdf" -> "pdf"; "text/plain" -> "txt"; "text/markdown" -> "md"; else -> "docx" }), "TEXT")
+            if (result.text.isBlank() && repository.detail(identity, id).text.isNotBlank()) throw DocumentFailure("DOCUMENT_AI_NO_TEXT", 400)
+            return repository.replaceText(identity, id, result.text, result.method)
+        } finally { permit.release() }
+    }
     fun delete(identity: VerifiedIdentity, id: UUID) {
         val original = original(identity, id).second
         storage.delete(id)
@@ -61,7 +73,17 @@ class DocumentService(private val repository: DocumentRepository, private val st
             val collection = analyses.loadCollection(identity)
             if (collection?.id != analysisId || collection.documents.none { it.documentId == id }) throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT", 409)
         }
-        val note = if (analysisId == null) "CV" else "AI-assisted CV"
-        return claims.create(identity, ClaimContent(skill, statement, context, "$note: ${source.document.originalName}", id, quote))
+        val note = if (analysisId == null) "Document" else "AI-assisted document"
+        val result=claims.create(identity, ClaimContent(skill, statement, context, "$note: ${source.document.originalName}", id, quote))
+        if(analysisId!=null) {
+            val analysis=analyses.loadCollection(identity)?.takeIf { it.id==analysisId }
+            val proposal=analysis?.suggestions?.find { it.documentId==id && it.quote==quote && it.skill==skill && it.statement==statement && it.context==context }
+            proposal?.additionalSources?.forEach { evidence ->
+                val other=repository.detail(identity,evidence.documentId)
+                if(!other.text.contains(evidence.quote))throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
+                claims.create(identity,ClaimContent(skill,statement,context,"$note: ${other.document.originalName}",evidence.documentId,evidence.quote))
+            }
+        }
+        return result
     }
 }

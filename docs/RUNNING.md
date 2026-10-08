@@ -1,6 +1,6 @@
 # Kjør første utviklingsversjon
 
-Status: A redesigned shadcn/ui workspace, Norwegian/English selection, official NAV URL import, service status and Groq requirement extraction are implemented. Optional local OIDC sign-in and a saved basic name/language profile are implemented. This branch adds reviewed competencies and bounded local DOCX/PDF source import; personal matching and public SaaS deployment remain future work. See [CV_IMPORT.md](CV_IMPORT.md). See [IDENTITY_SETUP.md](IDENTITY_SETUP.md) for the opt-in profile setup. See [TESTING_PILOT.md](TESTING_PILOT.md) for the complete AI test flow.
+Status: the tested local pilot includes a public landing page, dedicated OIDC sign-in, overview, public advertisement analysis, owned profiles/documents/competency review/career history, saved jobs, approved personal matching, reviewed standard DOCX/PDF export and manual application tracking. PDF/DOCX/UTF-8 TXT/Markdown sources and optional local PDF OCR are supported within documented bounds. Public SaaS deployment remains deferred. See [TESTING_PILOT.md](TESTING_PILOT.md), [IDENTITY_SETUP.md](IDENTITY_SETUP.md), [DOCUMENT_KNOWLEDGE.md](DOCUMENT_KNOWLEDGE.md), [CV_EXPORT.md](CV_EXPORT.md) and [APPLICATION_TRACKING.md](APPLICATION_TRACKING.md).
 
 ## Forutsetninger
 
@@ -71,7 +71,7 @@ CI-workflow er skrevet, men en lokal passering dokumenterer ikke at GitHub Actio
 
 Stop both running processes with Ctrl+C. From the repository root, run `git switch main` and `git pull --ff-only`. Reinstall frontend dependencies with `npm ci` when package-lock.json changes, rebuild the backend and start both using the commands above. A GitHub push does not update or restart your local application. Next.js dev mode reloads many UI edits automatically; backend JAR changes and dependency changes require restart.
 
-NAV import needs no personal token during experimentation; the public experiment token is fetched server-side. An optional NAV_API_TOKEN may be added to the backend `.env`. No Docker or database is needed for this slice.
+NAV import needs no personal token during experimentation; the public experiment token is fetched server-side. An optional NAV_API_TOKEN may be added to the backend `.env`. Public advertisement analysis needs no database. The private pilot requires PostgreSQL and local identity; follow IDENTITY_SETUP.md.
 
 ## FINN support and Java discovery on macOS
 
@@ -90,7 +90,7 @@ Both should report 21. These shell exports select the installed JDK; they do not
 
 ## PostgreSQL foundation update (2026-10-07)
 
-The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Optional local profile login/API/UI are available; see [IDENTITY_SETUP.md](IDENTITY_SETUP.md). Reviewed competency claims and local CV upload/source selection are added on this branch; normalized experience/projects and automatic AI discovery remain future increments. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.
+The complete backend test suite now requires Docker for disposable real PostgreSQL tests. Public-ad startup remains database independent; `./gradlew bootJar` can build the application without starting database tests. Optional local persistence startup and required credentials are documented in [POSTGRES_SETUP.md](POSTGRES_SETUP.md). Optional local profile login/API/UI are available; see [IDENTITY_SETUP.md](IDENTITY_SETUP.md). Reviewed competency claims, typed career history and local document source selection are implemented; a full normalized experience/project graph and automatic adjacent-skill discovery remain future increments. URL analysis now runs directly from **Analyze link**, with no mandatory excerpt-review step.
 
 ## Local development interaction troubleshooting
 
@@ -139,10 +139,14 @@ npm ci
 npm run dev -- --hostname 127.0.0.1
 ```
 
-Use the local application at `http://127.0.0.1:3000`. For Min profil/CV sign in as `pilot` using the password in your own ignored `.env.identity`. Public ad analysis works without sign-in. If changing default ports, configure both Next API base and backend public login origin consistently. The local private pilot is not an externally deployed SaaS.
+Use the local application at `http://127.0.0.1:3000`. The root opens the landing page. Sign in through `/login` as `pilot` using the password in your own ignored `.env.identity`; the callback opens `/dashboard`. Guest advertisement analysis is `/jobs/analyze`. Public ad analysis works without sign-in. If changing default ports, configure both Next API base and backend public login origin consistently. The local private pilot is not an externally deployed SaaS.
 
 Stop the running Java process **before** rebuilding its JAR. Overwriting an archive used by a live Spring Boot classloader can produce class-loading failures; rebuild first, then start the new process.
 
 ## Optional document AI summaries
 
 After updating/rebuilding this branch, use Min profil → CV og dokumenter → Oppsummer alle dokumentene med AI. Review all readable source excerpts and approve sending; do not send unnecessary private details. GROQ_API_KEY is reused server-side. The new V4 migration is automatic. No new dependency/service or account upgrade is needed. Individual analysis is available inside each document. See [CV_IMPORT.md](CV_IMPORT.md) for partial coverage, source inspection, UNVERIFIED review, persistence and failure behavior. Public advertisement diagnostics exclude this private content.
+
+## Optional local scan reading
+
+V5 applies automatically on backend restart. Existing originals do not need reuploading: choose **Les originalen på nytt** in their review Sheet. For image-only PDF pages, install free Tesseract on the Mac backend (`brew install tesseract`); Norwegian OCR additionally uses `brew install tesseract-lang` and `DOCUMENT_OCR_LANGUAGES=nor+eng` in `apps/backend/.env`. Restart Java after changing its environment/PATH. OCR is explicitly selected, local, limited to ten pages and requires text review before a separate AI call. It is optional for ordinary text-based PDF/DOCX. See CV_IMPORT.md.

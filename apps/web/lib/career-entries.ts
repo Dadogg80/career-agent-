@@ -1,0 +1,16 @@
+import { claimId } from "./claims";
+export type EntryKind = "EMPLOYMENT" | "PROJECT" | "EDUCATION" | "CERTIFICATION";
+export type EntryContent = { kind:EntryKind; title:string; organization:string; client:string; deliveryRole:string; startMonth:string|null; endMonth:string|null; ongoing:boolean; description:string; sourceNote:string };
+export type CareerEntry = { id:string; content:EntryContent; status:"UNVERIFIED"|"CONFIRMED"|"REJECTED"; revision:number; createdAt:string; updatedAt:string };
+export function validEntryContent(value: unknown): value is EntryContent {
+ if (!value || typeof value !== "object") return false;
+ const v = value as EntryContent;
+ const fields = {title:200,organization:200,client:200,deliveryRole:200,description:2000,sourceNote:500};
+ return ["EMPLOYMENT","PROJECT","EDUCATION","CERTIFICATION"].includes(v.kind) && Object.entries(fields).every(([k,max]) => { const x = v[k as keyof EntryContent]; return typeof x === "string" && x.length <= max && (["client","deliveryRole","description"].includes(k) || !!x.trim()); }) && typeof v.ongoing === "boolean" && [v.startMonth,v.endMonth].every(x => x === null || typeof x === "string" && /^\d{4}-(0[1-9]|1[0-2])$/.test(x)) && (!v.ongoing || v.endMonth === null) && (!v.startMonth || !v.endMonth || v.endMonth >= v.startMonth);
+}
+export function isEntry(value:unknown): value is CareerEntry { if(!value || typeof value !== "object") return false; const v=value as CareerEntry; return typeof v.id === "string" && claimId.test(v.id) && validEntryContent(v.content) && ["UNVERIFIED","CONFIRMED","REJECTED"].includes(v.status) && Number.isSafeInteger(v.revision) && v.revision >= 1 && [v.createdAt,v.updatedAt].every(x => typeof x === "string" && x.length <= 40 && Number.isFinite(Date.parse(x))); }
+export const isEntries = (value:unknown): value is CareerEntry[] => Array.isArray(value) && value.length <= 50 && value.every(isEntry);
+export const emptyEntry: EntryContent = {kind:"EMPLOYMENT",title:"",organization:"",client:"",deliveryRole:"",startMonth:null,endMonth:null,ongoing:false,description:"",sourceNote:""};
+export const entryKinds = {nb:{EMPLOYMENT:"Arbeidsforhold",PROJECT:"Prosjekt",EDUCATION:"Utdanning",CERTIFICATION:"Kurs / sertifisering"},en:{EMPLOYMENT:"Employment",PROJECT:"Project",EDUCATION:"Education",CERTIFICATION:"Course / certification"}};
+export function entryPeriod(content:EntryContent,locale:"nb"|"en") {const nb=locale === "nb";return `${content.startMonth ?? (nb ? "Start ikke oppgitt" : "Start not stated")} – ${content.ongoing ? (nb ? "nå" : "present") : content.endMonth ?? (nb ? "Slutt ikke oppgitt" : "End not stated")}`;}
+export function entryError(code:string,locale:"nb"|"en") {const nb=locale === "nb";const t:Record<string,string>={ENTRY_INVALID:nb ? "Kontroller felt og datoperiode." : "Check fields and dates.",ENTRY_CONFLICT:nb ? "Opplysningen er endret. Lukk utkastet og hent lagret versjon." : "Entry changed. Close the draft and reload it.",ENTRY_NOT_FOUND:nb ? "Opplysningen finnes ikke lenger." : "Entry no longer exists.",ENTRY_LIMIT:nb ? "Piloten har plass til 50 historikkpunkter." : "The pilot supports 50 career entries.",AUTH_REQUIRED:nb ? "Logg inn igjen." : "Sign in again."};return t[code] ?? (nb ? "Karrierehistorikken er utilgjengelig. Prøv igjen." : "Career history is unavailable. Try again.");}

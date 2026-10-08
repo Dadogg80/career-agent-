@@ -1,12 +1,16 @@
-# Next delivery: identity and usable career profile
+# Local pilot delivery and later work
 
-Status: direct URL analysis, sourced overview facts, compact requirement details and optional PostgreSQL/Flyway foundation are implemented on `feat/job-overview-flow`, pending merge. Earlier URL review/ingestion proposals are superseded by the implemented flow recorded in USER_FLOWS.md and ADRs 0008/0010/0011.
+The earlier identity/profile/import proposal is implemented. The tested `feat/competency-workspace` delivery now includes public entry, dedicated local sign-in, owned reviewed competencies and typed career history, PDF/DOCX/UTF-8 TXT/Markdown evidence, opt-in single/combined AI summaries, saved advertisements, approved matching, standard CV export and manual application tracking. See [ROADMAP.md](../ROADMAP.md) and the actual verification in [DEVELOPMENT_LOG.md](DEVELOPMENT_LOG.md).
 
-## Next coherent slices
+## Pilot handoff
 
-1. Configure OIDC login/session and server-side ownership enforcement. Use a verified issuer/subject to resolve the internal identity. The database migration alone does not authenticate anyone. Add unauthorized/cross-owner tests before exposing personal data. Provider client credentials must be configured securely outside Git.
-2. Add profile editing and saved experience/projects/competency claims, with source references, confirmation history and explicit UNVERIFIED/INFERRED/CONFIRMED/REJECTED states. Reopen saved data after reload. Add sanitized request diagnostics during this foundation work.
-3. Add authenticated CV upload, original-file retention and bounded document extraction. Extracted claims start UNVERIFIED and require review. Evaluate provider data policy before sending private candidate material to AI.
-4. Match advertisement requirements to confirmed profile claims and evidence. Missing documentation is unknown, not automatically a skill gap. Add clarification questions and approved CV wording after that.
+The owner explicitly authorized pushing this tested delivery and merging it to main on 2026-10-08. Follow [TESTING_PILOT.md](TESTING_PILOT.md) for the complete local flow and [RUNNING.md](RUNNING.md) for startup. GitHub publishing, merge, local synchronization and restarts are distinct actions. No paid service or account upgrade is authorized.
 
-Public job analysis remains database independent. Local backend integration tests require Docker. No private endpoint, CV upload or candidate AI processing exists yet. No paid infrastructure or provider upgrades are authorized. See ROADMAP.md for delivery boundaries and docs/POSTGRES_SETUP.md for local database setup.
+## Subsequent coherent increments
+
+1. Validate actual pilot documents and strengthen Norwegian/English source selection, context proof and recovery. The current slice adds read-only local document checks and source-selected AI proposals; see ADR 0023 and DEVELOPMENT_LOG.md.
+2. Add source-backed CV wording and application drafts, with visible before/after and explicit factual review. This is separate from the existing approved standard-template export and remains pending.
+3. Add interview preparation using the exact approved/recorded CV and application materials, with no invented examples. This remains pending.
+4. Add market discovery/scheduling only after checking source-access/reuse terms, freshness, deduplication and budget. Controlled browser preparation, academy/analytics and external hosting remain later milestones.
+
+Kafka, Temporal, pgvector and Redis are deferred until a concrete workload justifies them. Local integration tests require Docker; private workflows require the documented PostgreSQL/OIDC setup. Production identity, backups, deletion/export policy and external-provider privacy controls remain open before an external pilot.

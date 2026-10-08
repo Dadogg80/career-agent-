@@ -26,6 +26,7 @@ test("profile save uses the session CSRF token, reopens persisted data and suppo
   await page.getByRole("button", { name: "Lagre profil", exact: true }).click();
   await expect(page.getByText("Profilen er lagret.", { exact: true })).toBeVisible();
   await page.reload();
+  await page.locator(".profile-settings > summary").click();
   await expect(page.getByRole("textbox", { name: "Navn", exact: true })).toHaveValue("Synthetic Pilot");
   expect(reads).toBe(2);
   await page.getByRole("combobox", { name: "Språk", exact: true }).selectOption("en");
@@ -44,6 +45,7 @@ test("profile conflicts preserve the draft until explicitly loading the saved ve
     return route.fulfill({ status: 409, json: { code: "PROFILE_CONFLICT" } });
   });
   await page.goto("/career/profile");
+  await page.locator(".profile-settings > summary").click();
   await page.getByRole("textbox", { name: "Navn", exact: true }).fill("My draft");
   await page.getByRole("button", { name: "Lagre profil", exact: true }).click();
   await expect(page.getByRole("alert").filter({ hasText: "annen fane" })).toBeVisible();
@@ -54,9 +56,9 @@ test("profile conflicts preserve the draft until explicitly loading the saved ve
 
 test("unconfigured identity shows honest availability without exposing a profile form", async ({ page }) => {
   await page.goto("/career/profile");
-  await expect(page.getByText("Profilinnlogging er ikke aktivert i dette miljøet ennå.", { exact: true })).toBeVisible();
+  await expect(page.getByText("Ditt arbeidsområde krever innlogging", { exact: true })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Navn", exact: true })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "Logg inn", exact: true })).toHaveCount(0);
+  await expect(page.locator("main").getByRole("link", { name: "Logg inn", exact: true })).toHaveCount(0);
 });
 
 test("an expired save session offers sign-in and stops presenting a writable profile", async ({ page }) => {
@@ -65,9 +67,10 @@ test("an expired save session offers sign-in and stops presenting a writable pro
     ? route.fulfill({ json: { id, displayName: "Synthetic Pilot", preferredLanguage: "nb", revision: 1 } })
     : route.fulfill({ status: 401, json: { code: "AUTH_REQUIRED" } }));
   await page.goto("/career/profile");
+  await page.locator(".profile-settings > summary").click();
   await page.getByRole("button", { name: "Lagre profil", exact: true }).click();
   await expect(page.getByRole("alert").filter({ hasText: "Sesjonen er utløpt" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Logg inn", exact: true })).toHaveAttribute("href", "/api/auth/login");
+  await expect(page.getByRole("link", { name: "Logg inn", exact: true })).toHaveAttribute("href", "/login");
   await expect(page.getByRole("textbox", { name: "Navn", exact: true })).toHaveCount(0);
 });
 

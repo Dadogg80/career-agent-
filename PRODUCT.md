@@ -59,3 +59,11 @@ Kafka, Temporal, Redis og pgvector innføres bare når et konkret behov begrunne
 Undersøk om vurderingene oppleves riktige, om avklaringer avdekker nyttig erfaring, om materialet er faktatrofast, og om brukeren kommer raskere frem til en søknad han vil sende.
 
 Registrer feilaktige eller overdrevne formuleringer som kvalitetsfeil. Antall genererte søknader alene er ikke et mål på produktverdi.
+
+## Confirmed first-export layout decision (2026-10-07)
+
+The owner selected a controlled standard CV template for the first DOCX/PDF export. Uploaded original/master CV files remain immutable sources. Arbitrary DOCX-layout preservation/adaptation follows later and does not block initial export. Keep job-specific content approval and artifact/template versioning; export is not application submission. This decision is recorded, not an implemented export feature.
+
+## Confirmed next-phase defaults (2026-10-07)
+
+The first working pilot runs locally on the owner's Mac; online hosting comes later. Future personal matching may send relevant CONFIRMED competency statements and advertisement text to Groq after preview and approval for each analysis. This does not auto-enable matching, share the whole profile or reuse document-analysis consent. These choices are recorded in DECISIONS.md; implementation remains a separate increment.

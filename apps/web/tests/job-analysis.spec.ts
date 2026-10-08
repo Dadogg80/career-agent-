@@ -5,7 +5,7 @@ const result = { facts: [], requirements: [{ label: "Kotlin", kind: "REQUIRED", 
 
 test("renders cited requirements and marks edited source as outdated", async ({ page }) => {
   await page.route("**/api/jobs/requirements", (route) => route.fulfill({ json: result }));
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await page.getByRole("textbox", { name: "Stillingsannonse" }).fill(source);
   await page.getByRole("button", { name: "Analyser", exact: true }).click();
@@ -24,12 +24,12 @@ test("English request and UI error retain the advertisement", async ({ page }) =
     requestedLocale = route.request().postDataJSON().locale;
     return route.fulfill({ status: 429, json: { code: "AI_RATE_LIMITED" } });
   });
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await page.getByRole("combobox", { name: "Språk" }).selectOption("en");
   await page.getByRole("textbox", { name: "Job advertisement" }).fill(source);
   await page.getByRole("button", { name: "Analyze", exact: true }).click();
-  await expect(page.getByRole("region", { name: "Analyze a job advertisement" }).getByRole("alert")).toContainText("Groq quota");
+  await expect(page.locator(".workflow-notice")).toContainText("needs a short pause");
   await expect(page.getByRole("textbox", { name: "Job advertisement" })).toHaveValue(source);
   expect(requestedLocale).toBe("en");
 });
@@ -41,11 +41,11 @@ test("real proxy rejects invalid input without an AI call", async ({ request }) 
 });
 
 test("real browser proxy reaches the backend and reports missing configuration", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await page.getByRole("textbox", { name: "Stillingsannonse" }).fill(source);
   await page.getByRole("button", { name: "Analyser", exact: true }).click();
-  await expect(page.getByRole("region", { name: "Analyser en stillingsannonse" }).getByRole("alert")).toContainText("AI er ikke konfigurert");
+  await expect(page.locator(".workflow-notice")).toContainText("Automatisk sortering er ikke tilgjengelig");
   await expect(page.getByRole("textbox", { name: "Stillingsannonse" })).toHaveValue(source);
 });
 
@@ -60,7 +60,7 @@ test("cross-origin and oversized requests are rejected", async ({ request }) => 
 
 test("partial evidence is visible in both languages and valid cards remain usable", async ({ page }) => {
   await page.route("**/api/jobs/requirements", route => route.fulfill({ json: { ...result, omittedItems: 1 } }));
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await page.getByRole("textbox", { name: "Stillingsannonse" }).fill(source);
   await page.getByRole("button", { name: "Analyser", exact: true }).click();

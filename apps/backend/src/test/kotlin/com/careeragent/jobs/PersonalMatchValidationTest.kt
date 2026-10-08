@@ -1,0 +1,40 @@
+package com.careeragent.jobs
+
+import com.careeragent.ai.application.AiFailure
+import com.careeragent.ai.application.AiModel
+import com.careeragent.jobs.application.*
+import com.careeragent.jobs.domain.*
+import com.careeragent.profile.application.ClaimRepository
+import com.fasterxml.jackson.databind.ObjectMapper
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.Test
+import org.mockito.Mockito.mock
+import java.util.UUID
+
+class PersonalMatchValidationTest {
+ private val mapper = ObjectMapper()
+ private val service = PersonalMatchService(mock(SavedJobRepository::class.java),mock(ClaimRepository::class.java),mock(PersonalMatchRepository::class.java),mock(AiModel::class.java),mapper,10)
+ private val claim = MatchClaim(UUID.randomUUID(),2,"Kotlin","Built APIs using Kotlin","Fictional project")
+ @Test fun `unsupported strong matches and unshared requirements become unknown without inventing gaps`() {
+  val items = listOf(
+   mapOf("requirementIndex" to 0,"classification" to "STRONG","reason" to "Invented expertise","question" to "","evidence" to listOf(mapOf("claimId" to claim.id,"quote" to "Built APIs using Kafka"))),
+   mapOf("requirementIndex" to 1,"classification" to "STRONG","reason" to "Unshared requirement","question" to "","evidence" to listOf(mapOf("claimId" to claim.id,"quote" to claim.statement))))
+  val result = service.parse(mapper.writeValueAsString(mapOf("assessments" to items)),2,setOf(0),listOf(claim),"nb")
+  assertThat(result.first).hasSize(2)
+  assertThat(result.first.map { it.classification }).containsOnly(MatchKind.CLARIFY)
+  assertThat(result.first.flatMap { it.evidence }).isEmpty()
+  assertThat(result.first[0].reason).contains("Det betyr ikke at kompetansen mangler")
+  assertThat(result.second).isEqualTo(2)
+ }
+ @Test fun `valid evidence survives another malformed assessment but malformed roots are rejected`() {
+  val good = mapOf("requirementIndex" to 0,"classification" to "PARTIAL","reason" to "Related API contribution","question" to "Have you operated it in production?","evidence" to listOf(mapOf("claimId" to claim.id,"quote" to "Built APIs using Kotlin")))
+  val result = service.parse(mapper.writeValueAsString(mapOf("assessments" to listOf(good,mapOf("requirementIndex" to "bad")))),2,setOf(0,1),listOf(claim),"en")
+  assertThat(result.first[0].classification).isEqualTo(MatchKind.PARTIAL)
+  assertThat(result.first[0].evidence.single().claimId).isEqualTo(claim.id)
+  assertThat(result.first[1].reason).contains("does not establish a skill gap")
+  assertThat(result.second).isEqualTo(1)
+  assertThatThrownBy { service.parse("{broken",1,setOf(0),listOf(claim),"en") }.isInstanceOf(AiFailure::class.java)
+  assertThatThrownBy { service.parse("{\"assessments\":[],\"ownerId\":\"spoof\"}",1,setOf(0),listOf(claim),"en") }.isInstanceOf(AiFailure::class.java)
+ }
+}

@@ -1,0 +1,20 @@
+import {expect,test} from "@playwright/test";
+const id="12345678-1234-1234-1234-123456789abc";
+test("document checks show readable evidence and honest review states without another AI request",async({page})=>{
+ let checks=0;let aiCalls=0;
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"test-csrf"}}));
+ await page.route("**/api/profile/me",r=>r.fulfill({json:{id,displayName:"Synthetic Pilot",preferredLanguage:"nb",revision:1}}));
+ await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[]}));
+ await page.route("**/api/profile/me/documents",r=>r.fulfill({json:[{id,originalName:"synthetic.pdf",mediaType:"application/pdf",byteSize:1024,sha256:"a".repeat(64),language:"nb",isMaster:false,createdAt:"2026-10-08T00:00:00Z",textCharacters:240,extractionMethod:"TEXT"}]}));
+ await page.route("**/api/profile/me/documents/check",r=>{checks++;expect(r.request().headers()['x-csrf-token']).toBe('test-csrf');expect(r.request().postDataJSON()).toEqual({});return r.fulfill({json:{checkedAt:"2026-10-08T00:00:00Z",documents:[{documentId:id,characters:240,checks:[{kind:"ORIGINAL",state:"PASS",code:"ORIGINAL_UNCHANGED",items:0},{kind:"TEXT",state:"PASS",code:"TEXT_READABLE",items:0},{kind:"INDIVIDUAL_AI",state:"MISSING",code:"NOT_ANALYZED",items:0},{kind:"COMBINED_AI",state:"REVIEW",code:"PARTIAL_ANALYSIS",items:2}]}]}});});
+ await page.route(`**/api/profile/me/documents/${id}`,r=>r.fulfill({json:{document:{id,originalName:"synthetic.pdf",mediaType:"application/pdf",byteSize:1024,sha256:"a".repeat(64),language:"nb",isMaster:false,createdAt:"2026-10-08T00:00:00Z",textCharacters:240,extractionMethod:"TEXT"},text:"Built Kotlin APIs for an internal project."}}));
+ await page.route("**/api/profile/me/documents/**/analysis",r=>{if(r.request().method()==="POST")aiCalls++;return r.fulfill({json:null});});
+ await page.setViewportSize({width:390,height:844});await page.goto('/career/profile');await page.getByRole('button',{name:'Kontroller dokumentene',exact:true}).click();const sheet=page.getByRole('dialog');await expect(sheet).toContainText('Originalfilen er intakt.');await expect(sheet).toContainText('Ingen lagret AI-analyse ennå.');await expect(sheet).toContainText('Analysen dekker bare et utvalg.');expect(checks).toBe(1);expect(aiCalls).toBe(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await sheet.getByRole('button',{name:'Kontroller igjen',exact:true}).click();await expect.poll(()=>checks).toBe(2);await page.keyboard.press('Escape');await page.getByRole('combobox',{name:'Språk',exact:true}).selectOption('en');await page.getByRole('button',{name:'Check documents',exact:true}).click();await expect(page.getByRole('dialog')).toContainText('not exhaustive or correct competency interpretation');expect(aiCalls).toBe(0);
+ await page.getByRole('dialog').getByRole('button',{name:'Open document',exact:true}).click();await expect(page.getByRole('dialog').getByRole('heading',{name:'synthetic.pdf',exact:true})).toBeVisible();expect(aiCalls).toBe(0);
+});
+test('document check proxy enforces local origin strict body and authentication',async({request})=>{
+ expect((await request.get('/api/profile/me/documents')).status()).toBe(401);
+ expect((await request.post('/api/profile/me/documents/check',{data:{}})).status()).toBe(403);
+ expect((await request.post('/api/profile/me/documents/check',{data:{},headers:{Origin:'https://foreign.example'}})).status()).toBe(403);
+ expect((await request.post('/api/profile/me/documents/check',{data:{ownerId:id}})).status()).toBe(400);
+});

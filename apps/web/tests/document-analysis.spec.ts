@@ -100,9 +100,9 @@ test("quota and invalid AI replies preserve previous analysis without automatica
   await page.getByRole("button", { name:"Read text and add competency", exact:true }).click(); const dialog = page.getByRole("dialog");
   const submit = dialog.getByRole("button", { name:"Summarize competencies with AI", exact:true });
   await dialog.getByRole("checkbox").check(); await submit.click();
-  await expect(dialog.getByRole("alert")).toContainText("Groq quota reached"); await expect(submit).toBeDisabled();
+  await expect(dialog.locator(".workflow-notice")).toContainText("AI needs a pause"); await expect(submit).toBeDisabled();
   await expect(submit).toBeEnabled({ timeout:5000 }); expect(calls).toBe(1);
-  await submit.click(); await expect(dialog.getByRole("alert")).toContainText("AI response could not be checked");
+  await submit.click(); await expect(dialog.locator(".workflow-notice")).toContainText("previous assessment is retained");
   await expect(dialog.getByRole("region", { name:"Competency summary" })).toContainText("API development with Kotlin"); expect(calls).toBe(2);
 });
 
@@ -116,4 +116,27 @@ test("private analysis proxies reject missing approval cross-origin spoofing ove
   expect((await request.post(path, { data:{ ...body, ownerId:second } })).status()).toBe(400);
   expect((await request.post(path, { data:{ ...body, text:"x".repeat(12001) } })).status()).toBe(400);
   expect((await request.post("/api/profile/me/documents/analysis", { data:{ documents:[{ documentId:first, text:texts[first] }, { documentId:first, text:texts[first] }], locale:"nb", consent:true } })).status()).toBe(400);
+});
+
+test("long source windows preserve opening company context and require new consent without automatically calling AI",async({page})=>{
+ const text="Firma: Example AS\n"+"Built APIs with Kotlin for the internal platform.\n".repeat(380);
+ const document={id:first,originalName:"long-cv.md",mediaType:"text/markdown",byteSize:text.length,sha256:"a".repeat(64),language:"nb",isMaster:false,createdAt:time,textCharacters:text.length,extractionMethod:"TEXT"};let calls=0;
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));await page.route("**/api/profile/me",r=>r.fulfill({json:{id:first,displayName:"Fictional Pilot",preferredLanguage:"nb",revision:1}}));await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[]}));
+ await page.route("**/api/profile/me/documents**",r=>{if(r.request().url().endsWith("/analysis")){if(r.request().method()==="POST")calls++;return r.fulfill({json:{analysis:null}});}return r.fulfill({json:r.request().url().endsWith(first)?{document,text}:[document]});});
+ await page.goto("/career/profile");await page.getByRole("button",{name:"Se tekst og legg til kompetanse",exact:true}).click();await page.getByRole("checkbox",{name:"Jeg vil sende teksten over til Groq for denne analysen",exact:true}).check();await page.getByRole("button",{name:/^Del 2 · /}).click();
+ await expect(page.getByRole("checkbox",{name:"Jeg vil sende teksten over til Groq for denne analysen",exact:true})).not.toBeChecked();const selected=await page.getByRole("textbox",{name:"Tekst som sendes til Groq",exact:true}).inputValue();expect(selected.length).toBeLessThanOrEqual(12000);expect(selected).toContain("Firma: Example AS");expect(calls).toBe(0);
+});
+
+
+test("detail parts are available before the full input limit and employer evidence is inspectable", async({page})=>{
+ const text="Project: Example AS\n"+"Built Kotlin APIs for internal services.\n".repeat(145);
+ const document={...docs[0],language:"en",mediaType:"text/markdown",originalName:"project.md",textCharacters:text.length};
+ const stored={...result,summary:[],suggestions:[{skill:"Kotlin",statement:"Built Kotlin APIs for internal services.",context:"Example AS",contextQuote:"Project: Example AS",quote:"Built Kotlin APIs for internal services."}],sourceCharacters:text.length,inputCharacters:text.length};let calls=0;
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
+ await page.route("**/api/profile/me",r=>r.fulfill({json:{id:first,displayName:"Fictional Pilot",preferredLanguage:"nb",revision:1}}));
+ await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[]}));
+ await page.route("**/api/profile/me/documents**",r=>{if(r.request().url().endsWith("/analysis")){if(r.request().method()==="POST")calls++;return r.fulfill({json:stored});}return r.fulfill({json:r.request().url().endsWith(first)?{document,text}:[document]});});
+ await page.goto('/career/profile');await page.getByRole('button',{name:'Se tekst og legg til kompetanse',exact:true}).click();const dialog=page.getByRole('dialog');
+ const proposals=dialog.getByRole('region',{name:'Kompetanseforslag',exact:true});await proposals.locator('summary').click();await expect(proposals).toContainText('Kontekst fra dokumentet');await expect(proposals.locator('blockquote').last()).toHaveText('Project: Example AS');await expect(proposals.locator('p[lang="en"]').first()).toHaveText('Built Kotlin APIs for internal services.');
+ await dialog.getByRole('checkbox').check();await dialog.getByRole('button',{name:/^Del 2/}).click();await expect(dialog.getByRole('checkbox')).not.toBeChecked();const preview=await dialog.getByLabel('Tekst som sendes til Groq',{exact:true}).inputValue();expect(preview.length).toBeLessThanOrEqual(4000);expect(calls).toBe(0);
 });

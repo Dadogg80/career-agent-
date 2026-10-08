@@ -11,7 +11,7 @@ for (const width of [1280, 390]) test(`source paragraphs and contact precede req
   let calls = 0;
   await page.setViewportSize({ width, height: 900 });
   await page.route("**/api/jobs/requirements", route => { calls++; return route.fulfill({ json: { facts, requirements: [{ kind: "REQUIRED", label: "Kotlin", quote: "Kotlin er nødvendig." }] } }); });
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
   await page.getByRole("textbox", { name: "Stillingsannonse", exact: true }).fill(text);
   await page.getByRole("button", { name: "Analyser", exact: true }).click();
@@ -41,7 +41,7 @@ test("analysis rejection still displays the received advertisement and permits a
   const url = "https://arbeidsplassen.nav.no/stillinger/stilling/12345678-1234-1234-1234-123456789abc";
   await page.route("**/api/jobs/import", route => { imports++; return route.fulfill({ json: { sourceUrl: url, title: "Example developer", text, retrievedAt: "2026-10-07T00:00:00Z" } }); });
   await page.route("**/api/jobs/requirements", route => { analyses++; return analyses === 1 ? route.fulfill({ status: 502, json: { code: "AI_INVALID_RESULT", reason: "NO_SUPPORTED_ITEMS" } }) : route.fulfill({ json: { facts, requirements: [] } }); });
-  await page.goto("/");
+  await page.goto("/jobs/analyze");
   await page.getByRole("textbox", { name: "Lenke til stillingsannonse" }).fill(url);
   await page.getByRole("button", { name: "Analyser lenke", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Example developer", exact: true })).toBeVisible();
@@ -55,4 +55,25 @@ test("analysis rejection still displays the received advertisement and permits a
   await page.getByRole("combobox", { name: "Språk", exact: true }).selectOption("en");
   await expect(page.getByRole("region", { name: "Understand the role" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Contact person", exact: true })).toBeVisible();
+});
+
+test("received sections expand short AI quotes and the full reader preserves omitted detail without more AI calls", async ({ page }) => {
+  const role = "Du utvikler API-er. Du følger løsningene fra idé til produksjon. Teamet samarbeider med kundene hver uke.";
+  const company = "Example AS bygger tjenester. Vi er et fagmiljø med 45 kollegaer. Selskapet har kontorer i Oslo og Bergen.";
+  const offer = "Vi tilbyr fleksibel arbeidstid. Du får tid til faglig utvikling, pensjon og trening i arbeidstiden.";
+  const source = `# Utvikler\n\n## Om oss\n${company}\n\n## Om stillingen\n${role}\n\n## Vi tilbyr\n${offer}\n\n## Annen informasjon\nTilrettelegging avtales med rekrutteringsteamet.\nKotlin er nødvendig.`;
+  let calls = 0;
+  await page.route("**/api/jobs/requirements", route => { calls++; return route.fulfill({ json: { facts, requirements: [] } }); });
+  await page.goto("/jobs/analyze");
+  await page.getByRole("button", { name: "Lim inn tekst", exact: true }).click();
+  await page.getByRole("textbox", { name: "Stillingsannonse", exact: true }).fill(source);
+  await page.getByRole("button", { name: "Analyser", exact: true }).click();
+  await expect(page.locator(".employer-card")).toContainText(company);
+  await expect(page.locator(".employer-sections")).toContainText(role);
+  await page.locator(".employer-section summary").filter({ hasText: "Dette tilbyr de" }).click();
+  await expect(page.locator(".employer-sections")).toContainText(offer);
+  await page.locator(".advertisement-reader summary").click();
+  await expect(page.locator(".received-advertisement")).toContainText("Tilrettelegging avtales med rekrutteringsteamet.");
+  await expect(page.locator(".received-advertisement")).toContainText(company);
+  expect(calls).toBe(1);
 });
