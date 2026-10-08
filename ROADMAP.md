@@ -4,6 +4,8 @@ Status checked against remote main on 2026-10-08; the owner authorized publishin
 
 ## Current status
 
+Maintenance round on 2026-10-08: advertisement partial-result validation and long Groq cooldown preservation are implemented locally and tested. Full-document extraction, automatic career-history/profile filling, the related UI redesign and the experimental PDF text repair are paused pending agreement on the [knowledge-model proposal](docs/CAREER_KNOWLEDGE_MODEL_PROPOSAL.md). Proposed per-task model routing has not been activated. This round has not been pushed or merged.
+
 | Capability | Actual status |
 | --- | --- |
 | Next.js + Kotlin/Spring Boot, Norwegian default / English | Implemented and merged |

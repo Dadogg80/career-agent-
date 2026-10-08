@@ -4,6 +4,10 @@ Confirmed records explicit user requirements; recommendations record design prop
 
 ## Bekreftede føringer
 
+### Knowledge-model review and maintenance — 2026-10-08
+
+The owner supplied a review explicitly requesting a pause in document/profile feature implementation and a relational knowledge-model proposal before further implementation. The [proposal](CAREER_KNOWLEDGE_MODEL_PROPOSAL.md) covers schema, aggregates, staged migration, legacy compatibility, scoped confirmations, source conflicts and deletion. Its policies and schema remain PROPOSED, not accepted or implemented. Unfinished full-document/PDF experiments are unpublished. Existing advertisement analysis and quota-handling defects are separately authorized maintenance. Per-capability model selection is a possible next experiment, not an implemented automatic fallback or a confirmed independent-quota strategy.
+
 | ID | Føring | Grunnlag og konsekvens |
 | --- | --- | --- |
 | D-001 | Ingen applikasjonsimplementasjon før klarsignal. | Opprinnelig instruksjon. Klarsignal til første lille implementasjon er nå gitt; se D-012. |

@@ -4,6 +4,14 @@ Status: Historical comparison. Groq is now selected for the bounded public-adver
 
 ## Alternativer
 
+### Observed pilot quotas and proposed task-specific models — 2026-10-08
+
+The owner's Groq console screenshot lists GPT OSS 20B, GPT OSS 120B and Qwen 3.8 27B as text/reasoning candidates. Its displayed limits for these models are 30 requests/minute, 1,000 requests/day, 8,000 tokens/minute and 200,000 tokens/day. This records the supplied account view, not a timeless public free-tier guarantee or proof of independent aggregate account quotas. The reported 20B token/day rejection requests approximately 16 minutes of waiting; a 10-second pause cannot address it.
+
+Proposed experiment: retain 20B for short advertisement extraction; compare 120B on complex document extraction, reviewed personal matching and CV wording; evaluate Qwen vision only when locally extracted/scanned text is insufficient. Verify actual API IDs, strict structured-output support, Browser Search eligibility and Norwegian/source-grounded quality for each task before changing defaults. Voice models do not address present document/advertisement workflows.
+
+Task-specific selection can distribute legitimate work if model quotas are independent, but cannot create unlimited capacity. Prefer source/result reuse and small relevant inputs. Do not implement automatic model/key rotation after 429 or assume a larger model has a larger quota. Current application calls still use the existing configured model; this routing is proposed, not implemented.
+
 | Alternativ | Mulig fordel | Forbehold |
 | --- | --- | --- |
 | Gemini Developer API | Har tilbudt gratis API-kvoter og sterke generalistmodeller; kandidat for norsk/engelsk og strukturert analyse. | Kontroller dagens kvoter, tilgjengelige modeller, geografisk tilgang og datavilkår. Ikke anta gratis behandling av private CV-er er akseptabelt. |

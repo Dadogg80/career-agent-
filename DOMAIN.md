@@ -1,6 +1,6 @@
 # Domenemodell
 
-Status: The broader model remains a design. Identity/basic profile are merged; this branch implements owned competency claims/revisions and source documents. Normalized Employment, Project, Skill taxonomy, applications and personal matching remain future work.
+Status: The merged local pilot includes identity/basic profile, owned claims/revisions and source documents, reviewed typed career history, saved jobs, approved personal matching, standard CV export and manual application tracking. Normalized concepts, reusable evidence, structured claim/context links, conflicts and clarification questions remain proposals. See the [incremental knowledge-model proposal](docs/CAREER_KNOWLEDGE_MODEL_PROPOSAL.md). New document/profile feature implementation is paused pending agreement on that model; existing advertisement defects are handled separately.
 
 ## Eierskap
 

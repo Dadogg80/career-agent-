@@ -31,3 +31,8 @@ Docker recommendation: native frontend/backend, PostgreSQL in Compose when intro
 ## Source-import default (ADR 0015)
 
 The initial local import processes DOCX/PDF without external AI and uses user-selected excerpts. The owner explicitly authorized opt-in local Groq summaries of reviewed document excerpts, including combined analysis (ADR 0016). External-provider contracts/transfer/retention controls remain open before outside users. Q-007 still concerns backup/retention/account deletion and broader rollout; explicit per-document/per-claim deletion now exists with visible retained-quote semantics. This does not block the authorized single local pilot import.
+
+
+## Knowledge-model review — 2026-10-08
+
+The [relational proposal](CAREER_KNOWLEDGE_MODEL_PROPOSAL.md) is not implemented. Agree on default source/evidence deletion and historical artifact retention, advisory conflict/source authority, and measurable extraction acceptance criteria before resuming the paused feature work. Task-specific model selection additionally needs verified API capabilities, quota independence and a Norwegian/source-grounded quality comparison. These decisions do not block the advertisement/quota maintenance fixes.
