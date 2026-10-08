@@ -22,12 +22,13 @@ class DocumentWorkflowController(private val workflows:ObjectProvider<DocumentAn
     private fun revision(input:Map<String,Any?>):Long {val r=input["revision"];if(r !is Int && r !is Long)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400);return (r as Number).toLong()}
     @GetMapping fun latest(@AuthenticationPrincipal principal:OidcUser?,@RequestParam scope:String)=response(mapOf("run" to workflow().latest(identity(principal),(if(scope=="profile")scope else scope(scope)))))
     @PostMapping(consumes=["application/json"]) fun start(@AuthenticationPrincipal principal:OidcUser?,@RequestBody input:Map<String,Any?>):Any {
-        keys(input.filterKeys { it!="aiApproval" && it!="populateProfile" },setOf("scope","documents","locale","consent"))
+        keys(input.filterKeys { it!="aiApproval" && it!="populateProfile" && it!="coverageReview" },setOf("scope","documents","locale","consent"))
+        if(input.containsKey("coverageReview") && input["coverageReview"] !is Boolean)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
         if(input.containsKey("populateProfile") && input["populateProfile"] !is Boolean)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
         if(input.containsKey("aiApproval") && input["aiApproval"] !is String)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
         if(input["scope"] !is String || input["locale"] !is String || input["consent"] !is Boolean || input["documents"] !is List<*>)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
         val documents=(input["documents"] as List<*>).map { item -> if(item !is Map<*,*> || item.keys!=setOf("documentId","text") || item["documentId"] !is String || item["text"] !is String)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400);DocumentExcerpt(id(item["documentId"] as String),item["text"] as String) }
-        return response(workflow().start(identity(principal),scope(input["scope"] as String),documents,input["locale"] as String,input["consent"] as Boolean,input["aiApproval"] as? String,input["populateProfile"] as? Boolean ?: false))
+        return response(workflow().start(identity(principal),scope(input["scope"] as String),documents,input["locale"] as String,input["consent"] as Boolean,input["aiApproval"] as? String,input["populateProfile"] as? Boolean ?: false,input["coverageReview"] as? Boolean ?: false))
     }
     @PostMapping("/{runId}/provider",consumes=["application/json"])
     fun provider(@AuthenticationPrincipal principal:OidcUser?,@PathVariable runId:String,@RequestBody input:Map<String,Any?>):Any {

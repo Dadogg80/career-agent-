@@ -129,3 +129,7 @@ Claim confirmation now has an independent NONE/USER/DOCUMENT basis. Internal doc
 
 
 Contribution review keys additionally identify original extracted statement wording. Literal documentary import keys remain stable across AI rewording; source blockers prevent manual decisions from being overwritten by subsequent automatic imports. V14 records ledger purposes and conservatively identifies pre-existing ambiguous manual/tombstone links. Exact owned historical reviews reconnect only when contribution and source identity agree. UI skill grouping is a projection across claim records; it does not merge their identities, contexts, evidence or review status.
+
+## Source coverage state (ADR 0028)
+
+A new run may retain `coverageReview`, a bounded `DocumentCoverageReport` and one scheduled follow-up round. `DocumentCoveragePassage` records document, source offset, literal quotation and detected passage kind. Counts describe quotation use, not semantic competency completeness or confirmation. Follow-up batches have `repair=true` and zero additional source characters; processing steps include skipped follow-ups and synthesis. The optional defaults preserve old persisted runs without adding calls. All state remains in the existing owned JSONB run, without a schema migration.

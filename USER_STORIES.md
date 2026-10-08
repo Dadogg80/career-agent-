@@ -368,3 +368,6 @@ As a document reviewer, I can switch between competencies, profile summary and c
 - As a candidate, I see one profile card for Next.js even when several documents/projects mention it. Acceptance: combined existing explanations, repeated text deduplicated, context/source details retained and no undisclosed AI request.
 - As a candidate, I see confirmed evidence separately from drafts in a mixed-status competency. Editing one contribution resets only its own confirmation. Rejected wording stays outside the active summary.
 - As a candidate, confirming a contribution does not approve a different contribution merely because both use the same skill, company and quotation. Decisions survive reopening and automatic reanalysis.
+
+- As a candidate, I can see relevant source passages that extraction may have overlooked. Acceptance: document/type attribution, exact quotes and offsets, separate source-usage counts, keyboard scrolling and no completeness claim.
+- As a candidate, I can allow bounded follow-up under my chosen AI approval. Acceptance: disclosed maximum four extra calls/two per document, one repair round, no duplicate source coverage, retained quota progress and review decisions, no silent extension of older runs (ADR 0028).

@@ -76,3 +76,7 @@ PR #18 is verified merged at `5c896707202678e7fde339a994787654007ab0f2` with bot
 ## Gemini Lite defaults — 2026-10-08
 
 PR #19 is verified merged at `5bc9a3e84ad46273c80b7e483906063c55af4956`; continue on `feat/gemini-lite-defaults` from that main. The owner explicitly accepted Lite where suitable: Gemini document extraction/profile synthesis use `gemini-3.5-flash-lite` independently of the general `GEMINI_MODEL`; explicit task overrides still win. Gemini job/match retain Flash and the general model fallback. Unset providers still select Groq. Renew recipient/model-bound approval when a stored Flash run moves to Lite; preserve original saved result metadata. Test and prepare a new PR without merging it automatically.
+
+## Document coverage continuation — 2026-10-08
+
+PR #20 is verified merged; main `520bbe70869cc176f41585f457fd3a03cc911a34` adds explicit Flash/Lite options and per-model cooldowns, with successful Foundation CI. Current branch: `feat/document-coverage-audit`, ADR 0028. Owner resumed document-quality work and reiterated that Flash Lite must remain available across analysis tasks. Preserve those choices. Inventory source usage conservatively, disclose at most four follow-up calls on new approved runs, keep old runs unchanged and never label passage coverage as exhaustive competence. Private audit files remain outside Git. Test and prepare a PR without assuming merge authorization.

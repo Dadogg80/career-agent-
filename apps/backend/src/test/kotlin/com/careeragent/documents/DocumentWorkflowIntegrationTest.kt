@@ -54,6 +54,75 @@ class DocumentWorkflowIntegrationTest {
     private fun next(user:String,run:JsonNode)=post(user,"$path/${run["id"].asText()}/next",mapOf("revision" to run["revision"].asLong()))
     private fun output()=json.writeValueAsString(mapOf("competencies" to listOf(mapOf("skills" to listOf("Kotlin","PostgreSQL","InventedSkill"),"description" to "Utviklet API-er med Kotlin og PostgreSQL.","category" to "TECHNOLOGY","evidenceIds" to listOf(2),"contextId" to 0,"context" to "Example AS")),"profile" to listOf(mapOf("kind" to "EXPERIENCE","text" to "Utvikling av API-er.","evidenceIds" to listOf(2))),"history" to listOf(mapOf("kind" to "EMPLOYMENT","title" to "Senior Developer","organization" to "Example AS","client" to "","deliveryRole" to "","periodText" to "2021 – 2024","description" to "Utviklet API-er.","evidenceIds" to listOf(0,1,2)))))
     private fun stub(){`when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenAnswer { call -> if(call.getArgument<AiTask>(3)==AiTask.PROFILE_SUMMARY)"""{"profile":[{"kind":"PROFILE","text":"Erfaring med API-er, Kotlin og PostgreSQL.","evidenceIds":[0]}]}""" else output() }}
+    @Test fun `approved bounded follow-up saves missed evidence without double counting source coverage or replaying calls`() {
+        val user=profile();val source=text+"\nMentored two developers and coordinated releases."
+        val doc=upload(user,source)
+        val initial=post(user,path,mapOf("scope" to doc,"documents" to listOf(mapOf("documentId" to doc,"text" to source)),"locale" to "nb","consent" to true,"coverageReview" to true))
+        var extractionCalls=0
+        `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenAnswer { call ->
+            if(call.getArgument<AiTask>(3)==AiTask.PROFILE_SUMMARY) """{"profile":[{"kind":"PROFILE","text":"Utvikling og veiledning.","evidenceIds":[0]}]}"""
+            else if(++extractionCalls==1)output()
+            else {
+                assertThat(call.getArgument<String>(0)).contains("targeted follow-up")
+                assertThat(call.getArgument<String>(1)).contains("Mentored two developers").doesNotContain("Built APIs")
+                """{"competencies":[{"skills":["Mentored","coordinated releases"],"description":"Veiledet utviklere og koordinerte leveranser.","category":"LEADERSHIP","evidenceIds":[1],"contextId":0,"context":"Example AS"}],"profile":[],"history":[]}"""
+            }
+        }
+        val first=next(user,initial)
+        assertThat(first["phase"].asText()).isEqualTo("REPAIR")
+        assertThat(first["totalBatches"].asInt()).isEqualTo(3)
+        assertThat(first["coverage"]["remaining"].asInt()).isEqualTo(1)
+        assertThat(first["analysis"]["inputCharacters"].asInt()).isEqualTo(source.length)
+        next(user,initial);assertThat(extractionCalls).isEqualTo(1)
+        val repaired=next(user,first)
+        assertThat(repaired["phase"].asText()).isEqualTo("SUMMARY")
+        assertThat(repaired["coverage"]["remaining"].asInt()).isZero()
+        assertThat(repaired["analysis"]["inputCharacters"].asInt()).isEqualTo(source.length)
+        assertThat(repaired["analysis"]["suggestions"].map { it["skill"].asText() }).contains("Mentored","coordinated releases")
+        val completed=next(user,repaired)
+        assertThat(completed["status"].asText()).isEqualTo("COMPLETED")
+        assertThat(completed["coverage"]["repairCalls"].asInt()).isEqualTo(1)
+        mvc.perform(get("$path/${completed["id"].asText()}").with(caller(user))).andExpect(status().isOk).andExpect(jsonPath("$.coverage.remaining").value(0))
+        mvc.perform(get("$path/${completed["id"].asText()}").with(caller(profile()))).andExpect(status().isNotFound)
+        next(user,completed)
+        verify(model,times(3)).generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
+    }
+
+    @Test fun `a quota during follow-up preserves source results and resumes once without scheduling another repair round`() {
+        val user=profile();val source=text+"\nDelivered secure release workflows."
+        val doc=upload(user,source)
+        val initial=post(user,path,mapOf("scope" to doc,"documents" to listOf(mapOf("documentId" to doc,"text" to source)),"locale" to "nb","consent" to true,"coverageReview" to true))
+        stub();val first=next(user,initial)
+        `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenThrow(AiFailure("AI_RATE_LIMITED",429,968))
+        val paused=next(user,first)
+        assertThat(paused["status"].asText()).isEqualTo("PAUSED")
+        assertThat(paused["analysis"]).isEqualTo(first["analysis"])
+        assertThat(paused["coverage"]).isEqualTo(first["coverage"])
+        next(user,paused)
+        verify(model,times(2)).generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
+        assertThat(paused["totalBatches"].asInt()).isEqualTo(3)
+        jdbc.update("UPDATE document_analysis_run SET state=jsonb_set(state,'{nextAt}','null'::jsonb) WHERE id=?",UUID.fromString(paused["id"].asText()))
+        doReturn("""{"competencies":[],"profile":[],"history":[]}""").`when`(model).generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
+        val resumed=next(user,paused)
+        assertThat(resumed["phase"].asText()).isEqualTo("SUMMARY")
+        assertThat(resumed["totalBatches"].asInt()).isEqualTo(3)
+        assertThat(resumed["coverage"]["remaining"].asInt()).isEqualTo(1)
+    }
+    @Test fun `already represented follow-up is skipped without another model call`() {
+        val user=profile();val source="2021 – 2024 Example AS Senior Developer\nBuilt payment integrations."
+        val doc=upload(user,source)
+        val initial=post(user,path,mapOf("scope" to doc,"documents" to listOf(mapOf("documentId" to doc,"text" to source)),"locale" to "nb","consent" to true,"coverageReview" to true))
+        `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenReturn("""{"competencies":[],"profile":[],"history":[]}""")
+        val first=next(user,initial)
+        assertThat(first["totalBatches"].asInt()).isEqualTo(4)
+        `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenReturn("""{"competencies":[],"profile":[{"kind":"EXPERIENCE","text":"Erfaring med betalingsintegrasjoner.","evidenceIds":[0,1]}],"history":[]}""")
+        val repaired=next(user,first)
+        assertThat(repaired["coverage"]["remaining"].asInt()).isZero()
+        val skipped=next(user,repaired)
+        assertThat(skipped["phase"].asText()).isEqualTo("SUMMARY")
+        assertThat(skipped["analysis"]).isEqualTo(repaired["analysis"])
+        verify(model,times(2)).generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
+    }
     @Test fun `Gemini requires recipient approval and removing its availability prevents saved continuation`() {
         val user=profile();val doc=upload(user);val name="gemini-approval-test"
         environment.propertySources.addFirst(org.springframework.core.env.MapPropertySource(name,mapOf("AI_PROVIDER" to "gemini")))

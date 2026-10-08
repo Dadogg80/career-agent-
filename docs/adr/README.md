@@ -40,3 +40,5 @@ Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert i
 - [0026 Approved AI provider recovery](0026-approved-ai-provider-recovery.md) — accepted local pilot; request-local selection, retained progress, renewed private consent and actual model attribution.
 
 - [0027 — Documentary profile population and persistent review queue](0027-document-profile-population-and-review-queue.md)
+
+- [0028 — Source coverage checks and bounded document follow-up](0028-document-evidence-coverage.md) — accepted local pilot.

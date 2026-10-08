@@ -8,6 +8,13 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class DocumentCompetencyInventoryTest {
+    @Test fun `colon headings dash separated technologies and single named items are recovered without company guessing`() {
+        val source="## Example AS\nBuilt applications.\nKjernekompetanse\nBackend:\nNode.js - TypeScript - REST API - C++\nFrontend:\nReact - Next.js - HTML5 - CSS\nData:\nPostgreSQL - MongoDB\nCloud & DevOps:\nDocker\nEducation\nA narrative sentence is not a technology."
+        val id=UUID.randomUUID()
+        val result=DocumentCompetencyInventory.recover(AnalysisBatch(id,source,source.length),source,"en",emptyList())
+        assertThat(result.map { it.skill }).containsExactly("Node.js","TypeScript","REST API","C++","React","Next.js","HTML5","CSS","PostgreSQL","MongoDB","Docker")
+        assertThat(result).allMatch { it.context=="Context not stated" && source.contains(it.quote) }
+    }
     private val id=UUID.randomUUID()
     @Test fun `each literal technology is recovered with its company and punctuation intact`() {
         val text="## Synthetic AS\nSenior Developer\nTeknologi: Next.js - TypeScript - Node.js - PostgreSQL - C++ - C# - React Native"

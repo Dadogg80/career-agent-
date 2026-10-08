@@ -1,6 +1,6 @@
 # Test the local career pilot
 
-Status: the tested `feat/competency-workspace` delivery is authorized for publication and merge on 2026-10-08. Check the actual GitHub PR/branch state before synchronizing; a Git operation does not restart local services. Use the repository's actual installed branch/version and [RUNNING.md](RUNNING.md) for startup; Codex credentials/installations are not copied to your Mac.
+Status: the pilot foundation is merged through selectable AI models and per-model cooldowns. The ADR 0028 document coverage continuation is a separate PR. Check the actual GitHub PR/branch state before synchronizing; a Git operation does not restart local services. Use the repository's actual installed branch/version and [RUNNING.md](RUNNING.md) for startup; Codex credentials/installations are not copied to your Mac.
 
 ## Prerequisites
 
@@ -12,10 +12,10 @@ Start the backend from `apps/backend` after loading its ignored `.env` and build
 
 1. Open the public landing page, switch Norwegian/English, then sign in through the dedicated entry. Verify real profile/competency/job counts and actual working navigation. A configured anonymous private entry leads to sign-in before loading private data.
 2. Create a profile. Upload a CV and a supporting certificate/project document as PDF, DOCX, UTF-8 TXT or Markdown. Read the extracted text and download the unchanged original. A scan may need explicitly requested local OCR. TXT/Markdown are evidence, not master-CV candidates.
-3. Open **Summarize all documents with AI**. Review the selected excerpts, remove unnecessary personal data and approve this Groq call. Inspect summary, employer/project context and source-backed proposals. Sources over 4,000 characters expose smaller detail Part controls. Verify literal skill/statement wording and the context-heading quote or explicit unknown context. One call is bounded to 12,000 characters/20 proposals, not a promise of exhaustive discovery.
-4. Save useful proposals, then review each competency individually or through the guided queue. Confirm, reject or skip. Skip stays unconfirmed. Exact repeated experience in the same context reuses its claim without changing status, while all supporting sources remain inspectable. Add typed employment/projects/education and confirm separately.
+3. Open the document/profile analysis. Review the selected full source text, remove unnecessary personal data, choose the provider/model and approve this run. The system divides the text automatically and saves progress. New runs can check potentially missed passages, with at most four additional calls disclosed before approval. Inspect profile summary, employer/project context, source-backed proposals and the source-usage panel; its counts do not establish exhaustive discovery. Stop/reopen and resume without repeating committed calls. Older saved runs do not gain follow-up calls.
+4. With automatic profile population enabled, literal sourced competencies are saved as document-backed; history and generated wording remain editable drafts. Approve, edit, save as draft or reject remaining contributions. Processed items leave the pending queue and its count updates. The profile shows one skill card across contributions without merging sources or review status. Review prefilled employment/projects/education and confirm separately. Reanalysis preserves established edits, rejections and deletions.
 5. Analyze a public link or paste a fictional ad. Review employer/role/person/offers, practical details, requirement filters and source quotes. Open the full received text for extra details. On Groq failure, received text remains visible and explicit headings/fields can be sorted locally; unknown information is not invented. A FINN browser excerpt can still be partial/stale. DEV diagnostics show sanitized stages, never private CV/profile contents or credentials.
-6. Save the job. Reopen it without an AI call. If desired, preview selected CONFIRMED statements/ad text and approve a separate personal matching request. Missing documentation remains unknown, not automatically a skill gap.
+6. Save the job and reopen it without an AI call. Personal matching preselects relevant confirmed evidence; inspect or adjust the preview and approve the displayed provider/model. Check the explained weighted requirement-coverage percentage and answer clarification questions inline to save personal attestations. Missing documentation remains unknown, not automatically a skill gap.
 7. Create a CV draft from chosen confirmed competencies/history. Review name/contact/your own introduction and the full preview. Approve DOCX/PDF generation, download both, and inspect the files. Edit via a revised draft; approved versions remain unchanged. Changed source revisions block stale draft approval. Originals remain unchanged.
 8. Create/reopen an application case for the saved job. Add contact, notes and follow-up. Choose its approved/general CV. Submit externally yourself; then explicitly record the actual CV/date/application text. Confirm the archive preview. Those materials lock while status/interview/notes remain editable. This records your statement of submission, not an external acknowledgement.
 9. Sign out and verify private pages cannot reload your data. Reload/restart with the same database/storage to confirm persisted content. Delete only disposable test records: case first, then referenced CV/job if needed; source quotations and independent snapshots have separate deletion behavior.
@@ -33,3 +33,13 @@ After uploading or reopening documents, choose **Check documents**. Verify origi
 ## Whole-document review on the current feature branch
 
 Follow [FULL_DOCUMENT_REVIEW.md](FULL_DOCUMENT_REVIEW.md). Start from Documents and AI profile, review one or all sources, approve once, and expect genuine waits between calls. Review/edit skill contributions and history fields before explicit confirmation. Stop/reopen a run, verify drafts remain and continuation needs approval. Check unsupported/read-only sources, source evidence, Norwegian/English and mobile navigation. Test data/AI controls are covered synthetically; real Groq extraction quality remains a separate quota-dependent check.
+
+## Optional local original-document inventory audit
+
+Keep originals and the independent expected-evidence JSON manifest outside Git. Each manifest array item contains `path` (absolute local original path), `expectedTerms` (independently checked literal phrases), `expectedListedSkills` (actual named list labels) and `minimumPassages` (conservative expected minimum). Run from `apps/backend` with JDK 21:
+
+```bash
+LOCAL_DOCUMENT_AUDIT_MANIFEST=/tmp/private-document-audit.json ./gradlew test --tests '*PrivateDocumentInventoryAuditTest'
+```
+
+This checks actual local reading, exact passage offsets and list recovery without provider calls. It is not a semantic AI recall benchmark. Keep any assertion output that includes expected private phrases outside shared artifacts.

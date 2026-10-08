@@ -13,8 +13,9 @@ export async function documentWorkflowProxy(request:Request,operation:"latest"|"
   else if(!["load"].includes(operation)) {
    const input=await smallJson(request,operation==="start"?6000000:20000) as Record<string,unknown>;if(!input || typeof input!=="object")throw new Error();
    if(!validAiApprovalField(input))throw new Error();
-   const keys=Object.keys(input).filter(key=>key!=="aiApproval" && !(operation==="start" && key==="populateProfile")).sort().join(",");
+   const keys=Object.keys(input).filter(key=>key!=="aiApproval" && !(operation==="start" && ["populateProfile","coverageReview"].includes(key))).sort().join(",");
    if(operation==="start") {
+    if(input.coverageReview!==undefined && typeof input.coverageReview!=="boolean")throw new Error();
     if(input.populateProfile!==undefined && typeof input.populateProfile!=="boolean")throw new Error();
     if(keys!=="consent,documents,locale,scope" || input.consent!==true || !["nb","en"].includes(String(input.locale)) || input.scope!=="collection" && (typeof input.scope!=="string" || !claimId.test(input.scope)) || !Array.isArray(input.documents) || input.documents.length<1 || input.documents.length>20)throw new Error();
     let size=0;const ids=new Set<string>();for(const item of input.documents){if(!item || Object.keys(item).sort().join(",")!=="documentId,text" || typeof item.documentId!=="string" || !claimId.test(item.documentId) || ids.has(item.documentId) || typeof item.text!=="string" || !item.text.trim() || item.text.length>60000)throw new Error();size+=item.text.length;ids.add(item.documentId);}if(size<40 || size>1200000 || input.scope!=="collection" && (ids.size!==1 || !ids.has(String(input.scope))))throw new Error();
