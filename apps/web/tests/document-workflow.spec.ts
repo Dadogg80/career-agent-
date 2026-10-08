@@ -23,14 +23,14 @@ test("full source is approved once and automatically sequenced; editable skills 
    if(method==="GET")return r.fulfill({json:saved});
    expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf");
    if(url.endsWith("/next")){calls++;saved=calls===1?run("RUNNING",2):run();return r.fulfill({json:saved});}
-   starts++;expect(r.request().postDataJSON()).toEqual({scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true,aiApproval:expect.stringMatching(/^[a-f0-9]{64}$/)});saved={...run("RUNNING",1),completedBatches:0,analysis:{...analysis,suggestions:[],profile:[],careerEntries:[],inputCharacters:0,partial:true}};return r.fulfill({json:saved});
+   starts++;expect(r.request().postDataJSON()).toEqual({scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true,populateProfile:true,aiApproval:expect.stringMatching(/^[a-f0-9]{64}$/)});saved={...run("RUNNING",1),completedBatches:0,analysis:{...analysis,suggestions:[],profile:[],careerEntries:[],inputCharacters:0,partial:true}};return r.fulfill({json:saved});
   }
   return r.fulfill({json:url.endsWith(id)?{document:doc,text}:[doc]});
  });
  await open(page);const outer=page.locator(".document-workspace-sheet");const start=outer.getByRole("button",{name:"Bygg profil fra dokumentene",exact:true});await expect(start).toBeDisabled();expect(calls).toBe(0);
  await outer.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Groq for denne analysen"}).check();await start.click();
  await expect(outer.getByText("Gjennomgangen er klar",{exact:true})).toBeVisible();expect(calls).toBe(2);expect(starts).toBe(1);expect(claims).toBe(0);expect(entries).toBe(0);
- await outer.locator(".competency-proposal-grid").getByRole("button",{name:"Se gjennom",exact:true}).first().click();const draft=page.locator(".document-draft-sheet");
+ await outer.locator(".competency-proposal-grid").getByRole("button",{name:"Rediger",exact:true}).first().click();const draft=page.locator(".document-draft-sheet");
  await expect(draft.getByLabel("Kompetanse",{exact:true})).toHaveValue("Kotlin");await draft.getByLabel("Hva gjorde du selv?",{exact:true}).fill("Jeg utviklet API-er med Kotlin.");await draft.getByRole("checkbox").check();await draft.getByRole("button",{name:"Lagre og bekreft",exact:true}).click();await expect(draft).toHaveCount(0);expect(claims).toBe(1);
  await outer.getByRole("button",{name:"Karrierehistorikk",exact:true}).click();await outer.getByRole("button",{name:"Kontroller og legg til historikk",exact:true}).click();await expect(draft.getByLabel("Arbeidsgiver / organisasjon",{exact:true})).toHaveValue("Example AS");await draft.getByRole("button",{name:"Lagre som utkast",exact:true}).click();await expect(draft).toHaveCount(0);expect(entries).toBe(1);
  await outer.getByRole("button",{name:"Profilsammendrag",exact:true}).click();await outer.getByRole("button",{name:"Rediger sammendrag",exact:true}).click();await outer.getByLabel("Om deg",{exact:true}).fill("Mitt redigerte profilsammendrag.");await outer.getByRole("button",{name:"Lagre utkast",exact:true}).click();await expect(outer).toContainText("Mitt redigerte profilsammendrag.");
@@ -67,7 +67,7 @@ test("Gemini whole-document review names the recipient and binds sending to the 
   if(r.request().url().includes("/workflow")) {
    if(r.request().method()==="GET")return r.fulfill({json:stored});
    if(r.request().url().endsWith("/next")){nexts++;stored={...run(),analysis:{...analysis,provider:"Gemini"}};return r.fulfill({json:{...stored,aiApproval:token}});}
-   starts++;expect(r.request().postDataJSON()).toEqual({scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true,aiApproval:token});stored={...run("RUNNING",1),completedBatches:0};return r.fulfill({json:{...stored,aiApproval:token,analysis:{...analysis,provider:"Gemini"}}});
+   starts++;expect(r.request().postDataJSON()).toEqual({scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true,populateProfile:true,aiApproval:token});stored={...run("RUNNING",1),completedBatches:0};return r.fulfill({json:{...stored,aiApproval:token,analysis:{...analysis,provider:"Gemini"}}});
   }
   return r.fulfill({json:r.request().url().endsWith(id)?{document:doc,text}:[doc]});
  });
@@ -123,8 +123,8 @@ test("grouped competency cards keep distinct contributions editable with their o
  });
  await open(page);const outer=page.locator(".document-workspace-sheet");await expect(outer.locator(".competency-skill-card")).toHaveCount(2);
  const group=outer.locator(".competency-context-group").filter({has:page.getByRole("heading",{name:"Example AS",exact:true})});
- await group.locator(".competency-contributions summary").click();await expect(group).toContainText(drafts[0].statement);await expect(group).toContainText(drafts[1].statement);
- await group.getByRole("button",{name:"Se gjennom",exact:true}).nth(1).click();const sheet=page.locator(".document-draft-sheet");await expect(sheet.getByLabel("Hva gjorde du selv?",{exact:true})).toHaveValue(drafts[1].statement);await expect(sheet.getByLabel("Firma / prosjekt",{exact:true})).toHaveValue("Example AS");
+ await expect(group).toContainText(drafts[0].statement);await expect(group).toContainText(drafts[1].statement);
+ await group.getByRole("button",{name:"Rediger",exact:true}).nth(1).click();const sheet=page.locator(".document-draft-sheet");await expect(sheet.getByLabel("Hva gjorde du selv?",{exact:true})).toHaveValue(drafts[1].statement);await expect(sheet.getByLabel("Firma / prosjekt",{exact:true})).toHaveValue("Example AS");
  await sheet.getByRole("button",{name:"Lagre som utkast",exact:true}).click();await expect(sheet).toHaveCount(0);expect(imports).toBe(1);
 });
 
@@ -136,4 +136,56 @@ test("continuation cannot send an old source selection after the visible preview
  const consent=outer.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Groq for denne analysen"});await consent.check();
  await expect(outer.getByRole("button",{name:"Fortsett lagret analyse",exact:true})).toBeDisabled();expect(posts).toBe(0);
  await outer.getByRole("button",{name:"Hent lagret tekstutvalg",exact:true}).click();await expect(preview).toHaveValue(text);await expect(consent).not.toBeChecked();expect(posts).toBe(0);
+});
+
+test("automatic document population links skills and history to the profile and shows a sourced presentation",async({page})=>{
+ await profile(page);
+ const auto={...run(),populateProfile:true,populationLimited:false,analysis:{...analysis,suggestions:analysis.suggestions.map(s=>({...s,profileClaimId:second,recovered:true})),careerEntries:analysis.careerEntries.map(e=>({...e,profileEntryId:key}))}};
+ let profileReads=0;
+ await page.route("**/api/profile/me/documents**",r=>{
+  const url=r.request().url();
+  if(url.includes("/workflow")){expect(r.request().method()).toBe("GET");if(url.endsWith("scope=profile"))profileReads++;return r.fulfill({json:auto});}
+  return r.fulfill({json:url.endsWith(id)?{document:doc,text}:[doc]});
+ });
+ await page.goto("/career/profile");await expect(page.locator(".candidate-presentation")).toContainText("Erfaring med API-er, Kotlin og PostgreSQL.");
+ await page.locator(".candidate-presentation").getByText("Se grunnlaget",{exact:true}).click();await expect(page.locator(".candidate-presentation")).toContainText("cv.md");
+ await page.getByRole("button",{name:"Analyser dokumentet",exact:true}).click();const outer=page.locator(".document-workspace-sheet");
+ await expect(outer.getByRole("checkbox",{name:"Fyll ut kompetanse og karrierehistorikk automatisk",exact:true,includeHidden:true})).toBeChecked();
+ await expect(outer).toContainText("Profilen fylles ut underveis");await expect(outer.getByText("Ingen forslag venter i dette utvalget",{exact:true})).toBeVisible();await outer.getByRole("button",{name:/^Godkjent \/ dokumentert/}).click();await expect(outer.getByRole("link",{name:"Åpne i din kompetanse",exact:true})).toHaveCount(2);
+ await expect(outer.getByRole("button",{name:"Rediger",exact:true})).toHaveCount(0);
+ await outer.getByRole("button",{name:"Karrierehistorikk",exact:true}).click();await expect(outer.getByRole("link",{name:"Åpne i karrierehistorikken",exact:true})).toBeVisible();expect(profileReads).toBeGreaterThan(0);
+ await page.screenshot({path:"/tmp/career-automatic-profile-review.png",fullPage:false});
+ await outer.getByRole("link",{name:"Åpne i karrierehistorikken",exact:true}).click();await expect(outer).toHaveCount(0);await expect(page).toHaveURL(/#profile-career-history$/);
+});
+
+test("competency review is a persistent queue with direct approval, drafts and rejection outside the pending count",async({page})=>{
+ await profile(page);let decisions=0;let aiCalls=0;
+ const drafts=Array.from({length:116},(_,i)=>({...analysis.suggestions[0],skill:`Skill ${i+1}`,statement:`Contribution ${i+1}`,context:"Example AS",...(i>=90?{reviewState:i<110?"CONFIRMED":i<113?"DRAFT":"REJECTED",profileClaimId:second}:{})}));
+ let stored={...run(),analysis:{...analysis,suggestions:drafts}};
+ await page.route("**/api/profile/me/documents**",r=>{
+  const url=r.request().url(),method=r.request().method();
+  if(url.includes("/workflow")){
+   if(url.endsWith("/claims")){
+    decisions++;const input=r.request().postDataJSON();const state=input.confirm?"CONFIRMED":input.reject?"REJECTED":"DRAFT";
+    stored={...stored,analysis:{...stored.analysis,suggestions:stored.analysis.suggestions.map((draft,index)=>index===input.index?{...draft,reviewState:state,profileClaimId:second}:draft)}};
+    return r.fulfill({json:{id:second,skill:input.skill,statement:input.statement,context:input.context,sourceNote:"cv.md",sourceDocumentId:id,sourceQuote:analysis.suggestions[0].quote,status:input.confirm?"CONFIRMED":input.reject?"REJECTED":"UNVERIFIED",confirmationBasis:input.confirm?"USER":"NONE",revision:1,createdAt:time,updatedAt:time}});
+   }
+   if(method!=="GET")aiCalls++;
+   return r.fulfill({json:stored});
+  }
+  return r.fulfill({json:url.endsWith(id)?{document:doc,text}:[doc]});
+ });
+ await open(page);const outer=page.locator(".document-workspace-sheet");const waiting=outer.getByRole("button",{name:/^Venter på gjennomgang/});
+ await expect(waiting).toContainText("90");await expect(outer.locator(".competency-contribution")).toHaveCount(90);
+ await outer.getByRole("button",{name:"Godkjenn",exact:true}).first().click();await expect(waiting).toContainText("89");
+ await outer.getByRole("button",{name:"Utkast",exact:true}).first().click();await expect(waiting).toContainText("88");
+ await outer.getByRole("button",{name:"Avvis",exact:true}).first().click();await expect(waiting).toContainText("87");
+ await outer.getByRole("button",{name:/^Godkjent \/ dokumentert/}).click();await expect(outer.locator(".competency-contribution")).toHaveCount(21);
+ await outer.getByRole("button",{name:/^Lagrede utkast/}).click();await expect(outer.locator(".competency-contribution")).toHaveCount(4);
+ await outer.getByRole("button",{name:/^Avvist \/ fjernet/}).click();await expect(outer.locator(".competency-contribution")).toHaveCount(4);
+ await waiting.click();await outer.locator(".review-source summary").first().click();await expect(outer.locator(".review-source").first()).toContainText(analysis.suggestions[0].quote);
+ await page.screenshot({path:"/tmp/career-review-queue-desktop.png",fullPage:false});
+ await outer.getByRole("button",{name:"Lukk",exact:true}).click();await page.getByRole("button",{name:"Analyser dokumentet",exact:true}).click();await expect(waiting).toContainText("87");
+ await page.setViewportSize({width:390,height:844});expect(await outer.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
+ await waiting.scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/career-review-queue-mobile.png",fullPage:false});expect(decisions).toBe(3);expect(aiCalls).toBe(0);
 });

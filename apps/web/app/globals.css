@@ -315,3 +315,53 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 @keyframes ai-activity-spin { to { transform:rotate(360deg); } }
 @keyframes ai-activity-pulse { 50% { opacity:.35; } }
 @media(prefers-reduced-motion:reduce) { .ai-activity-icon svg,.ai-activity-dots i { animation:none!important; } }
+
+/* Keep source prose accessible without making the full job page a wall of text. */
+.advertisement-section-reader { max-height:360px; overflow-y:auto; overscroll-behavior:contain; padding-right:12px; scrollbar-gutter:stable; }
+.advertisement-section-reader:focus-visible { outline:2px solid var(--ring); outline-offset:4px; border-radius:4px; }
+.employer-overview-grid { align-items:start; }
+.match-selection-details > summary,.match-clarification summary { cursor:pointer; font-size:14px; font-weight:600; padding:10px 0; }
+.match-score { display:grid; grid-template-columns:auto minmax(0,1fr); gap:24px; padding:20px; background:var(--secondary); border-radius:14px; align-items:center; }
+.match-score strong { display:block; font-size:46px; letter-spacing:-2px; }
+.match-score span { display:block; font-size:13px; }.match-score progress { width:100%; accent-color:var(--primary); }
+.match-clarification-fields { display:grid; gap:12px; padding-top:8px; }.match-clarification-fields label { display:grid; gap:6px; font-size:13px; }
+@media(max-width:540px) { .match-score { grid-template-columns:1fr; gap:12px; } .advertisement-section-reader { max-height:300px; } }
+
+/* Review is a compact, persistent work queue rather than equal-height cards. */
+.document-source-settings > summary { display:flex; align-items:center; gap:.5rem; cursor:pointer; padding:.8rem 1rem; border:1px solid var(--border); border-radius:.75rem; font-size:.85rem; font-weight:600; }
+.document-source-settings > summary span { margin-left:auto; color:var(--muted-foreground); font-weight:400; }
+.document-source-settings[open] > summary { margin-bottom:.6rem; }
+.document-run-completed { padding:.65rem 1rem; display:flex; align-items:center; gap:1rem; flex-wrap:wrap; font-size:.8rem; }
+.document-run-completed progress,.document-run-completed > p { display:none; }
+.document-run-completed .ai-identity { margin:0; }
+.review-queue-toolbar { padding:1rem; background:var(--secondary); border:1px solid var(--border); border-radius:.8rem; margin-bottom:.7rem; }
+.review-state-navigation { display:flex; flex-wrap:wrap; gap:.4rem; margin:.6rem 0 1rem; }
+.review-state-navigation .badge { font-size:.7rem; }
+.review-queue-list { max-height:65vh; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; padding:.15rem .4rem .5rem 0; border-radius:.7rem; }
+.review-context-heading { display:flex; align-items:baseline; justify-content:space-between; gap:1rem; padding:.75rem .5rem .25rem; }
+.review-context-heading span { font-size:.75rem; color:var(--muted-foreground); }
+.review-queue-list .competency-proposal-grid { display:flex; flex-direction:column; gap:.5rem; }
+.review-queue-list .competency-skill-card { border:1px solid var(--border); border-radius:.7rem; background:var(--card); padding:.8rem 1rem; }
+.review-skill-heading { display:flex; flex-wrap:wrap; gap:.6rem; align-items:center; }
+.review-skill-heading h4 { margin:0; font-size:.9rem; }
+.review-skill-heading small { margin-left:auto; color:var(--muted-foreground); }
+.review-queue-list .competency-contribution { display:flex; align-items:flex-start; gap:1rem; margin-top:.6rem; }
+.review-contribution-text { flex:1; min-width:0; }
+.review-contribution-text > p { font-size:.85rem; line-height:1.55; margin-bottom:.35rem; white-space:pre-wrap; }
+.review-row-actions { display:flex; flex-wrap:wrap; gap:.25rem; align-items:center; }
+.review-source summary { display:flex; align-items:center; gap:.35rem; cursor:pointer; font-size:.75rem; color:var(--muted-foreground); }
+.review-source small { overflow-wrap:anywhere; }
+.review-queue-empty { display:grid; justify-items:center; gap:.7rem; text-align:center; padding:2rem 1rem; color:var(--muted-foreground); border:1px dashed var(--border); border-radius:.8rem; }
+@media(max-width:900px) { .review-queue-list .competency-contribution { flex-direction:column; gap:.5rem; } .review-row-actions { width:100%; } }
+@media(max-width:540px) { .review-queue-toolbar { padding:.75rem; } .review-state-navigation button { white-space:normal; height:auto; min-height:2rem; text-align:left; } .review-context-heading { font-size:.8rem; } }
+.full-document-workflow[data-completed=true] > .document-flow-heading { display:none; }
+.full-document-workflow[data-completed=true] > .document-source-settings { order:4; }
+.full-document-workflow[data-completed=true] > .document-run-completed { order:3; }
+.full-document-workflow .document-source-coverage { order:2; }
+.review-queue-toolbar .competency-filter-row { flex-wrap:nowrap; overflow-x:auto; padding:.25rem 0 .5rem; }
+.review-queue-toolbar .competency-filter-row button { flex-shrink:0; }
+.candidate-section { min-width:0; padding:.65rem .8rem; border:1px solid var(--border); border-radius:.7rem; }
+.candidate-section > summary { font-size:.85rem; font-weight:600; cursor:pointer; }
+.candidate-section > p { white-space:pre-wrap; margin:.75rem 0; font-size:.85rem; }
+.full-document-workflow { min-width:0; grid-template-columns:minmax(0,1fr); }
+.full-document-workflow > *, .review-queue-toolbar, .review-queue-list { min-width:0; }

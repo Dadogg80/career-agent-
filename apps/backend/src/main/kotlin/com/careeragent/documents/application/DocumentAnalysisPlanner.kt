@@ -18,7 +18,7 @@ internal object DocumentAnalysisPlanner {
             }
             val context = nearestHeader(text, start)
             val prefix = context?.takeIf { start > 0 && !text.substring(start, end).contains(it) }?.let { "$it\n" }.orEmpty()
-            result.add(AnalysisBatch(id, prefix + text.substring(start, end), end - start)); start = end
+            result.add(AnalysisBatch(id, prefix + text.substring(start, end), end - start, start)); start = end
         }
         result
     }

@@ -115,7 +115,7 @@ class SavedJobIntegrationTest {
   val first = mvc.perform(post(path).with(caller(user)).with(csrf()).contentType("application/json").content(input)).andExpect(status().isOk).andReturn()
   val firstId = json.readTree(first.response.contentAsString)["id"].asText()
   `when`(ai.generateJson(anyString(),anyString(),anyMap(),(any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))).thenAnswer {
-   jdbc.update("UPDATE competency_claim SET revision = revision + 1, status = 'UNVERIFIED' WHERE id = ?::uuid",claim)
+   jdbc.update("UPDATE competency_claim SET revision = revision + 1, status = 'UNVERIFIED', confirmation_basis = 'NONE' WHERE id = ?::uuid",claim)
    output(claim)
   }
   mvc.perform(post(path).with(caller(user)).with(csrf()).contentType("application/json").content(input)).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("MATCH_CONFLICT"))

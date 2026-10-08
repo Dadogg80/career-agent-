@@ -22,6 +22,8 @@ interface DocumentRunRepository {
     fun finish(identity: VerifiedIdentity, previous: DocumentRunState, next: DocumentRunState): DocumentRunState
     fun lock(identity: VerifiedIdentity, id: UUID): DocumentRunState
     fun attachEntry(identity: VerifiedIdentity, entry: CareerEntry, draft: CareerHistoryDraft)
+    fun linkClaimReview(identity: VerifiedIdentity, draft: CompetencySuggestion, claim: CompetencyClaim)
+    fun linkEntryReview(identity: VerifiedIdentity, draft: CareerHistoryDraft, entry: CareerEntry)
     fun release(identity: VerifiedIdentity, id: UUID, revision: Long)
 }
 
@@ -39,7 +41,7 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
         if(state.sources.any { (id,text) -> documents.detail(identity,id).text != text }) throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
         return state
     }
-    fun start(identity: VerifiedIdentity, scope: String, excerpts: List<DocumentExcerpt>, locale: String, consent: Boolean, aiApproval: String? = null): DocumentRunView {
+    fun start(identity: VerifiedIdentity, scope: String, excerpts: List<DocumentExcerpt>, locale: String, consent: Boolean, aiApproval: String? = null, populateProfile: Boolean = false): DocumentRunView {
         if(!consent) throw DocumentFailure("DOCUMENT_AI_CONSENT_REQUIRED",400)
         val plan=routing.resolveApproval(aiApproval,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)
         val approval=plan.approval
@@ -52,7 +54,7 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
         val analysis=DocumentAnalysis(id,locale,approval.selections.map { it.provider }.distinct().joinToString(" + "),emptyList(),emptyList(),0,sources.values.sumOf { it.text.length },true,0,OffsetDateTime.now(),
             excerpts.map { AnalysisDocument(it.documentId,sources.getValue(it.documentId).document.originalName,0,sources.getValue(it.documentId).text.length) })
         val state=DocumentRunState(id,scope,1,locale,"RUNNING",sources.mapValues { it.value.text },approved,
-            DocumentAnalysisPlanner.batches(approved),0,null,null,analysis,approval.token,approval.selections)
+            DocumentAnalysisPlanner.batches(approved),0,null,null,analysis,approval.token,approval.selections,populateProfile)
         return runs.start(identity,state).view()
     }
     fun switchProvider(identity: VerifiedIdentity, id: UUID, revision: Long, consent: Boolean, aiApproval: String): DocumentRunView {
@@ -134,10 +136,12 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
         } ?: entries.create(identity,sourced)
         runs.attachEntry(identity,imported,draft)
         draft.additionalSources.forEach { source -> runs.attachEntry(identity,imported,draft.copy(documentId=source.documentId,quote=source.quote)) }
-        return if(confirm && imported.status!=ClaimStatus.CONFIRMED) entries.review(identity,imported.id,imported.revision,ReviewDecision.CONFIRM) else imported
+        val reviewed=if(confirm && imported.status!=ClaimStatus.CONFIRMED) entries.review(identity,imported.id,imported.revision,ReviewDecision.CONFIRM) else imported
+        runs.linkEntryReview(identity,draft,reviewed)
+        return reviewed
     }
     @Transactional
-    fun importClaim(identity: VerifiedIdentity,id:UUID,revision:Long,index:Int,skill:String,statement:String,context:String,confirm:Boolean):CompetencyClaim {
+    fun importClaim(identity: VerifiedIdentity,id:UUID,revision:Long,index:Int,skill:String,statement:String,context:String,confirm:Boolean,reject:Boolean=false):CompetencyClaim {
         val state=checked(identity,runs.lock(identity,id))
         if(state.revision!=revision)throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
         val draft=state.analysis.suggestions.getOrNull(index) ?: throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
@@ -150,7 +154,9 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
             if(imported==null)imported=claim
         }
         val claim=imported!!
-        return if(confirm && claim.status!=ClaimStatus.CONFIRMED)claims.review(identity,claim.id,ReviewDecision.CONFIRM,claim.revision) else claim
+        val reviewed=if(confirm && (claim.status!=ClaimStatus.CONFIRMED || claim.confirmationBasis==ConfirmationBasis.DOCUMENT))claims.review(identity,claim.id,ReviewDecision.CONFIRM,claim.revision) else if(reject && claim.status!=ClaimStatus.REJECTED)claims.review(identity,claim.id,ReviewDecision.REJECT,claim.revision) else claim
+        runs.linkClaimReview(identity,draft,reviewed)
+        return reviewed
     }
     fun editSummary(identity: VerifiedIdentity,id:UUID,index:Int,revision:Long,text:String):DocumentRunView {
         val state=checked(identity,runs.load(identity,id))

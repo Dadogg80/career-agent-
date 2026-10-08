@@ -67,3 +67,9 @@ Owner requirement: AI should structure uploaded evidence into the candidate's co
 6. Derive the candidate presentation from the current evidence revision. Refresh only when source-backed knowledge changes and respect the approved recipient. Unsupported interests, seniority and motivations stay absent.
 
 Validation should use an independently reviewed expected-evidence checklist per supplied document, covering later sections, technology lists, employer/project association, date precision, education, multilingual labels, cross-document duplicates and conflicts. Measure captured expected facts and unsupported facts separately; a useful extraction has high recall without inventing experience. The local file-reading audit does not substitute for this semantic assessment.
+
+## Implemented continuation: ADR 0027
+
+The branch now includes named-list recovery without extra calls, opt-out literal document-backed profile population, saved unverified career history, newest-analysis profile presentation and durable manual review resolution. Source settings collapse after completion; pending contributions use compact rows with approve/edit/draft/reject, separate counts and expandable evidence. A saved draft is deliberately outside pending work. User-edited profile content is authoritative; source analysis wording remains preserved.
+
+The earlier next-priority list remains a broader quality plan: responsibility/achievement inventory, independently measured semantic recall, targeted AI repair and conflict/alias reconciliation are still pending. The implemented technology-list safeguard is not exhaustive semantic extraction. Presentation updates on new approved analyses, not automatically on upload or every manual edit.

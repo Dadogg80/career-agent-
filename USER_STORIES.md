@@ -353,3 +353,11 @@ As a pilot user, I can choose a configured alternate AI provider after a quota f
 As a document reviewer, I can switch between competencies, profile summary and career history. Repeated labels share context cards, while different contributions keep their own editable drafts and evidence.
 
 - As a candidate, I see an animated status while AI is responding and a distinct waiting state during quota/pacing delays. Acceptance: truthful labels, retained prior results, disabled duplicate submissions, reduced-motion support and independent source/analysis model identities.
+
+## Document-derived profile and review queue
+
+- As a candidate, I can let approved document processing populate literal sourced competencies and editable career history without retyping them. Documentary evidence and personal confirmation have distinct labels.
+- As a candidate, I see how many competency contributions still await review; approved, documented, saved drafts and rejected/removed items are outside that queue and remain separate after reopening.
+- As a candidate, I can approve, edit, save as draft or reject directly, with expandable exact evidence and a compact responsive list. My edits and decisions survive reanalysis.
+- As a candidate, I see the newest saved AI presentation with actual provider/model attribution; viewing my profile does not trigger another provider request.
+- As a candidate, matching preselects confirmed evidence, explains its requirement-coverage percentage, and lets me clarify missing evidence inline and explicitly save my own answer.

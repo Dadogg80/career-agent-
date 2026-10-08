@@ -122,3 +122,7 @@ AiSelection identifies a configured provider and model per task. AiApprovalPrevi
 ## AI plan and result attribution — 2026-10-08
 
 An AI plan maps tasks to backend-configured provider/model selections and has a recipient/model fingerprint. A document run retains its planned selections and approved sources; an explicitly approved plan change affects only future portions. `DocumentAnalysis.aiSelections` records actual successful contributors. Personal matches persist their actual provider/model; public extraction returns its actual selection. These execution facts are separate from factual competency confirmation and original source provenance.
+
+## Documentary population and review resolution (ADR 0027)
+
+Claim confirmation now has an independent NONE/USER/DOCUMENT basis. Internal documentary import requires an owned exact quotation, a literal skill and a statement equal to the source wording. Personal attestation uses USER; editing/rejection clears the basis. V13 migrates prior confirmed revisions to USER. The import ledger maps owner/kind/fingerprint to a claim or entry and retains deletion tombstones. Analysis reads derive DOCUMENTED, CONFIRMED, DRAFT, REJECTED or REMOVED review state without advancing progress or invoking AI. Original analysis wording remains an extraction draft; the linked profile record is authoritative after edits. Automatically populated history stays UNVERIFIED. The generalized knowledge graph remains proposed.

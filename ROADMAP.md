@@ -4,7 +4,7 @@ Status checked against remote main on 2026-10-08; the owner authorized publishin
 
 ## Current status
 
-PR #16 merged the tested local pilot and Gemini/full-document continuation on 2026-10-08 at `5c18439265e6fa2b9852b1a16c631d5ba7be6dc7`. Both pre-merge Foundation checks passed. The current `feat/document-evidence-quality` slice adds PDF mixed-layout/context fixes, compact document results and explicitly approved provider recovery. Default routing still preserves Groq unless configured otherwise; Gemini 3.5 Flash was validated with synthetic evidence. Automatic document-confirmed profile import, dynamic presentation and matching improvements remain queued. The full normalized knowledge graph and later roadmap capabilities are separate.
+PR #17 merged the document evidence/provider-recovery slice at `922c6171d32af654d99100625b94670a2d479ac3`; both Foundation checks passed. The new `feat/document-profile-population` continuation implements literal document-backed profile imports, saved history drafts, newest-analysis candidate presentation, explicit-list coverage recovery, a persistent compact review queue, automatic matching evidence planning, explained requirement percentages and inline personal clarification. This is branch implementation pending review/merge, not a main release. Provider routing and per-run recipient approval remain unchanged. The full knowledge graph and semantic completeness/repair loop remain separate.
 
 | Capability | Actual status |
 | --- | --- |
@@ -23,7 +23,9 @@ PR #16 merged the tested local pilot and Gemini/full-document continuation on 20
 | Public landing, dedicated sign-in, workspace overview and responsive navigation | Merged in the tested local pilot; production/development browser checks |
 | Whole-document sourced profile/competency/history review | Merged in PR #16; explicit per-run approval and factual confirmation |
 | Task-specific model configuration and safe token/cache usage logging | Merged in PR #16; default unchanged, synthetic Gemini validation passed |
-| PDF character-spacing/column repair | Merged initial repair; current mixed-layout refinements locally checked against seven unique private documents |
+| PDF character-spacing/column repair | Merged in PR #17; locally checked against seven unique private documents |
+| Documentary profile imports, history drafts and persistent review queue | Implemented on current branch (ADR 0027), pending review/merge |
+| Candidate presentation, automatic matching evidence, percentages and inline clarification | Implemented on current branch; newest-analysis synthesis, deterministic coverage |
 | Adjacent-skill inference, full normalized employment/project graph | Not implemented |
 | Owned saved job snapshots and searchable library | Merged in the tested local pilot |
 | Approved personal requirement-to-claim matching | Merged in the tested local pilot |
@@ -39,7 +41,7 @@ The previous delivery scope was the three deliveries already listed: ad overview
 
 1. Display employer source paragraphs left, collapsible role/applicant/offers right, then practical metadata and existing requirement cards. Contact has a stable honest unknown slot. Received advertisement text remains visible when AI structuring fails, with manual source-reusing retry and safe diagnostic reasons.
 2. Sign in, save/reopen competencies, separately confirm/reject, reset confirmation on edit, inspect history and explicitly delete. Verify cross-identity isolation, CSRF and revision conflicts against PostgreSQL.
-3. Upload bounded PDF/DOCX/UTF-8 TXT/Markdown evidence, retain/download original, declare language/select master, inspect local text, create an UNVERIFIED claim from an exact source excerpt and then review it. Confirm storage and source history across reload/restart. An optional owned single/combined AI analysis follows reviewed previews and per-run approval. Show partial coverage and exact document sources, persist suggestions, and never auto-confirm. Optional local OCR and rereading are added in the current workspace slice; layout-preserving generation is not implemented.
+3. Upload bounded PDF/DOCX/UTF-8 TXT/Markdown evidence, retain/download original, declare language/select master, inspect local text, create an UNVERIFIED claim from an exact source excerpt and then review it. Confirm storage and source history across reload/restart. An optional owned single/combined AI analysis follows reviewed previews and per-run approval. Show partial coverage and exact document sources, persist suggestions, and never promote generated wording into confirmation. ADR 0027 adds literal documentary confirmation with distinct basis on the current branch. Optional local OCR and rereading are added in the current workspace slice; layout-preserving generation is not implemented.
 
 ## Authorized local-pilot increments
 
@@ -59,8 +61,14 @@ Update stories/flows, decisions, security and the development log. Published bra
 
 Merged in PR #16: explicit Groq/Gemini task routing, recipient/model-bound private approval, persisted run protection, Gemini cooldown and sanitized token logging. Stable 3.5 Flash passed synthetic extraction/profile checks; 3.8 Flash generation returned 503. The related document-quality slice adds explicit responsibility coverage and prevents final synthesis from erasing already sourced profile sections. Real-document Gemini quality remains pending recipient-approved testing. Next: measured document coverage/PDF reading → conservative competency reconciliation → profile/history UX. Native Gemini PDF/URL retrieval, full normalized catalog/conflict model and later discovery/interview/browser/academy features remain separate.
 
-## Verified merge and current recovery slice — 2026-10-08
+## Prior recovery slice — 2026-10-08 (merged in PR #17)
 
 PR #16 is merged (`5c18439265e6fa2b9852b1a16c631d5ba7be6dc7`); both pre-merge Foundation checks passed. The related `feat/document-evidence-quality` branch adds mixed-layout PDF reading/context preservation, compact grouped document review and approved per-operation Groq/Gemini recovery with actual provider/model identities (ADR 0026).
 
-Next priorities: document-grounded automatic profile population and sourced confirmation semantics → dynamic candidate presentation → automatic matching evidence selection, explained percentage and inline clarification. Full conflict/catalog normalization, native Gemini source/PDF tools and the later discovery/interview/browser/academy roadmap remain separate. This slice does not claim those features are complete.
+The priorities listed for that slice (document-grounded population, presentation and matching UX) are now implemented on the current ADR 0027 branch. Full conflict/catalog normalization, native Gemini source/PDF tools and the later discovery/interview/browser/academy roadmap remain separate. This slice does not claim those features are complete.
+
+## Current delivery and next quality work
+
+- Current branch: ADR 0027, V13 documentary basis/owner ledger, atomic profile population, durable review decisions, compact counted queue, editable sourced candidate synthesis, matching automation/clarification and bounded advertisement readers.
+- Next: independent expected-evidence audit across the supplied document collection, full semantic section inventory and bounded targeted repair, relationship/date conflict reconciliation. Explicit-list recovery covers only named list items.
+- Later: normalized reusable knowledge graph, broader model-quality comparison, advanced CV/discovery/interview features and online hosting. No paid infrastructure or automatic AI submission is introduced.
