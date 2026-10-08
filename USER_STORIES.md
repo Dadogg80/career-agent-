@@ -371,3 +371,6 @@ As a document reviewer, I can switch between competencies, profile summary and c
 
 - As a candidate, I can see relevant source passages that extraction may have overlooked. Acceptance: document/type attribution, exact quotes and offsets, separate source-usage counts, keyboard scrolling and no completeness claim.
 - As a candidate, I can allow bounded follow-up under my chosen AI approval. Acceptance: disclosed maximum four extra calls/two per document, one repair round, no duplicate source coverage, retained quota progress and review decisions, no silent extension of older runs (ADR 0028).
+
+- As a candidate, technical subsections retain a supported employer/project context without inheriting unrelated global or peer sections. Acceptance: exact heading evidence remains inspectable and employer boundaries hold for repeated wording.
+- As a candidate, explicit month dates from my documents prefill career history correctly. Acceptance: local/ISO formats preserve endpoint positions, year precision does not invent months, original wording is retained and existing records are unchanged.

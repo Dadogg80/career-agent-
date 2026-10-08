@@ -163,3 +163,7 @@ Accepted maintenance: expose Groq, Gemini 3.5 Flash and Gemini 3.5 Flash-Lite as
 ## 2026-10-08 — Source usage audit and bounded extraction follow-up
 
 Accepted under the resumed document-quality request: inventory explicit source passages and compare validated quotation links, locally recover missed named list items and use one disclosed bounded follow-up round for other missing evidence. Defaults apply only to new consented runs, with at most four calls/two per document, preserved provider/model approval and normal quotas. Show remaining excerpts without calling the result exhaustive or confirmed. ADR 0028 records heuristics and limits.
+
+## 2026-10-08 — Literal subsection context and explicit month endpoints
+
+Accepted extraction correction within the resumed source-quality work: technical subsections retain a literal enclosing employer/project header only across compatible boundaries. Global sections and same-level Markdown sections reset it. Normalize explicit local/ISO month endpoints independently while retaining original periods and year precision. Reuse parsed heading inventories across batches/lists/coverage checks. Existing saved content and review decisions are not rewritten; no generalized context graph or conflict arbitration is introduced.

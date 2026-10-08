@@ -36,4 +36,13 @@ class DocumentCompetencyInventoryTest {
         val all=DocumentAnalysisPlanner.batches(mapOf(id to text)).flatMap { DocumentCompetencyInventory.recover(it,text,"en",emptyList()) }
         assertThat(all.filter { it.skill=="Kotlin" }.map { it.context }).containsExactly("First AS","Second AS")
     }
+    @Test fun `standalone technology subsection retains exact project evidence without borrowing global or peer lists`() {
+        val source="Project: Atlas\nFrontend:\nNext.js - React\nKjernekompetanse:\nFrontend:\nNext.js - Vue\n## Other AS\nDeveloper\n### Data\nPostgreSQL\n## Data\nMongoDB"
+        val result=DocumentCompetencyInventory.recover(AnalysisBatch(id,source,source.length),source,"en",emptyList())
+        assertThat(result.first { it.skill=="React" }.context).isEqualTo("Atlas")
+        assertThat(result.first { it.skill=="React" }.contextQuote).isEqualTo("Project: Atlas")
+        assertThat(result.first { it.skill=="Vue" }.context).isEqualTo("Context not stated")
+        assertThat(result.first { it.skill=="PostgreSQL" }.context).isEqualTo("Other AS")
+        assertThat(result.first { it.skill=="MongoDB" }.context).isEqualTo("Context not stated")
+    }
 }
