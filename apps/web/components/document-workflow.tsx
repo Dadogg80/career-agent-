@@ -1,5 +1,7 @@
 "use client";
 
+import { useAiConfiguration } from "../lib/use-ai-configuration";
+import { aiRecipients } from "../lib/ai-configuration";
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, FileText, Pause, Play, Sparkles } from "lucide-react";
@@ -23,8 +25,10 @@ export function DocumentWorkflow({ scope, documents, locale, csrfToken, onAuthRe
   scope: string; documents: DocumentDetail[]; locale: Locale; csrfToken: string; onAuthRequired: () => void;
 }) {
   const nb = locale === "nb"; const cache = useQueryClient();
+  const configuration=useAiConfiguration(); const approval=configuration.data?.documents; const recipients=aiRecipients(approval);
   const [previews, setPreviews] = useState(() => documents.map(d => ({documentId:d.document.id, text:d.text, included:!!d.text.trim()})));
-  const [consent, setConsent] = useState(false); const [run, setRun] = useState<DocumentRun | null>(null);
+  const [consent, setConsent] = useState(false);
+  useEffect(()=>setConsent(false),[approval?.token]); const [run, setRun] = useState<DocumentRun | null>(null);
   const [active, setActive] = useState(false); const control = useRef<{stop:boolean; abort:AbortController} | null>(null);
   const [retryUntil,setRetryUntil]=useState(0);
   const [now, setNow] = useState(Date.now()); const [filter, setFilter] = useState("ALL"); const [search,setSearch]=useState("");
@@ -48,10 +52,11 @@ export function DocumentWorkflow({ scope, documents, locale, csrfToken, onAuthRe
   function remember(value:unknown):DocumentRun { if(!isDocumentRun(value))throw new Error("DOCUMENT_UNAVAILABLE");setRun(value);cache.setQueryData(["private-document-workflow",scope],value);return value; }
   const process=useMutation({retry:false,mutationFn:async(fresh:boolean)=>{
     if(control.current)throw new Error("AI_BUSY");
+    if(!approval || !consent)throw new Error("AI_APPROVAL_CHANGED");
     const session={stop:false,abort:new AbortController()};control.current=session;setActive(true);setNotice(null);
     try {
       let next:DocumentRun;
-      if(fresh){setSaved([]);next=remember(await request(base,"POST",{scope,documents:selected,locale,consent},session.abort.signal));}
+      if(fresh){setSaved([]);next=remember(await request(base,"POST",{scope,documents:selected,locale,consent,aiApproval:approval?.token},session.abort.signal));}
       else {if(!current)throw new Error("DOCUMENT_UNAVAILABLE");next=remember(await request(`${base}/${current.id}`,"GET",undefined,session.abort.signal));}
       while(!session.stop && next.status!=="COMPLETED") {
         // Waiting is genuine quota pacing. Never retry a rejected provider call automatically.
@@ -74,7 +79,8 @@ export function DocumentWorkflow({ scope, documents, locale, csrfToken, onAuthRe
   }});
   function stop(){if(control.current)control.current.stop=true;}
   function failure(code:string){
-    if(code==="AI_RATE_LIMITED")return nb?"Groq-kvoten er midlertidig brukt opp. Fremdrift og forslag er bevart. Fortsett når ventetiden er over.":"Groq's quota is temporarily exhausted. Progress and drafts are preserved. Continue when the wait ends.";
+    if(code==="AI_APPROVAL_CHANGED")return nb?"AI-oppsettet er endret. Hent oppsettet på nytt, kontroller mottakeren og start en ny analyse. Lagrede forslag beholdes.":"The AI configuration changed. Refresh it, review the recipient and start a new analysis. Saved drafts are retained.";
+    if(code==="AI_RATE_LIMITED")return nb?"AI-kvoten er midlertidig brukt opp. Fremdrift og forslag er bevart. Fortsett når ventetiden er over.":"AI quota is temporarily exhausted. Progress and drafts are preserved. Continue when the wait ends.";
     if(code==="AI_INVALID_RESULT")return nb?"Denne delen ga ikke brukbare AI-forslag. Dokumentene og tidligere forslag er bevart; du kan prøve å fortsette.":"This step produced no usable AI drafts. Documents and previous drafts are preserved; you can try continuing.";
     if(code==="AI_BUDGET_REACHED")return nb?"Pilotens grense for dokumentkall er nådd. Forslagene er bevart; grensen gjelder frem til backend starter på nytt.":"The pilot document-call budget was reached. Drafts are preserved; the budget lasts until backend restart.";
     if(code==="DOCUMENT_AI_OUTPUT_TOO_LARGE")return nb?"Dette grunnlaget eller resultatet er større enn pilotens lagringsgrense. Tidligere fremdrift er bevart. Velg færre dokumenter for en ny analyse.":"These sources or results exceed the pilot storage limit. Previous progress is retained. Select fewer documents for a new analysis.";
@@ -96,9 +102,10 @@ export function DocumentWorkflow({ scope, documents, locale, csrfToken, onAuthRe
         <Textarea lang={languages.get(p.documentId)} aria-label={`${nb?"Tekst som sendes fra":"Text sent from"} ${names.get(p.documentId)}`} rows={8} maxLength={60000} value={p.text} disabled={active} onChange={e=>{setConsent(false);setPreviews(previews.map((v,i)=>i===index?{...v,text:e.target.value}:v));}}/>
       </details>)}</div>
       <p className="hint mt-3">{selected.length} {nb?"dokumenter valgt":"documents selected"} · {size.toLocaleString(locale)} {nb?"tegn. Originalene beholdes. Forslagene lagres privat og er ubekreftet.":"characters. Originals are retained. Drafts are stored privately and remain unverified."}</p>
-      <label className="consent-row"><input type="checkbox" checked={consent} disabled={active} onChange={e=>setConsent(e.target.checked)}/>{nb?"Jeg godkjenner at valgt tekst sendes til Groq for denne analysen":"I approve sending the selected text to Groq for this analysis"}</label>
-      <div className="claim-actions"><Button disabled={!consent || size<40 || wait>0 || active || save.isPending || latest.isPending} onClick={()=>process.mutate(true)}><Sparkles size={16}/>{current?nb?"Start ny analyse":"Start new analysis":nb?"Bygg profil fra dokumentene":"Build profile from documents"}</Button>
-        {current && current.status!=="COMPLETED" && !active && <Button variant="outline" disabled={!consent || wait>0 || save.isPending} onClick={()=>process.mutate(false)}><Play size={16}/>{nb?"Fortsett lagret analyse":"Continue saved analysis"}</Button>}
+      <label className="consent-row"><input type="checkbox" checked={consent} disabled={active || !approval} onChange={e=>setConsent(e.target.checked)}/>{nb?`Jeg godkjenner at valgt tekst sendes til ${recipients} for denne analysen`:`I approve sending the selected text to ${recipients} for this analysis`}</label>
+      <p className="hint">{approval?.selections.map(s=>`${s.provider} · ${s.model}`).join(" / ") ?? (nb?"Henter AI-oppsett …":"Loading AI configuration …")}</p>{(configuration.isError || issue==="AI_APPROVAL_CHANGED") && <Button variant="outline" onClick={()=>void configuration.refetch()}>{nb?"Hent AI-oppsett på nytt":"Refresh AI configuration"}</Button>}
+      <div className="claim-actions"><Button disabled={!approval || !consent || size<40 || wait>0 || active || save.isPending || latest.isPending} onClick={()=>process.mutate(true)}><Sparkles size={16}/>{current?nb?"Start ny analyse":"Start new analysis":nb?"Bygg profil fra dokumentene":"Build profile from documents"}</Button>
+        {current && current.status!=="COMPLETED" && !active && <Button variant="outline" disabled={!approval || !consent || (current.aiApproval?current.aiApproval!==approval.token:recipients!=="Groq") || wait>0 || save.isPending} onClick={()=>process.mutate(false)}><Play size={16}/>{nb?"Fortsett lagret analyse":"Continue saved analysis"}</Button>}
         {active && <Button variant="outline" onClick={stop}><Pause size={16}/>{nb?"Stopp etter dette kallet":"Stop after this call"}</Button>}</div>
     </CardContent></Card>
     {current && <div className="document-run-status" role="status"><div><strong>{current.status==="COMPLETED"?(nb?"Gjennomgangen er klar":"Review ready"):active?(wait?nb?"Venter på neste kall":"Waiting for next call":nb?"Leser dokumentgrunnlaget":"Reading document sources"):nb?"Fremdriften er lagret":"Progress saved"}</strong><span>{current.completedBatches} / {current.totalBatches} {nb?"behandlingstrinn":"processing steps"}{wait>0?` · ${retryWaitLabel(wait)}`:""}</span></div><progress aria-label={nb?"Dokumentanalyse":"Document analysis"} max={current.totalBatches} value={current.completedBatches}/><p className="hint">{analysis?.inputCharacters.toLocaleString(locale)} / {analysis?.sourceCharacters.toLocaleString(locale)} {nb?"kildetegn behandlet. Tekstdekning betyr ikke at AI har funnet all kompetanse.":"source characters processed. Text coverage does not mean AI found every competency."}</p></div>}

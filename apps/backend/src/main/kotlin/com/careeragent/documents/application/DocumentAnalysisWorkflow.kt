@@ -30,7 +30,8 @@ interface DocumentRunRepository {
 class DocumentAnalysisWorkflow(private val documents: DocumentRepository, private val runs: DocumentRunRepository,
     private val model: AiModel, private val mapper: ObjectMapper, private val entries: CareerEntryService, private val claims: ClaimService,
     @Value("\${DOCUMENT_AI_MAX_REQUESTS:40}") private val maxRequests: Int,
-    @Value("\${DOCUMENT_AI_BATCH_DELAY_SECONDS:65}") private val delaySeconds: Int) {
+    @Value("\${DOCUMENT_AI_BATCH_DELAY_SECONDS:65}") private val delaySeconds: Int, private val routing: AiRouting = AiRouting(),
+    @Value("\${DOCUMENT_GEMINI_BATCH_DELAY_SECONDS:5}") private val geminiDelaySeconds: Int = 5) {
     private val permit=Semaphore(1); private val used=AtomicInteger()
     fun latest(identity: VerifiedIdentity, scope: String) = runs.latest(identity,scope)?.let { checked(identity,it).view() }
     fun load(identity: VerifiedIdentity, id: UUID) = checked(identity,runs.load(identity,id)).view()
@@ -38,18 +39,19 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
         if(state.sources.any { (id,text) -> documents.detail(identity,id).text != text }) throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
         return state
     }
-    fun start(identity: VerifiedIdentity, scope: String, excerpts: List<DocumentExcerpt>, locale: String, consent: Boolean): DocumentRunView {
+    fun start(identity: VerifiedIdentity, scope: String, excerpts: List<DocumentExcerpt>, locale: String, consent: Boolean, aiApproval: String? = null): DocumentRunView {
         if(!consent) throw DocumentFailure("DOCUMENT_AI_CONSENT_REQUIRED",400)
+        val approval=routing.requireApproval(aiApproval,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)
         if(locale !in setOf("nb","en") || excerpts.size !in 1..20 || excerpts.map { it.documentId }.distinct().size != excerpts.size ||
             excerpts.any { it.text.isBlank() || it.text.length > 60000 } || excerpts.sumOf { it.text.length } !in 40..1200000 ||
             scope != "collection" && (excerpts.size != 1 || excerpts.first().documentId.toString() != scope)) throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
         val sources=excerpts.associate { it.documentId to documents.detail(identity,it.documentId) }
         if(sources.values.any { it.text.isBlank() }) throw DocumentFailure("DOCUMENT_AI_NO_TEXT",400)
         val approved=excerpts.associate { it.documentId to it.text }; val id=UUID.randomUUID()
-        val analysis=DocumentAnalysis(id,locale,"Groq",emptyList(),emptyList(),0,sources.values.sumOf { it.text.length },true,0,OffsetDateTime.now(),
+        val analysis=DocumentAnalysis(id,locale,approval.selections.map { it.provider }.distinct().joinToString(" + "),emptyList(),emptyList(),0,sources.values.sumOf { it.text.length },true,0,OffsetDateTime.now(),
             excerpts.map { AnalysisDocument(it.documentId,sources.getValue(it.documentId).document.originalName,0,sources.getValue(it.documentId).text.length) })
         val state=DocumentRunState(id,scope,1,locale,"RUNNING",sources.mapValues { it.value.text },approved,
-            DocumentAnalysisPlanner.batches(approved),0,null,null,analysis)
+            DocumentAnalysisPlanner.batches(approved),0,null,null,analysis,approval.token)
         return runs.start(identity,state).view()
     }
     fun next(identity: VerifiedIdentity, id: UUID, revision: Long): DocumentRunView {
@@ -57,6 +59,7 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
         val current=checked(identity,runs.load(identity,id))
         // A repeated HTTP request returns the committed progress instead of spending another model call.
         if(current.revision != revision || current.status == "COMPLETED") return current.view()
+        routing.requireApproval(current.aiApproval,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)
         if(current.nextAt?.isAfter(OffsetDateTime.now()) == true) return current.view()
         if(!permit.tryAcquire()) throw AiFailure("AI_BUSY",429)
         var claimed: DocumentRunState?=null
@@ -67,7 +70,7 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
             used.incrementAndGet()
             val extractor=DocumentDraftExtractor(model,mapper)
             if(state.completed==state.batches.size) {
-                val profile=extractor.summarize(state.analysis.profile,state.analysis.suggestions,state.locale)
+                val profile=extractor.summarize(state.analysis.profile,state.analysis.suggestions,state.locale,state.analysis.careerEntries)
                 checked(identity,state)
                 val analysis=state.analysis.copy(profile=profile,summary=profile.map { CompetencySummary(it.text.take(500),it.quote.take(600),it.documentId) })
                 return runs.finish(identity,state,state.copy(revision=state.revision+1,completed=state.completed+1,status="COMPLETED",issue=null,nextAt=null,analysis=analysis)).view()
@@ -90,7 +93,7 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
                 documents=state.analysis.documents.map { it.copy(inputCharacters=covered[it.documentId] ?: 0) })
             return runs.finish(identity,state,state.copy(revision=state.revision+1,completed=completed,
                 status="RUNNING",issue=null,
-                nextAt=OffsetDateTime.now().plusSeconds(delaySeconds.coerceIn(0,300).toLong()),analysis=analysis)).view()
+                nextAt=OffsetDateTime.now().plusSeconds((if(routing.selection(if(completed==state.batches.size)AiTask.PROFILE_SUMMARY else AiTask.DOCUMENT_EXTRACTION).provider=="Gemini")geminiDelaySeconds else delaySeconds).coerceIn(0,300).toLong()),analysis=analysis)).view()
         } catch(error: AiFailure) {
             val state=claimed ?: throw error
             return runs.finish(identity,state,state.copy(revision=state.revision+1,status="PAUSED",issue=error.code,

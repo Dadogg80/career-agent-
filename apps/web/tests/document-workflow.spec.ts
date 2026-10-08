@@ -23,7 +23,7 @@ test("full source is approved once and automatically sequenced; editable skills 
    if(method==="GET")return r.fulfill({json:saved});
    expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf");
    if(url.endsWith("/next")){calls++;saved=calls===1?run("RUNNING",2):run();return r.fulfill({json:saved});}
-   starts++;expect(r.request().postDataJSON()).toEqual({scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true});saved={...run("RUNNING",1),completedBatches:0,analysis:{...analysis,suggestions:[],profile:[],careerEntries:[],inputCharacters:0,partial:true}};return r.fulfill({json:saved});
+   starts++;expect(r.request().postDataJSON()).toEqual({scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true,aiApproval:expect.stringMatching(/^[a-f0-9]{64}$/)});saved={...run("RUNNING",1),completedBatches:0,analysis:{...analysis,suggestions:[],profile:[],careerEntries:[],inputCharacters:0,partial:true}};return r.fulfill({json:saved});
   }
   return r.fulfill({json:url.endsWith(id)?{document:doc,text}:[doc]});
  });
@@ -46,13 +46,35 @@ test("long documents have full editable previews without manual parts; editing r
 test("a long quota pause keeps proposals visible, survives reopening and never automatically retries",async({page})=>{
  await profile(page);const paused={...run("PAUSED",2),nextAt:new Date(Date.now()+968000).toISOString(),issue:"AI_RATE_LIMITED"};let calls=0;
  await page.route("**/api/profile/me/documents**",r=>{if(r.request().url().includes("/workflow")){if(r.request().method()==="POST")calls++;return r.fulfill({json:paused});}return r.fulfill({json:r.request().url().endsWith(id)?{document:doc,text}:[doc]});});
- await open(page);const outer=page.locator(".document-workspace-sheet");await expect(outer).toContainText("Groq-kvoten er midlertidig brukt opp");await expect(outer.getByText("Erfaring med API-er, Kotlin og PostgreSQL.",{exact:true})).toBeVisible();await outer.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Groq for denne analysen"}).check();await expect(outer.getByRole("button",{name:"Fortsett lagret analyse",exact:true})).toBeDisabled();await expect(outer).toContainText(/16 min/);expect(calls).toBe(0);
+ await open(page);const outer=page.locator(".document-workspace-sheet");await expect(outer).toContainText("AI-kvoten er midlertidig brukt opp");await expect(outer.getByText("Erfaring med API-er, Kotlin og PostgreSQL.",{exact:true})).toBeVisible();await outer.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Groq for denne analysen"}).check();await expect(outer.getByRole("button",{name:"Fortsett lagret analyse",exact:true})).toBeDisabled();await expect(outer).toContainText(/16 min/);expect(calls).toBe(0);
  await outer.getByRole("button",{name:"Lukk",exact:true}).click();await page.getByRole("button",{name:"Analyser dokumentet",exact:true}).click();await expect(outer).toContainText("Erfaring med API-er, Kotlin og PostgreSQL.");expect(calls).toBe(0);
- await outer.getByRole("button",{name:"Lukk",exact:true}).click();await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await page.getByRole("button",{name:"Analyze document",exact:true}).click();await expect(outer).toContainText("Groq's quota is temporarily exhausted");await expect(outer.getByRole("button",{name:"Continue saved analysis",exact:true})).toBeDisabled();
+ await outer.getByRole("button",{name:"Lukk",exact:true}).click();await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await page.getByRole("button",{name:"Analyze document",exact:true}).click();await expect(outer).toContainText("AI quota is temporarily exhausted");await expect(outer.getByRole("button",{name:"Continue saved analysis",exact:true})).toBeDisabled();
 });
 test("workflow proxies reject anonymous reads, missing consent, spoofed ownership and cross-origin calls",async({request})=>{
  const path="/api/profile/me/documents/workflow";const body={scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true};
  expect((await request.get(`${path}?scope=${id}`)).status()).toBe(401);expect((await request.post(path,{data:{...body,consent:false}})).status()).toBe(400);
  expect((await request.post(path,{data:{...body,ownerId:second}})).status()).toBe(400);expect((await request.post(path,{data:body,headers:{Origin:"https://other.example"}})).status()).toBe(403);
  expect((await request.post(`${path}/${runId}/next`,{data:{revision:1,ownerId:second}})).status()).toBe(400);expect((await request.post(`${path}/${runId}/claims`,{data:{revision:1,index:0,skill:"Kotlin",statement:"Built APIs",context:"Example AS",confirm:true,status:"CONFIRMED"}})).status()).toBe(400);
+});
+
+test("Gemini whole-document review names the recipient and binds sending to the displayed configuration",async({page})=>{
+ await profile(page);const token="a".repeat(64);const selection={provider:"Gemini",model:"gemini-3.5-flash"};const approval={token,selections:[selection]};
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:selection,DOCUMENT_EXTRACTION:selection,PROFILE_SUMMARY:selection,PERSONAL_MATCH:selection},documents:approval,documentExcerpt:approval,matching:approval}}));
+ let stored:ReturnType<typeof run>|null=null;let starts=0;let nexts=0;
+ await page.route("**/api/profile/me/documents**",r=>{
+  if(r.request().url().includes("/workflow")) {
+   if(r.request().method()==="GET")return r.fulfill({json:stored});
+   if(r.request().url().endsWith("/next")){nexts++;stored={...run(),analysis:{...analysis,provider:"Gemini"}};return r.fulfill({json:{...stored,aiApproval:token}});}
+   starts++;expect(r.request().postDataJSON()).toEqual({scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true,aiApproval:token});stored={...run("RUNNING",1),completedBatches:0};return r.fulfill({json:{...stored,aiApproval:token,analysis:{...analysis,provider:"Gemini"}}});
+  }
+  return r.fulfill({json:r.request().url().endsWith(id)?{document:doc,text}:[doc]});
+ });
+ await open(page);const outer=page.locator(".document-workspace-sheet");
+ await expect(outer).toContainText("Gemini · gemini-3.5-flash");
+ await expect(outer.getByRole("checkbox",{name:/sendes til Groq/})).toHaveCount(0);
+ const consent=outer.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Gemini for denne analysen"});
+ const start=outer.getByRole("button",{name:"Bygg profil fra dokumentene",exact:true});await expect(start).toBeDisabled();expect(starts).toBe(0);
+ await consent.check();await start.click();await expect(outer).toContainText("Gjennomgangen er klar");expect(starts).toBe(1);expect(nexts).toBe(1);
+ await expect(outer).toContainText("Arbeid, prosjekter og utdanning");await expect(outer.getByText("Kotlin",{exact:true})).toBeVisible();
+ await page.screenshot({path:"/tmp/career-gemini-document-review.png",fullPage:false});
 });

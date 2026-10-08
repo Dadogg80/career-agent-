@@ -162,3 +162,7 @@ Reviewed text is encoded as bounded numbered literal passages. Groq selects evid
 The browser submits approved full previews once, then dispatches one private `/documents/workflow/{id}/next` step at a time. PostgreSQL stores progress; revision replay, owner locks and a short processing lease protect against duplicate calls/imports. Successful steps persist usable drafts. Provider rejection pauses progress and preserves the full reported cooldown. Closing the UI stops further dispatch; reopening requires explicit continuation. An in-flight request can finish and save its result. This is a local-pilot workflow, not a background queue or Temporal implementation.
 
 Stable task prompts/schema precede variable numbered evidence. `AiTask` selects a configurable provider model; current defaults remain unchanged. Strict JSON validates shape, independent evidence checks validate literal provenance, and user review determines factual confirmation. No model can directly modify authoritative career history. See [GROQ_OPTIMIZATION.md](docs/GROQ_OPTIMIZATION.md).
+
+## Explicit AI provider routing
+
+The local pilot now routes the existing AiModel port by task to Groq or Gemini. Recipient/model preview fingerprints protect private approvals and persisted workflow continuation. Retrieval stays a separate source adapter; no provider-switch retry loop or agent swarm is introduced. See [ADR 0025](docs/adr/0025-explicit-ai-providers-and-approval.md) and [Gemini setup](docs/GEMINI_SETUP.md).

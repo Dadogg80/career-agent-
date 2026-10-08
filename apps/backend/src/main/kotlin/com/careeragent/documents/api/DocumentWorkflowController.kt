@@ -22,10 +22,11 @@ class DocumentWorkflowController(private val workflows:ObjectProvider<DocumentAn
     private fun revision(input:Map<String,Any?>):Long {val r=input["revision"];if(r !is Int && r !is Long)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400);return (r as Number).toLong()}
     @GetMapping fun latest(@AuthenticationPrincipal principal:OidcUser?,@RequestParam scope:String)=response(mapOf("run" to workflow().latest(identity(principal),scope(scope))))
     @PostMapping(consumes=["application/json"]) fun start(@AuthenticationPrincipal principal:OidcUser?,@RequestBody input:Map<String,Any?>):Any {
-        keys(input,setOf("scope","documents","locale","consent"))
+        keys(input.filterKeys { it!="aiApproval" },setOf("scope","documents","locale","consent"))
+        if(input.containsKey("aiApproval") && input["aiApproval"] !is String)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
         if(input["scope"] !is String || input["locale"] !is String || input["consent"] !is Boolean || input["documents"] !is List<*>)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
         val documents=(input["documents"] as List<*>).map { item -> if(item !is Map<*,*> || item.keys!=setOf("documentId","text") || item["documentId"] !is String || item["text"] !is String)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400);DocumentExcerpt(id(item["documentId"] as String),item["text"] as String) }
-        return response(workflow().start(identity(principal),scope(input["scope"] as String),documents,input["locale"] as String,input["consent"] as Boolean))
+        return response(workflow().start(identity(principal),scope(input["scope"] as String),documents,input["locale"] as String,input["consent"] as Boolean,input["aiApproval"] as? String))
     }
     @GetMapping("/{runId}") fun progress(@AuthenticationPrincipal principal:OidcUser?,@PathVariable runId:String)=response(workflow().load(identity(principal),id(runId)))
     @PostMapping("/{runId}/next",consumes=["application/json"]) fun next(@AuthenticationPrincipal principal:OidcUser?,@PathVariable runId:String,@RequestBody input:Map<String,Any?>):Any {keys(input,setOf("revision"));return response(workflow().next(identity(principal),id(runId),revision(input)))}

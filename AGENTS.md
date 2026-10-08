@@ -55,3 +55,7 @@ Hver cloud-task har allerede et isolert miljø. Bruk eksisterende checkout; ikke
 ## Frontend implementation rule
 
 Use TanStack Query for server queries and asynchronous mutations. Use shadcn/ui components, kept in `apps/web/components/ui`, as the UI foundation. Keep Next.js routing; do not introduce TanStack Router or Table without a concrete need. Norwegian remains the default. Preserve visible evidence, accessible controls, responsive layouts and honest feature availability; no fake match scores or inactive navigation presented as working features. Disable automatic retries for AI mutations.
+
+## Gemini continuation — 2026-10-08
+
+The owner authorized implementation of Gemini and immediate prioritization of related document/competency/profile/history quality work. Follow ADR 0025: explicit task routing and recipient/model-bound private approvals, retain source checks and factual confirmation, no automatic provider/model switch after failures, no paid services. Gemini-specific first model is tested 3.5 Flash; existing unset provider remains Groq. Do not send owner documents to Google under an old Groq approval. Keep the current continuation unpublished under the latest publication instruction.

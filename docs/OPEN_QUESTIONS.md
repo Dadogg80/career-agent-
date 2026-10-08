@@ -36,3 +36,7 @@ The initial local import processes DOCX/PDF without external AI and uses user-se
 ## Knowledge-model review — 2026-10-08
 
 The [relational proposal](CAREER_KNOWLEDGE_MODEL_PROPOSAL.md) is partially applied through revision-linked career-entry evidence and owned analysis progress. The owner resumed this specific feature slice; full catalog/context/conflict migrations and new retention policies remain separate decisions. The authorized local workflow preserves existing deletion disclosures. Task configuration is implemented with unchanged defaults. Live model quality, account-level quota interactions, source-term compliance, historical artifact retention and broader privacy/export/deletion policy remain open before expansion.
+
+## Gemini follow-up
+
+Gemini 3.5 Flash is verified on synthetic extraction/profile data only. Still open: account-specific quotas, real-document semantic coverage after recipient-specific approval, normalized aliases/context conflict review, native PDF and FINN URL Context quality, and production data processing/retention. 3.8 Flash generation was unavailable in this instance. No model/key rotation is planned.

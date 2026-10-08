@@ -119,3 +119,7 @@ A numbered-evidence model request contains only the explicitly reviewed excerpt,
 ## Whole-document run privacy
 
 Owned run state now stores original-text snapshots and approved previews in PostgreSQL alongside source evidence; include this private state in backup, export and future account-deletion policy. Per-run approval covers sequential extraction and final synthesis of that selected data only. Embedded source instructions remain untrusted data. Source mutations/deletion invalidate affected runs; imported claim/history quotations follow existing disclosed retention. Imported history evidence uses owner/revision-scoped foreign keys. No provider response, private source, API key or hidden reasoning is logged. Broader GDPR/provider policy remains unresolved before outside users.
+
+## Gemini local-pilot processing
+
+Gemini credentials are backend-only GEMINI_API_KEY and travel in x-goog-api-key, not URLs or frontend code. Per-analysis consent names Google/Gemini and is checked against a task/provider/model snapshot. Stored Groq approvals cannot silently authorize Google. JSON and source checks remain mandatory; outputs never auto-confirm competencies/history. Synthetic verification precedes recipient-approved private document testing. Current Google terms include an EEA unpaid-service data-use exception; this does not establish zero retention, EU-only processing or SaaS compliance. See docs/GEMINI_SETUP.md.

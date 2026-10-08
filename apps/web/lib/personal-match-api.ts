@@ -1,3 +1,4 @@
+import { validAiApprovalField } from "./ai-configuration";
 import { retryAfterSeconds as parseRetryAfter } from "./retry-after";
 import { claimId } from "./claims";
 import { isPersonalMatch } from "./personal-match";
@@ -9,7 +10,7 @@ export async function personalMatchProxy(request: Request, id: string) {
  if (request.method === "POST") {
   try {
    const v = await smallJson(request, 73728) as Record<string,unknown>;
-   if (!v || Object.keys(v).sort().join(",") !== "claims,consent,locale,text" || v.consent !== true || !["nb","en"].includes(String(v.locale)) || typeof v.text !== "string" || v.text.trim().length < 40 || v.text.length > 12000 || !Array.isArray(v.claims) || v.claims.length < 1 || v.claims.length > 30) throw new Error("Invalid input");
+   if (!v || !validAiApprovalField(v) || Object.keys(v).filter(key=>key!=="aiApproval").sort().join(",") !== "claims,consent,locale,text" || v.consent !== true || !["nb","en"].includes(String(v.locale)) || typeof v.text !== "string" || v.text.trim().length < 40 || v.text.length > 12000 || !Array.isArray(v.claims) || v.claims.length < 1 || v.claims.length > 30) throw new Error("Invalid input");
    const ids = new Set<string>();
    for (const c of v.claims) { if (!c || Object.keys(c).sort().join(",") !== "id,revision" || typeof c.id !== "string" || !claimId.test(c.id) || ids.has(c.id) || !Number.isSafeInteger(c.revision) || c.revision < 1) throw new Error("Invalid claim"); ids.add(c.id); }
    body = JSON.stringify(v); headers.set("Content-Type", "application/json");

@@ -132,3 +132,7 @@ Accepted under the owner's request to test actual uploaded evidence: separate li
 ## Resumed document/profile review — 2026-10-08
 
 The owner explicitly resumed the planned implementation and reiterated automatic whole-document processing, prefilled career history, editable AI summaries/competencies, improved profile navigation, PDF readability, model configuration and the incremental domain model. Accepted implementation scope is ADR 0024. Keep existing disclosed source-deletion semantics, per-run provider consent and explicit factual confirmation. Task model overrides are implemented but defaults remain unchanged pending live quality comparison; there is no automatic quota fallback. The full proposed domain schema is not accepted wholesale. The latest development instruction to defer publishing remains in effect for this branch.
+
+## 2026-10-08 — Gemini and related knowledge quality
+
+Accepted: Gemini adapter behind explicit task routing, recipient/model-bound private approval and independent cooldowns (ADR 0025). Gemini-specific first model is stable 3.5 Flash after synthetic pipeline verification; 3.8 Flash returned 503. Existing unset-provider behavior remains Groq. Prioritize whole-document/PDF quality → competency coverage/deduplication → profile/history presentation. Keep this continuation unpublished. No paid upgrades or automatic failover.

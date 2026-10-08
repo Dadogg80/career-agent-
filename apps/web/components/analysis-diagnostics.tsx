@@ -48,6 +48,7 @@ export function AnalysisDiagnostics({ events, imported, delay, locale }: {
               {event.details.characters !== undefined && <p>{event.details.characters} {t.characters} · {event.details.sourceType}{event.details.reused && ` · ${t.reused}`}</p>}
               {event.details.seconds !== undefined && <p>{event.details.seconds} {t.unit}</p>}
               {event.details.requirements !== undefined && <p>{t.counts}: {event.details.requirements} / {event.details.facts} / {event.details.omittedItems}</p>}
+              {event.details.provider && <p>{event.details.provider} · {event.details.model}</p>}
               {event.details.reason && <p>{t.reason}: <code>{event.details.reason}</code></p>}
               {event.details.code && <p>{t.code}: <code>{event.details.code}</code></p>}
             </div>

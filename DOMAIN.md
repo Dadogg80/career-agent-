@@ -114,3 +114,7 @@ CompetencySuggestion optionally retains contextQuote: the nearby literal header 
 `ProfileSummaryDraft` contains a supported kind, editable AI wording and exact evidence references. `CareerHistoryDraft` includes prefilled typed entry content and literal period text. `CompetencySuggestion` may contain editable AI wording, a category, supported literal skill label and multiple source quotes. Missing interests, dates and context remain unknown. Explicit owner import creates an UNVERIFIED claim/entry; an additional explicit confirmation can be submitted in the same review action. Editing established content still resets confirmation through existing revision rules.
 
 `CareerEntryEvidence` records owner, entry and revision, source document/name, quote, literal period and timestamp. Entry/document foreign keys enforce matching ownership. Deleting the source detaches the document reference while retaining disclosed quotations; deleting the entry removes its evidence/revisions. This is an incremental source-link implementation, not the proposed generalized reusable evidence graph.
+
+## AI approval snapshots
+
+AiSelection identifies a configured provider and model per task. AiApprovalPreview binds the tasks and selections to a non-secret fingerprint. A DocumentRun persists this approval snapshot; changing provider/model cannot authorize continuation implicitly. This is separate from authentication, source Evidence and factual Claim confirmation. PersonalMatch stores its generating provider/model; old records retain their Groq default.

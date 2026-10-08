@@ -1,4 +1,6 @@
 "use client";
+import { useAiConfiguration } from "../lib/use-ai-configuration";
+import { aiRecipients } from "../lib/ai-configuration";
 import { retryAfterSeconds as parseRetryAfter, retryWaitLabel } from "../lib/retry-after";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -36,12 +38,14 @@ export function DocumentAiAnalysis({ id, text, locale, csrfToken, onAuthRequired
   id:string; text:string; locale:Locale; csrfToken:string; onAuthRequired:() => void; documents?:DocumentDetail[]; sourceLanguage?:Locale;
   onChoose:(suggestion:CompetencySuggestion & { analysisId:string }) => void;
 }) {
-  const t = copy[locale]; const cache = useQueryClient();
+  const configuration=useAiConfiguration(); const approval=configuration.data?.documentExcerpt; const recipients=aiRecipients(approval);
+  const original=copy[locale]; const t={...original,preview:original.preview.replaceAll("Groq","AI"),privacy:original.privacy.replaceAll("Groq",recipients),consent:original.consent.replaceAll("Groq",recipients)}; const cache = useQueryClient();
   const [search, setSearch] = useState("");
   const [preview, setPreview] = useState(spreadExcerpt(text, 12000));
   const [excerpts, setExcerpts] = useState<Record<string,string>>(() => collectionExcerpts(documents ?? []));
   const inputCharacters = documents ? Object.values(excerpts).reduce((sum, value) => sum + value.length, 0) : preview.length;
   const endpoint = `/api/profile/me/documents${documents ? "" : `/${id}`}/analysis`; const [consent, setConsent] = useState(false);
+  useEffect(()=>setConsent(false),[approval?.token]);
   const [cooldown, setCooldown] = useState(0); const [remaining, setRemaining] = useState(0); const [chosen, setChosen] = useState(false);
   useEffect(() => { if (!cooldown) return; const tick = () => setRemaining(Math.max(0, Math.ceil((cooldown - Date.now())/1000))); tick(); const timer = setInterval(tick, 500); return () => clearInterval(timer); }, [cooldown]);
   const key = ["private-document-analysis", documents ? "collection" : id];
@@ -49,7 +53,7 @@ export function DocumentAiAnalysis({ id, text, locale, csrfToken, onAuthRequired
     if (response.status === 401) onAuthRequired();
     const value: unknown = await response.json();
     if (!response.ok) {
-      const code = value && typeof value === "object" && "code" in value && Object.hasOwn(t.errors, String(value.code)) ? String(value.code) : "DOCUMENT_UNAVAILABLE";
+      const code = value && typeof value === "object" && "code" in value && (Object.hasOwn(t.errors, String(value.code)) || value.code==="AI_APPROVAL_CHANGED") ? String(value.code) : "DOCUMENT_UNAVAILABLE";
       const retry = Number(response.headers.get("retry-after"));
       throw new AnalysisError(code, response.status === 429 && code === "AI_RATE_LIMITED" ? (parseRetryAfter(retry) ?? 60) : undefined);
     }
@@ -59,7 +63,7 @@ export function DocumentAiAnalysis({ id, text, locale, csrfToken, onAuthRequired
   const saved = useQuery({ queryKey:key, gcTime:0, retry:false, refetchOnWindowFocus:false, refetchOnReconnect:false,
     queryFn:async () => read(await fetch(endpoint, { cache:"no-store" })) });
   const analysis = useMutation({ retry:false, mutationFn:async () => {
-    const value = await read(await fetch(endpoint, { method:"POST", headers:{ "Content-Type":"application/json", "X-CSRF-TOKEN":csrfToken }, body:JSON.stringify(documents ? { documents:Object.entries(excerpts).filter(([, value]) => value.trim()).map(([documentId, text]) => ({ documentId, text })), locale, consent } : { text:preview, locale, consent }), signal:AbortSignal.timeout(35000) }));
+    const value = await read(await fetch(endpoint, { method:"POST", headers:{ "Content-Type":"application/json", "X-CSRF-TOKEN":csrfToken }, body:JSON.stringify(documents ? { documents:Object.entries(excerpts).filter(([, value]) => value.trim()).map(([documentId, text]) => ({ documentId, text })), locale, consent, aiApproval:approval?.token } : { text:preview, locale, consent, aiApproval:approval?.token }), signal:AbortSignal.timeout(35000) }));
     if (!value) throw new AnalysisError("AI_INVALID_RESULT"); return value;
   }, onSuccess:value => { cache.setQueryData(key, value); setConsent(false); setChosen(false); }, onError:error => { if (error instanceof AnalysisError && error.retryAfter) { setRemaining(error.retryAfter); setCooldown(Date.now() + error.retryAfter*1000); } } });
   const error = analysis.error ?? saved.error;
@@ -67,14 +71,15 @@ export function DocumentAiAnalysis({ id, text, locale, csrfToken, onAuthRequired
   const value = saved.data;
   return <div className="document-ai-workspace"><div className="document-analysis-steps" aria-label={locale === "nb" ? "Slik bygger du kompetanseprofilen" : "Build your competency profile"}>{[{ icon:FileSearch, text:locale === "nb" ? "1. Kontroller dokumentene" : "1. Review documents" }, { icon:ListChecks, text:locale === "nb" ? "2. Gjennomgå AI-forslag" : "2. Review AI suggestions" }, { icon:ShieldCheck, text:locale === "nb" ? "3. Bekreft egen erfaring" : "3. Confirm your experience" }].map(step => <span key={step.text}><step.icon size={17}/>{step.text}</span>)}</div>
   <div className="document-analysis-columns"><Card className="document-ai-panel document-ai-input"><CardHeader><h3 className="flex items-center gap-2"><FileSearch size={18}/>{locale === "nb" ? "Dokumentgrunnlag" : "Source documents"}</h3><p className="hint">{t.intro}</p></CardHeader><CardContent>
-    <form className="claim-form" onSubmit={event => { event.preventDefault(); if (consent && inputCharacters >= 40 && inputCharacters <= 12000 && !analysis.isPending && !remaining) analysis.mutate(); }}>
+    {(configuration.isError || error?.message==="AI_APPROVAL_CHANGED") && <Button variant="outline" onClick={()=>void configuration.refetch()}>{locale==="nb"?"Hent AI-oppsett på nytt":"Refresh AI configuration"}</Button>}
+    <form className="claim-form" onSubmit={event => { event.preventDefault(); if (approval && consent && inputCharacters >= 40 && inputCharacters <= 12000 && !analysis.isPending && !remaining) analysis.mutate(); }}>
       {documents ? documents.map(item => <div key={item.document.id} className="document-ai-excerpt"><label htmlFor={`ai-${item.document.id}`}>{t.preview}: {item.document.originalName}</label>{item.text.trim() ? <><p className="hint">{(excerpts[item.document.id] ?? "").length.toLocaleString(locale)} / {item.text.length.toLocaleString(locale)} {locale === "nb" ? "tegn valgt" : "characters selected"}</p><Textarea id={`ai-${item.document.id}`} rows={4} value={excerpts[item.document.id] ?? ""} maxLength={12000} onChange={event => { setExcerpts(previous => ({ ...previous, [item.document.id]:event.target.value })); setConsent(false); analysis.reset(); }} disabled={analysis.isPending}/>{item.text.length > 4000 && <div className="excerpt-controls"><span className="hint">{locale === "nb" ? "Detaljanalyse: velg en mindre del og godkjenn ett kall av gangen:" : "Detailed analysis: choose a smaller part and approve one call at a time:"}</span>{documentWindows(item.text,4000).map((window,index)=><Button key={index} type="button" size="sm" variant="outline" disabled={analysis.isPending} onClick={()=>{setExcerpts({[item.document.id]:window.text});setConsent(false);analysis.reset();}}>{locale === "nb" ? "Del" : "Part"} {index+1} · {window.label}</Button>)}</div>}<Button variant="ghost" size="sm" type="button" disabled={analysis.isPending} onClick={() => { setExcerpts({ [item.document.id]:spreadExcerpt(item.text,12000) }); setConsent(false); analysis.reset(); }}>{locale === "nb" ? "Fokuser på dette dokumentet" : "Focus on this document"}</Button></> : <p className="hint">{locale === "nb" ? "Ingen lesbar tekst; dette dokumentet sendes ikke til AI. Åpne dokumentet og prøv lokal OCR." : "No readable text; this document is not sent to AI. Open the document and try local OCR."}</p>}</div>) : <><label htmlFor="document-ai-preview">{t.preview}</label><Textarea id="document-ai-preview" rows={6} value={preview} maxLength={12000} onChange={event => { setPreview(event.target.value); setConsent(false); analysis.reset(); }} disabled={analysis.isPending}/><div className="excerpt-controls">{(["spread", "start", "middle", "end"] as const).map((part, index) => <Button type="button" variant="outline" size="sm" disabled={analysis.isPending} key={part} onClick={() => { const start = part === "middle" ? Math.max(0, Math.floor((text.length - 12000)/2)) : part === "end" ? Math.max(0,text.length - 12000) : 0; setPreview(part === "spread" ? spreadExcerpt(text,12000) : text.slice(start,start+12000)); setConsent(false); analysis.reset(); }}>{(locale === "nb" ? ["Fordelt utvalg", "Starten", "Midten", "Slutten"] : ["Distributed", "Beginning", "Middle", "End"])[index]}</Button>)}</div>{text.length > 4000 && <div className="excerpt-controls">{documentWindows(text,4000).map((window,index)=><Button key={index} type="button" size="sm" variant="outline" disabled={analysis.isPending} onClick={()=>{setPreview(window.text);setConsent(false);analysis.reset();}}>{locale === "nb" ? "Del" : "Part"} {index+1} · {window.label}</Button>)}</div>}</>}
       {documents && <Button type="button" variant="outline" size="sm" disabled={analysis.isPending} onClick={() => { setExcerpts(collectionExcerpts(documents)); setConsent(false); analysis.reset(); }}>{locale === "nb" ? "Fordel på alle lesbare dokumenter" : "Include all readable documents"}</Button>}
       <p className="hint">{inputCharacters.toLocaleString(locale)} / 12 000 · {t.limit}</p>
       {inputCharacters > 12000 && <p role="alert">{locale === "nb" ? "Utvalget er for stort. Kort ned teksten før sending." : "Selection too large. Shorten the text before sending."}</p>}
       <details className="document-privacy"><summary>{locale === "nb" ? "Hva sendes til AI?" : "What is sent to AI?"}</summary><p className="hint">{t.privacy}</p></details>
-      <label className="document-ai-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} disabled={analysis.isPending}/><span>{t.consent}</span></label>
-      <Button type="submit" disabled={!consent || (documents ? inputCharacters < 40 : preview.trim().length < 40) || inputCharacters > 12000 || analysis.isPending || remaining > 0 || saved.isPending || saved.isError}>{analysis.isPending ? <LoaderCircle className="animate-spin" size={16}/> : <Sparkles size={16}/>} {t.analyze}</Button>
+      <label className="document-ai-consent"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} disabled={analysis.isPending || !approval}/><span>{t.consent}</span></label>
+      <Button type="submit" disabled={!approval || !consent || (documents ? inputCharacters < 40 : preview.trim().length < 40) || inputCharacters > 12000 || analysis.isPending || remaining > 0 || saved.isPending || saved.isError}>{analysis.isPending ? <LoaderCircle className="animate-spin" size={16}/> : <Sparkles size={16}/>} {t.analyze}</Button>
     </form>
     {saved.isPending && <p role="status">{t.loading}</p>}
     {analysis.isPending && <p role="status" className="hint mt-3">{t.busy}</p>}

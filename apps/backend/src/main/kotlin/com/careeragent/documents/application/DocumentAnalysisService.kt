@@ -3,6 +3,7 @@ package com.careeragent.documents.application
 import com.careeragent.ai.application.AiFailure
 import com.careeragent.ai.application.AiModel
 import com.careeragent.ai.application.AiTask
+import com.careeragent.ai.application.AiRouting
 import com.careeragent.documents.domain.*
 import com.careeragent.profile.application.VerifiedIdentity
 import com.fasterxml.jackson.databind.JsonNode
@@ -26,7 +27,7 @@ interface DocumentAnalysisRepository {
 @Profile("persistence")
 class DocumentAnalysisService(private val documents: DocumentRepository,
     private val analyses: DocumentAnalysisRepository, private val model: AiModel, private val mapper: ObjectMapper,
-    @Value("\${DOCUMENT_AI_MAX_REQUESTS:10}") private val maxRequests: Int) {
+    @Value("\${DOCUMENT_AI_MAX_REQUESTS:10}") private val maxRequests: Int, private val routing: AiRouting = AiRouting()) {
     private val permit = Semaphore(1)
     private val used = AtomicInteger()
 
@@ -35,9 +36,10 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
         return analyses.load(identity, id)?.let { groundedStored(it, mapOf(id to source.text), id) }
     }
 
-    fun analyze(identity: VerifiedIdentity, id: UUID, text: String, locale: String, consent: Boolean): DocumentAnalysis {
+    fun analyze(identity: VerifiedIdentity, id: UUID, text: String, locale: String, consent: Boolean, aiApproval: String? = null): DocumentAnalysis {
         val source = documents.detail(identity, id).text
         if (!consent) throw DocumentFailure("DOCUMENT_AI_CONSENT_REQUIRED", 400)
+        routing.requireApproval(aiApproval,AiTask.DOCUMENT_EXTRACTION)
         if (locale !in setOf("nb", "en") || text.trim().length < 40 || text.length > 12000) throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID", 400)
         if (source.isBlank()) throw DocumentFailure("DOCUMENT_AI_NO_TEXT", 400)
         val selection = DocumentEvidenceSelection(mapOf(UUID(0, 0) to text), mapper)
@@ -47,7 +49,7 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
             used.incrementAndGet()
             val output = selection.expand(model.generateJson(prompt(locale), selection.input(), DocumentEvidenceSelection.schema(), AiTask.DOCUMENT_EXTRACTION), false)
             val parsed = parse(output, text, source, locale)
-            return analyses.save(identity, id, DocumentAnalysis(UUID.randomUUID(), locale, "Groq", parsed.first,
+            return analyses.save(identity, id, DocumentAnalysis(UUID.randomUUID(), locale, routing.selection(AiTask.DOCUMENT_EXTRACTION).provider, parsed.first,
                 parsed.second, text.length, source.length, text != source, parsed.third, OffsetDateTime.now()), source)
         } finally { permit.release() }
     }
@@ -102,8 +104,9 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
         }.firstOrNull()
     }
 
-    fun analyzeCollection(identity: VerifiedIdentity, excerpts: List<DocumentExcerpt>, locale: String, consent: Boolean): DocumentAnalysis {
+    fun analyzeCollection(identity: VerifiedIdentity, excerpts: List<DocumentExcerpt>, locale: String, consent: Boolean, aiApproval: String? = null): DocumentAnalysis {
         if (!consent) throw DocumentFailure("DOCUMENT_AI_CONSENT_REQUIRED", 400)
+        routing.requireApproval(aiApproval,AiTask.DOCUMENT_EXTRACTION)
         if (locale !in setOf("nb", "en") || excerpts.size !in 1..20 || excerpts.map { it.documentId }.distinct().size != excerpts.size ||
             excerpts.any { it.text.isBlank() } || excerpts.sumOf { it.text.length } !in 40..12000) throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID", 400)
         val sources = excerpts.associate { it.documentId to documents.detail(identity, it.documentId) }
@@ -118,7 +121,7 @@ class DocumentAnalysisService(private val documents: DocumentRepository,
             val output = selection.expand(model.generateJson(prompt(locale), selection.input(), DocumentEvidenceSelection.schema(), AiTask.DOCUMENT_EXTRACTION), true)
             val parsed = parseSources(output, sent, sources.mapValues { it.value.text }, true, locale)
             val sourceDocuments = excerpts.map { AnalysisDocument(it.documentId, sources.getValue(it.documentId).document.originalName, it.text.length, sources.getValue(it.documentId).text.length) }
-            return analyses.saveCollection(identity, DocumentAnalysis(UUID.randomUUID(), locale, "Groq", parsed.first, parsed.second,
+            return analyses.saveCollection(identity, DocumentAnalysis(UUID.randomUUID(), locale, routing.selection(AiTask.DOCUMENT_EXTRACTION).provider, parsed.first, parsed.second,
                 excerpts.sumOf { it.text.length }, sources.values.sumOf { it.text.length }, excerpts.size != availableCount || excerpts.any { it.text != sources.getValue(it.documentId).text }, parsed.third, OffsetDateTime.now(), sourceDocuments), sources.mapValues { it.value.text })
         } finally { permit.release() }
     }

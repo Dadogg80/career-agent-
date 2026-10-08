@@ -42,3 +42,7 @@ flowchart LR
 Owned REST endpoints resolve identity from the authenticated OIDC session. CSRF, strict input shapes, optimistic revisions, row locks, source rechecks and private no-store proxies protect reads/writes. V12 introduces run state and career-entry evidence; it does not implement the full proposed skill/concept/conflict graph. See ADR 0024, DOMAIN.md and GROQ_OPTIMIZATION.md.
 
 Automated tests use synthetic documents and mocked AI responses for model-dependent behavior, with real PostgreSQL for ownership, migrations, source invalidation, evidence, review and replay. Six supplied private files were locally extracted and independently checked outside Git. Real Groq quality comparison was blocked by quota. Passing text coverage and keyword checks do not establish exhaustive competence extraction or semantic correctness.
+
+## Gemini and synthesis coverage
+
+Recipient/model previews now bind new runs and persisted continuation (ADR 0025). Next Gemini steps use their own configurable pacing. Explicit responsibilities, mentoring and releases are requested alongside technologies with literal source labels and editable descriptions. Final synthesis also receives career-history quotations and retains sourced profile sections it omits. Whole-document coverage still does not prove all competencies were found; conservative exact deduplication and source/company proof remain.

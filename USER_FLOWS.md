@@ -364,3 +364,7 @@ Technical checks do not certify semantics or completeness. Provider failures kee
 ## Whole-document profile flow (ADR 0024)
 
 Upload and read locally → inspect full previews → approve selected documents once → automatic sequential sourced analysis → bounded candidate summary → inspect/edit profile, history and skill cards → save unverified or explicitly confirm reviewed experience. Paused runs retain previous drafts and need manual approved continuation. Document deletion/rereading invalidates affected progress. See [FULL_DOCUMENT_REVIEW.md](docs/FULL_DOCUMENT_REVIEW.md).
+
+## Provider-aware document and matching review
+
+Load the non-secret AI configuration → show recipients and models beside the editable preview → obtain explicit approval → send the matching fingerprint → retain progress and source-backed drafts. A changed recipient/model requires a refreshed configuration and new approval/run; previous suggestions remain reviewable. Whole-document analysis also includes career-history sources in final synthesis and retains already sourced profile sections.

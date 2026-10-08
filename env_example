@@ -18,3 +18,17 @@ DATABASE_PASSWORD=""
 # The legacy single/combined analysis API has a separate process-local counter.
 # DOCUMENT_AI_MAX_REQUESTS=40
 # DOCUMENT_AI_BATCH_DELAY_SECONDS=65
+
+# Optional Gemini integration; values are examples, never real keys.
+# GEMINI_API_KEY=
+# AI_PROVIDER=groq
+# GEMINI_MODEL=gemini-3.5-flash
+# AI_JOB_PROVIDER=
+# AI_DOCUMENT_PROVIDER=
+# AI_PROFILE_PROVIDER=
+# AI_MATCH_PROVIDER=
+# GEMINI_JOB_MODEL=
+# GEMINI_DOCUMENT_MODEL=
+# GEMINI_PROFILE_MODEL=
+# GEMINI_MATCH_MODEL=
+# DOCUMENT_GEMINI_BATCH_DELAY_SECONDS=5

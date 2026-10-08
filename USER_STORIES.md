@@ -339,3 +339,9 @@ As a jobseeker, I want employment, projects, education and certificates with the
 - As a candidate, I receive prefilled employment/project/education drafts and supported profile summaries. Acceptance: unknown dates/interests remain unknown, user edits and confirms explicitly, and career-entry evidence remains revision-linked.
 - As a candidate, I reach documents, competencies and career history through clear profile sections. Acceptance: dashboard links select the destination and mobile review fits the screen.
 - As a candidate, I retain useful work on provider failure. Acceptance: saved portions remain visible, full cooldown is respected, no automatic retry/model switch and explicit continuation.
+
+## AI provider integration
+
+- As a pilot user, I see which AI recipient/model will receive my reviewed data and explicitly approve each new analysis. Backend and UI reject stale configuration approvals without sending to a new recipient.
+- As a returning user, I can inspect stored document progress after configuration changes; it never silently resumes with another provider.
+- As a job seeker, I receive explicit responsibilities/mentoring/release skills alongside technologies, retain original evidence and can edit drafts before confirming. Source-backed education/interests survive a shorter final summary.

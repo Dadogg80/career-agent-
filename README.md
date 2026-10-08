@@ -69,3 +69,7 @@ The current branch adds owned saved advertisement snapshots and a searchable lib
 ### Whole-document review and Groq optimization
 
 The current unpublished branch adds automatic document portions, editable sourced profile/history/competency drafts and section-based profile navigation. See [the workflow and limits](docs/FULL_DOCUMENT_REVIEW.md) and [Groq documentation findings/configuration](docs/GROQ_OPTIMIZATION.md). Model defaults remain unchanged pending live quality comparison.
+
+## Opt-in Gemini analysis
+
+The current unpublished branch adds Gemini behind explicit task routing. Add GEMINI_API_KEY, AI_PROVIDER=gemini and GEMINI_MODEL=gemini-3.5-flash to the existing ignored backend .env and load it into the backend terminal. The UI names recipients/models and requires new private-data approval; stored Groq runs cannot migrate implicitly. FINN retrieval still uses Groq independently. See [Gemini setup](docs/GEMINI_SETUP.md).

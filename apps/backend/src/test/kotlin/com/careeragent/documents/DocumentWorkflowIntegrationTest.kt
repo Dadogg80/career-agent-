@@ -37,6 +37,8 @@ class DocumentWorkflowIntegrationTest {
     @Autowired lateinit var mvc:MockMvc
     @Autowired lateinit var json:ObjectMapper
     @Autowired lateinit var jdbc:JdbcTemplate
+    @Autowired lateinit var routing:AiRouting
+    @Autowired lateinit var environment:org.springframework.core.env.ConfigurableEnvironment
     @Autowired lateinit var runs:com.careeragent.documents.infrastructure.JdbcDocumentRunRepository
     private val path="/api/profile/me/documents/workflow"
     private val text="## Example AS\nSenior Developer 2021 – 2024\nBuilt APIs using Kotlin and PostgreSQL."
@@ -52,6 +54,30 @@ class DocumentWorkflowIntegrationTest {
     private fun next(user:String,run:JsonNode)=post(user,"$path/${run["id"].asText()}/next",mapOf("revision" to run["revision"].asLong()))
     private fun output()=json.writeValueAsString(mapOf("competencies" to listOf(mapOf("skills" to listOf("Kotlin","PostgreSQL","InventedSkill"),"description" to "Utviklet API-er med Kotlin og PostgreSQL.","category" to "TECHNOLOGY","evidenceIds" to listOf(2),"contextId" to 0,"context" to "Example AS")),"profile" to listOf(mapOf("kind" to "EXPERIENCE","text" to "Utvikling av API-er.","evidenceIds" to listOf(2))),"history" to listOf(mapOf("kind" to "EMPLOYMENT","title" to "Senior Developer","organization" to "Example AS","client" to "","deliveryRole" to "","periodText" to "2021 – 2024","description" to "Utviklet API-er.","evidenceIds" to listOf(0,1,2)))))
     private fun stub(){`when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenAnswer { call -> if(call.getArgument<AiTask>(3)==AiTask.PROFILE_SUMMARY)"""{"profile":[{"kind":"PROFILE","text":"Erfaring med API-er, Kotlin og PostgreSQL.","evidenceIds":[0]}]}""" else output() }}
+    @Test fun `Gemini requires recipient approval and a changed provider cannot resume a saved run`() {
+        val user=profile();val doc=upload(user);val name="gemini-approval-test"
+        environment.propertySources.addFirst(org.springframework.core.env.MapPropertySource(name,mapOf("AI_PROVIDER" to "gemini")))
+        try {
+            val config=json.readTree(mvc.perform(get("/api/ai/config")).andExpect(status().isOk).andExpect(header().string("Cache-Control","no-store")).andReturn().response.contentAsString)
+            assertThat(config["documents"]["selections"][0]["provider"].asText()).isEqualTo("Gemini")
+            assertThat(config.toString()).doesNotContain("API_KEY")
+            for(approval in listOf(null,"a".repeat(64))) {
+                val input=body(listOf(doc)) + (approval?.let {mapOf("aiApproval" to it)} ?: emptyMap())
+                mvc.perform(post(path).with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(input)))
+                    .andExpect(status().isConflict).andExpect(jsonPath("$.code").value("AI_APPROVAL_CHANGED"))
+            }
+            verifyNoInteractions(model)
+            val initial=post(user,path,body(listOf(doc))+mapOf("aiApproval" to config["documents"]["token"].asText()))
+            assertThat(initial["analysis"]["provider"].asText()).isEqualTo("Gemini")
+            assertThat(initial["aiApproval"].asText()).isEqualTo(config["documents"]["token"].asText())
+            stub();val first=next(user,initial)
+            environment.propertySources.remove(name)
+            mvc.perform(post("$path/${first["id"].asText()}/next").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("revision" to first["revision"].asLong()))))
+                .andExpect(status().isConflict).andExpect(jsonPath("$.code").value("AI_APPROVAL_CHANGED"))
+            verify(model,times(1)).generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
+            mvc.perform(get("$path/${first["id"].asText()}").with(caller(user))).andExpect(status().isOk).andExpect(jsonPath("$.completedBatches").value(1)).andExpect(jsonPath("$.analysis.provider").value("Gemini"))
+        } finally {environment.propertySources.remove(name)}
+    }
     @Test fun `whole-document planning covers every source character without requiring manual portions`() {
         val document=UUID.randomUUID();val source=(1..120).joinToString("\n") { "Line $it: explicit evidence with Kotlin and PostgreSQL, preserving each word." }
         val batches=com.careeragent.documents.application.DocumentAnalysisPlanner.batches(mapOf(document to source))

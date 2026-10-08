@@ -33,3 +33,7 @@ Ingen automatisk betalt fallback. Kvotefeil skal bevare arbeidet og tillate retr
 - [Gemini API-vilkår](https://ai.google.dev/gemini-api/terms)
 - [Groq rate limits](https://console.groq.com/docs/rate-limits)
 - [Groq databehandling](https://console.groq.com/docs/your-data)
+
+## Gemini integration — 2026-10-08
+
+The owner authorized opt-in Gemini integration. Stable 3.5 Flash passed the actual synthetic document-extraction/profile pipeline; 3.8 Flash model listing succeeded but generation returned 503. Keep Groq defaults when no provider is configured. Model distribution is explicit per task, without automatic quota failover. No owner documents were sent to Google during integration. See [Gemini setup](GEMINI_SETUP.md). Earlier candidate-only descriptions are superseded for this local slice; comparative real-document quality remains open.

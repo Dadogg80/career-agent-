@@ -1,3 +1,4 @@
+import { validAiApprovalField } from "./ai-configuration";
 import { retryAfterSeconds as parseRetryAfter } from "./retry-after";
 import { localRequest, privateBase, sessionHeaders, privateResponse, smallJson, mappedPrivateError } from "./private-api";
 import { claimId } from "./claims";
@@ -10,16 +11,16 @@ export async function documentAnalysisProxy(request: Request, id?: string) {
   if (request.method === "POST") {
     try {
       const input = await smallJson(request, 73728) as Record<string, unknown>;
-      if (!input || input.consent !== true || !["nb", "en"].includes(String(input.locale))) throw new Error("Invalid request");
+      if (!input || !validAiApprovalField(input) || input.consent !== true || !["nb", "en"].includes(String(input.locale))) throw new Error("Invalid request");
       if (id === undefined) {
-        if (Object.keys(input).sort().join(",") !== "consent,documents,locale" || !Array.isArray(input.documents) || input.documents.length < 1 || input.documents.length > 20) throw new Error("Invalid documents");
+        if (Object.keys(input).filter(key=>key!=="aiApproval").sort().join(",") !== "consent,documents,locale" || !Array.isArray(input.documents) || input.documents.length < 1 || input.documents.length > 20) throw new Error("Invalid documents");
         let total = 0; const ids = new Set<string>();
         for (const doc of input.documents) {
           if (!doc || Object.keys(doc).sort().join(",") !== "documentId,text" || typeof doc.documentId !== "string" || !claimId.test(doc.documentId) || ids.has(doc.documentId) || typeof doc.text !== "string" || !doc.text.trim()) throw new Error("Invalid document");
           ids.add(doc.documentId); total += doc.text.length;
         }
         if (total < 40 || total > 12000) throw new Error("Invalid size");
-      } else if (Object.keys(input).sort().join(",") !== "consent,locale,text" || typeof input.text !== "string" || input.text.trim().length < 40 || input.text.length > 12000) throw new Error("Invalid request");
+      } else if (Object.keys(input).filter(key=>key!=="aiApproval").sort().join(",") !== "consent,locale,text" || typeof input.text !== "string" || input.text.trim().length < 40 || input.text.length > 12000) throw new Error("Invalid request");
       body = JSON.stringify(input); headers.set("Content-Type", "application/json");
     } catch { return privateResponse({ code:"DOCUMENT_AI_INPUT_INVALID" }, undefined, 400); }
   }

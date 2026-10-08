@@ -16,11 +16,12 @@ class DocumentCollectionAnalysisController(services: ObjectProvider<DocumentAnal
     @GetMapping override fun load(@AuthenticationPrincipal principal: OidcUser?, @PathVariable(required = false) documentId: String?) = response(mapOf("analysis" to service().loadCollection(identity(principal))))
     @PostMapping(consumes = ["application/json"])
     override fun analyze(@AuthenticationPrincipal principal: OidcUser?, @PathVariable(required = false) documentId: String?, @RequestBody input: Map<String, Any?>): ResponseEntity<*> {
-        if (input.keys != setOf("documents", "locale", "consent") || input["documents"] !is List<*> || input["locale"] !is String || input["consent"] !is Boolean) throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID", 400)
+        if (input.filterKeys { it!="aiApproval" }.keys != setOf("documents", "locale", "consent") || input["documents"] !is List<*> || input["locale"] !is String || input["consent"] !is Boolean) throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID", 400)
         val documents = (input["documents"] as List<*>).map { item ->
             if (item !is Map<*, *> || item.keys != setOf("documentId", "text") || item["documentId"] !is String || item["text"] !is String) throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID", 400)
             DocumentExcerpt(id(item["documentId"] as String), item["text"] as String)
         }
-        return response(service().analyzeCollection(identity(principal), documents, input["locale"] as String, input["consent"] as Boolean))
+        if(input.containsKey("aiApproval") && input["aiApproval"] !is String)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
+        return response(service().analyzeCollection(identity(principal), documents, input["locale"] as String, input["consent"] as Boolean,input["aiApproval"] as? String))
     }
 }

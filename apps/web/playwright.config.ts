@@ -17,7 +17,7 @@ export default defineConfig({
     {
       command: "java -jar ../backend/build/libs/career-agent-backend.jar",
       url: "http://127.0.0.1:18080/actuator/health",
-      env: { SERVER_PORT: "18080", GROQ_API_KEY: "" },
+      env: { SERVER_PORT: "18080", GROQ_API_KEY: "", GEMINI_API_KEY: "", AI_PROVIDER: "groq", AI_JOB_PROVIDER: "groq", AI_DOCUMENT_PROVIDER: "groq", AI_PROFILE_PROVIDER: "groq", AI_MATCH_PROVIDER: "groq" },
       timeout: 60000,
       reuseExistingServer: false,
     },
