@@ -37,7 +37,10 @@ class GroqAiModel(
     internal fun providerFailure(status: Int, body: String, retryAfter: String?): AiFailure? = when (status) {
         200 -> null
         401, 403 -> AiFailure("AI_ACCESS_DENIED", 503)
-        429 -> AiFailure("AI_RATE_LIMITED", 429, cooldown.record(retryAfter))
+        429 -> {
+            val message = try { mapper.readTree(body).path("error").path("message").textValue() } catch (_: Exception) { null }
+            AiFailure("AI_RATE_LIMITED", 429, cooldown.record(retryAfter, message))
+        }
         400 -> {
             val code = try { mapper.readTree(body).path("error").path("code").asText() } catch (_: Exception) { "" }
             AiFailure(if (code == "json_validate_failed") "AI_INVALID_RESULT" else "AI_UNAVAILABLE", if (code == "json_validate_failed") 502 else 503, reason = if (code == "json_validate_failed") "PROVIDER_SCHEMA_MISMATCH" else null)

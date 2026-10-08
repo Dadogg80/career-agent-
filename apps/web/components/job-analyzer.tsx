@@ -1,4 +1,5 @@
 "use client";
+import { retryAfterSeconds as parseRetryAfter, retryWaitLabel } from "../lib/retry-after";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
@@ -37,7 +38,7 @@ async function post(path: string, input: unknown, signal?: AbortSignal) {
     const retryAfter = Number(value?.retryAfterSeconds ?? response.headers.get("retry-after"));
     const code = typeof value?.code === "string" && Object.hasOwn(jobTranslations.nb.errors, value.code) ? value.code : "AI_UNAVAILABLE";
     const providerRateLimit = ["AI_RATE_LIMITED", "SOURCE_RATE_LIMITED"].includes(code);
-    throw new RequestFailure(code, response.status === 429 && providerRateLimit ? Math.min(300, Math.max(1, Math.ceil(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : 60))) : undefined, response.status, durationMs, safeAnalysisReason(value?.reason));
+    throw new RequestFailure(code, response.status === 429 && providerRateLimit ? (parseRetryAfter(retryAfter) ?? 60) : undefined, response.status, durationMs, safeAnalysisReason(value?.reason));
   }
   return { value: value as unknown, httpStatus: response.status, durationMs };
 }
@@ -202,7 +203,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
           {!ready && <p role="status" className="hint">{t.starting}</p>}
           <noscript><p className="notice">{t.javascriptRequired}</p></noscript>
           {error && !result?.analysisFailed && !result?.refreshFailed && (error.startsWith("SOURCE_") || error.startsWith("AI_") || error === "NETWORK_ERROR" ? <WorkflowNotice code={error} locale={locale} onPaste={mode === "url" ? () => changeMode("text") : undefined}/> : <Alert variant="destructive" role="alert" className="feedback"><AlertDescription>{t.errors[error as keyof typeof t.errors] ?? t.errors.AI_UNAVAILABLE}</AlertDescription></Alert>)}
-          {retryIn > 0 && <p role="status" className="notice">{t.retryWait} {retryIn} {t.seconds}</p>}
+          {retryIn > 0 && <p role="status" className="notice">{t.retryWait} {retryIn >= 60 ? retryWaitLabel(retryIn) : `${retryIn} ${t.seconds}`}</p>}
           {phase === "cancelled" && <p role="status" className="hint">{t.cancelled}</p>}
           <div className="privacy-note"><ShieldCheck size={18}/><p>{t.privacy}</p></div>
         </CardContent></Card>

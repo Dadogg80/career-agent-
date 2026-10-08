@@ -1,3 +1,4 @@
+import { retryAfterSeconds as parseRetryAfter } from "../../../../lib/retry-after";
 import { safeAnalysisReason } from "../../../../lib/analysis-workflow";
 import { isExtraction } from "../../../../lib/job-requirements";
 
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
       const codes = ["INVALID_INPUT", "AI_NOT_CONFIGURED", "AI_ACCESS_DENIED", "AI_RATE_LIMITED", "AI_BUSY", "AI_BUDGET_REACHED", "AI_INVALID_RESULT", "AI_UNAVAILABLE"];
       const code = value && typeof value === "object" && "code" in value && codes.includes(String(value.code)) ? value.code : "AI_UNAVAILABLE";
       const seconds = Number(response.headers.get("retry-after"));
-      const retryAfterSeconds = response.status === 429 && Number.isFinite(seconds) && seconds > 0 ? Math.min(300, Math.ceil(seconds)) : undefined;
+      const retryAfterSeconds = response.status === 429 ? parseRetryAfter(seconds) : undefined;
       const reason = value && typeof value === "object" && "reason" in value ? safeAnalysisReason(value.reason) : undefined;
       return Response.json({ code, ...(reason ? { reason } : {}), ...(retryAfterSeconds ? { retryAfterSeconds } : {}) }, { headers: { "Cache-Control": "no-store", ...(retryAfterSeconds ? { "Retry-After": String(retryAfterSeconds) } : {}) }, status: [400, 429, 502, 503].includes(response.status) ? response.status : 503 });
     }

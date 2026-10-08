@@ -39,7 +39,12 @@ class GroqBrowserTransport(
                 when (connection.responseCode) {
                     200 -> Unit
                     401, 403 -> throw ImportFailure("SOURCE_ACCESS_DENIED", 503)
-                    429 -> throw ImportFailure("SOURCE_RATE_LIMITED", 429, cooldown.record(connection.getHeaderField("Retry-After")))
+                    429 -> {
+                        val message = try {
+                            connection.errorStream?.use { mapper.readTree(it.readNBytes(16384)).path("error").path("message").textValue() }
+                        } catch (_: Exception) { null }
+                        throw ImportFailure("SOURCE_RATE_LIMITED", 429, cooldown.record(connection.getHeaderField("Retry-After"), message))
+                    }
                     else -> throw ImportFailure("SOURCE_SEARCH_UNAVAILABLE", 503)
                 }
                 if (!connection.contentType.orEmpty().lowercase().startsWith("application/json")) throw ImportFailure("SOURCE_INVALID", 502)

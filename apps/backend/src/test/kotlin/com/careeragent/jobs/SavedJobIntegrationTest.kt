@@ -50,6 +50,12 @@ class SavedJobIntegrationTest {
   mvc.perform(get("$path/$id").with(caller(user))).andExpect(status().isOk)
   verifyNoInteractions(ai)
  }
+ @Test fun `partial results with many omitted items can still be saved and reopened`() {
+  val user = profile(); val id = save(user, content() + ("omittedItems" to 188))
+  mvc.perform(get("$path/$id").with(caller(user))).andExpect(status().isOk)
+   .andExpect(jsonPath("$.content.omittedItems").value(188)).andExpect(jsonPath("$.content.requirements[0].label").value("Kotlin"))
+  verifyNoInteractions(ai)
+ }
  @Test fun `subjects issuers anonymous requests CSRF and ownership injection cannot access other saved jobs`() {
   val user = profile(); val other = profile(); profile(user, "https://other.example.test"); val id = save(user)
   mvc.perform(get(path)).andExpect(status().isUnauthorized)

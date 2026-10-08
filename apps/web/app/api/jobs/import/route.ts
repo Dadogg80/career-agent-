@@ -1,3 +1,4 @@
+import { retryAfterSeconds as parseRetryAfter } from "../../../../lib/retry-after";
 import { isImportedJob } from "../../../../lib/job-import";
 
 export async function POST(request: Request) {
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
       const codes = ["INVALID_URL", "SOURCE_UNSUPPORTED", "SOURCE_NOT_AVAILABLE", "SOURCE_INVALID", "SOURCE_TOO_LARGE", "SOURCE_UNAVAILABLE", "SOURCE_BUSY", "SOURCE_AI_NOT_CONFIGURED", "SOURCE_ACCESS_DENIED", "SOURCE_RATE_LIMITED", "SOURCE_SEARCH_UNAVAILABLE", "SOURCE_SEARCH_DISABLED", "SOURCE_BUDGET_REACHED"];
       const code = value && typeof value === "object" && "code" in value && codes.includes(String(value.code)) ? value.code : "SOURCE_UNAVAILABLE";
       const seconds = Number(response.headers.get("retry-after"));
-      const retryAfterSeconds = response.status === 429 && Number.isFinite(seconds) && seconds > 0 ? Math.min(300, Math.ceil(seconds)) : undefined;
+      const retryAfterSeconds = response.status === 429 ? parseRetryAfter(seconds) : undefined;
       return Response.json({ code, ...(retryAfterSeconds ? { retryAfterSeconds } : {}) }, { headers: { "Cache-Control": "no-store", ...(retryAfterSeconds ? { "Retry-After": String(retryAfterSeconds) } : {}) }, status: [400, 404, 413, 429, 502, 503].includes(response.status) ? response.status : 503 });
     }
     if (!isImportedJob(value)) throw new Error("Invalid result");

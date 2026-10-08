@@ -1,3 +1,4 @@
+import { retryAfterSeconds as parseRetryAfter } from "./retry-after";
 import { localRequest, privateBase, sessionHeaders, privateResponse, smallJson, mappedPrivateError } from "./private-api";
 import { claimId } from "./claims";
 import { isDocumentAnalysis } from "./document-analysis";
@@ -29,7 +30,7 @@ export async function documentAnalysisProxy(request: Request, id?: string) {
       const reason = safeAnalysisReason(value && typeof value === "object" && "reason" in value ? value.reason : undefined);
       const retry = upstream.headers.get("retry-after");
       const response = privateResponse({ ...mappedPrivateError(value), ...(reason ? { reason } : {}) }, upstream, [400,401,403,404,409,429,502,503].includes(upstream.status) ? upstream.status : 503);
-      if (upstream.status === 429 && retry && /^\d{1,3}$/.test(retry)) response.headers.set("Retry-After", String(Math.min(300, Math.max(1, Number(retry)))));
+      if (upstream.status === 429 && parseRetryAfter(retry)) response.headers.set("Retry-After", String(parseRetryAfter(retry)));
       return response;
     }
     if (request.method === "GET") {

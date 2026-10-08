@@ -100,7 +100,7 @@ test("quota and invalid AI replies preserve previous analysis without automatica
   await page.getByRole("button", { name:"Read text and add competency", exact:true }).click(); const dialog = page.getByRole("dialog");
   const submit = dialog.getByRole("button", { name:"Summarize competencies with AI", exact:true });
   await dialog.getByRole("checkbox").check(); await submit.click();
-  await expect(dialog.locator(".workflow-notice")).toContainText("AI needs a pause"); await expect(submit).toBeDisabled();
+  await expect(dialog.locator(".workflow-notice")).toContainText("The AI quota has been reached"); await expect(submit).toBeDisabled();
   await expect(submit).toBeEnabled({ timeout:5000 }); expect(calls).toBe(1);
   await submit.click(); await expect(dialog.locator(".workflow-notice")).toContainText("previous assessment is retained");
   await expect(dialog.getByRole("region", { name:"Competency summary" })).toContainText("API development with Kotlin"); expect(calls).toBe(2);

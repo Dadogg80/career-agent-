@@ -38,7 +38,9 @@ The loading component shows actual stages and a countdown, with a decorative doc
 
 ## Quota limits remain real
 
-Ten seconds is a configurable pacing aid, not an assurance that the shared account/model token quota has reset. Playground, other clients and browser tool work can consume the same quota. The UI still honors bounded reactive provider Retry-After cooldowns and offers a manual retry using fetched text. It does not poll for quota, forecast token availability, automatically retry failures, rotate keys or upgrade the account.
+Ten seconds is a configurable pacing aid, not an assurance that the shared account/model token quota has reset. Playground, other clients and browser tool work can consume the same quota. Quota waits can be minutes or hours, especially for tokens per day. Cooldown handling now preserves positive numeric or HTTP-date Retry-After hints and a recognized Groq “Please try again in …” duration, choosing the longer valid hint and bounding it to 24 hours. Invalid/missing hints default to 60 seconds. This is provider feedback, not a guarantee that the next request will fit the available quota.
+
+The shared backend cooldown blocks further provider dispatch after a rate response, including calls from other features. Advertisement, document and personal-matching proxies and controls preserve the delay; they no longer shorten it to five minutes. Long UI waits display minutes/hours. Existing text and earlier saved results remain available. The cooldown is process-local and is lost on backend restart; the provider still enforces its quota. The app does not poll for quota, forecast token availability, automatically retry failures, rotate keys or upgrade the account.
 
 No advertisement body, title, full URL, contact details, raw provider payload, exception message or API key is added to console events. Development source inspection is explicitly expanded in the UI. Current use remains public advertisements only; this does not authorize private CV diagnostics or production private-data processing.
 
@@ -50,3 +52,5 @@ Automated browser tests mock provider outcomes or disable the backend key. They 
 ## Analysis rejected after Groq HTTP 200
 
 HTTP 200 means the provider returned a response, not that the app accepted the structured content/evidence. The backend and DEV events now include an allowlisted reason: PROVIDER_SCHEMA_MISMATCH, OUTPUT_INCOMPLETE, EMPTY_OUTPUT, MALFORMED_JSON, INVALID_STRUCTURE or NO_SUPPORTED_ITEMS. No raw failed_generation, provider body or input text is logged. A failed analysis shows the available source excerpt and a retry, without an empty result panel. Missing structured fields mean not identified, not proof they are absent from the source. Private CV import never uses this diagnostic panel.
+
+Individual invalid/overlong fields and unsupported quotes are omitted without discarding valid sourced items. Result limits remain 12 requirements and 10 facts; at most 128 candidates from each array are inspected. Excess/invalid item counts are reported through `omittedItems`, including counts beyond the old 22-item assumption so partial results can still be saved. Logs include only omission categories/counts. Malformed top-level JSON/containers remain errors; if every proposed item is invalid, the source-reader recovery remains available. No extra repair call is made to Groq.

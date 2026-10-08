@@ -60,3 +60,29 @@ test("matching proxy rejects missing approval spoofed statements owner injection
  expect((await request.post(path,{data:{...input,ownerId:claimId}})).status()).toBe(400);
  expect((await request.post(path,{data:input,headers:{Origin:"https://unrelated.example"}})).status()).toBe(403);
 });
+
+test("daily quota keeps matching blocked beyond five minutes and preserves the earlier assessment", async ({ page }) => {
+ let calls = 0;
+ await page.route("**/api/auth/session", r => r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
+ await page.route("**/api/profile/me/claims", r => r.fulfill({json:[confirmed]}));
+ await page.route("**/api/profile/me/jobs**", r => {
+  if (r.request().url().endsWith("/match")) {
+   if (r.request().method() === "GET") return r.fulfill({json:result});
+   calls++; return r.fulfill({status:429,headers:{"Retry-After":"968"},json:{code:"AI_RATE_LIMITED"}});
+  }
+  return r.fulfill({json:[job]});
+ });
+ await page.goto("/jobs/saved");
+ await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();
+ const sheet = page.getByRole("dialog");
+ await sheet.getByRole("button",{name:"Velg grunnlag for personlig matching",exact:true}).click();
+ await sheet.locator(".match-claim").getByRole("checkbox").check();
+ await sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Groq for denne matchingen"}).check();
+ await page.clock.install();
+ const submit = sheet.getByRole("button",{name:"Analyser personlig match",exact:true}); await submit.click();
+ await expect(sheet).toContainText("16 min 8 s");
+ await expect(sheet.locator(".workflow-notice")).toContainText("Den tidligere vurderingen er beholdt");
+ await expect(sheet.locator(".match-result")).toBeVisible();
+ await page.clock.fastForward(300000); await expect(submit).toBeDisabled(); expect(calls).toBe(1);
+ await page.clock.fastForward(668000); await expect(submit).toBeEnabled(); expect(calls).toBe(1);
+});

@@ -124,6 +124,85 @@ class RequirementExtractorTest {
         catch (failure: AiFailure) { assertThat(failure.reason).isEqualTo("NO_SUPPORTED_ITEMS") }
     }
 
+    @Test
+    fun `an overlong narrative does not discard valid requirements or contact information`() {
+        var calls = 0
+        val text = source + " Kontakt: Kari Test, kari@example.test."
+        val service = RequirementExtractor(object : AiModel {
+            override fun generateJson(system: String, user: String, schema: Map<String, Any>): String {
+                calls++
+                return jacksonObjectMapper().writeValueAsString(mapOf(
+                    "requirements" to listOf(mapOf("label" to "Kotlin", "kind" to "REQUIRED", "quote" to "Du må ha erfaring med Kotlin.")),
+                    "facts" to listOf(
+                        mapOf("label" to "Bedrift", "kind" to "COMPANY", "value" to "x".repeat(501), "quote" to "Vi søker en utvikler."),
+                        mapOf("label" to "Kontakt", "kind" to "CONTACT", "value" to "Kari Test", "quote" to "Kontakt: Kari Test, kari@example.test."),
+                    ),
+                ))
+            }
+        }, jacksonObjectMapper())
+        val result = service.extract(text, "nb")
+        assertThat(result.requirements.map { it.label }).containsExactly("Kotlin")
+        assertThat(result.facts.map { it.kind }).containsExactly(JobFactKind.CONTACT)
+        assertThat(result.omittedItems).isEqualTo(1)
+        assertThat(calls).isEqualTo(1)
+    }
+
+    @Test
+    fun `malformed individual items are omitted without bypassing evidence or classification checks`() {
+        val invalid = listOf<Any?>(
+            null, "Kotlin", mapOf("label" to listOf("Kotlin"), "kind" to "REQUIRED", "quote" to "Kotlin"),
+            mapOf("label" to "Kotlin", "kind" to "CONFIRMED", "quote" to "Kotlin"),
+            mapOf("label" to "Kotlin", "kind" to "REQUIRED", "quote" to "x".repeat(601)),
+            mapOf("label" to "Kotlin", "kind" to "REQUIRED", "quote" to "Invented wording"),
+        )
+        val result = extractor(jacksonObjectMapper().writeValueAsString(mapOf(
+            "requirements" to invalid + mapOf("label" to "Kotlin", "kind" to "REQUIRED", "quote" to "Kotlin"),
+            "facts" to listOf(mapOf("label" to "Rolle", "value" to "Utvikler", "kind" to "GUESS", "quote" to "utvikler")),
+        ))).extract(source, "nb")
+        assertThat(result.requirements).containsExactly(ExtractedRequirement("Kotlin", RequirementKind.REQUIRED, "Kotlin"))
+        assertThat(result.facts).isEmpty()
+        assertThat(result.omittedItems).isEqualTo(7)
+    }
+
+    @Test
+    fun `oversized arrays retain bounded valid items and report every omission`() {
+        val result = extractor(jacksonObjectMapper().writeValueAsString(mapOf(
+            "requirements" to List(13) { mapOf("label" to "Kotlin", "kind" to "REQUIRED", "quote" to "Kotlin") },
+            "facts" to List(11) { mapOf("label" to "Rolle", "value" to "Utvikler", "kind" to "ROLE", "quote" to "utvikler") },
+        ))).extract(source, "en")
+        assertThat(result.requirements).hasSize(12)
+        assertThat(result.facts).hasSize(10)
+        assertThat(result.omittedItems).isEqualTo(2)
+    }
+
+    @Test
+    fun `invalid items do not consume the retained result capacity`() {
+        val result = extractor(jacksonObjectMapper().writeValueAsString(mapOf(
+            "requirements" to List(12) { mapOf("label" to "", "kind" to "REQUIRED", "quote" to "Kotlin") } +
+                mapOf("label" to "Kotlin", "kind" to "REQUIRED", "quote" to "Kotlin"), "facts" to emptyList<Any>(),
+        ))).extract(source, "nb")
+        assertThat(result.requirements).hasSize(1)
+        assertThat(result.omittedItems).isEqualTo(12)
+    }
+
+    @Test
+    fun `inspection is bounded even when the model returns hundreds of items`() {
+        val result = extractor(jacksonObjectMapper().writeValueAsString(mapOf(
+            "requirements" to List(200) { mapOf("label" to "Kotlin", "kind" to "REQUIRED", "quote" to "Kotlin") },
+            "facts" to emptyList<Any>(),
+        ))).extract(source, "nb")
+        assertThat(result.requirements).hasSize(12)
+        assertThat(result.omittedItems).isEqualTo(188)
+    }
+
+    @Test
+    fun `invalid top level containers remain structural errors`() {
+        for (json in listOf("[]", "null", "{\"requirements\":[],\"facts\":{}}")) {
+            assertThatThrownBy { extractor(json).extract(source, "nb") }
+                .isInstanceOfSatisfying(AiFailure::class.java) { assertThat(it.reason).isEqualTo("INVALID_STRUCTURE") }
+        }
+    }
+
     private fun assertInvalid(result: String) {
         assertThatThrownBy { extractor(result).extract(source, "nb") }
             .isInstanceOf(AiFailure::class.java).hasMessage("AI_INVALID_RESULT")

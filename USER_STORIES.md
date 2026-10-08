@@ -1,6 +1,6 @@
 # User stories
 
-Status: Working stories. US-23 is implemented for a bounded local test on feat/job-requirements. The original profile/matching stories are not complete. P0 targets the first useful delivery, P1 the proposed complete MVP and P2 later improvements. Acceptance criteria are requirements; the development log records actual validation.
+Status: Working stories. The merged local pilot includes bounded advertisement analysis plus optional owned profile/documents, saved jobs, approved matching, standard CV export and manual application tracking. This does not complete every original profile/matching requirement. P0 targets the first useful delivery, P1 the proposed complete MVP and P2 later improvements. Acceptance criteria are requirements; the development log records actual validation.
 
 ## Current pilot slice
 
@@ -13,6 +13,8 @@ As a jobseeker, I want to paste a public advertisement and inspect AI-extracted 
 - Retain input on error and mark results as stale after source edits.
 - Explain external Groq processing before submission. Do not persist data or generate a candidate score.
 - Limit input, output, concurrent inference and attempts; do not enable a paid fallback.
+- Retain valid source-backed items if another AI item has invalid fields or exceeds limits; preserve citation validation and bounded result sizes.
+- Preserve long provider quota delays through backend, proxies and UI; do not shorten a daily-quota wait to five minutes. Keep source text and previous usable results without automatic retries or extra repair calls.
 - A real browser call must reach the backend through the proxy; tests with no configured key must make no provider calls.
 
 This slice does not replace the persistence, ownership or matching requirements of US-04/US-05.

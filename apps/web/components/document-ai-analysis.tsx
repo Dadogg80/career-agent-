@@ -1,4 +1,5 @@
 "use client";
+import { retryAfterSeconds as parseRetryAfter, retryWaitLabel } from "../lib/retry-after";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Sparkles, LoaderCircle, Search, FileSearch, ListChecks, ShieldCheck } from "lucide-react";
@@ -50,7 +51,7 @@ export function DocumentAiAnalysis({ id, text, locale, csrfToken, onAuthRequired
     if (!response.ok) {
       const code = value && typeof value === "object" && "code" in value && Object.hasOwn(t.errors, String(value.code)) ? String(value.code) : "DOCUMENT_UNAVAILABLE";
       const retry = Number(response.headers.get("retry-after"));
-      throw new AnalysisError(code, response.status === 429 && code === "AI_RATE_LIMITED" ? Math.min(300, Math.max(1, retry || 60)) : undefined);
+      throw new AnalysisError(code, response.status === 429 && code === "AI_RATE_LIMITED" ? (parseRetryAfter(retry) ?? 60) : undefined);
     }
     if (value !== null && !isDocumentAnalysis(value)) throw new AnalysisError("AI_INVALID_RESULT");
     return value as DocumentAnalysis | null;
@@ -78,7 +79,7 @@ export function DocumentAiAnalysis({ id, text, locale, csrfToken, onAuthRequired
     {saved.isPending && <p role="status">{t.loading}</p>}
     {analysis.isPending && <p role="status" className="hint mt-3">{t.busy}</p>}
     {message && (error?.message.startsWith("AI_") ? <WorkflowNotice code={error.message} locale={locale} area="documents" retained previous={!!value}/> : <Alert variant="destructive" role="alert"><AlertDescription>{message}</AlertDescription></Alert>)}
-    {remaining > 0 && <p role="status">{t.wait}: {remaining} {t.seconds}</p>}
+    {remaining > 0 && <p role="status">{t.wait}: {remaining >= 60 ? retryWaitLabel(remaining) : `${remaining} ${t.seconds}`}</p>}
     {saved.isError && <Button variant="outline" onClick={() => void saved.refetch()}>{t.retry}</Button>}
     {chosen && <p role="status" className="claim-notice mt-3">{t.chosen}</p>}
   </CardContent></Card><Card className="document-ai-output"><CardHeader><h3 className="flex items-center gap-2"><Sparkles size={18}/>{documents ? locale === "nb" ? "Samlet kompetanse fra dokumentene" : "Combined document competencies" : t.title}</h3><p className="hint">{locale === "nb" ? "Kildebaserte forslag. Du velger hva som beskriver deg." : "Source-backed suggestions. You decide what describes you."}</p></CardHeader><CardContent>

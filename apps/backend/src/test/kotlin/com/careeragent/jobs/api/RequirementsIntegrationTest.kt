@@ -31,6 +31,19 @@ class RequirementsIntegrationTest @Autowired constructor(private val client: Tes
     }
 
     @Test
+    fun `one invalid AI fact returns a partial successful analysis instead of 502`() {
+        `when`(model.generateJson(anyString(), anyString(), anyMap())).thenReturn(
+            """{"requirements":[{"label":"Kotlin","kind":"REQUIRED","quote":"Kotlin"}],"facts":[{"kind":"ROLE","label":"Rolle","value":"${"x".repeat(501)}","quote":"utvikler"}]}""",
+        )
+        val response = client.postForEntity("/api/jobs/requirements", ExtractionRequest(source), Map::class.java)
+        assertThat(response.statusCode).isEqualTo(HttpStatus.OK)
+        assertThat(response.body?.get("requirements") as List<*>).hasSize(1)
+        assertThat(response.body?.get("facts") as List<*>).isEmpty()
+        assertThat(response.body?.get("omittedItems")).isEqualTo(1)
+        verify(model, times(1)).generateJson(anyString(), anyString(), anyMap())
+    }
+
+    @Test
     fun `bad input is rejected before calling the provider`() {
         val response = client.postForEntity("/api/jobs/requirements", ExtractionRequest("short"), Map::class.java)
         assertThat(response.statusCode).isEqualTo(HttpStatus.BAD_REQUEST)

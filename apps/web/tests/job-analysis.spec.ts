@@ -29,7 +29,7 @@ test("English request and UI error retain the advertisement", async ({ page }) =
   await page.getByRole("combobox", { name: "Språk" }).selectOption("en");
   await page.getByRole("textbox", { name: "Job advertisement" }).fill(source);
   await page.getByRole("button", { name: "Analyze", exact: true }).click();
-  await expect(page.locator(".workflow-notice")).toContainText("needs a short pause");
+  await expect(page.locator(".workflow-notice")).toContainText("is waiting for available AI quota");
   await expect(page.getByRole("textbox", { name: "Job advertisement" })).toHaveValue(source);
   expect(requestedLocale).toBe("en");
 });

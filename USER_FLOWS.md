@@ -1,6 +1,8 @@
 # Brukerflyter
 
-Status: Proposed full MVP flows. The full flows below are not implemented. A bounded public-advertisement flow (US-23) is available on feat/job-requirements: paste text → explicitly send to Groq → inspect categories and source quotations → edit/retry. It has no candidate matching or persistence. Story IDs refer to [USER_STORIES.md](USER_STORIES.md).
+Status: The complete future flows below remain a design. The merged local pilot supports public URL/text analysis and optional authenticated profile/documents, saved jobs, approved matching, reviewed CV export and manual application tracking. The maintenance slice retains valid cited items when other AI fields fail and preserves long quota waits. Story IDs refer to [USER_STORIES.md](USER_STORIES.md).
+
+Maintenance recovery: source retrieved → analyze once → retain valid cited items and report omissions. If the whole response is unusable or quota is reached, keep the source reader and any previous valid result. A quota response establishes a shared backend cooldown; proxies/UI preserve the duration and no automatic retry occurs. Existing saved analyses can be reopened without another provider call. A new manual attempt after the wait may still exceed the provider quota.
 
 ## 1. Fra første besøk til søknad
 
