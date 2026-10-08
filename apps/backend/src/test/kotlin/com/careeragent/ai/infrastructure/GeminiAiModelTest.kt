@@ -86,7 +86,7 @@ class GeminiAiModelTest {
         val approved = config.preview(AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)
         assertThat(approved.selections.map { it.provider }).containsExactly("Gemini","Groq")
         assertThat(config.requireApproval(approved.token,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)).isEqualTo(approved)
-        env.setProperty("GEMINI_DOCUMENT_MODEL","gemini-3.5-flash-lite")
+        env.setProperty("GEMINI_DOCUMENT_MODEL","gemini-3.5-flash")
         assertThatThrownBy { config.requireApproval(approved.token,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY) }.isInstanceOf(AiFailure::class.java)
     }
     @Test fun `configured alternatives have scoped approvals and request local selection does not mutate defaults`() {
@@ -97,10 +97,46 @@ class GeminiAiModelTest {
         assertThat(gemini.available).isTrue()
         val plan=routing.resolveApproval(gemini.approval.token,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)
         assertThat(plan.tasks.values.map { it.provider }).containsOnly("Gemini")
+        assertThat(plan.tasks.values.map { it.model }).containsOnly("gemini-3.5-flash-lite")
         assertThat(routing.selection(AiTask.DOCUMENT_EXTRACTION).provider).isEqualTo("Groq")
         assertThatThrownBy { routing.resolveApproval(gemini.approval.token,AiTask.PERSONAL_MATCH) }.isInstanceOf(AiFailure::class.java)
         env.setProperty("GEMINI_API_KEY","")
         assertThatThrownBy { routing.resolveApproval(gemini.approval.token,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY) }.isInstanceOf(AiFailure::class.java)
+    }
+    @Test fun `Lite defaults apply to document and profile tasks while analytical and Groq overrides remain intact`() {
+        val env = MockEnvironment().withProperty("AI_PROVIDER", "gemini")
+            .withProperty("GEMINI_MODEL", "gemini-3.5-flash")
+        val config = AiRouting(env)
+        for (task in listOf(AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY)) {
+            assertThat(config.selection(task)).isEqualTo(AiSelection("Gemini", "gemini-3.5-flash-lite"))
+        }
+        for (task in listOf(AiTask.JOB_ANALYSIS, AiTask.PERSONAL_MATCH)) {
+            assertThat(config.selection(task)).isEqualTo(AiSelection("Gemini", "gemini-3.5-flash"))
+        }
+        env.setProperty("GEMINI_DOCUMENT_MODEL", "gemini-3.5-flash")
+        env.setProperty("GEMINI_PROFILE_MODEL", "gemini-3.5-flash")
+        assertThat(config.selection(AiTask.DOCUMENT_EXTRACTION).model).isEqualTo("gemini-3.5-flash")
+        assertThat(config.selection(AiTask.PROFILE_SUMMARY).model).isEqualTo("gemini-3.5-flash")
+        env.setProperty("GEMINI_MATCH_MODEL", "gemini-3.5-flash-lite")
+        assertThat(config.selection(AiTask.PERSONAL_MATCH).model).isEqualTo("gemini-3.5-flash-lite")
+        assertThat(AiRouting(MockEnvironment()).selection(AiTask.DOCUMENT_EXTRACTION)).isEqualTo(AiSelection("Groq", "openai/gpt-oss-20b"))
+        env.setProperty("GROQ_MODEL", "openai/gpt-oss-120b")
+        assertThat(config.selection(AiTask.DOCUMENT_EXTRACTION, "groq").model).isEqualTo("openai/gpt-oss-120b")
+    }
+
+    @Test fun `moving a private Flash plan to Lite requires renewed approval`() {
+        val env = MockEnvironment().withProperty("AI_PROVIDER", "gemini")
+            .withProperty("GEMINI_DOCUMENT_MODEL", "gemini-3.5-flash")
+            .withProperty("GEMINI_PROFILE_MODEL", "gemini-3.5-flash")
+        val config = AiRouting(env)
+        val previous = config.preview(AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY)
+        env.setProperty("GEMINI_DOCUMENT_MODEL", "")
+        env.setProperty("GEMINI_PROFILE_MODEL", "")
+        assertThatThrownBy { config.resolveApproval(previous.token, AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY) }
+            .isInstanceOfSatisfying(AiFailure::class.java) { assertThat(it.code).isEqualTo("AI_APPROVAL_CHANGED") }
+        val renewed = config.preview(AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY)
+        assertThat(renewed.selections).containsExactly(AiSelection("Gemini", "gemini-3.5-flash-lite"))
+        assertThat(config.resolveApproval(renewed.token, AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY).approval).isEqualTo(renewed)
     }
     @Test fun `explicit selected Gemini adapter runs even while default routing is Groq`() {
         val client=mock(HttpClient::class.java)

@@ -24,12 +24,17 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
         val provider = explicitProvider?.lowercase() ?: value("AI_${suffix}_PROVIDER", value("AI_PROVIDER", "groq")).lowercase()
         val defaultModel = when (provider) {
             "groq" -> "openai/gpt-oss-20b"
-            "gemini" -> "gemini-3.5-flash"
+            "gemini" -> when (task) {
+                AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY -> "gemini-3.5-flash-lite"
+                else -> value("GEMINI_MODEL", "gemini-3.5-flash")
+            }
             else -> throw AiFailure("AI_NOT_CONFIGURED", 503)
         }
         val prefix = provider.uppercase()
+        // Document/profile tasks have independent defaults; explicit task overrides still win.
+        val modelFallback = if (provider == "groq") value("GROQ_MODEL", defaultModel) else defaultModel
         return AiSelection(if (provider == "gemini") "Gemini" else "Groq",
-            value("${prefix}_${suffix}_MODEL", value("${prefix}_MODEL", defaultModel)))
+            value("${prefix}_${suffix}_MODEL", modelFallback))
     }
 
     private fun plan(tasks: Array<out AiTask>, provider: String? = null): AiPlan {

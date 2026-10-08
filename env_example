@@ -22,13 +22,16 @@ DATABASE_PASSWORD=""
 # Optional Gemini integration; values are examples, never real keys.
 # GEMINI_API_KEY=
 # AI_PROVIDER=groq
+# Gemini job/match fallback; document/profile defaults are independently Flash Lite.
 # GEMINI_MODEL=gemini-3.5-flash
 # AI_JOB_PROVIDER=
 # AI_DOCUMENT_PROVIDER=
 # AI_PROFILE_PROVIDER=
 # AI_MATCH_PROVIDER=
 # GEMINI_JOB_MODEL=
+# Optional explicit override (default gemini-3.5-flash-lite).
 # GEMINI_DOCUMENT_MODEL=
+# Optional explicit override (default gemini-3.5-flash-lite).
 # GEMINI_PROFILE_MODEL=
 # GEMINI_MATCH_MODEL=
 # DOCUMENT_GEMINI_BATCH_DELAY_SECONDS=5

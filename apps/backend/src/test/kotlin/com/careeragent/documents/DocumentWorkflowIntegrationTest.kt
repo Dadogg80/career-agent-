@@ -104,13 +104,14 @@ class DocumentWorkflowIntegrationTest {
             assertThat(switched["approvedDocuments"][0]["text"].asText()).isEqualTo(text)
             assertThat(switched["nextAt"].isNull).isTrue()
             assertThat(switched["plannedSelections"][0]["provider"].asText()).isEqualTo("Gemini")
-            `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION),(any(AiSelection::class.java) ?: AiSelection("Gemini","gemini-3.5-flash")))).thenReturn(output())
+            assertThat(switched["plannedSelections"][0]["model"].asText()).isEqualTo("gemini-3.5-flash-lite")
+            `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION),(any(AiSelection::class.java) ?: AiSelection("Gemini","gemini-3.5-flash-lite")))).thenReturn(output())
             val continued=next(user,switched)
             assertThat(continued["completedBatches"].asInt()).isEqualTo(2)
             assertThat(continued["analysis"]["suggestions"].size()).isEqualTo(2)
             assertThat(continued["analysis"]["provider"].asText()).isEqualTo("Groq + Gemini")
             assertThat(continued["analysis"]["aiSelections"].map { it["provider"].asText() }).containsExactly("Groq","Gemini")
-            verify(model,times(1)).generateJson(anyString(),anyString(),anyMap(),(eq(AiTask.DOCUMENT_EXTRACTION) ?: AiTask.DOCUMENT_EXTRACTION),(eq(AiSelection("Gemini","gemini-3.5-flash")) ?: AiSelection("Gemini","gemini-3.5-flash")))
+            verify(model,times(1)).generateJson(anyString(),anyString(),anyMap(),(eq(AiTask.DOCUMENT_EXTRACTION) ?: AiTask.DOCUMENT_EXTRACTION),(eq(AiSelection("Gemini","gemini-3.5-flash-lite")) ?: AiSelection("Gemini","gemini-3.5-flash-lite")))
         } finally {environment.propertySources.remove(name)}
     }
     @Test fun `whole-document planning covers every source character without requiring manual portions`() {
