@@ -58,7 +58,7 @@ export function DocumentPanel({ locale, csrfToken, onAuthRequired }: { locale: L
     if (command.kind === "reread" && isDocumentDetail(value)) { cache.setQueryData(["private-document-detail",command.document.id],value); setReadingRevision(previous => previous + 1); } else cache.removeQueries({ queryKey:["private-document-detail"] }); cache.removeQueries({ queryKey:["private-document-analysis"] }); cache.removeQueries({ queryKey:["private-document-collection-text"] });
     await cache.invalidateQueries({ queryKey:["private-documents"] });
     await cache.invalidateQueries({ queryKey:["private-document-profile"] });
-    if (command.kind === "claim" || command.kind === "delete") { cache.removeQueries({ queryKey:["private-claim-history"] }); cache.removeQueries({ queryKey:["private-claim-evidence"] }); await cache.invalidateQueries({ queryKey:["private-claims"] }); }
+    if (command.kind === "claim" || command.kind === "delete") { cache.removeQueries({ queryKey:["private-claim-history"] }); cache.removeQueries({ queryKey:["private-claim-evidence"] }); await cache.invalidateQueries({ queryKey:["private-claims"] }); await cache.invalidateQueries({queryKey:["private-claim-context"]}); }
   } });
   const message = (error: Error | null) => error ? t.errors[error.message as keyof typeof t.errors] ?? t.errors.DOCUMENT_UNAVAILABLE : null;
   function open(document: CareerDocument, kind: "read" | "delete" | "collection") { mutation.reset(); setNotice(null); setDraft(blank); setModal({ document, kind }); }

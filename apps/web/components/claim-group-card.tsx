@@ -8,7 +8,7 @@ import type { Locale } from "../lib/translations";
 import { Badge } from "./ui/badge";
 import { ClaimEvidence } from "./claim-evidence";
 
-export function ClaimGroupCard({ group, locale, actions }: { group: ClaimGroup; locale: Locale; actions: (claim: CompetencyClaim) => ReactNode }) {
+export function ClaimGroupCard({ group, locale, actions, careerLinks }: { group: ClaimGroup; locale: Locale; actions: (claim: CompetencyClaim) => ReactNode; careerLinks?: (claim: CompetencyClaim) => ReactNode }) {
   const nb = locale === "nb";
   const status = { UNVERIFIED: nb ? "Ubekreftet" : "Unverified", INFERRED: nb ? "Utledet" : "Inferred", CONFIRMED: nb ? "Bekreftet" : "Confirmed", REJECTED: nb ? "Avvist" : "Rejected" };
   const label = (claim: CompetencyClaim) => claim.confirmationBasis === "DOCUMENT" ? nb ? "Dokumentert" : "Document-backed" : status[claim.status];
@@ -16,7 +16,7 @@ export function ClaimGroupCard({ group, locale, actions }: { group: ClaimGroup; 
   const evidence = (claim: CompetencyClaim) => <details className="claim-evidence-details"><summary>{source}</summary><p className="claim-source">{claim.sourceNote}</p>{claim.sourceQuote && <blockquote className="claim-source">{claim.sourceQuote}</blockquote>}<p className="hint">{nb ? "Revisjon" : "Revision"}: {claim.revision}</p><ClaimEvidence id={claim.id} locale={locale}/></details>;
   if (group.claims.length === 1) {
     const claim = group.claims[0];
-    return <article className="claim-tile claim-single" aria-label={group.label}><div className="claim-heading"><h3>{group.label}</h3><Badge variant="outline" data-claim-status={claim.status}>{label(claim)}</Badge></div><p className="claim-statement" tabIndex={0} role="region" aria-label={`${nb ? "Forklaring" : "Explanation"}: ${group.label}`}>{claim.statement}</p><p className="hint">{claim.context}</p>{evidence(claim)}{actions(claim)}</article>;
+    return <article className="claim-tile claim-single" aria-label={group.label}><div className="claim-heading"><h3>{group.label}</h3><Badge variant="outline" data-claim-status={claim.status}>{label(claim)}</Badge></div><p className="claim-statement" tabIndex={0} role="region" aria-label={`${nb ? "Forklaring" : "Explanation"}: ${group.label}`}>{claim.statement}</p><p className="hint">{claim.context}</p>{evidence(claim)}{careerLinks?.(claim)}{actions(claim)}</article>;
   }
   const ready = group.claims.filter(claim => claim.status === "CONFIRMED");
   const pending = group.claims.filter(claim => ["UNVERIFIED", "INFERRED"].includes(claim.status));
@@ -35,7 +35,7 @@ export function ClaimGroupCard({ group, locale, actions }: { group: ClaimGroup; 
     </div>
     {contexts.length > 0 && <p className="claim-group-contexts"><Building2 size={14}/><span>{contexts.join(" · ")}</span></p>}
     <details className="claim-group-contributions"><summary><span>{nb ? "Se bidrag, kilder og rediger" : "View contributions, sources and edit"}</span><ChevronDown size={16}/></summary><div className="claim-group-contribution-list">
-      {group.claims.map(claim => <section key={claim.id} data-contribution-id={claim.id} aria-label={`${group.label}: ${claim.context}`}><div className="claim-heading"><strong>{claim.context}</strong><Badge variant="outline" data-claim-status={claim.status}>{label(claim)}</Badge></div><p className="claim-statement-full">{claim.statement}</p>{evidence(claim)}{actions(claim)}</section>)}
+      {group.claims.map(claim => <section key={claim.id} data-contribution-id={claim.id} aria-label={`${group.label}: ${claim.context}`}><div className="claim-heading"><strong>{claim.context}</strong><Badge variant="outline" data-claim-status={claim.status}>{label(claim)}</Badge></div><p className="claim-statement-full">{claim.statement}</p>{evidence(claim)}{careerLinks?.(claim)}{actions(claim)}</section>)}
     </div></details>
   </article>;
 }

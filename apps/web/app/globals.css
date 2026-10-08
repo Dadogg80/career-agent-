@@ -495,3 +495,20 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 .coverage-passages article { padding:.75rem 0; border-bottom:1px solid var(--border); }
 .coverage-passages article>div { display:flex; flex-wrap:wrap; gap:.5rem; align-items:center; }
 .coverage-passages blockquote { white-space:pre-wrap; overflow-wrap:anywhere; margin:.5rem 0; }
+
+.career-context-panel { margin:8px 0; border-top:1px solid var(--border); padding-top:6px; }
+.career-context-content { display:grid; gap:10px; padding:8px 4px 8px 0; min-width:0; max-height:360px; overflow-y:auto; overscroll-behavior:contain; scrollbar-width:thin; }
+.career-context-content:focus-visible,.career-context-row blockquote:focus-visible { outline:2px solid #3f846d; outline-offset:2px; border-radius:5px; }
+.career-context-content>button { justify-self:start; max-width:100%; min-height:32px; height:auto; white-space:normal; }
+.career-context-row { padding:12px; border:1px solid #dce5de; border-radius:10px; background:#f3f7f4; min-width:0; }
+.career-context-row[data-context-state="STALE"] { background:#f9f5e9; }
+.career-context-heading { display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:12px; }
+.career-context-heading strong { overflow-wrap:anywhere; min-width:0; }
+.career-context-heading svg { flex-shrink:0; }
+.career-context-row blockquote { max-height:180px; overflow-y:auto; white-space:pre-wrap; overflow-wrap:anywhere; border-left:2px solid #b8cbbf; padding-left:10px; margin-top:8px; font-size:12px; line-height:1.6; }
+.career-context-actions { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+.career-context-note { font-size:11px; }
+.career-context-picker { max-height:50dvh; overflow-y:auto; display:grid; gap:8px; min-width:0; }
+.career-context-choice { display:flex; flex-direction:column; align-items:flex-start; height:auto; white-space:normal; text-align:left; padding:12px; gap:4px; min-width:0; }
+.career-context-choice strong,.career-context-choice span { overflow-wrap:anywhere; max-width:100%; }
+.career-context-choice span { font-size:12px; font-weight:400; color:#5e7065; }

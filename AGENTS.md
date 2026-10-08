@@ -84,3 +84,7 @@ PR #20 is verified merged; main `520bbe70869cc176f41585f457fd3a03cc911a34` adds 
 ## Context and period continuation — 2026-10-08
 
 PR #21 is verified merged at `ccae0ed53ef10bb74b5c12c36dd8599dbda60731`; push/PR/main Foundation checks passed. Continue on `fix/document-context-and-periods` with a small extraction correction: retain literal employer/project context through nested technical subsection headings, reset at global or same-level Markdown boundaries, and normalize explicit local month dates without inventing months from year-only endpoints. Preserve original periods, existing stored content, evidence, budgets and manual review behavior. This is not the generalized claim-context graph or conflict resolution. Test and prepare a new PR without merging automatically.
+
+## Structured context continuation — 2026-10-08
+
+PR #22 is verified merged at `182c22ca71dff1776258e81ebd222af8e82a530e`; push/PR/main Foundation checks passed. Continue on `feat/competency-career-context`, ADR 0029, with one owner-scoped revision-aware relationship table. Automatic links require a unique untouched career entry and exact shared documentary evidence; explicit review/removal preserves factual statuses and survives reanalysis. Existing job/CV snapshots, provider choices (including Flash Lite), AI approvals and source-deletion policy remain unchanged. This is a small domain slice, not the full proposed graph/conflict model. Test and prepare a PR; no automatic merge authorization.

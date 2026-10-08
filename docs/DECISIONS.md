@@ -167,3 +167,7 @@ Accepted under the resumed document-quality request: inventory explicit source p
 ## 2026-10-08 — Literal subsection context and explicit month endpoints
 
 Accepted extraction correction within the resumed source-quality work: technical subsections retain a literal enclosing employer/project header only across compatible boundaries. Global sections and same-level Markdown sections reset it. Normalize explicit local/ISO month endpoints independently while retaining original periods and year precision. Reuse parsed heading inventories across batches/lists/coverage checks. Existing saved content and review decisions are not rewritten; no generalized context graph or conflict arbitration is introduced.
+
+## 2026-10-08 — Revision-aware competency career context
+
+Accepted small domain increment within the resumed document/profile work: add owned revision-linked competency/career events with exact unique shared documentary proof, explicit owner association/removal, tombstones and read-time stale checks (ADR 0029). Relationship decisions never change factual confirmation, do not require AI calls and do not rewrite existing job/CV snapshots. Broad conflict/catalog normalization remains proposed.
