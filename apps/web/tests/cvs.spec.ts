@@ -38,7 +38,7 @@ test("CV builder excludes unconfirmed experience, requires preview approval and 
  expect(aiCalls).toBe(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.screenshot({path:"/tmp/career-cv-mobile.png",fullPage:true});
  await page.getByRole("button",{name:"Slett versjon",exact:true}).click();await page.getByRole("dialog").filter({hasText:"Slett CV-versjonen?"}).getByRole("button",{name:"Slett versjon",exact:true}).click();
- await expect(page.getByRole("heading",{name:"En ryddig CV, basert på din erfaring"})).toBeVisible();
+ await expect(page.getByRole("heading",{name:"En CV bygget på det du har bekreftet"})).toBeVisible();
 });
 test("CV proxies reject cross origin, client-owned status and unauthorized downloads",async({request})=>{
  expect((await request.get("/api/profile/me/cvs")).status()).toBe(401);

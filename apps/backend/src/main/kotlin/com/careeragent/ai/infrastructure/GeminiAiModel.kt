@@ -15,9 +15,8 @@ import java.time.Duration
 
 @Component
 class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:}") private val apiKey: String,
-    private val routing: AiRouting, private val client: HttpClient = geminiHttpClient()) : AiModel {
-    // Separate instance: exhausted Groq capacity must not block an explicitly selected Gemini task.
-    private val cooldown = GroqCooldown()
+    private val routing: AiRouting, private val client: HttpClient = geminiHttpClient(),
+    private val cooldowns: AiCooldowns = AiCooldowns()) : AiModel {
     private val logger = LoggerFactory.getLogger(javaClass)
 
     internal fun requestBody(system: String, user: String, schema: Map<String, Any>, task: AiTask): Map<String, Any> = mapOf(
@@ -27,10 +26,11 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
             "thinkingConfig" to mapOf("thinkingLevel" to "LOW"),
             "maxOutputTokens" to if (task == AiTask.PROFILE_SUMMARY) 4096 else 8192))
 
-    internal fun providerFailure(status: Int, body: String, retryAfter: String?): AiFailure? = when (status) {
+    internal fun providerFailure(status: Int, body: String, retryAfter: String?, model: String): AiFailure? = when (status) {
         200 -> null
         401, 403 -> AiFailure("AI_ACCESS_DENIED", 503)
         429 -> {
+            val modelCooldown = cooldowns.forModel("Gemini", model)
             // RetryInfo supplies a duration rather than account/error text. Retain only the bounded wait.
             val hint = try {
                 mapper.readTree(body).path("error").path("details").filter {
@@ -38,9 +38,9 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
                 }.mapNotNull { Regex("^(\\d+(?:\\.\\d+)?)s$").matchEntire(it.path("retryDelay").asText())?.groupValues?.get(1)?.toDoubleOrNull() }
                     .filter { it.isFinite() && it > 0 }.maxOrNull()
             } catch (_: Exception) { null }
-            val wait = if (hint == null) cooldown.record(retryAfter) else {
-                if (!retryAfter.isNullOrBlank()) cooldown.record(retryAfter)
-                cooldown.record(hint.toString())
+            val wait = if (hint == null) modelCooldown.record(retryAfter) else {
+                if (!retryAfter.isNullOrBlank()) modelCooldown.record(retryAfter)
+                modelCooldown.record(hint.toString())
             }
             AiFailure("AI_RATE_LIMITED", 429, wait)
         }
@@ -66,18 +66,18 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
     override fun generateJson(system: String, user: String, schema: Map<String, Any>, task: AiTask): String = generateJson(system,user,schema,task,routing.selection(task))
     override fun generateJson(system: String, user: String, schema: Map<String, Any>, task: AiTask, selection: AiSelection): String {
         if (apiKey.isBlank()) throw AiFailure("AI_NOT_CONFIGURED", 503)
-        val remaining = cooldown.remainingSeconds()
-        if (remaining > 0) throw AiFailure("AI_RATE_LIMITED", 429, remaining)
         val selected = selection
         if (selected.provider != "Gemini" || selected.model !in setOf("gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"))
             throw AiFailure("AI_NOT_CONFIGURED", 503)
+        val remaining = cooldowns.forModel("Gemini", selected.model).remainingSeconds()
+        if (remaining > 0) throw AiFailure("AI_RATE_LIMITED", 429, remaining)
         val request = HttpRequest.newBuilder(URI.create("https://generativelanguage.googleapis.com/v1beta/models/${selected.model}:generateContent"))
             .timeout(Duration.ofSeconds(25)).header("x-goog-api-key", apiKey)
             .header("Content-Type", "application/json").header("User-Agent", "career-agent/0.1")
             .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(requestBody(system, user, schema, task)))).build()
         try {
             val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-            providerFailure(response.statusCode(), response.body(), response.headers().firstValue("retry-after").orElse(null))?.let {
+            providerFailure(response.statusCode(), response.body(), response.headers().firstValue("retry-after").orElse(null), selected.model)?.let {
                 logger.warn("gemini_request_failed task={} model={} status={} category={}", task, selected.model, response.statusCode(), it.code)
                 throw it
             }

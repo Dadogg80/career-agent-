@@ -43,14 +43,41 @@ class GeminiAiModelTest {
     @Test fun `quota retry info preserves the longest duration without exposing account details or retrying`() {
         val model = adapter()
         val body = """{"error":{"message":"PRIVATE ACCOUNT","details":[{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"967.68s"}]}}"""
-        val failure = model.providerFailure(429, body, "300")!!
+        val failure = model.providerFailure(429, body, "300", "gemini-3.5-flash")!!
         assertThat(failure.retryAfterSeconds).isBetween(967, 968)
         assertThat(failure.message).isEqualTo("AI_RATE_LIMITED")
         assertThatThrownBy { model.generateJson("rules","data", emptyMap()) }.isInstanceOfSatisfying(AiFailure::class.java) { assertThat(it.retryAfterSeconds).isBetween(967,968) }
         assertThat(GroqCooldown().remainingSeconds()).isZero()
-        assertThat(adapter().providerFailure(429,"""{"error":{"details":[{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"15.4s"}]}}""",null)!!.retryAfterSeconds).isBetween(15,16)
-        assertThat(model.providerFailure(403,"PRIVATE",null)!!.code).isEqualTo("AI_ACCESS_DENIED")
-        assertThat(model.providerFailure(503,"PRIVATE",null)!!.code).isEqualTo("AI_UNAVAILABLE")
+        assertThat(adapter().providerFailure(429,"""{"error":{"details":[{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"15.4s"}]}}""",null,"gemini-3.5-flash")!!.retryAfterSeconds).isBetween(15,16)
+        assertThat(model.providerFailure(403,"PRIVATE",null,"gemini-3.5-flash")!!.code).isEqualTo("AI_ACCESS_DENIED")
+        assertThat(model.providerFailure(503,"PRIVATE",null,"gemini-3.5-flash")!!.code).isEqualTo("AI_UNAVAILABLE")
+    }
+
+    @Test fun `Flash cooldown does not block Flash Lite requests`() {
+        val client = mock(HttpClient::class.java)
+        @Suppress("UNCHECKED_CAST") val limited = mock(HttpResponse::class.java) as HttpResponse<String>
+        `when`(limited.statusCode()).thenReturn(429)
+        `when`(limited.headers()).thenReturn(HttpHeaders.of(emptyMap()) { _,_ -> true })
+        `when`(limited.body()).thenReturn("""{"error":{"details":[{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"900s"}]}}""")
+        @Suppress("UNCHECKED_CAST") val success = mock(HttpResponse::class.java) as HttpResponse<String>
+        `when`(success.statusCode()).thenReturn(200)
+        `when`(success.headers()).thenReturn(HttpHeaders.of(emptyMap()) { _,_ -> true })
+        `when`(success.body()).thenReturn("""{"candidates":[{"finishReason":"STOP","content":{"parts":[{"text":"{}"}]}}]}""")
+        `when`(client.send(any(HttpRequest::class.java), any<HttpResponse.BodyHandler<String>>()))
+            .thenReturn(limited, success)
+        val model = GeminiAiModel(mapper, "fictional-key", routing, client, AiCooldowns())
+        val flash = AiSelection("Gemini", "gemini-3.5-flash")
+        val lite = AiSelection("Gemini", "gemini-3.5-flash-lite")
+
+        assertThatThrownBy { model.generateJson("rules", "data", emptyMap(), AiTask.JOB_ANALYSIS, flash) }
+            .isInstanceOfSatisfying(AiFailure::class.java) {
+                assertThat(it.code).isEqualTo("AI_RATE_LIMITED")
+                assertThat(it.retryAfterSeconds).isEqualTo(900)
+            }
+        assertThat(model.generateJson("rules", "data", emptyMap(), AiTask.DOCUMENT_EXTRACTION, lite)).isEqualTo("{}")
+        assertThatThrownBy { model.generateJson("rules", "data", emptyMap(), AiTask.JOB_ANALYSIS, flash) }
+            .isInstanceOfSatisfying(AiFailure::class.java) { assertThat(it.code).isEqualTo("AI_RATE_LIMITED") }
+        verify(client, times(2)).send(any(HttpRequest::class.java), any<HttpResponse.BodyHandler<String>>())
     }
 
     @Test fun `adapter makes exactly one request with a header key and returns only structured content`() {
@@ -60,7 +87,7 @@ class GeminiAiModelTest {
         `when`(response.headers()).thenReturn(HttpHeaders.of(emptyMap()) { _,_ -> true })
         `when`(response.body()).thenReturn("""{"candidates":[{"finishReason":"STOP","content":{"parts":[{"text":"{\"skills\":[\"Kotlin\"]}"}]}}],"usageMetadata":{"promptTokenCount":10}}""")
         `when`(client.send(any(HttpRequest::class.java), any<HttpResponse.BodyHandler<String>>())).thenReturn(response)
-        val model = GeminiAiModel(mapper,"fictional-key",routing,client)
+        val model = GeminiAiModel(mapper,"fictional-key",routing,client,AiCooldowns())
         assertThat(model.generateJson("rules","data",emptyMap())).isEqualTo("""{"skills":["Kotlin"]}""")
         val capture = ArgumentCaptor.forClass(HttpRequest::class.java)
         verify(client,times(1)).send(capture.capture(),any<HttpResponse.BodyHandler<String>>())
@@ -98,10 +125,26 @@ class GeminiAiModelTest {
         val plan=routing.resolveApproval(gemini.approval.token,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)
         assertThat(plan.tasks.values.map { it.provider }).containsOnly("Gemini")
         assertThat(plan.tasks.values.map { it.model }).containsOnly("gemini-3.5-flash-lite")
+        val flash=options.first { it.approval.selections.singleOrNull() == AiSelection("Gemini","gemini-3.5-flash") }
+        assertThat(flash.available).isTrue()
+        assertThat(routing.resolveApproval(flash.approval.token,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)
+            .tasks.values.map { it.model }).containsOnly("gemini-3.5-flash")
         assertThat(routing.selection(AiTask.DOCUMENT_EXTRACTION).provider).isEqualTo("Groq")
         assertThatThrownBy { routing.resolveApproval(gemini.approval.token,AiTask.PERSONAL_MATCH) }.isInstanceOf(AiFailure::class.java)
         env.setProperty("GEMINI_API_KEY","")
         assertThatThrownBy { routing.resolveApproval(gemini.approval.token,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY) }.isInstanceOf(AiFailure::class.java)
+    }
+    @Test fun `Flash Lite is an available selectable option for every AI task`() {
+        val routing=AiRouting(MockEnvironment()
+            .withProperty("GEMINI_API_KEY","fictional-key")
+            .withProperty("GROQ_API_KEY","fictional-key"))
+        for (task in AiTask.entries) {
+            val lite=routing.options(task).single {
+                it.available && it.approval.selections.singleOrNull()==AiSelection("Gemini","gemini-3.5-flash-lite")
+            }
+            assertThat(routing.resolveApproval(lite.approval.token,task).tasks.getValue(task))
+                .isEqualTo(AiSelection("Gemini","gemini-3.5-flash-lite"))
+        }
     }
     @Test fun `Lite defaults apply to document and profile tasks while analytical and Groq overrides remain intact`() {
         val env = MockEnvironment().withProperty("AI_PROVIDER", "gemini")
@@ -145,7 +188,7 @@ class GeminiAiModelTest {
         `when`(response.headers()).thenReturn(HttpHeaders.of(emptyMap()){ _,_ -> true })
         `when`(response.body()).thenReturn("""{"candidates":[{"finishReason":"STOP","content":{"parts":[{"text":"{}"}]}}]}""")
         `when`(client.send(any(HttpRequest::class.java),any<HttpResponse.BodyHandler<String>>())).thenReturn(response)
-        val model=GeminiAiModel(mapper,"fictional-key",AiRouting(MockEnvironment()),client)
+        val model=GeminiAiModel(mapper,"fictional-key",AiRouting(MockEnvironment()),client,AiCooldowns())
         assertThat(model.generateJson("rules","data",emptyMap(),AiTask.PERSONAL_MATCH,AiSelection("Gemini","gemini-3.5-flash"))).isEqualTo("{}")
         verify(client,times(1)).send(any(HttpRequest::class.java),any<HttpResponse.BodyHandler<String>>())
     }

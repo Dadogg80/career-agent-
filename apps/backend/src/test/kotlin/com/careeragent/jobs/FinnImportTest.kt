@@ -81,10 +81,10 @@ class FinnImportTest {
     }
     @Test fun `failed searches count toward the process limit and do not retry`() {
         val b = browser(1)
-        `when`(transport.complete(anyMap())).thenThrow(ImportFailure("SOURCE_RATE_LIMITED", 429))
+        `when`(transport.complete(anyMap(), anyString())).thenThrow(ImportFailure("SOURCE_RATE_LIMITED", 429))
         assertEquals("SOURCE_RATE_LIMITED", assertThrows(ImportFailure::class.java) { b.load(url) }.code)
         assertEquals("SOURCE_BUDGET_REACHED", assertThrows(ImportFailure::class.java) { b.load(url) }.code)
-        verify(transport, times(1)).complete(anyMap())
+        verify(transport, times(1)).complete(anyMap(), anyString())
     }
     @Test fun `disabled and zero-budget search never calls Groq`() {
         assertEquals("SOURCE_SEARCH_DISABLED", assertThrows(ImportFailure::class.java) { browser(enabled = false).load(url) }.code)

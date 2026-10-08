@@ -1,7 +1,7 @@
 package com.careeragent.jobs.infrastructure
 
 import com.careeragent.jobs.application.*
-import com.careeragent.ai.infrastructure.GroqCooldown
+import com.careeragent.ai.infrastructure.AiCooldowns
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -15,9 +15,10 @@ import javax.net.ssl.HttpsURLConnection
 class GroqBrowserTransport(
     private val mapper: ObjectMapper,
     @Value("\${GROQ_API_KEY:}") private val apiKey: String,
-    private val cooldown: GroqCooldown,
+    private val cooldowns: AiCooldowns,
 ) {
-    fun complete(body: Map<String, Any>): String {
+    fun complete(body: Map<String, Any>, model: String): String {
+        val cooldown = cooldowns.forModel("Groq", model)
         val remaining = cooldown.remainingSeconds()
         if (remaining > 0) throw ImportFailure("SOURCE_RATE_LIMITED", 429, remaining)
         if (apiKey.isBlank()) throw ImportFailure("SOURCE_AI_NOT_CONFIGURED", 503)
@@ -87,7 +88,7 @@ class GroqAdvertisementBrowser(
         try {
             if (used.get() >= maxRequests) throw ImportFailure("SOURCE_BUDGET_REACHED", 429)
             used.incrementAndGet()
-            return parse(canonical, transport.complete(requestBody(canonical)))
+            return parse(canonical, transport.complete(requestBody(canonical), model))
         } finally { permits.release() }
     }
 

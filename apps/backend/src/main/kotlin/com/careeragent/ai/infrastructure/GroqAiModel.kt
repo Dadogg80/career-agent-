@@ -21,7 +21,7 @@ class GroqAiModel(
     private val mapper: ObjectMapper,
     @Value("\${GROQ_API_KEY:}") private val apiKey: String,
     @Value("\${GROQ_MODEL:openai/gpt-oss-20b}") private val model: String,
-    private val cooldown: GroqCooldown,
+    private val cooldowns: AiCooldowns,
     @Value("\${GROQ_JOB_MODEL:}") private val jobModel: String = "",
     @Value("\${GROQ_DOCUMENT_MODEL:}") private val documentModel: String = "",
     @Value("\${GROQ_PROFILE_MODEL:}") private val profileModel: String = "",
@@ -40,12 +40,12 @@ class GroqAiModel(
         }
         .build()
 
-    internal fun providerFailure(status: Int, body: String, retryAfter: String?): AiFailure? = when (status) {
+    internal fun providerFailure(status: Int, body: String, retryAfter: String?, model: String = this.model): AiFailure? = when (status) {
         200 -> null
         401, 403 -> AiFailure("AI_ACCESS_DENIED", 503)
         429 -> {
             val message = try { mapper.readTree(body).path("error").path("message").textValue() } catch (_: Exception) { null }
-            AiFailure("AI_RATE_LIMITED", 429, cooldown.record(retryAfter, message))
+            AiFailure("AI_RATE_LIMITED", 429, cooldowns.forModel("Groq", model).record(retryAfter, message))
         }
         400 -> {
             val code = try { mapper.readTree(body).path("error").path("code").asText() } catch (_: Exception) { "" }
@@ -73,10 +73,12 @@ class GroqAiModel(
         return generateJson(system,user,schema,task,selection.model)
     }
     private fun generateJson(system: String, user: String, schema: Map<String, Any>, task:AiTask, explicitModel:String?): String {
-        val remaining = cooldown.remainingSeconds()
-        if (remaining > 0) throw AiFailure("AI_RATE_LIMITED", 429, remaining)
         if (apiKey.isBlank()) throw AiFailure("AI_NOT_CONFIGURED", 503)
         val body = requestBody(system,user,schema,task,explicitModel)
+        val selectedModel = body.getValue("model") as String
+        val cooldown = cooldowns.forModel("Groq", selectedModel)
+        val remaining = cooldown.remainingSeconds()
+        if (remaining > 0) throw AiFailure("AI_RATE_LIMITED", 429, remaining)
         val request = HttpRequest.newBuilder(URI.create("https://api.groq.com/openai/v1/chat/completions"))
             .timeout(Duration.ofSeconds(25))
             .header("Authorization", "Bearer $apiKey")
@@ -86,7 +88,7 @@ class GroqAiModel(
             .build()
         try {
             val response = client.send(request, HttpResponse.BodyHandlers.ofString())
-            providerFailure(response.statusCode(), response.body(), response.headers().firstValue("retry-after").orElse(null))?.let {
+            providerFailure(response.statusCode(), response.body(), response.headers().firstValue("retry-after").orElse(null), selectedModel)?.let {
                 logger.warn("groq_request_failed status={} category={}", response.statusCode(), it.code)
                 throw it
             }

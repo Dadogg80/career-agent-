@@ -155,3 +155,7 @@ Owner-requested: consolidate the profile's repeated skill cards across contexts,
 ## 2026-10-08 — Accepted Gemini Lite document/profile defaults
 
 The owner explicitly accepted Lite where suitable following synthetic extraction/profile validation. Gemini document extraction and profile summaries default to `gemini-3.5-flash-lite` independently of a pre-existing general `GEMINI_MODEL`. Task-specific overrides remain authoritative. Job analysis and personal matching retain Flash, with their existing general fallback. Provider defaults and budgets are unchanged; no quota bypass or silent rotation. Existing Flash workflows require renewed model-bound approval before continuing on Lite; saved results retain their actual original metadata. This supersedes only the unchanged-model-default decision above.
+
+## 2026-10-08 — Model selection and independent application cooldowns
+
+Accepted maintenance: expose Groq, Gemini 3.5 Flash and Gemini 3.5 Flash-Lite as explicit choices for supported AI tasks. Bind each choice to its existing approval fingerprint; private tasks still require renewed consent whenever the recipient/model changes. Keep cooldowns per provider/model and share each across features using that same model. This prevents one model's application cooldown from suppressing another model, without bypassing provider-enforced project/account quotas or changing retry/budget behavior.

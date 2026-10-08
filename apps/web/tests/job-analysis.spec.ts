@@ -80,7 +80,25 @@ test("advertisement retry can select Gemini without refetching source and displa
   expect(r.request().postDataJSON()).toEqual({text:source,locale:"nb",aiApproval:alternative.token});return r.fulfill({json:{...result,aiSelection:gemini}});
  });
  await page.goto("/jobs/analyze");await page.getByRole("button",{name:"Lim inn tekst",exact:true}).click();await page.getByRole("textbox",{name:"Stillingsannonse"}).fill(source);await page.getByRole("button",{name:"Analyser",exact:true}).click();
- await page.getByRole("button",{name:"Prøv med Gemini",exact:true}).click();expect(calls).toBe(1);
+ await page.getByRole("button",{name:/Prøv med Gemini/}).click();expect(calls).toBe(1);
  await expect(page.getByRole("textbox",{name:"Stillingsannonse"})).toHaveValue(source);await page.getByRole("button",{name:"Analyser",exact:true}).click();
  await expect(page.locator(".ai-identity").filter({hasText:"Brukt i analysen"})).toContainText("Gemini · gemini-3.5-flash");expect(calls).toBe(2);
+});
+
+test("job analysis offers Flash, Flash-Lite and Groq as separate selectable models",async({page})=>{
+ const groq={provider:"Groq",model:"openai/gpt-oss-20b"},flash={provider:"Gemini",model:"gemini-3.5-flash"},lite={provider:"Gemini",model:"gemini-3.5-flash-lite"};
+ const original={token:"a".repeat(64),selections:[groq]},flashApproval={token:"b".repeat(64),selections:[flash]},liteApproval={token:"c".repeat(64),selections:[lite]};
+ const options=[{approval:original,available:true},{approval:flashApproval,available:true},{approval:liteApproval,available:true}];
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:groq,DOCUMENT_EXTRACTION:groq,PROFILE_SUMMARY:groq,PERSONAL_MATCH:groq},documents:original,documentExcerpt:original,matching:original,job:original,options:{documents:options,documentExcerpt:options,matching:options,job:options}}}));
+ let sentApproval="";
+ await page.route("**/api/jobs/requirements",r=>{sentApproval=r.request().postDataJSON().aiApproval;return r.fulfill({json:{...result,aiSelection:lite}});});
+ await page.goto("/jobs/analyze");
+ await page.getByRole("combobox",{name:"Språk"}).selectOption("en");
+ await page.locator(".ai-choice summary").click();
+ await page.getByRole("button",{name:/Gemini · gemini-3.5-flash-lite/}).click();
+ await page.getByRole("button",{name:"Paste text",exact:true}).click();
+ await page.getByRole("textbox",{name:"Job advertisement"}).fill(source);
+ await page.getByRole("button",{name:"Analyze",exact:true}).click();
+ await expect(page.locator(".ai-identity").filter({hasText:"Used in this analysis"})).toContainText("Gemini · gemini-3.5-flash-lite");
+ expect(sentApproval).toBe(liteApproval.token);
 });

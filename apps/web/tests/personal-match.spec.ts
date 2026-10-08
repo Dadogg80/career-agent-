@@ -10,13 +10,17 @@ const result = { id:"82345678-1234-1234-1234-123456789abc",locale:"nb",createdAt
 
 test("matching shares only selected confirmed revisions after separate approval and reopens without another call", async ({ page }) => {
  let stored: typeof result | null = null; let calls = 0; let current = { ...confirmed };
+ const groq={provider:"Groq",model:"openai/gpt-oss-20b"},flash={provider:"Gemini",model:"gemini-3.5-flash"},lite={provider:"Gemini",model:"gemini-3.5-flash-lite"};
+ const original={token:"a".repeat(64),selections:[groq]},flashApproval={token:"b".repeat(64),selections:[flash]},liteApproval={token:"c".repeat(64),selections:[lite]};
+ const options=[{approval:original,available:true},{approval:flashApproval,available:true},{approval:liteApproval,available:true}];
  const logs: string[] = []; page.on("console",message => logs.push(message.text()));
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:groq,DOCUMENT_EXTRACTION:groq,PROFILE_SUMMARY:groq,PERSONAL_MATCH:groq},documents:original,documentExcerpt:original,matching:original,job:original,options:{documents:options,documentExcerpt:options,matching:options,job:options}}}));
  await page.route("**/api/auth/session",r => r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
  await page.route("**/api/profile/me/claims",r => r.fulfill({json:[current,{...confirmed,id:pendingId,skill:"React",status:"UNVERIFIED",revision:1}]}));
  await page.route("**/api/profile/me/jobs**",r => {
   if (r.request().url().endsWith("/match")) {
    if (r.request().method() === "GET") return r.fulfill({json:stored});
-   calls++; expect(r.request().postDataJSON()).toEqual({text,claims:[{id:claimId,revision:2}],locale:"nb",consent:true,aiApproval:expect.stringMatching(/^[a-f0-9]{64}$/)});
+   calls++; expect(r.request().postDataJSON()).toEqual({text,claims:[{id:claimId,revision:2}],locale:"nb",consent:true,aiApproval:liteApproval.token});
    expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf"); stored = result; return r.fulfill({json:result});
   }
   return r.fulfill({json:[job]});
@@ -24,12 +28,14 @@ test("matching shares only selected confirmed revisions after separate approval 
  await page.goto("/jobs/saved"); await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();
  const sheet = page.getByRole("dialog");
  await sheet.getByRole("button",{name:"Vurder personlig match",exact:true}).click();
+ await sheet.locator(".ai-choice summary").click();
+ await sheet.getByRole("button",{name:/Gemini · gemini-3.5-flash-lite/}).click();
  const submit = sheet.getByRole("button",{name:"Analyser personlig match",exact:true});
  await expect(submit).toBeDisabled(); expect(calls).toBe(0);
  await sheet.getByText("Se og juster kompetanseutvalget",{exact:true}).click();await expect(sheet.locator(".match-claim")).toHaveCount(1);
  await expect(sheet.locator(".match-claim").getByRole("checkbox",{includeHidden:true})).toBeChecked();
  await expect(submit).toBeDisabled();
- const consent = sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Groq for denne matchingen"});
+ const consent = sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for denne matchingen"});
  await consent.check();
  const preview = sheet.getByRole("textbox",{name:"Annonsetekst som sendes"});
  await preview.fill(text+"\n"); await expect(consent).not.toBeChecked();
@@ -127,7 +133,7 @@ test("Groq quota recovery keeps selected evidence and requires Gemini approval b
  await sheet.getByRole("button",{name:"Vurder personlig match",exact:true}).click();
  await expect(sheet.locator(".match-claim").getByRole("checkbox",{includeHidden:true})).toBeChecked();await sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Groq for denne matchingen"}).check();
  const submit=sheet.getByRole("button",{name:"Analyser personlig match",exact:true});await submit.click();await expect(sheet).toContainText("16 min");
- await sheet.getByRole("button",{name:"Prøv med Gemini",exact:true}).click();await expect(submit).toBeDisabled();expect(calls).toBe(1);
+ await sheet.getByRole("button",{name:/Prøv med Gemini/}).click();await expect(submit).toBeDisabled();expect(calls).toBe(1);
  await expect(sheet.locator(".match-claim").getByRole("checkbox",{includeHidden:true})).toBeChecked();await expect(sheet.locator(".match-result")).toContainText("Groq · openai/gpt-oss-20b");
  const consent=sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for denne matchingen"});await expect(consent).not.toBeChecked();await consent.check();await submit.click();
  const activity=sheet.locator(".ai-activity");await expect(activity).toContainText("Venter på svar fra Gemini");

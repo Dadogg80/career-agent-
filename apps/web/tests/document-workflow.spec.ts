@@ -102,7 +102,7 @@ test("quota recovery changes the displayed recipient and resumes the same run on
  });
  await page.setViewportSize({width:390,height:844});await open(page);const outer=page.locator(".document-workspace-sheet");
  await expect(outer).toContainText("Groq · openai/gpt-oss-20b");
- await outer.getByRole("button",{name:"Prøv med Gemini",exact:true}).click();
+ await outer.getByRole("button",{name:/Prøv med Gemini/}).click();
  await expect(outer.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Gemini for denne analysen"})).not.toBeChecked();
  const resume=outer.getByRole("button",{name:"Fortsett lagret analyse",exact:true});await expect(resume).toBeDisabled();expect(switches+nexts).toBe(0);
  await outer.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Gemini for denne analysen"}).check();await resume.click();

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 class GroqFailureTest {
     @Test fun `task-specific model configuration is explicit and summary output stays bounded without exposing reasoning`() {
-        val model=GroqAiModel(jacksonObjectMapper(),"","openai/gpt-oss-20b",GroqCooldown(),documentModel="openai/gpt-oss-120b",profileModel="qwen/qwen3.8-27b")
+        val model=GroqAiModel(jacksonObjectMapper(),"","openai/gpt-oss-20b",AiCooldowns(),documentModel="openai/gpt-oss-120b",profileModel="qwen/qwen3.8-27b")
         val document=model.requestBody("static","dynamic",emptyMap(),com.careeragent.ai.application.AiTask.DOCUMENT_EXTRACTION)
         assertThat(document["model"]).isEqualTo("openai/gpt-oss-120b")
         assertThat(document["include_reasoning"]).isEqualTo(false)
@@ -17,7 +17,7 @@ class GroqFailureTest {
         assertThat(model.requestBody("static","dynamic",emptyMap(),com.careeragent.ai.application.AiTask.JOB_ANALYSIS)["model"]).isEqualTo("openai/gpt-oss-20b")
     }
     @Test fun `schema failure is distinguished without exposing provider payload`() {
-        val model = GroqAiModel(jacksonObjectMapper(), "", "openai/gpt-oss-20b", GroqCooldown())
+        val model = GroqAiModel(jacksonObjectMapper(), "", "openai/gpt-oss-20b", AiCooldowns())
         val failure = model.providerFailure(400, """{"error":{"code":"json_validate_failed","failed_generation":"PRIVATE CONTENT"}}""", null)!!
         assertThat(failure.code).isEqualTo("AI_INVALID_RESULT")
         assertThat(failure.httpStatus).isEqualTo(502)
@@ -26,14 +26,36 @@ class GroqFailureTest {
         assertThat(model.providerFailure(400, "malformed", null)!!.code).isEqualTo("AI_UNAVAILABLE")
     }
     @Test fun `rate failure records bounded shared cooldown for later calls`() {
-        val cooldown = GroqCooldown()
-        val model = GroqAiModel(jacksonObjectMapper(), "", "openai/gpt-oss-20b", cooldown)
+        val cooldowns = AiCooldowns()
+        val cooldown = cooldowns.forModel("Groq", "openai/gpt-oss-20b")
+        val model = GroqAiModel(jacksonObjectMapper(), "", "openai/gpt-oss-20b", cooldowns)
         assertThat(cooldown.remainingSeconds()).isZero()
         val failure = model.providerFailure(429, "", "15.4725")!!
         assertThat(failure.retryAfterSeconds).isBetween(15, 16)
         assertThat(cooldown.remainingSeconds()).isBetween(15, 16)
         cooldown.record("1")
         assertThat(cooldown.remainingSeconds()).isBetween(15, 16)
+    }
+    @Test fun `Groq cooldown is scoped to a model but shared across features for that model`() {
+        val cooldowns = AiCooldowns()
+        val model = GroqAiModel(jacksonObjectMapper(), "", "openai/gpt-oss-20b", cooldowns)
+        val failure = model.providerFailure(429, "", "900", "openai/gpt-oss-120b")!!
+        assertThat(failure.retryAfterSeconds).isEqualTo(900)
+        assertThat(cooldowns.forModel("Groq", "openai/gpt-oss-20b").remainingSeconds()).isZero()
+        assertThat(cooldowns.forModel("Groq", "openai/gpt-oss-120b").remainingSeconds()).isEqualTo(900)
+        assertThat(cooldowns.forModel("Gemini", "gemini-3.5-flash").remainingSeconds()).isZero()
+        org.assertj.core.api.Assertions.assertThatThrownBy {
+            com.careeragent.jobs.infrastructure.GroqBrowserTransport(jacksonObjectMapper(), "", cooldowns)
+                .complete(emptyMap(), "openai/gpt-oss-20b")
+        }.isInstanceOfSatisfying(com.careeragent.jobs.application.ImportFailure::class.java) {
+            assertThat(it.code).isEqualTo("SOURCE_AI_NOT_CONFIGURED")
+        }
+        org.assertj.core.api.Assertions.assertThatThrownBy {
+            com.careeragent.jobs.infrastructure.GroqBrowserTransport(jacksonObjectMapper(), "", cooldowns)
+                .complete(emptyMap(), "openai/gpt-oss-120b")
+        }.isInstanceOfSatisfying(com.careeragent.jobs.application.ImportFailure::class.java) {
+            assertThat(it.code).isEqualTo("SOURCE_RATE_LIMITED")
+        }
     }
     @Test fun `absent malformed and oversized retry hints remain bounded`() {
         assertThat(GroqCooldown().record(null)).isBetween(59, 60)
@@ -45,8 +67,9 @@ class GroqFailureTest {
     }
 
     @Test fun `daily quota waits are preserved when provided only in the Groq message`() {
-        val cooldown = GroqCooldown()
-        val model = GroqAiModel(jacksonObjectMapper(), "", "openai/gpt-oss-20b", cooldown)
+        val cooldowns = AiCooldowns()
+        val cooldown = cooldowns.forModel("Groq", "openai/gpt-oss-20b")
+        val model = GroqAiModel(jacksonObjectMapper(), "fictional-key", "openai/gpt-oss-20b", cooldowns)
         val failure = model.providerFailure(429, """{"error":{"message":"Rate limit reached on tokens per day (TPD). Please try again in 16m7.68s. Private account details."}}""", null)!!
         assertThat(failure.retryAfterSeconds).isBetween(967, 968)
         assertThat(failure.message).isEqualTo("AI_RATE_LIMITED")
@@ -55,7 +78,7 @@ class GroqFailureTest {
         org.assertj.core.api.Assertions.assertThatThrownBy { model.generateJson("system", "input", emptyMap()) }
             .isInstanceOfSatisfying(com.careeragent.ai.application.AiFailure::class.java) { assertThat(it.code).isEqualTo("AI_RATE_LIMITED") }
         org.assertj.core.api.Assertions.assertThatThrownBy {
-            com.careeragent.jobs.infrastructure.GroqBrowserTransport(jacksonObjectMapper(), "", cooldown).complete(emptyMap())
+            com.careeragent.jobs.infrastructure.GroqBrowserTransport(jacksonObjectMapper(), "", cooldowns).complete(emptyMap(), "openai/gpt-oss-20b")
         }.isInstanceOfSatisfying(com.careeragent.jobs.application.ImportFailure::class.java) { assertThat(it.code).isEqualTo("SOURCE_RATE_LIMITED") }
     }
 

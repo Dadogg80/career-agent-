@@ -13,7 +13,7 @@ data class AiOption(val approval: AiApprovalPreview, val available: Boolean)
 /** Non-secret task configuration, also used to bind private-data approval to its recipients. */
 @Component
 class AiRouting(private val environment: Environment = StandardEnvironment()) {
-    fun selection(task: AiTask, explicitProvider: String? = null): AiSelection {
+    fun selection(task: AiTask, explicitProvider: String? = null, explicitModel: String? = null): AiSelection {
         val suffix = when (task) {
             AiTask.JOB_ANALYSIS -> "JOB"
             AiTask.DOCUMENT_EXTRACTION -> "DOCUMENT"
@@ -34,32 +34,34 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
         // Document/profile tasks have independent defaults; explicit task overrides still win.
         val modelFallback = if (provider == "groq") value("GROQ_MODEL", defaultModel) else defaultModel
         return AiSelection(if (provider == "gemini") "Gemini" else "Groq",
-            value("${prefix}_${suffix}_MODEL", modelFallback))
+            explicitModel ?: value("${prefix}_${suffix}_MODEL", modelFallback))
     }
 
-    private fun plan(tasks: Array<out AiTask>, provider: String? = null): AiPlan {
-        val selected = tasks.associateWith { selection(it, provider) }
+    private fun plan(tasks: Array<out AiTask>, provider: String? = null, model: String? = null): AiPlan {
+        val selected = tasks.associateWith { selection(it, provider, model) }
         val canonical = tasks.joinToString("\n") { "$it:${selected.getValue(it).provider}:${selected.getValue(it).model}" }
         val token = MessageDigest.getInstance("SHA-256").digest(canonical.toByteArray(Charsets.UTF_8))
             .joinToString("") { "%02x".format(it) }
         return AiPlan(AiApprovalPreview(token, selected.values.distinct()), selected)
     }
+    private fun candidatePlans(tasks: Array<out AiTask>) = listOf(
+        plan(tasks), plan(tasks, "Groq"), plan(tasks, "Gemini"),
+        plan(tasks, "Gemini", "gemini-3.5-flash"),
+        plan(tasks, "Gemini", "gemini-3.5-flash-lite"),
+    ).distinctBy { it.approval.token }
+
     fun preview(vararg tasks: AiTask) = plan(tasks).approval
     private fun available(plan: AiPlan) = plan.tasks.values.all {
         environment.getProperty("${it.provider.uppercase()}_API_KEY")?.isNotBlank() == true
     }
     fun options(vararg tasks: AiTask): List<AiOption> =
-        (listOf(plan(tasks)) + listOf("Groq", "Gemini").map { plan(tasks, it) })
-            .distinctBy { it.approval.token }.map { AiOption(it.approval, available(it)) }
+        candidatePlans(tasks).map { AiOption(it.approval, available(it)) }
 
     fun resolveApproval(token: String?, vararg tasks: AiTask): AiPlan {
         val current = plan(tasks)
         // Legacy approvals apply only to the current Groq plan. Alternatives require an explicit fingerprint.
         if (token == current.approval.token || token == null && current.tasks.values.all { it.provider == "Groq" }) return current
-        for (provider in listOf("Groq", "Gemini")) {
-            val alternative = plan(tasks, provider)
-            if (available(alternative) && token == alternative.approval.token) return alternative
-        }
+        candidatePlans(tasks).firstOrNull { available(it) && token == it.approval.token }?.let { return it }
         throw AiFailure("AI_APPROVAL_CHANGED", 409)
     }
     fun requireApproval(token: String?, vararg tasks: AiTask) = resolveApproval(token, *tasks).approval
