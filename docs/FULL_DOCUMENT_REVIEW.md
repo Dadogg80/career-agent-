@@ -81,3 +81,9 @@ New runs can check potentially missed source passages under the displayed model 
 One follow-up round schedules at most two passages per source and four per run, using the same approved sources/provider plan and normal budgets/pacing. It adds no extra source characters to the coverage counter. Quota failures preserve initial findings and the pending step; explicit continuation or model switching uses existing approval rules. Remaining gaps stay visible after completion. Detected passage counts are bounded to 2,000, with a visible limit flag and the first 40 remaining excerpts shown.
 
 The named-list fallback additionally handles colon-only headings, spaced dash separators and single-token items, stopping at education/history/profile boundaries. A gated local private-manifest audit checks independently selected terms, source offsets and expected list labels from real originals without provider calls. It does not benchmark live AI semantic recall. Full conflict/alias reconciliation remains pending.
+
+## Literal context and month precision correction
+
+Technical subsections inside a proven employer/project section retain that literal heading as context evidence. Global profile/skills/education/history boundaries reset it; a same-level Markdown subsection cannot borrow the preceding employer. Automatic portions and targeted follow-up carry the same context rule. No global skill is assigned an employer merely to fill a missing label.
+
+New history extraction accepts explicit `MM.YYYY`, `MM/YYYY` and `YYYY-MM` endpoints. Normalize only supplied month precision; a year-only start remains unknown even when the end specifies a month. Retain the exact original period text for review. Invalid/day-level dates and free prose are not converted by this bounded parser. Existing entries and source snapshots are not rewritten, and imported history remains unverified.

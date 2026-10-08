@@ -4,7 +4,7 @@ Status checked against remote main on 2026-10-08; the owner authorized publishin
 
 ## Current status
 
-Remote main `520bbe7` includes documentary profile imports, grouped skill cards, persistent review, candidate presentation, automatic matching evidence, explained percentages and inline clarification. PR #20 merged Gemini Lite document/profile defaults; the subsequent main commit adds explicit Flash/Lite model choices and isolated model cooldowns. Both merge checks and latest main Foundation CI succeeded. Current `feat/document-coverage-audit` work adds literal source inventories, missed-list recovery and one bounded targeted follow-up round with compact coverage UX. This slice is pending review/merge and does not implement the full knowledge graph or semantic completeness/conflict reconciliation.
+Remote main `ccae0ed` includes documentary profile imports, grouped skill cards, persistent review, candidate presentation, automatic matching evidence, explained percentages and inline clarification. PR #20 added Gemini Lite document/profile defaults; explicit Flash/Lite model choices and isolated cooldowns remain available across supported tasks. PR #21 merged literal source inventories, missed-list recovery and bounded follow-up with compact coverage UX; push/PR/main Foundation checks passed. Current `fix/document-context-and-periods` corrects nested literal context and local-format month endpoints. The generalized relationship/conflict model and semantic completeness measurement remain pending.
 
 | Capability | Actual status |
 | --- | --- |
@@ -70,5 +70,5 @@ The priorities listed for that slice (document-grounded population, presentation
 ## Current delivery and next quality work
 
 - Current branch: ADR 0027, V13 documentary basis/owner ledger, atomic profile population, durable review decisions, compact counted queue, editable sourced candidate synthesis, matching automation/clarification and bounded advertisement readers.
-- Next: independent expected-evidence audit across the supplied document collection, broader semantic section inventory and measured recall, relationship/date conflict reconciliation. ADR 0028 adds an initial lexical source inventory and bounded follow-up, not the full semantic repair loop. Explicit-list recovery covers only named list items.
+- Next: broader semantic expected-evidence inventory and measured recall, relationship/date conflict reconciliation. The initial independent local reading/list audit across seven supplied originals passed without provider calls. ADR 0028 adds an initial lexical source inventory and bounded follow-up, not the full semantic repair loop. Explicit-list recovery covers only named list items.
 - Later: normalized reusable knowledge graph, broader model-quality comparison, advanced CV/discovery/interview features and online hosting. No paid infrastructure or automatic AI submission is introduced.

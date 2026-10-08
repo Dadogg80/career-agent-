@@ -54,6 +54,27 @@ class DocumentWorkflowIntegrationTest {
     private fun next(user:String,run:JsonNode)=post(user,"$path/${run["id"].asText()}/next",mapOf("revision" to run["revision"].asLong()))
     private fun output()=json.writeValueAsString(mapOf("competencies" to listOf(mapOf("skills" to listOf("Kotlin","PostgreSQL","InventedSkill"),"description" to "Utviklet API-er med Kotlin og PostgreSQL.","category" to "TECHNOLOGY","evidenceIds" to listOf(2),"contextId" to 0,"context" to "Example AS")),"profile" to listOf(mapOf("kind" to "EXPERIENCE","text" to "Utvikling av API-er.","evidenceIds" to listOf(2))),"history" to listOf(mapOf("kind" to "EMPLOYMENT","title" to "Senior Developer","organization" to "Example AS","client" to "","deliveryRole" to "","periodText" to "2021 – 2024","description" to "Utviklet API-er.","evidenceIds" to listOf(0,1,2)))))
     private fun stub(){`when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenAnswer { call -> if(call.getArgument<AiTask>(3)==AiTask.PROFILE_SUMMARY)"""{"profile":[{"kind":"PROFILE","text":"Erfaring med API-er, Kotlin og PostgreSQL.","evidenceIds":[0]}]}""" else output() }}
+    @Test fun `local month dates and nested headings populate owned history and skill context with literal evidence`() {
+        val user=profile();val period="08.2023 – 01.2026"
+        val source="## Example AS\nSenior Developer $period\n### Frontend:\nBuilt APIs using Kotlin and PostgreSQL."
+        val doc=upload(user,source)
+        val extraction=output().replace("2021 – 2024",period).replace("\"evidenceIds\":[2]","\"evidenceIds\":[3]")
+        `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenAnswer { call ->
+            if(call.getArgument<AiTask>(3)==AiTask.PROFILE_SUMMARY) """{"profile":[{"kind":"PROFILE","text":"API-utvikling.","evidenceIds":[0]}]}""" else extraction
+        }
+        val initial=post(user,path,mapOf("scope" to doc,"documents" to listOf(mapOf("documentId" to doc,"text" to source)),"locale" to "nb","consent" to true,"populateProfile" to true))
+        val first=next(user,initial)
+        assertThat(first["analysis"]["suggestions"].map { it["context"].asText() }).containsOnly("Example AS")
+        assertThat(first["analysis"]["careerEntries"][0]["periodText"].asText()).isEqualTo(period)
+        mvc.perform(get("/api/profile/me/entries").with(caller(user))).andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].content.startMonth").value("2023-08")).andExpect(jsonPath("$[0].content.endMonth").value("2026-01"))
+            .andExpect(jsonPath("$[0].status").value("UNVERIFIED"))
+        val complete=next(user,first)
+        assertThat(complete["status"].asText()).isEqualTo("COMPLETED")
+        mvc.perform(get("$path?scope=$doc").with(caller(user))).andExpect(status().isOk)
+            .andExpect(jsonPath("$.run.analysis.careerEntries[0].content.startMonth").value("2023-08"))
+        assertThat(next(user,first)).isEqualTo(complete)
+    }
     @Test fun `approved bounded follow-up saves missed evidence without double counting source coverage or replaying calls`() {
         val user=profile();val source=text+"\nMentored two developers and coordinated releases."
         val doc=upload(user,source)

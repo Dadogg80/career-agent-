@@ -391,3 +391,5 @@ Manual review identity includes the original contribution description. Two contr
 ## Document source coverage and follow-up
 
 Approved new run with optional missed-passage check → primary extraction → local source inventory → at most four bounded follow-up steps → synthesis → compact coverage panel and editable/profile-backed findings. Setting changes clear consent. Each step saves progress; repeated requests do not repeat committed calls. Follow-up uses the selected recipient/model and does not double-count source text. Inspect remaining literal excerpts in a scrollable document-attributed reader. Legacy runs do not gain follow-up steps. A represented passage is source usage, not semantic completeness or factual confirmation (ADR 0028).
+
+New document analysis → inspect competency context from the surrounding literal employer/project section, including nested technical subsections → global/same-level boundaries leave unrelated lists without a company → review history with normalized explicit month endpoints and the original period wording. Existing saved runs/entries are not retroactively rewritten.

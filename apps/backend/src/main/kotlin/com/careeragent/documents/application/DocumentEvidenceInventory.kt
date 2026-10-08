@@ -48,7 +48,8 @@ internal object DocumentEvidenceInventory {
             }
         }
         val lines = Regex("[^\\r\\n]+").findAll(text).toList()
-        val headers = DocumentAnalysisPlanner.headers(text).map { it.first }.toSet()
+        val sourceHeaders = DocumentAnalysisPlanner.headers(text)
+        val headers = sourceHeaders.map { it.first }.toSet()
         lines.forEachIndexed { index, line ->
             val content = line.value.trim()
             val heading = content.trimStart('#',' ').trimEnd(':')
@@ -83,25 +84,26 @@ internal object DocumentEvidenceInventory {
                 searchAt = line.range.first + quote.length
             }
         }
-        val sourceHeaders=DocumentAnalysisPlanner.headers(text)
         return candidates.distinctBy { listOf(it.documentId,it.start,it.kind) }.sortedBy { it.start }.map {
-            it.copy(contextQuote=sourceHeaders.lastOrNull { heading -> heading.first<it.start }?.second,
+            it.copy(contextQuote=DocumentAnalysisPlanner.contextHeader(sourceHeaders,it.start)?.second,
                 ambiguous=text.indexOf(it.quote)!=text.lastIndexOf(it.quote))
         }
     }
     fun repairBatches(assessment: Assessment, approved: Map<UUID,String>): List<AnalysisBatch> {
         val counts = mutableMapOf<UUID,Int>()
+        val headers = approved.mapValues { DocumentAnalysisPlanner.headers(it.value) }
         return assessment.missing.asSequence().filter { it.kind != "TECHNOLOGY" }.sortedBy {
             when(it.kind) { "EXPERIENCE" -> 0; "EDUCATION" -> 1; "DELIVERY" -> 2; else -> 3 }
         }.filter { counts.getOrDefault(it.documentId,0) < 2 }.map { item ->
             counts[item.documentId] = counts.getOrDefault(item.documentId,0) + 1
             val text = approved.getValue(item.documentId)
-            val heading = DocumentAnalysisPlanner.headers(text).lastOrNull { it.first < item.start }?.second
+            val sourceHeaders = headers.getValue(item.documentId)
+            val heading = DocumentAnalysisPlanner.contextHeader(sourceHeaders,item.start)?.second
             var excerpt = item.quote
             // Date/organization rows need adjacent literal role evidence for history extraction.
             if (item.kind in setOf("EXPERIENCE","EDUCATION")) {
                 val end = minOf(text.length,item.start + 1000)
-                val nextHeader = DocumentAnalysisPlanner.headers(text).firstOrNull { it.first > item.start }?.first ?: end
+                val nextHeader = sourceHeaders.firstOrNull { it.first > item.start }?.first ?: end
                 excerpt = text.substring(item.start,minOf(end,nextHeader)).trimEnd().take(1000)
             }
             AnalysisBatch(item.documentId,(heading?.let { "$it\n" }.orEmpty()) + excerpt,0,item.start,repair=true)

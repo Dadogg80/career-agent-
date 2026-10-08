@@ -80,3 +80,7 @@ PR #19 is verified merged at `5bc9a3e84ad46273c80b7e483906063c55af4956`; continu
 ## Document coverage continuation — 2026-10-08
 
 PR #20 is verified merged; main `520bbe70869cc176f41585f457fd3a03cc911a34` adds explicit Flash/Lite options and per-model cooldowns, with successful Foundation CI. Current branch: `feat/document-coverage-audit`, ADR 0028. Owner resumed document-quality work and reiterated that Flash Lite must remain available across analysis tasks. Preserve those choices. Inventory source usage conservatively, disclose at most four follow-up calls on new approved runs, keep old runs unchanged and never label passage coverage as exhaustive competence. Private audit files remain outside Git. Test and prepare a PR without assuming merge authorization.
+
+## Context and period continuation — 2026-10-08
+
+PR #21 is verified merged at `ccae0ed53ef10bb74b5c12c36dd8599dbda60731`; push/PR/main Foundation checks passed. Continue on `fix/document-context-and-periods` with a small extraction correction: retain literal employer/project context through nested technical subsection headings, reset at global or same-level Markdown boundaries, and normalize explicit local month dates without inventing months from year-only endpoints. Preserve original periods, existing stored content, evidence, budgets and manual review behavior. This is not the generalized claim-context graph or conflict resolution. Test and prepare a new PR without merging automatically.

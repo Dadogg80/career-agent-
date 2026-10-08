@@ -133,3 +133,5 @@ Contribution review keys additionally identify original extracted statement word
 ## Source coverage state (ADR 0028)
 
 A new run may retain `coverageReview`, a bounded `DocumentCoverageReport` and one scheduled follow-up round. `DocumentCoveragePassage` records document, source offset, literal quotation and detected passage kind. Counts describe quotation use, not semantic competency completeness or confirmation. Follow-up batches have `repair=true` and zero additional source characters; processing steps include skipped follow-ups and synthesis. The optional defaults preserve old persisted runs without adding calls. All state remains in the existing owned JSONB run, without a schema migration.
+
+Literal history periods may now supply local-format month endpoints (`MM.YYYY`/`MM/YYYY`) as well as ISO months. Each endpoint preserves its own precision; a known end month cannot become the unknown start. Original period text and unverified history status remain intact. Context resolution respects global section resets and Markdown depth but does not create claim-to-career-entry relationships.

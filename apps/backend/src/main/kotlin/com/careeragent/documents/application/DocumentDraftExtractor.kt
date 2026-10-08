@@ -99,10 +99,10 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
             val client=field(node,"client",200,true); val role=field(node,"deliveryRole",200,true); val period=field(node,"periodText",120,true)
             require(client.isBlank() || literal(client,quote) != null); require(role.isBlank() || literal(role,quote) != null); require(period.isBlank() || quote.contains(period))
             // Do not manufacture January/December for year-only dates. Literal periods are retained for review.
-            val months=Regex("\\b(?:19|20)\\d{2}-(?:0[1-9]|1[0-2])\\b").findAll(period).map { it.value }.toList()
-            val ongoing=Regex("(?i)\\b(?:present|nå|dags dato|ongoing)\\b").containsMatchIn(period)
+            val months=DocumentCareerPeriod.parse(period)
+            val ongoing=Regex("(?i)\\b(?:present|now|nå|dags dato|ongoing)\\b").containsMatchIn(period)
             val description=field(node,"description",1600)
-            val content=CareerEntryContent(kind,title,org,client,role,months.firstOrNull(),if(ongoing) null else months.getOrNull(1),ongoing,
+            val content=CareerEntryContent(kind,title,org,client,role,months.start,if(ongoing) null else months.end,ongoing,
                 (if(period.isNotBlank()) "$period\n" else "")+description,"Document evidence: ${quote.take(460)}")
             require(content.startMonth == null || content.endMonth == null || content.endMonth >= content.startMonth)
             CareerHistoryDraft(UUID.randomUUID(),content,period,documentId,quote)
