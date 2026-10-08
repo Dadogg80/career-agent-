@@ -1,6 +1,6 @@
 # Career Agent roadmap
 
-Status checked against remote main on 2026-10-07. Deliver small tested increments; branch implementation is not a merged release.
+Status checked against remote main on 2026-10-08; the owner authorized publishing and merging the tested local-pilot delivery. Deliver small tested increments; branch implementation is not a merged release.
 
 ## Current status
 
@@ -16,19 +16,19 @@ Status checked against remote main on 2026-10-07. Deliver small tested increment
 | Owned competency statements, explicit review and revision history | Implemented and merged, PR #14 |
 | Local DOCX/PDF original upload, text inspection, master selection and source-selected claims | Implemented and merged, PR #14 |
 | Opt-in single/combined document AI summaries and source-backed suggestions | Implemented and merged, PR #14 |
-| Competency search/status dashboard, wider document review Sheet, improved source coverage and local rereading/OCR | Implemented and locally validated on feat/competency-workspace; not pushed/merged |
+| Competency search/status dashboard, wider document review Sheet, improved source coverage and local rereading/OCR | Implemented and locally validated on feat/competency-workspace; ready for the authorized delivery merge |
 | Reviewed typed career history, role/client distinction and revision review | Implemented on the local branch; real PostgreSQL and browser checks |
 | Public landing, dedicated sign-in, workspace overview and responsive navigation | Implemented on the local branch; production/development browser regression checks completed |
 | Adjacent-skill inference, full normalized employment/project graph | Not implemented |
 | Owned saved job snapshots and searchable library | Implemented on current local branch; verified in the integrated local pilot |
 | Approved personal requirement-to-claim matching | Implemented on current local branch; verified in the integrated local pilot |
-| Reviewed CV selection, preview and immutable standard DOCX/PDF export | Implemented on the unpublished local branch; verified with real local identity/storage and automated checks |
-| Manual application cases, exact approved CV references, history and follow-up dates | Implemented on the unpublished local branch; verified with real local identity/storage and automated checks |
+| Reviewed CV selection, preview and immutable standard DOCX/PDF export | Implemented on the tested delivery branch; verified with real local identity/storage and automated checks |
+| Manual application cases, exact approved CV references, history and follow-up dates | Implemented on the tested delivery branch; verified with real local identity/storage and automated checks |
 | Local advertisement recovery, richer received text, UTF-8 TXT/Markdown and conservative multi-source deduplication | Implemented locally; verified with real local identity/storage and automated checks |
-| Source-selected document competencies, context proof and local original/text/quote check | Implemented locally; current validation recorded in DEVELOPMENT_LOG.md; unpublished |
+| Source-selected document competencies, context proof and local original/text/quote check | Implemented locally; current validation recorded in DEVELOPMENT_LOG.md; ready for delivery |
 | Automatic CV rewriting, discovery, interview/academy/analytics and browser submission | Not implemented |
 
-The previous delivery scope was the three deliveries already listed: ad overview, competency review and initial CV import. Saved jobs/matching were excluded from that earlier delivery; the latest instruction authorizes progressing through the local pilot workflow without pushing yet. The owner subsequently added AI competency summarization across uploaded documents before merge. Upload/extraction remain local; a separately approved Groq call creates stored source-backed suggestions, and an explicit user save creates UNVERIFIED claims. See docs/CV_IMPORT.md and the actual validation in docs/DEVELOPMENT_LOG.md.
+The previous delivery scope was the three deliveries already listed: ad overview, competency review and initial CV import. Saved jobs/matching were excluded from that earlier delivery; the latest instruction authorizes publishing and merging the tested local pilot workflow. The owner subsequently added AI competency summarization across uploaded documents before merge. Upload/extraction remain local; a separately approved Groq call creates stored source-backed suggestions, and an explicit user save creates UNVERIFIED claims. See docs/CV_IMPORT.md and the actual validation in docs/DEVELOPMENT_LOG.md.
 
 ## Current delivery completion criteria
 
@@ -38,7 +38,7 @@ The previous delivery scope was the three deliveries already listed: ad overview
 
 ## Authorized local-pilot increments
 
-The owner expanded the pilot with public entry, dedicated sign-in and a serious UX/UI redesign. Public entry, CV generation and application tracking are implemented and locally verified; publication/merge remain separate. Standard CV generation uses reviewed selections; automatic AI rewriting and the full normalized employment/project graph remain separate future increments. Keep the local work unpublished as requested; long-term product phases remain separate. See docs/UX_DESIGN.md.
+The owner expanded the pilot with public entry, dedicated sign-in and a serious UX/UI redesign. Public entry, CV generation and application tracking are implemented and locally verified; publication/merge remain separate. Standard CV generation uses reviewed selections; automatic AI rewriting and the full normalized employment/project graph remain separate future increments. The owner authorized publication and merge on 2026-10-08; long-term product phases remain separate. See docs/UX_DESIGN.md.
 
 1. Owned saved advertisement snapshots and reviewed typed employment/projects are implemented. A full normalized career graph remains future work.
 2. Personal requirement-to-confirmed-claim matching, explicit uncertainty/clarification and explainable CV wording recommendations. Undocumented experience is unknown, not automatically a skill gap. The owner approved relevant CONFIRMED claims plus ad text with preview and approval per analysis; production provider/privacy policy remains separate.
@@ -48,4 +48,4 @@ Automatic job discovery/digests → interview/follow-up → browser application 
 
 ## Completion discipline
 
-Update stories/flows, decisions, security and the development log. Published branches remain pending until the user merges. Local tests do not establish GitHub Actions execution or fresh-task cloud restoration. Production identity, provider/source terms, account export/deletion, retention, backup and object storage remain unresolved before external rollout.
+Update stories/flows, decisions, security and the development log. Published branches remain pending until an actual authorized merge is verified. Local tests do not establish GitHub Actions execution or fresh-task cloud restoration. Production identity, provider/source terms, account export/deletion, retention, backup and object storage remain unresolved before external rollout.

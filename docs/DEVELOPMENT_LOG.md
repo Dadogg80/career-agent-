@@ -267,3 +267,8 @@ Actual validation also encountered transient provider unavailability and rate li
 Final verification: the authenticated actual-PDF document-check UI passed through Next's private proxy with intact original/reproducible text, zero browser errors and zero Groq calls. Its disposable uploaded copy/analysis was deleted, and the task-owned database had zero remaining document/analysis fixtures. Source content was not committed.
 
 Automated browser verification completed: all 75 production browser tests passed, including the final source-language/detail/context/check UI and private route changes. Eight development-server checks also passed during this slice. Final production build/TypeScript and all 118 backend tests passed. No push, merge, GitHub Actions run, new cloud publication or fresh-task restoration is claimed.
+
+
+## 2026-10-08 — Authorized pilot publication
+
+The owner explicitly requested pushing and merging the tested pilot delivery to main, superseding the earlier unpublished-work preference. Fetched remote main explicitly: it remains c0bcb13 and is an ancestor of the five implementation commits through ef2086a. Final backend reports contain 118 tests with zero failures/errors/skips; the final production browser run passed 75 tests, and the production build/TypeScript check passed. Publication preparation changes documentation only. Checked the delivery paths and credential patterns; the real owner CV, local environment files and private test artifacts remain outside Git. GitHub publication/merge and local Mac synchronization/restarts are separate operations.

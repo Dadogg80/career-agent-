@@ -1,10 +1,10 @@
 # Local pilot delivery and later work
 
-The earlier identity/profile/import proposal is implemented. The unpublished `feat/competency-workspace` branch now includes public entry, dedicated local sign-in, owned reviewed competencies and typed career history, PDF/DOCX/UTF-8 TXT/Markdown evidence, opt-in single/combined AI summaries, saved advertisements, approved matching, standard CV export and manual application tracking. See [ROADMAP.md](../ROADMAP.md) and the actual verification in [DEVELOPMENT_LOG.md](DEVELOPMENT_LOG.md).
+The earlier identity/profile/import proposal is implemented. The tested `feat/competency-workspace` delivery now includes public entry, dedicated local sign-in, owned reviewed competencies and typed career history, PDF/DOCX/UTF-8 TXT/Markdown evidence, opt-in single/combined AI summaries, saved advertisements, approved matching, standard CV export and manual application tracking. See [ROADMAP.md](../ROADMAP.md) and the actual verification in [DEVELOPMENT_LOG.md](DEVELOPMENT_LOG.md).
 
 ## Pilot handoff
 
-Keep this work local and unpublished until the owner requests a push. Follow [TESTING_PILOT.md](TESTING_PILOT.md) for the complete local flow and [RUNNING.md](RUNNING.md) for startup. GitHub publishing, merge, local synchronization and restarts are distinct actions. No paid service or account upgrade is authorized.
+The owner explicitly authorized pushing this tested delivery and merging it to main on 2026-10-08. Follow [TESTING_PILOT.md](TESTING_PILOT.md) for the complete local flow and [RUNNING.md](RUNNING.md) for startup. GitHub publishing, merge, local synchronization and restarts are distinct actions. No paid service or account upgrade is authorized.
 
 ## Subsequent coherent increments
 

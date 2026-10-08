@@ -1,6 +1,6 @@
 # Kjør første utviklingsversjon
 
-Status: the unpublished local pilot includes a public landing page, dedicated OIDC sign-in, overview, public advertisement analysis, owned profiles/documents/competency review/career history, saved jobs, approved personal matching, reviewed standard DOCX/PDF export and manual application tracking. PDF/DOCX/UTF-8 TXT/Markdown sources and optional local PDF OCR are supported within documented bounds. Public SaaS deployment remains deferred. See [TESTING_PILOT.md](TESTING_PILOT.md), [IDENTITY_SETUP.md](IDENTITY_SETUP.md), [DOCUMENT_KNOWLEDGE.md](DOCUMENT_KNOWLEDGE.md), [CV_EXPORT.md](CV_EXPORT.md) and [APPLICATION_TRACKING.md](APPLICATION_TRACKING.md).
+Status: the tested local pilot includes a public landing page, dedicated OIDC sign-in, overview, public advertisement analysis, owned profiles/documents/competency review/career history, saved jobs, approved personal matching, reviewed standard DOCX/PDF export and manual application tracking. PDF/DOCX/UTF-8 TXT/Markdown sources and optional local PDF OCR are supported within documented bounds. Public SaaS deployment remains deferred. See [TESTING_PILOT.md](TESTING_PILOT.md), [IDENTITY_SETUP.md](IDENTITY_SETUP.md), [DOCUMENT_KNOWLEDGE.md](DOCUMENT_KNOWLEDGE.md), [CV_EXPORT.md](CV_EXPORT.md) and [APPLICATION_TRACKING.md](APPLICATION_TRACKING.md).
 
 ## Forutsetninger
 

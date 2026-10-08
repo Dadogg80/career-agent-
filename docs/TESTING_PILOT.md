@@ -1,6 +1,6 @@
 # Test the local career pilot
 
-Status: the current local `feat/competency-workspace` implementation is unpublished. No new main release or push is implied. Use the repository's actual installed branch/version and [RUNNING.md](RUNNING.md) for startup; Codex credentials/installations are not copied to your Mac.
+Status: the tested `feat/competency-workspace` delivery is authorized for publication and merge on 2026-10-08. Check the actual GitHub PR/branch state before synchronizing; a Git operation does not restart local services. Use the repository's actual installed branch/version and [RUNNING.md](RUNNING.md) for startup; Codex credentials/installations are not copied to your Mac.
 
 ## Prerequisites
 
