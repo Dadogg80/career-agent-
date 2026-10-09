@@ -127,3 +127,7 @@ PR #29 is verified merged at `8e88d1f0832b1ae673f7f01a110733b740b713da`; both Fo
 ## Base-CV visibility continuation — 2026-10-09
 
 PR #30 is verified merged at `9df2ae41fc61d7769346de3c5af4413665c54810`; both pre-merge Foundation checks passed. Continue on `feat/base-cv-visibility` from this main, under ADR 0034. Use one approved CV_TAILORING request for source-bound criterion visibility and wording. Keep exact selected-CV/current-match references, candidate uncertainty separate from presentation gaps, per-item unassessed recovery and historical result readability. No additional calls, factual promotion, model defaults, migration or durable changeset. Verify updated main before the next delivery. Do not merge automatically.
+
+## Reviewed CV text handoff continuation — 2026-10-09
+
+PR #31 merged at `ab15566a003c03c043f77a00c74e17016cb8825f`; PR #32 merged at `e7f18bf36f02568d062b58bfeddbeb26df9dd911`, both with successful Foundation checks. Continue on `feat/reviewed-cv-text-handoff` from that main under ADR 0035. Exact-source plain-text preview/copy is local and explicit, with approved changes only and stale/error guards; no original/file/version/profile writes or provider calls. Preserve the owner's focused-validation/no-live-AI-default preference. Prepare a tested PR without automatic merge.

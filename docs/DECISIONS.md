@@ -216,3 +216,7 @@ The owner additionally requested clearer clarification confirmation/rejection UX
 ## 2026-10-09 — Source-bound base-CV presentation review
 
 Accepted [ADR 0034](adr/0034-base-cv-visibility.md). Combine visibility and wording in the same recipient-approved request. Require exact CV citations and current criterion evidence; uncertain matching cannot become an established CV presentation gap. Missing/invalid visibility becomes unassessed while valid proposals remain usable. Read-only compact review does not confirm facts, change percentages or write originals. Semantic quality, durable changesets and tailored files remain future slices.
+
+## 2026-10-09 — Approved wording plain-text handoff
+
+Accepted [ADR 0035](adr/0035-reviewed-cv-text-handoff.md). Offer explicit local preview/copy from the exact base source and approved changes, preserve untouched text and reject stale/current-invalid output. Clipboard denial is recoverable through the preview. No persistent CV version, original mutation, provider request or profile confirmation is implied.

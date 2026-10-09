@@ -458,3 +458,7 @@ An existing answer can be rejected through a separate confirmation dialog. Rejec
 ## Source-bound CV visibility (ADR 0034)
 
 From the owned preparation page, select the base CV and approve the displayed recipient/model. One request returns both criterion visibility and supported wording proposals. Filter/search the compact CV review; expand a criterion to inspect exact base-CV excerpts and the confirmed candidate contribution. Clear presentation, weak visibility, established but absent detail, uncertain evidence and unassessed output remain distinct. No profile confirmation, match-score change or additional provider request follows viewing this panel. Changed CV/match/selections mark the result historical; proposals retain existing review and staleness controls. Original files are retained and review remains page-session-only.
+
+## Approved CV wording handoff
+
+After approving individual text changes in preparation, open the full plain-text preview and choose Copy CV text. Only approved replacements are applied to the exact selected source snapshot; pending/rejected items preserve original wording and separators. A later edit returns its proposal to pending. Changed/unavailable required evidence disables copying as current; earlier text remains readable. Clipboard denial retains the selectable preview for manual copying. Nothing is sent, saved to the profile or written to the original file. Decisions/preview remain page-session-only (ADR 0035).

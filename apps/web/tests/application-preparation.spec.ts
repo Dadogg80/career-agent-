@@ -134,3 +134,29 @@ test("CV visibility metadata rejects duplicate indexes and unsupported absence o
  expect(isTailoringResult({...result,visibility:[{...visibility[0],claimIds:[]}]})).toBe(false);
  expect(isTailoringResult({...result,visibility:[{...visibility[0],requirementIndex:128}]})).toBe(false);
 });
+
+test("reviewed CV handoff copies only approved edits and blocks stale wording without new provider calls",async({page})=>{
+ await page.addInitScript(()=>Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async(text:string)=>{(window as unknown as {copiedCv:string}).copiedCv=text;}}}));
+ await fixtures(page);let calls=0;await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{calls++;return r.fulfill({json:result});});
+ await page.goto(`/jobs/${jobId}/apply`);await page.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for CV-forslag",exact:true}).check();await page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true}).click();
+ const handoff=page.locator(".reviewed-cv-text"),article=page.locator(".tailoring-proposal");await expect(handoff.getByRole("button",{name:"Kopier CV-teksten",exact:true})).toBeDisabled();await handoff.locator("summary").click();await expect(handoff.getByLabel("CV-tekst med godkjente endringer")).toHaveValue(cv);
+ const edited="Utviklet Kotlin-API-er for en fiktiv arbeidsgiver.";await article.getByLabel("Forslag – kan redigeres",{exact:true}).fill(edited);await article.getByRole("button",{name:"Godkjenn teksten",exact:true}).click();
+ const expected=cv.replace(claim.statement,edited);await expect(handoff.getByLabel("CV-tekst med godkjente endringer")).toHaveValue(expected);await handoff.getByRole("button",{name:"Kopier CV-teksten",exact:true}).click();await expect(handoff.getByRole("status")).toContainText("CV-teksten er kopiert");expect(await page.evaluate(()=>(window as unknown as {copiedCv:string}).copiedCv)).toBe(expected);
+ await page.getByRole("button",{name:"Behandlet · 1",exact:true}).click();await article.getByLabel("Forslag – kan redigeres",{exact:true}).fill("Et nytt, ubekreftet tekstvalg.");await expect(handoff.getByLabel("CV-tekst med godkjente endringer")).toHaveValue(cv);await expect(handoff.getByRole("button",{name:"Kopier CV-teksten",exact:true})).toBeDisabled();
+ await page.getByRole("button",{name:"Til gjennomgang · 1",exact:true}).click();await article.getByRole("button",{name:"Godkjenn teksten",exact:true}).click();await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await handoff.screenshot({path:"/tmp/career-reviewed-cv-mobile.png"});
+ await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await expect(handoff).toContainText("Evidence or selections changed");await expect(handoff.getByRole("button",{name:"Copy CV text",exact:true})).toBeDisabled();expect(calls).toBe(1);
+});
+
+test("clipboard denial retains a selectable preview and rejection restores the original",async({page})=>{
+ await page.addInitScript(()=>Object.defineProperty(navigator,"clipboard",{value:{writeText:async()=>{throw new Error("Permission denied");}}}));await fixtures(page);await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>r.fulfill({json:result}));
+ await page.goto(`/jobs/${jobId}/apply`);await page.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for CV-forslag",exact:true}).check();await page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true}).click();await page.locator(".tailoring-proposal").getByRole("button",{name:"Godkjenn teksten",exact:true}).click();
+ const handoff=page.locator(".reviewed-cv-text");await handoff.getByRole("button",{name:"Kopier CV-teksten",exact:true}).click();await expect(handoff.getByRole("status")).toContainText("kopier teksten manuelt");await handoff.locator("summary").click();await expect(handoff.getByLabel("CV-tekst med godkjente endringer")).toHaveValue(cv.replace(claim.statement,result.proposals[0].newText));
+ await page.getByRole("button",{name:"Behandlet · 1",exact:true}).click();await page.locator(".tailoring-proposal").getByRole("button",{name:"Avvis forslaget",exact:true}).click();await expect(handoff.getByLabel("CV-tekst med godkjente endringer")).toHaveValue(cv);await expect(handoff.getByRole("button",{name:"Kopier CV-teksten",exact:true})).toBeDisabled();
+});
+
+test("reviewed substitutions preserve repeated passages whitespace untouched history and long-source boundaries",async()=>{
+ const {reviewedCvText,tailoringPassages}=await import("../lib/cv-tailoring");const source="Contact details\n \nRepeated contribution\n\nRepeated contribution\n\n2021–2023: Historical title\n\n";
+ expect(reviewedCvText(source,[])).toBe(source);expect(reviewedCvText(source,[{paragraphIndex:2,oldText:"Repeated contribution",text:"Approved second contribution"}])).toBe(source.replace("Repeated contribution\n\n2021","Approved second contribution\n\n2021"));
+ expect(reviewedCvText(source,[{paragraphIndex:1,oldText:"Wrong original",text:"Changed"}])).toBeNull();const change={paragraphIndex:1,oldText:"Repeated contribution",text:"Changed"};expect(reviewedCvText(source,[change,change])).toBeNull();
+ const long="a".repeat(3999)+"😀"+"b".repeat(4100);const parts=tailoringPassages(long);expect(reviewedCvText(long,[{paragraphIndex:1,oldText:parts[1],text:"Reviewed section"}])).toBe(parts[0]+"Reviewed section"+parts[2]);
+});

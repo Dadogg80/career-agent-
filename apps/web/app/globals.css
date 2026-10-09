@@ -672,3 +672,8 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 @media(max-width:600px) { .cv-visibility-item > summary { flex-wrap:wrap; }.cv-visibility-item > summary > div { margin-left:27px; } }
 
 .cv-visibility-item[open] .cv-visibility-toggle { transform:rotate(180deg); }
+
+.reviewed-cv-text h3 { display:flex; align-items:center; gap:8px; }
+.reviewed-cv-preview { margin-bottom:16px; }
+.reviewed-cv-preview summary { cursor:pointer; font-size:13px; font-weight:600; }
+.reviewed-cv-preview textarea { max-height:360px; overflow:auto; font-size:13px; line-height:1.7; margin-top:12px; }

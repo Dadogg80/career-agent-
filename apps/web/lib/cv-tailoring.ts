@@ -21,6 +21,17 @@ export function tailoringPassages(text:string):string[] {
  });
 }
 
+/** Apply reviewed substitutions to exact source ranges, retaining all other whitespace and text. */
+export function reviewedCvText(source:string,changes:{paragraphIndex:number;oldText:string;text:string}[]):string|null {
+ const paragraphs=tailoringPassages(source),ranges:{start:number;end:number}[]=[];
+ let position=0;
+ for(const paragraph of paragraphs){const start=source.indexOf(paragraph,position);if(start<0)return null;position=start+paragraph.length;ranges.push({start,end:position});}
+ if(new Set(changes.map(c=>c.paragraphIndex)).size!==changes.length || changes.some(c=>!Number.isInteger(c.paragraphIndex) || c.paragraphIndex<0 || c.oldText!==paragraphs[c.paragraphIndex] || !c.text.trim() || c.text.length>4000))return null;
+ let cursor=0,output="";
+ for(const change of [...changes].sort((a,b)=>a.paragraphIndex-b.paragraphIndex)){const range=ranges[change.paragraphIndex];output+=source.slice(cursor,range.start)+change.text;cursor=range.end;}
+ return output+source.slice(cursor);
+}
+
 export function isVisibilityList(value:unknown):value is CvVisibility[] {
  if(!Array.isArray(value) || value.length>MAX_JOB_REQUIREMENTS)return false;
  const str=(v:unknown,max:number)=>typeof v==="string" && !!v.trim() && v.length<=max;
