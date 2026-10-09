@@ -77,9 +77,9 @@ class SavedJobIntegrationTest {
   verifyNoInteractions(ai)
  }
 
- private fun claim(user: String, confirmed: Boolean = true): String {
-  val statement=if(confirmed) "Built APIs using Kotlin" else "Proposed APIs using Kotlin"
-  val r = mvc.perform(post("/api/profile/me/claims").with(caller(user)).with(csrf()).contentType("application/json").content("""{"skill":"Kotlin","statement":"$statement","context":"Fictional project","sourceNote":"User statement"}""")).andExpect(status().isOk).andReturn()
+ private fun claim(user: String, confirmed: Boolean = true, suffix: String = "", skill: String = "Kotlin"): String {
+  val statement=(if(confirmed) "Built APIs using Kotlin" else "Proposed APIs using Kotlin") + suffix
+  val r = mvc.perform(post("/api/profile/me/claims").with(caller(user)).with(csrf()).contentType("application/json").content("""{"skill":"$skill","statement":"$statement","context":"Fictional project","sourceNote":"User statement"}""")).andExpect(status().isOk).andReturn()
   val id = json.readTree(r.response.contentAsString)["id"].asText()
   if (confirmed) mvc.perform(post("/api/profile/me/claims/$id/review").with(caller(user)).with(csrf()).contentType("application/json").content("""{"revision":1,"decision":"CONFIRM"}""")).andExpect(status().isOk)
   return id
@@ -120,6 +120,31 @@ class SavedJobIntegrationTest {
   }
   mvc.perform(post(path).with(caller(user)).with(csrf()).contentType("application/json").content(input)).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("MATCH_CONFLICT"))
   mvc.perform(get(path).with(caller(user))).andExpect(jsonPath("$.analysis.id").value(firstId)).andExpect(jsonPath("$.analysis.stale").value(true))
+ }
+ @Test fun `all 35 confirmed contributions are included and a newly confirmed claim invalidates the snapshot`() {
+  val user = profile(); val job = save(user)
+  val ids = (1..35).map { claim(user, suffix=". " + "Fictional delivery. ".repeat(25), skill="Skill $it") }
+  val input = matchInput(ids.first()) + ("claims" to ids.map { mapOf("id" to it, "revision" to 2) })
+  val endpoint = "$path/$job/match"
+  mvc.perform(post(endpoint).with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(matchInput(ids.first())))).andExpect(status().isConflict)
+  verifyNoInteractions(ai)
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),(any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))).thenAnswer { invocation ->
+   val packed = json.readTree(invocation.getArgument<String>(1))
+   assertThat(packed["confirmedClaims"].size()).isEqualTo(35)
+   assertThat(packed["candidatePassages"].size()).isEqualTo(1)
+   assertThat(packed["confirmedClaims"].map { it["id"].asText() }).containsExactlyInAnyOrderElementsOf(ids)
+   output(ids.last())
+  }
+  mvc.perform(post(endpoint).with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(input)))
+   .andExpect(status().isOk).andExpect(jsonPath("$.claims.length()").value(35))
+   .andExpect(jsonPath("$.automaticEvidence").value(true))
+   .andExpect(jsonPath("$.assessments[0].evidence[0].claimId").value(ids.last()))
+  val stored = mvc.perform(get(endpoint).with(caller(user))).andExpect(status().isOk).andExpect(jsonPath("$.analysis.stale").value(false)).andReturn()
+  assertThat(json.readTree(stored.response.contentAsString)["analysis"]["inputCharacters"].asInt()).isGreaterThan(12000)
+  claim(user)
+  mvc.perform(get(endpoint).with(caller(user))).andExpect(jsonPath("$.analysis.stale").value(true))
+  mvc.perform(post(endpoint).with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(input))).andExpect(status().isConflict)
+  verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),(any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))
  }
  companion object {
   @Container @JvmStatic val postgres = PostgreSQLContainer<Nothing>("postgres@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826")

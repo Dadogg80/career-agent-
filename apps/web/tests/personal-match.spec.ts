@@ -32,15 +32,17 @@ test("matching shares only selected confirmed revisions after separate approval 
  await sheet.getByRole("button",{name:/Gemini · gemini-3.5-flash-lite/}).click();
  const submit = sheet.getByRole("button",{name:"Analyser personlig match",exact:true});
  await expect(submit).toBeDisabled(); expect(calls).toBe(0);
- await sheet.getByText("Se og juster kompetanseutvalget",{exact:true}).click();await expect(sheet.locator(".match-claim")).toHaveCount(1);
- await expect(sheet.locator(".match-claim").getByRole("checkbox",{includeHidden:true})).toBeChecked();
+ await sheet.getByText("Se kompetansegrunnlaget",{exact:true}).click();await expect(sheet.locator(".match-claim")).toHaveCount(1);
+ await expect(sheet.locator(".match-claim input")).toHaveCount(0);
  await expect(submit).toBeDisabled();
  const consent = sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for denne matchingen"});
  await consent.check();
+ await sheet.getByText("Se annonseteksten som sendes",{exact:true}).click();
  const preview = sheet.getByRole("textbox",{name:"Annonsetekst som sendes"});
  await preview.fill(text+"\n"); await expect(consent).not.toBeChecked();
  await preview.fill(text); await consent.check(); await submit.click();
  await expect(sheet.locator(".match-result")).toBeVisible();
+ await expect(page.locator(".saved-job-card .saved-job-match")).toContainText("67%");
  await sheet.locator(".match-assessment summary").filter({hasText:"Kotlin"}).click();
  await expect(sheet.locator(".match-proof")).toContainText(confirmed.statement);
  await sheet.locator(".match-assessment summary").filter({hasText:"Kafka"}).click();
@@ -82,7 +84,7 @@ test("daily quota keeps matching blocked beyond five minutes and preserves the e
  await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();
  const sheet = page.getByRole("dialog");
  await sheet.getByRole("button",{name:"Vurder personlig match",exact:true}).click();
- await expect(sheet.locator(".match-claim").getByRole("checkbox",{includeHidden:true})).toBeChecked();
+ await expect(sheet.locator(".match-claim input")).toHaveCount(0);
  await sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Groq for denne matchingen"}).check();
  await page.clock.install();
  const submit = sheet.getByRole("button",{name:"Analyser personlig match",exact:true}); await submit.click();
@@ -109,7 +111,7 @@ test("Gemini matching rejects stale approval without retrying and allows explici
  });
  await page.goto("/jobs/saved");await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();const sheet=page.getByRole("dialog");
  await sheet.getByRole("button",{name:"Vurder personlig match",exact:true}).click();await expect(sheet).toContainText("Gemini · gemini-3.5-flash");
- await expect(sheet.locator(".match-claim").getByRole("checkbox",{includeHidden:true})).toBeChecked();const consent=sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for denne matchingen"});const submit=sheet.getByRole("button",{name:"Analyser personlig match",exact:true});
+ await expect(sheet.locator(".match-claim input")).toHaveCount(0);const consent=sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for denne matchingen"});const submit=sheet.getByRole("button",{name:"Analyser personlig match",exact:true});
  await consent.check();await submit.click();await expect(sheet).toContainText("Ingen data er sendt med den gamle godkjenningen.");expect(attempts).toBe(1);
  await sheet.getByRole("button",{name:"Hent AI-oppsett på nytt",exact:true}).click();await expect(sheet).toContainText("Gemini · gemini-3.7-flash");await expect(consent).not.toBeChecked();await expect(submit).toBeDisabled();expect(attempts).toBe(1);
  await consent.check();await submit.click();await expect(sheet.locator(".match-result")).toContainText("Gemini");expect(attempts).toBe(2);
@@ -131,10 +133,10 @@ test("Groq quota recovery keeps selected evidence and requires Gemini approval b
  });
  await page.goto("/jobs/saved");await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();const sheet=page.getByRole("dialog");
  await sheet.getByRole("button",{name:"Vurder personlig match",exact:true}).click();
- await expect(sheet.locator(".match-claim").getByRole("checkbox",{includeHidden:true})).toBeChecked();await sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Groq for denne matchingen"}).check();
+ await expect(sheet.locator(".match-claim input")).toHaveCount(0);await sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Groq for denne matchingen"}).check();
  const submit=sheet.getByRole("button",{name:"Analyser personlig match",exact:true});await submit.click();await expect(sheet).toContainText("16 min");
  await sheet.getByRole("button",{name:/Prøv med Gemini/}).click();await expect(submit).toBeDisabled();expect(calls).toBe(1);
- await expect(sheet.locator(".match-claim").getByRole("checkbox",{includeHidden:true})).toBeChecked();await expect(sheet.locator(".match-result")).toContainText("Groq · openai/gpt-oss-20b");
+ await expect(sheet.locator(".match-claim input")).toHaveCount(0);await expect(sheet.locator(".match-result")).toContainText("Groq · openai/gpt-oss-20b");
  const consent=sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for denne matchingen"});await expect(consent).not.toBeChecked();await consent.check();await submit.click();
  const activity=sheet.locator(".ai-activity");await expect(activity).toContainText("Venter på svar fra Gemini");
  await expect(sheet.getByRole("button",{name:"Sammenligner krav og erfaring …",exact:true})).toBeDisabled();expect(calls).toBe(2);
@@ -144,16 +146,16 @@ test("Groq quota recovery keeps selected evidence and requires Gemini approval b
  await page.screenshot({path:"/tmp/career-ai-provider-recovery-match.png",fullPage:false});
 });
 
-test("automatic evidence planning weights requirements, retains whole lines and avoids repeated source paragraphs",async()=>{
+test("automatic evidence planning keeps all skill identities and the whole advertisement",async()=>{
  const {automaticMatchEvidence,matchCoverage,matchSourcePreview}=await import("../lib/match-planning");
  const duplicate={...confirmed,id:pendingId,skill:"APIs",status:"CONFIRMED" as const};
- expect(automaticMatchEvidence([{...confirmed,status:"CONFIRMED"},duplicate,{...confirmed,id:jobId,status:"REJECTED"}],job.content as Parameters<typeof automaticMatchEvidence>[1],text)).toEqual([claimId]);
+ expect(automaticMatchEvidence([{...confirmed,status:"CONFIRMED"},duplicate,{...confirmed,id:jobId,status:"REJECTED"}],job.content as Parameters<typeof automaticMatchEvidence>[1],text)).toEqual([claimId,pendingId]);
  expect(matchCoverage(result as Parameters<typeof matchCoverage>[0],job.content as Parameters<typeof matchCoverage>[1])).toMatchObject({percent:67,upper:100,assessed:1,total:2});
  const unknown={...result,assessments:result.assessments.map(a=>({...a,classification:"CLARIFY",evidence:[]}))};
  expect(matchCoverage(unknown as Parameters<typeof matchCoverage>[0],job.content as Parameters<typeof matchCoverage>[1])?.percent).toBe(0);
  const long={...job.content,text:"Company description.\n".repeat(600)+"Kotlin experience is required\nWe also prefer Kafka."};
  const preview=matchSourcePreview(long as Parameters<typeof matchSourcePreview>[0]);
- expect(preview.length).toBeLessThanOrEqual(6000);expect(preview).toContain("Kotlin experience is required");expect(preview).toContain("We also prefer Kafka.");
+ expect(preview).toBe(long.text);expect(preview).toContain("Kotlin experience is required");expect(preview).toContain("We also prefer Kafka.");
  expect(preview.split("\n").every(line=>long.text.includes(line))).toBe(true);
 });
 
@@ -172,4 +174,32 @@ test("clarification saves personal experience and confirms it locally without an
  await assessment.locator(":scope > summary").click();await assessment.getByText("Avklar og legg til erfaring",{exact:true}).click();
  await assessment.getByLabel("Beskriv det du selv gjorde",{exact:true}).fill("Jeg bygget en Kafka-basert hendelsesflyt.");await assessment.getByLabel("Firma eller prosjekt",{exact:true}).fill("Fictional AS");
  await assessment.getByRole("button",{name:"Bekreft og lagre i profilen",exact:true}).click();await expect(assessment).toContainText("Lagret som bekreftet kompetanse");expect(created).toBe(1);expect(reviewed).toBe(1);expect(ai).toBe(0);
+});
+
+test("matching approves all 35 contributions without skill checkboxes and updates the saved job card",async({page})=>{
+ const evidence=Array.from({length:35},(_,i)=>({...confirmed,id:`${(i+1).toString(16).padStart(8,"0")}-1234-1234-1234-123456789abc`,statement:confirmed.statement+". Fictional delivery".repeat(25)}));
+ let saved:Record<string,unknown>|null=null,calls=0;
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
+ await page.route("**/api/profile/me/claims",r=>r.fulfill({json:evidence}));
+ await page.route("**/api/profile/me/jobs**",r=>{
+  if(!r.request().url().endsWith("/match"))return r.fulfill({json:[job]});
+  if(r.request().method()==="GET")return r.fulfill({json:saved});
+  calls++;const input=r.request().postDataJSON();
+  expect(input.claims).toEqual(evidence.map(c=>({id:c.id,revision:c.revision})));
+  expect(input.text).toBe(text);expect(input.consent).toBe(true);
+  saved={...result,automaticEvidence:true,inputCharacters:20000,claims:evidence.map(({id,revision,skill,statement,context})=>({id,revision,skill,statement,context})),assessments:[{...result.assessments[0],evidence:[{claimId:evidence[34].id,quote:confirmed.statement}]},result.assessments[1]]};
+  return r.fulfill({json:saved});
+ });
+ await page.goto("/jobs/saved");await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();const sheet=page.getByRole("dialog");
+ await sheet.getByRole("button",{name:"Vurder personlig match",exact:true}).click();
+ await expect(sheet).toContainText("35 kompetansebidrag");
+ await expect(sheet.locator(".match-claims input")).toHaveCount(0);
+ await sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Groq for denne matchingen"}).check();
+ await sheet.getByRole("button",{name:"Analyser personlig match",exact:true}).click();
+ await expect(sheet.locator(".match-score")).toContainText("67%");expect(calls).toBe(1);
+ await sheet.getByRole("button",{name:"Lukk",exact:true}).click();
+ await expect(page.locator(".saved-job-card .saved-job-match")).toContainText("67% kravmatch");
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:"/tmp/career-full-profile-match-card.png",fullPage:true});
+ await page.reload();await expect(page.locator(".saved-job-card .saved-job-match")).toContainText("67% kravmatch");expect(calls).toBe(1);
 });
