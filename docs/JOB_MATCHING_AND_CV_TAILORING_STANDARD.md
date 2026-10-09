@@ -302,13 +302,13 @@ Understand the real candidate sufficiently to identify suitable opportunities an
 
 ## Delivery matrix and acceptance
 
-This matrix separates verified foundations from target behavior. Remote main `217192c` includes PR #27. The current preparation branch adds the initial apply/text-proposal slice; statuses below distinguish it from the broader target.
+This matrix separates verified foundations from target behavior. Remote main `8e88d1f` includes PR #29. The current evidence-relation branch adds ADR 0033 explanations and application priorities; statuses below distinguish verified foundations and this slice from the broader target.
 
 | Standard areas | Current foundation | Next acceptance / missing behavior |
 | --- | --- | --- |
 | 2–4, 50, 61, 68 | Owned documents/claims, explicit truth/review, revisions and documentary confirmation basis | Whole-journey tests must preserve corrections and rejection across rereading/reanalysis |
 | 5–8, 52 | Whole-ad criterion prompt and up to 128 source-backed requirements across extraction/storage/matching; bounded 15,000-character ad input | Unassessed output is distinct and coverage provisional (ADR 0032); measure semantic recall/formal criteria; richer taxonomy remains pending |
-| 9–18, 21–22, 53–56 | Confirmed-evidence STRONG/PARTIAL/CLARIFY, literal validation, deterministic weighted coverage, inline user clarification | Explicit transferability, positively evidenced gap/formal-barrier handling and richer assessment are pending |
+| 9–18, 21–22, 53–56 | Confirmed-evidence STRONG/PARTIAL/CLARIFY, literal validation, deterministic weighted coverage, inline user clarification and source-backed application priority groups | Explicit AI-labelled direct/transferable/unknown relations and formal/practical criterion nature with conservative coverage guards are implemented (ADR 0033); positively evidenced actual gaps, independently measured semantic quality and richer assessment remain pending |
 | 19–20, 65, 69 | Reason per requirement and score | Concise separately labelled recruiter/hiring-manager reasoning is pending, with evidence and uncertainty |
 | 24–29, 36, 40, 57–58 | Master-document selection, original text, independent standard CV export | Owned base-CV selection and source/match-bound old/new proposals are implemented in the preparation slice; exhaustive visibility assessment and durable changesets remain pending |
 | 30–35, 38–39, 43, 50 | Source reading, typed career history, context links, side-by-side period review | Cross-profession evidence/chronology/reading-order checks; complete all-section text review is pending |

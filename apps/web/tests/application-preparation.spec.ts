@@ -72,3 +72,37 @@ test("English preparation remains usable on mobile and rejects unsupported respo
  await expect(page.getByText("AI suggestions could not complete now. Evidence and earlier proposals are retained. Retry or select another available model with renewed approval.",{exact:true})).toBeVisible();
  await expect(page.locator(".tailoring-proposal")).toHaveCount(0);expect(calls).toBe(1);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+
+test("application priorities distinguish direct transferable and formal evidence with sources and no new AI call",async({page})=>{
+ await fixtures(page);let calls=0;
+ const criteria=[{label:"Kotlin APIs",kind:"REQUIRED",quote:"Kotlin API delivery is required."},{label:"React Native",kind:"REQUIRED",quote:"React Native mobile delivery is required."},{label:"Azure certification",kind:"REQUIRED",quote:"An Azure Solutions Architect certification is required."}];
+ const assessed={...match,assessments:[{...match.assessments[0],evidenceRelation:"DIRECT",requirementNature:"PRACTICAL"},{requirementIndex:1,classification:"PARTIAL",reason:"Web UI experience is related; mobile delivery is not documented.",evidence:[{claimId,quote:claim.statement}],question:"Have you delivered mobile apps?",evidenceRelation:"TRANSFERABLE",requirementNature:"PRACTICAL"},{requirementIndex:2,classification:"CLARIFY",reason:"The required certification is not documented, not a proven gap.",evidence:[],question:"Do you hold this certification?",evidenceRelation:"UNKNOWN",requirementNature:"FORMAL"}]};
+ await page.route(`**/api/profile/me/jobs/${jobId}`,r=>r.fulfill({json:{...job,content:{...job.content,requirements:criteria,text:criteria.map(c=>c.quote).join("\n")}}}));
+ await page.route("**/api/profile/me/jobs",r=>r.fulfill({json:[{...job,content:{...job.content,requirements:criteria}}]}));
+ await page.route(`**/api/profile/me/jobs/${jobId}/match`,r=>{if(r.request().method()==="POST")calls++;return r.fulfill({json:assessed});});
+ await page.goto("/jobs/saved");await expect(page.locator(".saved-job-match")).toContainText("50%");await expect(page.locator(".saved-job-match")).toContainText("1 kvalifikasjonskrav til kontroll");
+ await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();const sheet=page.getByRole("dialog");
+ for(const label of ["Kotlin APIs","React Native","Azure certification"])await sheet.locator(".match-assessment summary").filter({hasText:label}).click();
+ await expect(sheet.locator(".match-evidence-tags")).toContainText(["Direkte erfaring","Overførbar erfaring","AI: formelt kvalifikasjonskrav"]);
+ await sheet.getByRole("button",{name:"Om relevans og kvalifikasjoner",exact:true}).first().click();await expect(page.getByRole("tooltip")).toContainText("ikke automatisk tilsvarende");await page.keyboard.press("Escape");await expect(sheet).toBeVisible();
+ await sheet.getByRole("button",{name:"Lukk",exact:true}).click();
+ await page.locator(".saved-job-card").getByRole("link",{name:"Søk på stillingen",exact:true}).click();
+ const guide=page.getByRole("region",{name:"Prioriteringer fra stillingsmatchen",exact:true});await expect(guide).toBeVisible();
+ for(const label of ["Fremhev dokumenterte eksempler","Forklar overførbar erfaring","Kontroller kvalifikasjonskrav"])await guide.locator("summary").filter({hasText:label}).click();
+ await expect(guide).toContainText("Fictional employer");await expect(guide).toContainText("mobile delivery is not documented");await expect(guide).toContainText(criteria[2].quote);
+ await guide.getByRole("button",{name:"Om søknadsprioriteringene",exact:true}).click();await expect(page.getByRole("tooltip")).toContainText("allerede er synlig i CV-en");await page.keyboard.press("Escape");
+ await page.screenshot({path:"/tmp/career-relations-preparation-desktop.png",fullPage:true});
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:"/tmp/career-relations-preparation-mobile.png",fullPage:true});
+ await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await expect(page.getByRole("region",{name:"Priorities from your job match",exact:true})).toContainText("Review qualification requirements");expect(calls).toBe(0);
+ await page.route(`**/api/profile/me/jobs/${jobId}/match`,r=>r.fulfill({json:{...assessed,stale:true}}));await page.reload();await expect(page.locator(".match-application-focus")).toContainText("earlier assessment");expect(calls).toBe(0);
+});
+
+test("relation validation preserves legacy results and never gives full coverage to transferable or unknown claims",async()=>{
+ const {isPersonalMatch}=await import("../lib/personal-match");const {matchInsights,relationLabel}=await import("../lib/match-insights");
+ const direct={...match,assessments:[{...match.assessments[0],evidenceRelation:"DIRECT" as const,requirementNature:"FORMAL" as const}]};
+ expect(isPersonalMatch(match)).toBe(true);expect(isPersonalMatch(direct)).toBe(true);expect(matchInsights(direct as import("../lib/personal-match").PersonalMatch,job.content as import("../lib/saved-jobs").SavedJobContent).formal).toHaveLength(0);
+ for(const evidenceRelation of ["TRANSFERABLE","UNKNOWN","EQUIVALENT"])expect(isPersonalMatch({...direct,assessments:[{...direct.assessments[0],evidenceRelation}]})).toBe(false);
+ expect(isPersonalMatch({...direct,assessments:[{...direct.assessments[0],evidenceRelation:"TRANSFERABLE",classification:"PARTIAL"}]})).toBe(false);
+ expect(relationLabel({...direct.assessments[0],evaluated:false} as import("../lib/personal-match").MatchAssessment,true)).toBeNull();
+});

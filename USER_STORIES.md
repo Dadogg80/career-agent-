@@ -410,7 +410,7 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - A candidate explicitly approves the visible provider/model and complete supported source before one AI request. Wrong-task consent, other owners, missing CSRF and stale source/match revisions cannot produce current proposals.
 - A candidate compares exact old/new wording with references, edits it and approves/rejects it; pending counts exclude processed proposals. The original and profile facts are unchanged.
 - Quota failures retain existing proposals. Model changes clear consent and permit an explicit alternate-model request; no automatic fallback/retry occurs.
-- Limits: up to 12 text changes, current matching's 12 criteria, page-session review only, no generated tailored file and no deterministic guarantee of factual/semantic completeness.
+- Limits: up to 12 text changes, defensive 128-criterion matching bound (ADR 0032), page-session review only, no generated tailored file and no deterministic guarantee of factual/semantic completeness.
 
 ## Requirement coverage and answer continuity — 2026-10-09
 
@@ -418,3 +418,13 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - I can distinguish unassessed AI output from a question about my experience. Missing output does not ask me to create a competency, and incomplete coverage is provisional.
 - I can see, edit and retry confirmation of an existing personal answer without duplicating it. Editing uses current revision checks; rejected answers are not silently restored. AI still assesses actual relevance.
 - I can search and filter a long match and inspect document-source passages in a compact table, including by keyboard and on mobile. Supplementary help dismisses before the containing reader on Escape.
+
+## Evidence-based application priorities — 2026-10-09
+
+- I can distinguish direct experience from a supported analogy without having inferred skills added to my profile. Transferable evidence never receives full coverage, and related practical experience cannot establish a formal qualification.
+- I can see unresolved mandatory qualification counts on saved cards and review sources before applying. Explicit alternatives offered by the employer remain relevant; an unknown qualification is not a proven gap.
+- I can expand documented examples, transferable experience and qualifications in application preparation, inspect their sources, and recognize stale guidance. No extra provider call or claim confirmation follows reading these groups.
+- Older stored results remain readable without invented labels. Actual base-CV visibility assessment is still pending.
+
+- I can inspect the saved answer/status/context, edit its wording and confirm it with clear feedback. Related-scope writing aids do not falsely establish a complete match.
+- I can reject a saved clarification with a confirmation dialog, cancel it or retry a failed rejection. The rejected answer remains visible after reopening, excluded from matching, and can later be deliberately corrected/reconfirmed under the same identity. No automatic AI call or factual resurrection occurs.

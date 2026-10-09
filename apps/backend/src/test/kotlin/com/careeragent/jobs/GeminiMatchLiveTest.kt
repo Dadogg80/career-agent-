@@ -24,12 +24,12 @@ class GeminiMatchLiveTest {
   val now=OffsetDateTime.now(); val jobId=UUID.randomUUID(); val mapper=jacksonObjectMapper()
   val routing=AiRouting(MockEnvironment().withProperty("AI_PROVIDER","gemini").withProperty("GEMINI_MATCH_MODEL","gemini-3.5-flash-lite"))
   val jobs=mock(SavedJobRepository::class.java); val claims=mock(ClaimRepository::class.java); val results=object:PersonalMatchRepository { override fun load(identity:VerifiedIdentity,jobId:UUID):PersonalMatch?=null; override fun save(identity:VerifiedIdentity,jobId:UUID,result:PersonalMatch)=result }
-  val evidence=(0 until 35).map { index -> CompetencyClaim(UUID.randomUUID(),if(index==34)"Kotlin" else "Fictional tool $index",
-   if(index==34)"Built and operated backend APIs using Kotlin." else "Used fictional tools for a fictional project; no Kafka experience is stated.",
+  val evidence=(0 until 35).map { index -> CompetencyClaim(UUID.randomUUID(),if(index==34)"Kotlin" else if(index==33)"React" else "Fictional tool $index",
+   if(index==34)"Built and operated backend APIs using Kotlin." else if(index==33)"Built React web interfaces using TypeScript." else "Used fictional tools for a fictional project; no Kafka experience is stated.",
    "Example AS", "Fictional note",ClaimStatus.CONFIRMED,2,now,now) }
-  val criteria=listOf("Kafka experience is preferred.") + (1..18).map { "Experience with unfamiliar platform $it is preferred." } + "Kotlin experience is required for this backend role."
+  val criteria=listOf("Kafka experience is preferred.","React Native mobile application experience is required.") + (2..17).map { "Experience with unfamiliar platform $it is preferred." } + "An Azure Solutions Architect certification is required." + "Kotlin experience is required for this backend role."
   val text=criteria.joinToString("\n")
-  val requirements=criteria.mapIndexed { index, quote -> ExtractedRequirement(if(index==19) "Kotlin" else if(index==0) "Kafka" else "Unfamiliar platform $index", if(index==19) RequirementKind.REQUIRED else RequirementKind.PREFERRED,quote) }
+  val requirements=criteria.mapIndexed { index, quote -> ExtractedRequirement(if(index==19) "Kotlin" else if(index==18) "Azure certification" else if(index==1) "React Native" else if(index==0) "Kafka" else "Unfamiliar platform $index", if(index in setOf(1,18,19)) RequirementKind.REQUIRED else RequirementKind.PREFERRED,quote) }
   val job=SavedJob(jobId,SavedJobContent("Fictional backend developer",null,"PASTED_TEXT",text,"en",requirements,emptyList(),0,null),now)
   val linked=evidence.dropLast(1)+evidence.last().copy(sourceNote="User clarification for job $jobId; requirement 19")
   `when`(jobs.get(identity,jobId)).thenReturn(job); `when`(claims.list(identity)).thenReturn(linked)
@@ -40,6 +40,14 @@ class GeminiMatchLiveTest {
   assertThat(result.assessments[19].classification).isEqualTo(MatchKind.STRONG)
   assertThat(result.assessments[19].evidence.map { it.claimId }).contains(evidence.last().id)
   assertThat(result.assessments[0].classification).isEqualTo(MatchKind.CLARIFY)
+  assertThat(result.assessments[19].evidenceRelation).isEqualTo(EvidenceRelation.DIRECT)
+  assertThat(result.assessments[1].evidenceRelation).isEqualTo(EvidenceRelation.TRANSFERABLE)
+  // Transferability may still need clarification; it must never become direct/full credit.
+  assertThat(result.assessments[1].classification).isIn(MatchKind.PARTIAL,MatchKind.CLARIFY)
+  assertThat(result.assessments[1].requirementNature).isEqualTo(RequirementNature.PRACTICAL)
+  assertThat(result.assessments[1].evidence.map { it.claimId }).contains(evidence[33].id)
+  assertThat(result.assessments[18].requirementNature).isEqualTo(RequirementNature.FORMAL)
+  assertThat(result.assessments[18].classification).isEqualTo(MatchKind.CLARIFY)
   assertThat(result.provider).isEqualTo("Gemini"); assertThat(result.model).isEqualTo("gemini-3.5-flash-lite")
   println("Synthetic full-profile match: contributions=${result.claims.size} assessments=${result.assessments.size} model=${result.model}")
  }
