@@ -447,6 +447,15 @@ Validation: production frontend build and TypeScript passed. Full backend regres
 
 Proposals and review decisions remain page-session-only and this is disclosed in the UI. Up to 12 wording proposals and the current extracted criteria are handled; source-reference validation does not prove semantic truth or exhaustive coverage. Next increments: requirement recall beyond the existing 12-criterion ceiling, explicit transferability/visibility assessments, broader guided journey review and durable proposal review later. Publication is recorded in the PR handoff; this entry does not imply merge.
 
+
+## 2026-10-09 — Optional workspace guide and relevant next actions
+
+Branched independently from PR #30/main `9df2ae4`; PR #31 remains open with successful checks. Dashboard next actions now distinguish pending review, uploaded documents awaiting profile knowledge, confirmed evidence with saved opportunities, and unavailable data. Add document metadata count/direct upload links and an optional five-step local guide with real destinations, format/content advice, automatic matching explanation and honest coverage/preparation limits. Correct outdated copy claiming experience is never documentary-confirmed. No original text reads, AI calls, factual writes, migration or provider changes are introduced by the guide.
+
+Focused validation per the owner's lower-token development request: production frontend build and TypeScript passed; all eight affected entry-flow browser tests passed. Tests cover landing/login, authenticated navigation, review priorities, saved-job guidance, document read/failure states, bilingual/mobile guide, help dismissal and zero POST requests during tutorial use. Mobile screenshot reviewed; `git diff --check` passed. No live provider calls, backend rebuild/full backend suite, full browser regression or development-mode suite were run for this frontend-only slice. The previously tested backend JAR was reused; fixtures simulate private data. Required GitHub CI remains the full regression.
+
+Limit: the guide is optional local display state, not measured journey completion. Saved jobs do not prove current matching; users inspect/approve the job-specific analysis on the existing screens. Next: independently measure semantic quality across professions and improve the joined source/profile/match/preparation flow based on concrete findings.
+
 ## 2026-10-09 — Requirement coverage, saved answers and compact document review
 
 Branched from verified merged PR #28/main `e0f87ca`. Replaced twelve-criterion extraction selection with distinct whole-source instructions and a defensive 128-criterion bound throughout extraction, saved snapshots, matching and tailoring references. Exact duplicates are omitted while distinct criteria sharing a quote survive. Missing/invalid model assessments and excluded sources now persist as unassessed without personal questions; provisional percentages, search and filters expose them separately from unknown candidate experience.

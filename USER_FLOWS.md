@@ -428,6 +428,13 @@ Provide an optional skippable tutorial and short contextual guidance throughout.
 6. Quota/provider failures retain previous proposals and source information. Choose an available alternate model explicitly and approve the new recipient. Per-choice waits do not carry to another model. Changed original text, knowledge revisions or match invalidate suggestions; their original references remain readable.
 7. This milestone stops here: no application submission, new CV artifact/version or durable proposal storage. Reload/navigation clears proposal review; the original remains unchanged.
 
+
+## Optional workspace guide and saved-data next actions
+
+The signed-in dashboard offers a collapsed five-step guide: documents → profile review → advertisement/save → automatic personal matching → CV wording preparation. Users can skip, move backward/forward or hide it; no guide action starts AI, edits facts or records journey completion. Document guidance names currently supported DOCX, text-based PDF, TXT and Markdown, with useful employer/role/period/contribution evidence. Matching coverage is not hiring probability, and preparation does not submit an application or create a tailored file.
+
+Next-action guidance uses owned metadata and existing competency/job lists. Uploaded documents without confirmed knowledge lead to source reading/approved analysis rather than repeated upload advice; saved opportunities with confirmed evidence lead to the saved-job workspace rather than another advertisement search. Missing/unavailable data is never interpreted as a completed or empty stage. Documents have a count/link and upload remains directly accessible. This does not inspect every saved match or imply current match readiness.
+
 ## Requirement and document review continuation — 2026-10-09
 
 Advertisement extraction now requests distinct candidate criteria from the whole source instead of selecting twelve. Up to 128 source-backed requirements survive saving/reopening and matching. Invalid or absent AI assessments appear as “Not assessed”, with provisional percentage and no personal clarification form. Search and classification filters help review long matches. An excluded source preview is also unassessed, not a candidate gap.

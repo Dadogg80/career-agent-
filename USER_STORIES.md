@@ -412,6 +412,14 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - Quota failures retain existing proposals. Model changes clear consent and permit an explicit alternate-model request; no automatic fallback/retry occurs.
 - Limits: up to 12 text changes, defensive 128-criterion matching bound (ADR 0032), page-session review only, no generated tailored file and no deterministic guarantee of factual/semantic completeness.
 
+
+## Optional guided workspace journey
+
+- I can open a short guide, skip among five steps and follow real links without starting an AI call.
+- I know which document formats and information are useful, how automatic matching uses confirmed evidence, and what CV preparation does.
+- My next action reflects saved documents/competencies/jobs; unavailable information does not become a false empty-profile recommendation.
+- I can reach document upload from the dashboard without searching through profile panels. Guide position is local display state, not stored application progress.
+
 ## Requirement coverage and answer continuity — 2026-10-09
 
 - As a candidate, I can review later source-backed criteria after saving/matching, rather than losing everything beyond twelve. Defensive bound: 128; no promise of exhaustive extraction.
