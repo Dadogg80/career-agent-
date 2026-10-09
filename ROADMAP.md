@@ -134,3 +134,9 @@ Implemented on `feat/match-evidence-explanations` from merged PR #29 (ADR 0033):
 Next: base-CV visibility outcomes against confirmed evidence, then a measured cross-profession joined journey review and broader onboarding. Independent semantic recall/qualification benchmarks and durable writing review/conflict decisions remain pending. Tailored versions, letters and submission remain deferred; current preparation stops at reviewed wording suggestions.
 
 The same slice also improves clarification review: compact status/context cards, personal/related-scope writing guidance, explicit reversible rejection with retained history, feedback and same-entry editing. Rejected answers are shown as excluded and are not automatically restored or sent to AI.
+
+## Base-CV visibility continuation — 2026-10-09
+
+ADR 0034 adds source-bound criterion visibility to the existing approved tailoring request: compact search/count filters, exact CV excerpts, confirmed contribution sources, conservative uncertainty and explicit unassessed recovery. This shares one call with wording proposals; original files and profile facts are unchanged. PR #30 is now verified merged at `9df2ae4`; this follow-up is prepared against that main without automatic merging.
+
+Next: independently measure semantic visibility/criterion recall across professions and review the joined onboarding → documents/profile → saved job/match → preparation journey. Improve concrete mobile/readiness defects from those tests. Durable text changesets, tailored file/version creation, letters, submission and online hosting remain separate later work. Citation validation and source coverage are not guarantees of semantic completeness.

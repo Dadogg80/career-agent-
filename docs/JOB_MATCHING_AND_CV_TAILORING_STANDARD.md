@@ -302,7 +302,7 @@ Understand the real candidate sufficiently to identify suitable opportunities an
 
 ## Delivery matrix and acceptance
 
-This matrix separates verified foundations from target behavior. Remote main `8e88d1f` includes PR #29. The current evidence-relation branch adds ADR 0033 explanations and application priorities; statuses below distinguish verified foundations and this slice from the broader target.
+This matrix separates verified foundations from target behavior. Remote main `9df2ae4` includes PR #30 and ADR 0033 explanations and application priorities; its follow-up adds ADR 0034 source-bound CV visibility. Statuses below distinguish these slices from the broader target.
 
 | Standard areas | Current foundation | Next acceptance / missing behavior |
 | --- | --- | --- |
@@ -310,7 +310,7 @@ This matrix separates verified foundations from target behavior. Remote main `8e
 | 5–8, 52 | Whole-ad criterion prompt and up to 128 source-backed requirements across extraction/storage/matching; bounded 15,000-character ad input | Unassessed output is distinct and coverage provisional (ADR 0032); measure semantic recall/formal criteria; richer taxonomy remains pending |
 | 9–18, 21–22, 53–56 | Confirmed-evidence STRONG/PARTIAL/CLARIFY, literal validation, deterministic weighted coverage, inline user clarification and source-backed application priority groups | Explicit AI-labelled direct/transferable/unknown relations and formal/practical criterion nature with conservative coverage guards are implemented (ADR 0033); positively evidenced actual gaps, independently measured semantic quality and richer assessment remain pending |
 | 19–20, 65, 69 | Reason per requirement and score | Concise separately labelled recruiter/hiring-manager reasoning is pending, with evidence and uncertainty |
-| 24–29, 36, 40, 57–58 | Master-document selection, original text, independent standard CV export | Owned base-CV selection and source/match-bound old/new proposals are implemented in the preparation slice; exhaustive visibility assessment and durable changesets remain pending |
+| 24–29, 36, 40, 57–58 | Master-document selection, original text, independent standard CV export | Owned base-CV selection and source/match-bound old/new proposals are implemented in the preparation slice; source-bound criterion visibility is implemented in ADR 0034; independently measured exhaustive semantic coverage and durable changesets remain pending |
 | 30–35, 38–39, 43, 50 | Source reading, typed career history, context links, side-by-side period review | Cross-profession evidence/chronology/reading-order checks; complete all-section text review is pending |
 | 41–42, 44–49, 59, 66 | Independent reviewed export and manual application tracking | Tailored file/version creation, letters/answers and final package gate are explicitly deferred |
 | 51, 60–64 | Structured AI calls, model/recipient approval, exact passage packing, retained quota progress | Separate one-call tailoring contract implemented; review is page-session-only, durable resumption remains pending |

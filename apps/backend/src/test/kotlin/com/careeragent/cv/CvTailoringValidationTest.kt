@@ -105,4 +105,41 @@ class CvTailoringValidationTest {
   assertThat(invalid.first).isEmpty();assertThat(invalid.second).isEqualTo(1)
  }
 
+ @Test fun `visibility preserves literal CV sources and separates presentation gaps from uncertain competence`() {
+  val match=setup().copy(assessments=(0..4).map {index->RequirementMatch(index,if(index==3)MatchKind.CLARIFY else MatchKind.STRONG,"Source-based relevance",listOf(MatchEvidence(claimId,text.substringAfter("\n\n"))),"")})
+  fun item(index:Int,status:String,passages:List<Map<String,Any>> = emptyList())=mapOf("requirementIndex" to index,"status" to status,"reason" to "Specific evidence visibility", "claimIds" to listOf(claimId.toString()),"passages" to passages)
+  val source=mapOf("paragraphIndex" to 1,"quote" to "Built Kotlin APIs")
+  val root=mapper.readTree(mapper.writeValueAsString(mapOf("visibility" to listOf(item(0,"VISIBLE",listOf(source)),item(1,"WEAKLY_VISIBLE",listOf(source)),item(2,"NOT_VISIBLE"),item(3,"NOT_VISIBLE"),item(4,"VISIBLE",listOf(source+("quote" to "Invented authorization")))))))
+  val result=validatedVisibility(root,service.paragraphs(text),match,5,"en")
+  assertThat(result.map {it.status}).containsExactly(CvVisibility.VISIBLE,CvVisibility.WEAKLY_VISIBLE,CvVisibility.NOT_VISIBLE,CvVisibility.NEEDS_CLARIFICATION,CvVisibility.UNASSESSED)
+  assertThat(result[0].passages.single().quote).isEqualTo("Built Kotlin APIs")
+  assertThat(result[3].reason).contains("does not establish");assertThat(result[4].claimIds).isEmpty()
+ }
+ @Test fun `healthcare sales and project evidence cannot replace uncertain formal qualifications or acquire foreign context`() {
+  val source=listOf("Assisted patients with appointments.","Managed customer renewals.","Delivered project schedules.")
+  val claims=source.mapIndexed {index,statement->MatchClaim(UUID.randomUUID(),2,listOf("Patient support","Sales","Project delivery")[index],statement,"Fictional organization $index")}
+  val match=setup().copy(claims=claims,assessments=listOf(
+   RequirementMatch(0,MatchKind.CLARIFY,"Authorization not established",emptyList(),"Do you hold the required authorization?",requirementNature=RequirementNature.FORMAL),
+   RequirementMatch(1,MatchKind.STRONG,"Confirmed renewals",listOf(MatchEvidence(claims[1].id,source[1])),""),
+   RequirementMatch(2,MatchKind.PARTIAL,"Delivery documented, leadership not established",listOf(MatchEvidence(claims[2].id,source[2])),"")))
+  val items=claims.mapIndexed {index,claim->mapOf("requirementIndex" to index,"status" to "VISIBLE","reason" to "Scope must remain tied to the source", "claimIds" to listOf(claim.id.toString()),"passages" to listOf(mapOf("paragraphIndex" to index,"quote" to source[index])))}
+  fun assess(output:List<Map<String,Any>>)=validatedVisibility(mapper.readTree(mapper.writeValueAsString(mapOf("visibility" to output))),source,match,3,"en")
+  assertThat(assess(items).map {it.status}).containsExactly(CvVisibility.NEEDS_CLARIFICATION,CvVisibility.VISIBLE,CvVisibility.VISIBLE)
+  val foreign=items.toMutableList();foreign[1]=items[1]+("claimIds" to listOf(claims[2].id.toString()))
+  assertThat(assess(foreign)[1].status).isEqualTo(CvVisibility.UNASSESSED)
+ }
+ @Test fun `visibility rejects foreign claims duplicate references false absence and malformed lists while keeping proposals`() {
+  val match=setup().copy(assessments=(0..2).map {RequirementMatch(it,MatchKind.STRONG,"Relevant",listOf(MatchEvidence(claimId,"Built Kotlin APIs")),"")})
+  val item=mapOf("requirementIndex" to 0,"status" to "NOT_VISIBLE","reason" to "Known experience omitted", "claimIds" to listOf(claimId.toString()),"passages" to emptyList<Any>())
+  fun parse(items:Any)=validatedVisibility(mapper.readTree(mapper.writeValueAsString(mapOf("visibility" to items))),service.paragraphs(text),match,3,"nb")
+  val invalid=listOf(item+("claimIds" to listOf(UUID.randomUUID().toString())),item+mapOf("requirementIndex" to 1,"passages" to listOf(mapOf("paragraphIndex" to 1,"quote" to "Built Kotlin APIs"))),item+mapOf("requirementIndex" to 2,"status" to "VISIBLE","passages" to listOf(mapOf("paragraphIndex" to 0,"quote" to "Built Kotlin APIs"))))
+  assertThat(parse(invalid)).allMatch {it.status==CvVisibility.UNASSESSED}
+  assertThat(parse(listOf(item,item))[0].status).isEqualTo(CvVisibility.NOT_VISIBLE)
+  assertThat(parse(mapOf("bad" to true))).allMatch {it.status==CvVisibility.UNASSESSED}
+  assertThat(parse((0..256).map {item})).allMatch {it.status==CvVisibility.UNASSESSED}
+  val output=mapper.writeValueAsString(mapOf("proposals" to listOf(proposal()),"visibility" to mapOf("bad" to true)))
+  assertThat(service.parse(output,service.paragraphs(text),setOf(claimId),3).first).hasSize(1)
+  assertThat(validatedVisibility(mapper.readTree("{}"),service.paragraphs(text),match,128,"en")).hasSize(128).allMatch {it.status==CvVisibility.UNASSESSED}
+ }
+
 }

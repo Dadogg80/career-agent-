@@ -118,3 +118,7 @@ PR #28 is verified merged at `e0f87ca1fb6bf5533f011c2ad5a6f38f40134830`. Continu
 ## Evidence relation continuation — 2026-10-09
 
 PR #29 is verified merged at `8e88d1f0832b1ae673f7f01a110733b740b713da`; both Foundation checks passed. Continue on `feat/match-evidence-explanations` under ADR 0033: nullable source-backed AI relation/nature metadata, conservative transferable/formal score constraints, compact saved-card qualification hints and existing-result application priorities. Do not label older results, promote factual status or claim base-CV visibility is complete. Preserve full evidence, consent, sources and staleness. Prepare a tested PR without automatic merge.
+
+## Base-CV visibility continuation — 2026-10-09
+
+PR #30 is verified merged at `9df2ae41fc61d7769346de3c5af4413665c54810`; both pre-merge Foundation checks passed. Continue on `feat/base-cv-visibility` from this main, under ADR 0034. Use one approved CV_TAILORING request for source-bound criterion visibility and wording. Keep exact selected-CV/current-match references, candidate uncertainty separate from presentation gaps, per-item unassessed recovery and historical result readability. No additional calls, factual promotion, model defaults, migration or durable changeset. Verify updated main before the next delivery. Do not merge automatically.

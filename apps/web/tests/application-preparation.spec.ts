@@ -8,6 +8,7 @@ const doc={id:documentId,originalName:"fictional-master.txt",mediaType:"text/pla
 const gemini={provider:"Gemini",model:"gemini-3.5-flash-lite"},groq={provider:"Groq",model:"openai/gpt-oss-20b"};
 const approval={token:"a".repeat(64),selections:[gemini]},other={token:"b".repeat(64),selections:[groq]},options=[{approval,available:true},{approval:other,available:true}];
 const result={documentId,matchId,...gemini,proposals:[{paragraphIndex:1,oldText:claim.statement,newText:"Developed Kotlin APIs with responsibility for service reliability.",reason:"Makes the supported API contribution visible for the role.",claimIds:[claimId],requirementIndexes:[0]}],omittedItems:0};
+const visibility=[{requirementIndex:0,status:"VISIBLE",reason:"The CV describes the confirmed Kotlin API contribution.",claimIds:[claimId],passages:[{paragraphIndex:1,quote:"Built Kotlin APIs"}]}];
 async function fixtures(page:Page,{missing=false,stale=false}={}) {
  await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
  await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:gemini,DOCUMENT_EXTRACTION:gemini,PROFILE_SUMMARY:gemini,PERSONAL_MATCH:gemini},documents:approval,documentExcerpt:approval,matching:approval,job:approval,tailoring:approval,options:{documents:options,documentExcerpt:options,matching:options,job:options,tailoring:options}}}));
@@ -105,4 +106,31 @@ test("relation validation preserves legacy results and never gives full coverage
  for(const evidenceRelation of ["TRANSFERABLE","UNKNOWN","EQUIVALENT"])expect(isPersonalMatch({...direct,assessments:[{...direct.assessments[0],evidenceRelation}]})).toBe(false);
  expect(isPersonalMatch({...direct,assessments:[{...direct.assessments[0],evidenceRelation:"TRANSFERABLE",classification:"PARTIAL"}]})).toBe(false);
  expect(relationLabel({...direct.assessments[0],evaluated:false} as import("../lib/personal-match").MatchAssessment,true)).toBeNull();
+});
+
+test("CV visibility shares one approved call with wording and exposes literal sources on desktop and mobile",async({page})=>{
+ await fixtures(page);let calls=0;await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{calls++;return r.fulfill({json:{...result,visibility}});});
+ await page.goto(`/jobs/${jobId}/apply`);await page.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for CV-forslag",exact:true}).check();await page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true}).click();
+ const review=page.locator(".cv-visibility-review");await expect(review.getByRole("heading",{name:"Hva viser CV-en din?"})).toBeVisible();await expect(review.locator(".cv-visibility-item")).toHaveCount(1);
+ await review.locator("summary").click();await expect(review.locator("blockquote")).toHaveText("Built Kotlin APIs");await expect(review.locator(".cv-visibility-evidence")).toContainText("Fictional employer");
+ await review.getByRole("button",{name:"Om synlighet i CV-en",exact:true}).click();await expect(page.getByRole("tooltip")).toContainText("ikke manglende kompetanse");await page.keyboard.press("Escape");
+ await review.getByRole("button",{name:/Ikke vurdert/}).click();await expect(review.locator(".cv-visibility-item")).toHaveCount(0);await review.getByRole("button",{name:/Alle/}).click();
+ await review.getByLabel("Søk i CV-vurderingen").fill("nonexistent criterion");await expect(review.locator(".cv-visibility-item")).toHaveCount(0);await review.getByLabel("Søk i CV-vurderingen").fill("Kotlin");await expect(review.locator(".cv-visibility-item")).toHaveCount(1);
+ await page.screenshot({path:"/tmp/career-visibility-desktop.png",fullPage:true});await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:"/tmp/career-visibility-mobile.png",fullPage:true});
+ await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await expect(review).toContainText("earlier CV assessment");await expect(review).toContainText("What does your CV show?");expect(calls).toBe(1);
+});
+
+test("invalid CV visibility preserves prior proposals and legacy responses disclose missing review",async({page})=>{
+ await fixtures(page);let calls=0;await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{calls++;return r.fulfill({json:calls===1?result:{...result,visibility:[{...visibility[0],passages:[{paragraphIndex:0,quote:"Built Kotlin APIs"}]}]}});});
+ await page.goto(`/jobs/${jobId}/apply`);const consent=page.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for CV-forslag",exact:true}),submit=page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true});
+ await consent.check();await submit.click();await expect(page.locator(".cv-visibility-review")).toContainText("ingen CV-sammenligning");await expect(page.locator(".tailoring-proposal")).toHaveCount(1);
+ await consent.check();await submit.click();await expect(page.locator(".tailoring-proposal")).toHaveCount(1);await expect(page.locator(".cv-visibility-item")).toHaveCount(0);expect(calls).toBe(2);
+});
+
+test("CV visibility metadata rejects duplicate indexes and unsupported absence or evidence references",async()=>{
+ const {isTailoringResult}=await import("../lib/cv-tailoring");expect(isTailoringResult({...result,visibility})).toBe(true);
+ expect(isTailoringResult({...result,visibility:[...visibility,...visibility]})).toBe(false);
+ expect(isTailoringResult({...result,visibility:[{...visibility[0],status:"NOT_VISIBLE"}]})).toBe(false);
+ expect(isTailoringResult({...result,visibility:[{...visibility[0],claimIds:[]}]})).toBe(false);
+ expect(isTailoringResult({...result,visibility:[{...visibility[0],requirementIndex:128}]})).toBe(false);
 });

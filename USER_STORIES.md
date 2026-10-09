@@ -424,7 +424,14 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - I can distinguish direct experience from a supported analogy without having inferred skills added to my profile. Transferable evidence never receives full coverage, and related practical experience cannot establish a formal qualification.
 - I can see unresolved mandatory qualification counts on saved cards and review sources before applying. Explicit alternatives offered by the employer remain relevant; an unknown qualification is not a proven gap.
 - I can expand documented examples, transferable experience and qualifications in application preparation, inspect their sources, and recognize stale guidance. No extra provider call or claim confirmation follows reading these groups.
-- Older stored results remain readable without invented labels. Actual base-CV visibility assessment is still pending.
+- Older stored results remain readable without invented labels. Source-bound base-CV visibility is now available through ADR 0034; independently measured semantic completeness remains pending.
 
 - I can inspect the saved answer/status/context, edit its wording and confirm it with clear feedback. Related-scope writing aids do not falsely establish a complete match.
 - I can reject a saved clarification with a confirmation dialog, cancel it or retry a failed rejection. The rejected answer remains visible after reopening, excluded from matching, and can later be deliberately corrected/reconfirmed under the same identity. No automatic AI call or factual resurrection occurs.
+
+## Implemented base-CV visibility slice
+
+- I receive a criterion-by-criterion CV presentation review from the same approved request as wording suggestions, without selecting competencies manually.
+- I can search/filter outcomes and inspect literal CV excerpts and established candidate evidence before deciding what to change.
+- Unknown experience/authorization is a clarification, not an asserted skill gap. Invalid/missing output is unassessed, not absent competence.
+- I can still read earlier/legacy wording proposals; changed evidence makes the CV review historical. No confirmation, new CV version or durable changeset is implied.

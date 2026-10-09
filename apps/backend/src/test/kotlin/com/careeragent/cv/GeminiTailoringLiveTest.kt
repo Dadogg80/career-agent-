@@ -20,7 +20,7 @@ import java.util.UUID
 /** One explicitly enabled fictional provider request; uploaded documents are never used. */
 @EnabledIfEnvironmentVariable(named="GEMINI_TAILORING_LIVE_TEST",matches="true")
 class GeminiTailoringLiveTest {
- @Test fun `Flash Lite proposes supported role-specific wording with exact source references`() {
+ @Test fun `Flash Lite reviews explicit CV evidence without inventing changes to fill a list`() {
   val mapper=jacksonObjectMapper();val now=OffsetDateTime.now();val identity=VerifiedIdentity("https://fictional.example","synthetic-candidate")
   val jobId=UUID.randomUUID();val documentId=UUID.randomUUID();val matchId=UUID.randomUUID();val claimId=UUID.randomUUID()
   val text="Fictional software engineer\n\nI work on software.\n\nExample AS: Built and operated backend APIs using Kotlin and improved automated testing."
@@ -37,8 +37,12 @@ class GeminiTailoringLiveTest {
   val service=CvTailoringService(jobs,documents,matching,routing,GeminiAiModel(mapper,System.getenv("GEMINI_API_KEY") ?: "",routing),mapper,1)
   val result=service.propose(identity,jobId,TailoringRequest(documentId,text,matchId,"en",true,routing.preview(AiTask.CV_TAILORING).token))
   assertThat(result.provider).isEqualTo("Gemini");assertThat(result.model).isEqualTo("gemini-3.5-flash-lite")
-  assertThat(result.proposals).isNotEmpty();assertThat(result.proposals.all {it.claimIds==listOf(claimId) && it.requirementIndexes==listOf(0)}).isTrue()
-  assertThat(result.proposals.any {it.newText.contains("Kotlin")}).isTrue()
+  assertThat(result.visibility).hasSize(1)
+  assertThat(result.visibility!!.single().status).isEqualTo(CvVisibility.VISIBLE)
+  assertThat(result.visibility.single().passages).isNotEmpty()
+  assertThat(result.visibility.single().claimIds).contains(claimId)
+  assertThat(result.omittedItems).isZero();assertThat(result.proposals.all {it.claimIds==listOf(claimId) && it.requirementIndexes==listOf(0)}).isTrue()
+  assertThat(result.proposals.all {it.newText.contains("Kotlin")}).isTrue()
   assertThat(result.proposals.joinToString(" ") {it.newText}).doesNotContain("Kafka","React Native","bachelor","certified")
   println("Fictional CV proposals: count=${result.proposals.size} omitted=${result.omittedItems} model=${result.model}")
  }
