@@ -51,6 +51,21 @@ class DocumentWorkflowController(private val workflows:ObjectProvider<DocumentAn
         if(input["index"] !is Int || input["skill"] !is String || input["statement"] !is String || input["context"] !is String || input["confirm"] !is Boolean)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
         return response(workflow().importClaim(identity(principal),id(runId),revision(input),input["index"] as Int,input["skill"] as String,input["statement"] as String,input["context"] as String,input["confirm"] as Boolean,input["reject"] as? Boolean ?: false))
     }
+    @PostMapping("/{runId}/coverage/claim",consumes=["application/json"])
+    fun importCoverageClaim(@AuthenticationPrincipal principal:OidcUser?,@PathVariable runId:String,@RequestBody input:Map<String,Any?>):Any {
+        keys(input,setOf("revision","index","skill","statement","context","confirm"))
+        if(input["index"] !is Int || input["skill"] !is String || input["statement"] !is String || input["context"] !is String || input["confirm"] !is Boolean)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
+        return response(workflow().importCoverageClaim(identity(principal),id(runId),revision(input),input["index"] as Int,input["skill"] as String,input["statement"] as String,input["context"] as String,input["confirm"] as Boolean))
+    }
+    @PostMapping("/{runId}/coverage/entry",consumes=["application/json"])
+    fun importCoverageEntry(@AuthenticationPrincipal principal:OidcUser?,@PathVariable runId:String,@RequestBody input:Map<String,Any?>):Any {
+        keys(input,setOf("revision","index","content","confirm"))
+        if(input["index"] !is Int || input["confirm"] !is Boolean)throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
+        val raw=input["content"] as? Map<*,*> ?: throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
+        if(raw.keys!=setOf("kind","title","organization","client","deliveryRole","startMonth","endMonth","ongoing","description"))throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
+        val content=try {json.convertValue(mapOf("kind" to raw["kind"],"title" to raw["title"],"organization" to raw["organization"],"client" to raw["client"],"deliveryRole" to raw["deliveryRole"],"startMonth" to raw["startMonth"],"endMonth" to raw["endMonth"],"ongoing" to raw["ongoing"],"description" to raw["description"],"sourceNote" to "Coverage review"),CareerEntryContent::class.java)}catch(_:Exception){throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)}
+        return response(workflow().importCoverageEntry(identity(principal),id(runId),revision(input),input["index"] as Int,content,input["confirm"] as Boolean))
+    }
     @ExceptionHandler(com.careeragent.profile.application.ClaimFailure::class) fun claimFailure(error:com.careeragent.profile.application.ClaimFailure)=org.springframework.http.ResponseEntity.status(error.status).header("Cache-Control","no-store").body(mapOf("code" to error.code))
     @PutMapping("/{runId}/summary",consumes=["application/json"]) fun summary(@AuthenticationPrincipal principal:OidcUser?,@PathVariable runId:String,@RequestBody input:Map<String,Any?>):Any {
         keys(input,setOf("revision","index","text"));val index=input["index"] as? Int ?: throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400);val text=input["text"] as? String ?: throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)

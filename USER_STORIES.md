@@ -331,6 +331,8 @@ As a jobseeker, I want employment, projects, education and certificates with the
 
 - **US46 — Check my actual evidence:** locally check owned originals, text reproducibility and existing AI quotation support without another model call or writes. Show distinct intact/missing/OCR/partial/unsupported states with text and accessible indicators, then open the document for inspection. A passing technical check must not imply semantic or exhaustive correctness.
 - **US47 — Source-selected competencies:** suggestions use original wording and a skill label found in their own quote. Show nearby same-document context proof or unknown context; preserve course/list limitations and require separate user confirmation. Invalid items cannot turn an unrelated valid quote into invented experience. Older results reopen safely without rewriting confirmed claims.
+- **US48 — Personalize my private profile:** show a compact identity card with my name, preferred language, profile revision and optional photo. I can preview, explicitly save or remove a JPG/PNG photo; validate and normalize it server-side, keep it owner-bound and uncached, and never send it to AI. Photo changes do not modify profile facts or their revision.
+- **US49 — Find a clear first step in my profile:** when a section has no data, see useful source-first actions for documents, competencies or career history instead of empty metrics and blank space. Navigation opens the selected working section. Explain that extraction and AI analysis are separate, unknown dates can stay blank, and new facts need my review; loading or request failures must never be presented as empty data.
 
 ## Resumed document/profile slice
 
@@ -357,9 +359,11 @@ As a document reviewer, I can switch between competencies, profile summary and c
 ## Document-derived profile and review queue
 
 - As a candidate, I can let approved document processing populate literal sourced competencies and editable career history without retyping them. Documentary evidence and personal confirmation have distinct labels.
+- As a candidate, I can review bounded source passages that were not represented in an analysis result and edit one into a competency, interest, or career-history draft. Acceptance: filtering retains the original passage index; the exact quote and source stay attached; the server checks ownership, current run revision, approved-text offset and retained-original evidence; personal confirmation is explicit; repeat submission reuses the linked item; a stale or missing source is not silently recreated.
 - As a candidate, I see how many competency contributions still await review; approved, documented, saved drafts and rejected/removed items are outside that queue and remain separate after reopening.
 - As a candidate, I can approve, edit, save as draft or reject directly, with expandable exact evidence and a compact responsive list. My edits and decisions survive reanalysis.
 - As a candidate, I see the newest saved AI presentation with actual provider/model attribution; viewing my profile does not trigger another provider request.
+- As a candidate, I can tell AI-written presentation text from source-backed claims and user-confirmed information, inspect the exact cited excerpts, and edit presentation wording without promoting it to a fact.
 - As a candidate, matching preselects confirmed evidence, explains its requirement-coverage percentage, and lets me clarify missing evidence inline and explicitly save my own answer.
 
 

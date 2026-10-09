@@ -5,7 +5,7 @@ import { ClaimGroupCard } from "./claim-group-card";
 import { claimGroups } from "../lib/claim-groups";
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Check, X, History, Trash2, Search, ShieldCheck, ClipboardCheck, Files } from "lucide-react";
+import { Plus, Pencil, Check, X, History, Trash2, Search, ShieldCheck, ClipboardCheck, Files, FileUp, PenLine, BriefcaseBusiness } from "lucide-react";
 import { Card, CardHeader, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -115,13 +115,30 @@ export function ClaimPanel({ locale, csrfToken, onAuthRequired }: { locale: Loca
     {notice && <p role="status" className="claim-notice">{t[notice]}</p>}
     {list.isPending && <p role="status">{t.loading}</p>}
     {list.isError && <Alert variant="destructive"><AlertDescription>{message(list.error)}</AlertDescription></Alert>}
-    {list.data && <><div className="competency-stats">{stats.map(stat => <div key={stat.label}><stat.icon size={20}/><strong>{stat.value}</strong><span>{stat.label}</span></div>)}</div>
+    {list.data && (list.data.length ? <><div className="competency-stats">{stats.map(stat => <div key={stat.label}><stat.icon size={20}/><strong>{stat.value}</strong><span>{stat.label}</span></div>)}</div>
       {reviewable.length > 0 && <div className="guided-review-start"><div><h3>{locale === "nb" ? "La oss avklare erfaringen din" : "Let’s review your experience"}</h3><p>{locale === "nb" ? "Ett synlig forslag om gangen. Les bidrag og kilde, og velg det som stemmer." : "One visible proposal at a time. Read the contribution and source, then choose what is accurate."}</p></div><Button onClick={startReview} disabled={change.isPending}><ClipboardCheck size={17}/>{locale === "nb" ? `Gjennomgå ${reviewable.length} forslag` : `Review ${reviewable.length} proposals`}</Button></div>}
       <div className="competency-search"><Search size={18}/><Input aria-label={locale === "nb" ? "Søk i kompetanse" : "Search competencies"} placeholder={locale === "nb" ? "Søk etter kompetanse, prosjekt eller kilde …" : "Search skills, projects or sources …"} value={search} onChange={event => setSearch(event.target.value)}/></div>
       <div className="claim-filters" aria-label={t.count}><Button variant={filter === "ALL" ? "default" : "outline"} size="sm" aria-pressed={filter === "ALL"} onClick={() => setFilter("ALL")}>{t.all} ({claimGroups(list.data).length})</Button>{(Object.keys(t.statuses) as ClaimStatus[]).map(status => <Button key={status} size="sm" variant={filter === status ? "default" : "outline"} aria-pressed={filter === status} onClick={() => setFilter(status)}>{t.statuses[status]} ({claimGroups(list.data!.filter(claim => claim.status === status)).length})</Button>)}</div>
       <p className="hint claim-group-help">{locale === "nb" ? `${groups.length} kompetanseområder · ${visible.length} bidrag. Samme kompetanse samles i én boks; bekreftet grunnlag og utkast vises separat. Åpne boksen for kilder og redigering.` : `${groups.length} skills · ${visible.length} contributions. Each skill has one card, with confirmed evidence and drafts shown separately. Open a card for sources and editing.`}</p>
-      {visible.length === 0 ? <p className="hint">{list.data.length ? t.emptyFilter : t.empty}</p> : <div className="claim-grid">{groups.map(group => <ClaimGroupCard key={group.key} group={group} locale={locale} actions={actions} careerLinks={claim => <ClaimCareerLinks claim={claim} locale={locale} csrfToken={csrfToken} onAuthRequired={onAuthRequired}/>}/>)}</div>}
-    </>}
+      {visible.length === 0 ? <p className="hint">{t.emptyFilter}</p> : <div className="claim-grid">{groups.map(group => <ClaimGroupCard key={group.key} group={group} locale={locale} actions={actions} careerLinks={claim => <ClaimCareerLinks claim={claim} locale={locale} csrfToken={csrfToken} onAuthRequired={onAuthRequired}/>}/>)}</div>}
+    </> : <section className="profile-empty-state competency-empty-state">
+      <div className="profile-empty-icon"><ShieldCheck size={24} aria-hidden="true"/></div>
+      <div className="profile-empty-copy">
+        <span className="profile-overline">{locale === "nb" ? "Første steg" : "A good place to start"}</span>
+        <h3>{locale === "nb" ? "Bygg kompetanse på det du faktisk har gjort" : "Build competencies from what you have actually done"}</h3>
+        <p>{locale === "nb" ? "Start med en kilde eller skriv inn et eget bidrag. Ingenting blir bekreftet automatisk." : "Start with a source or add your own contribution. Nothing is confirmed automatically."}</p>
+        <ol className="profile-empty-steps">
+          <li><span>1</span>{locale === "nb" ? "Legg til CV eller annen dokumentasjon" : "Add a CV or other source"}</li>
+          <li><span>2</span>{locale === "nb" ? "Kontroller ordlyd og kilde" : "Review the wording and source"}</li>
+          <li><span>3</span>{locale === "nb" ? "Bekreft bare det som stemmer" : "Confirm only what is accurate"}</li>
+        </ol>
+        <div className="profile-empty-actions">
+          <Button asChild><a href="#profile-documents"><FileUp size={16} aria-hidden="true"/>{locale === "nb" ? "Start med CV eller dokument" : "Start with a CV or document"}</a></Button>
+          <Button variant="outline" onClick={() => open({ kind: "create" })}><PenLine size={16} aria-hidden="true"/>{locale === "nb" ? "Legg til manuelt" : "Add manually"}</Button>
+          <Button asChild variant="ghost"><a href="#profile-career-history"><BriefcaseBusiness size={16} aria-hidden="true"/>{locale === "nb" ? "Se arbeidshistorikk" : "Add career history"}</a></Button>
+        </div>
+      </div>
+    </section>)}
     <p className="hint mt-5">{t.aiBoundary}</p><Button variant="ghost" size="sm" onClick={() => void reload()} disabled={change.isPending}>{t.reload}</Button>
     <Dialog open={!!modal} onOpenChange={value => { if (!value) close(); }}><DialogContent className="claim-dialog" closeLabel={t.close}><DialogHeader><DialogTitle>{modalTitle}</DialogTitle><DialogDescription>{modal?.kind === "edit" ? t.editNotice : modal?.kind === "confirm" ? t.confirmNotice : modal?.kind === "reject" ? t.rejectNotice : modal?.kind === "delete" ? t.deleteNotice : modal?.kind === "create" ? t.sourceHint : t.byYou}</DialogDescription></DialogHeader>
       {change.isError && <Alert variant="destructive" role="alert"><AlertDescription>{message(change.error)}</AlertDescription></Alert>}

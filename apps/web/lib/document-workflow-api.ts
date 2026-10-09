@@ -4,7 +4,7 @@ import { retryAfterSeconds } from "./retry-after";
 import { isClaim, claimId } from "./claims";
 import { isDocumentRun } from "./document-workflow";
 import { isEntry,validEntryContent } from "./career-entries";
-export async function documentWorkflowProxy(request:Request,operation:"latest"|"start"|"load"|"next"|"entry"|"claim"|"summary"|"provider",id?:string) {
+export async function documentWorkflowProxy(request:Request,operation:"latest"|"start"|"load"|"next"|"entry"|"claim"|"coverageEntry"|"coverageClaim"|"summary"|"provider",id?:string) {
  if(!localRequest(request))return privateResponse({code:"ACCESS_DENIED"},undefined,403);
  if(id!==undefined && !claimId.test(id))return privateResponse({code:"DOCUMENT_INVALID"},undefined,400);
  const headers=sessionHeaders(request);let body:string|undefined;let scope="";
@@ -21,15 +21,21 @@ export async function documentWorkflowProxy(request:Request,operation:"latest"|"
     let size=0;const ids=new Set<string>();for(const item of input.documents){if(!item || Object.keys(item).sort().join(",")!=="documentId,text" || typeof item.documentId!=="string" || !claimId.test(item.documentId) || ids.has(item.documentId) || typeof item.text!=="string" || !item.text.trim() || item.text.length>60000)throw new Error();size+=item.text.length;ids.add(item.documentId);}if(size<40 || size>1200000 || input.scope!=="collection" && (ids.size!==1 || !ids.has(String(input.scope))))throw new Error();
    } else if(operation==="entry") {if(keys!=="confirm,content,key" || typeof input.confirm!=="boolean" || typeof input.key!=="string" || !claimId.test(input.key) || !validEntryContent(input.content) || Object.keys(input.content).sort().join(",")!=="client,deliveryRole,description,endMonth,kind,ongoing,organization,sourceNote,startMonth,title")throw new Error();}
    else if(operation==="claim") {if((input.reject!==undefined && (typeof input.reject!=="boolean" || input.reject===true && input.confirm===true)) || Object.keys(input).filter(key=>key!=="reject").sort().join(",")!=="confirm,context,index,revision,skill,statement" || typeof input.confirm!=="boolean" || !Number.isSafeInteger(input.revision) || Number(input.revision)<1 || !Number.isInteger(input.index) || Number(input.index)<0 || Number(input.index)>299 || !["skill","statement","context"].every(key=>typeof input[key]==="string" && String(input[key]).trim().length>0 && String(input[key]).length<=(key==="skill"?120:key==="statement"?1000:500)))throw new Error();}
+   else if(operation==="coverageClaim") {if(keys!=="confirm,context,index,revision,skill,statement" || typeof input.confirm!=="boolean" || !Number.isSafeInteger(input.revision) || Number(input.revision)<1 || !Number.isInteger(input.index) || Number(input.index)<0 || Number(input.index)>39 || !["skill","statement","context"].every(key=>typeof input[key]==="string" && String(input[key]).trim().length>0 && String(input[key]).length<=(key==="skill"?120:key==="statement"?1000:500)))throw new Error();}
+   else if(operation==="coverageEntry") {
+    const content=input.content as Record<string,unknown>|null;
+    if(keys!=="confirm,content,index,revision" || typeof input.confirm!=="boolean" || !Number.isSafeInteger(input.revision) || Number(input.revision)<1 || !Number.isInteger(input.index) || Number(input.index)<0 || Number(input.index)>39 || !content || typeof content!=="object" || Object.keys(content).sort().join(",")!=="client,deliveryRole,description,endMonth,kind,ongoing,organization,startMonth,title" || !validEntryContent({...content,sourceNote:"Coverage review"}))throw new Error();
+   }
    else {if(!Number.isSafeInteger(input.revision) || Number(input.revision)<1)throw new Error();if(operation==="provider" && (keys!=="consent,revision" || input.consent!==true || typeof input.aiApproval!=="string"))throw new Error();if(operation==="next" && keys!=="revision")throw new Error();if(operation==="summary" && (keys!=="index,revision,text" || !Number.isInteger(input.index) || Number(input.index)<0 || Number(input.index)>79 || typeof input.text!=="string" || input.text.trim().length<1 || input.text.length>1000))throw new Error();}
    body=JSON.stringify(input);headers.set("Content-Type","application/json");
   }
  }catch{return privateResponse({code:"DOCUMENT_AI_INPUT_INVALID"},undefined,400);}
  try {
-  const suffix=operation==="latest"?`?scope=${encodeURIComponent(scope)}`:id?`/${id}${operation==="provider"?"/provider":operation==="next"?"/next":operation==="entry"?"/entries":operation==="summary"?"/summary":operation==="claim"?"/claims":""}`:"";
+  const suffix=operation==="latest"?`?scope=${encodeURIComponent(scope)}`:id?`/${id}${operation==="provider"?"/provider":operation==="next"?"/next":operation==="entry"?"/entries":operation==="summary"?"/summary":operation==="claim"?"/claims":operation==="coverageClaim"?"/coverage/claim":operation==="coverageEntry"?"/coverage/entry":""}`:"";
   const upstream=await fetch(`${privateBase()}/api/profile/me/documents/workflow${suffix}`,{method:request.method,headers,body,cache:"no-store",redirect:"manual",signal:AbortSignal.timeout(30000)});let value:unknown=await upstream.json();
   if(!upstream.ok){const response=privateResponse(mappedPrivateError(value),upstream,[400,401,403,404,409,413,429,502,503].includes(upstream.status)?upstream.status:503);const retry=retryAfterSeconds(upstream.headers.get("retry-after"));if(retry)response.headers.set("Retry-After",String(retry));return response;}
   if(operation==="latest" && value && typeof value==="object" && "run" in value)value=value.run;
-  if(!(value===null && operation==="latest") && !(operation==="entry"?isEntry(value):operation==="claim"?isClaim(value):isDocumentRun(value)))throw new Error();return privateResponse(value,upstream);
+  const isCoverageValue=(kind:"claim"|"entry")=>!!value && typeof value==="object" && "run" in value && isDocumentRun(value.run) && (kind==="claim"?isClaim((value as {claim?:unknown}).claim):isEntry((value as {entry?:unknown}).entry));
+  if(!(value===null && operation==="latest") && !(operation==="entry"?isEntry(value):operation==="claim"?isClaim(value):operation==="coverageClaim"?isCoverageValue("claim"):operation==="coverageEntry"?isCoverageValue("entry"):isDocumentRun(value)))throw new Error();return privateResponse(value,upstream);
  }catch{return privateResponse({code:"DOCUMENT_UNAVAILABLE"});}
 }

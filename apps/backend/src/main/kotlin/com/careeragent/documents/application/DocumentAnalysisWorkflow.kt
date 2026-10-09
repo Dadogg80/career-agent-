@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.OffsetDateTime
+import java.time.ZoneOffset
 import java.util.UUID
 import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicInteger
@@ -51,7 +52,7 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
         val sources=excerpts.associate { it.documentId to documents.detail(identity,it.documentId) }
         if(sources.values.any { it.text.isBlank() }) throw DocumentFailure("DOCUMENT_AI_NO_TEXT",400)
         val approved=excerpts.associate { it.documentId to it.text }; val id=UUID.randomUUID()
-        val analysis=DocumentAnalysis(id,locale,approval.selections.map { it.provider }.distinct().joinToString(" + "),emptyList(),emptyList(),0,sources.values.sumOf { it.text.length },true,0,OffsetDateTime.now(),
+        val analysis=DocumentAnalysis(id,locale,approval.selections.map { it.provider }.distinct().joinToString(" + "),emptyList(),emptyList(),0,sources.values.sumOf { it.text.length },true,0,OffsetDateTime.now(ZoneOffset.UTC),
             excerpts.map { AnalysisDocument(it.documentId,sources.getValue(it.documentId).document.originalName,0,sources.getValue(it.documentId).text.length) })
         val state=DocumentRunState(id,scope,1,locale,"RUNNING",sources.mapValues { it.value.text },approved,
             DocumentAnalysisPlanner.batches(approved),0,null,null,analysis,approval.token,approval.selections,populateProfile,coverageReview=coverageReview)
@@ -76,7 +77,7 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
         // A repeated HTTP request returns the committed progress instead of spending another model call.
         if(current.revision != revision || current.status == "COMPLETED") return current.view()
         val plan=routing.resolveApproval(current.aiApproval,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)
-        if(current.nextAt?.isAfter(OffsetDateTime.now()) == true) return current.view()
+        if(current.nextAt?.isAfter(OffsetDateTime.now(ZoneOffset.UTC)) == true) return current.view()
         if(!permit.tryAcquire()) throw AiFailure("AI_BUSY",429)
         var claimed: DocumentRunState?=null
         try {
@@ -125,11 +126,11 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
             return runs.finish(identity,state,state.copy(revision=state.revision+1,completed=completed,
                 status="RUNNING",issue=null,batches=batches,repairScheduled=state.repairScheduled || assessment!=null,
                 coverage=assessment?.report(batches.count { it.repair }) ?: state.coverage,
-                nextAt=OffsetDateTime.now().plusSeconds((if(plan.tasks.getValue(if(completed==batches.size)AiTask.PROFILE_SUMMARY else AiTask.DOCUMENT_EXTRACTION).provider=="Gemini")geminiDelaySeconds else delaySeconds).coerceIn(0,300).toLong()),analysis=analysis)).view()
+                nextAt=OffsetDateTime.now(ZoneOffset.UTC).plusSeconds((if(plan.tasks.getValue(if(completed==batches.size)AiTask.PROFILE_SUMMARY else AiTask.DOCUMENT_EXTRACTION).provider=="Gemini")geminiDelaySeconds else delaySeconds).coerceIn(0,300).toLong()),analysis=analysis)).view()
         } catch(error: AiFailure) {
             val state=claimed ?: throw error
             return runs.finish(identity,state,state.copy(revision=state.revision+1,status="PAUSED",issue=error.code,
-                nextAt=error.retryAfterSeconds?.let { OffsetDateTime.now().plusSeconds(it.toLong()) })).view()
+                nextAt=error.retryAfterSeconds?.let { OffsetDateTime.now(ZoneOffset.UTC).plusSeconds(it.toLong()) })).view()
         } finally { claimed?.let { runs.release(identity,id,it.revision) }; permit.release() }
     }
     private fun normal(value:String)=java.text.Normalizer.normalize(value,java.text.Normalizer.Form.NFC).trim().replace(Regex("(?U)\\s+")," ").lowercase(java.util.Locale.ROOT)
@@ -171,6 +172,56 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
         val reviewed=if(confirm && (claim.status!=ClaimStatus.CONFIRMED || claim.confirmationBasis==ConfirmationBasis.DOCUMENT))claims.review(identity,claim.id,ReviewDecision.CONFIRM,claim.revision) else if(reject && claim.status!=ClaimStatus.REJECTED)claims.review(identity,claim.id,ReviewDecision.REJECT,claim.revision) else claim
         runs.linkClaimReview(identity,draft,reviewed)
         return reviewed
+    }
+    @Transactional
+    fun importCoverageClaim(identity:VerifiedIdentity,id:UUID,revision:Long,index:Int,skill:String,statement:String,context:String,confirm:Boolean):Map<String,Any> {
+        val state=checked(identity,runs.lock(identity,id))
+        if(state.status!="COMPLETED" || state.revision!=revision)throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
+        val report=state.coverage ?: throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
+        val passage=report.passages.getOrNull(index) ?: throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
+        passage.profileClaimId?.let { id ->
+            val existing=claims.list(identity).find { it.id==id } ?: throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
+            return mapOf("claim" to existing,"run" to state.view())
+        }
+        if(passage.profileEntryId!=null)throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
+        val source=checkedCoverageSource(identity,state,passage)
+        val claim=claims.create(identity,ClaimContent(skill,statement,context,"Document: ${source.document.originalName}",passage.documentId,passage.quote))
+        val reviewed=if(confirm)claims.review(identity,claim.id,ReviewDecision.CONFIRM,claim.revision) else claim
+        val updated=passage.copy(profileClaimId=reviewed.id,reviewState=if(confirm)"CONFIRMED" else "DRAFT")
+        val next=state.copy(revision=state.revision+1,coverage=report.copy(passages=report.passages.mapIndexed { at,item -> if(at==index)updated else item }))
+        return mapOf("claim" to reviewed,"run" to runs.finish(identity,state,next).view())
+    }
+    @Transactional
+    fun importCoverageEntry(identity:VerifiedIdentity,id:UUID,revision:Long,index:Int,content:CareerEntryContent,confirm:Boolean):Map<String,Any> {
+        val state=checked(identity,runs.lock(identity,id))
+        if(state.status!="COMPLETED" || state.revision!=revision)throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
+        val report=state.coverage ?: throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
+        val passage=report.passages.getOrNull(index) ?: throw DocumentFailure("DOCUMENT_AI_INPUT_INVALID",400)
+        passage.profileEntryId?.let { id ->
+            val existing=entries.list(identity).find { it.id==id } ?: throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
+            return mapOf("entry" to existing,"run" to state.view())
+        }
+        if(passage.profileClaimId!=null)throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
+        val source=checkedCoverageSource(identity,state,passage)
+        val sourced=content.copy(sourceNote="${source.document.originalName.take(80)}: ${passage.quote.take(410)}")
+        val key=UUID.nameUUIDFromBytes("${state.id}:${passage.documentId}:${passage.sourceStart}".toByteArray(Charsets.UTF_8))
+        val period="${sourced.startMonth ?: "Period not stated"} – ${if(sourced.ongoing)"Present" else sourced.endMonth ?: "Period not stated"}"
+        val draft=CareerHistoryDraft(key,sourced,period,passage.documentId,passage.quote)
+        val entry=entries.create(identity,sourced)
+        runs.attachEntry(identity,entry,draft)
+        val reviewed=if(confirm)entries.review(identity,entry.id,entry.revision,ReviewDecision.CONFIRM) else entry
+        val updated=passage.copy(profileEntryId=reviewed.id,reviewState=if(confirm)"CONFIRMED" else "DRAFT")
+        val next=state.copy(revision=state.revision+1,coverage=report.copy(passages=report.passages.mapIndexed { at,item -> if(at==index)updated else item }))
+        return mapOf("entry" to reviewed,"run" to runs.finish(identity,state,next).view())
+    }
+    private fun checkedCoverageSource(identity:VerifiedIdentity,state:DocumentRunState,passage:DocumentCoveragePassage):DocumentDetail {
+        val approved=state.approved[passage.documentId] ?: throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
+        if(passage.sourceStart<0 || passage.sourceStart+passage.quote.length>approved.length ||
+            !approved.regionMatches(passage.sourceStart,passage.quote,0,passage.quote.length))
+            throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
+        val source=documents.detail(identity,passage.documentId)
+        if(!source.text.contains(passage.quote))throw DocumentFailure("DOCUMENT_ANALYSIS_CONFLICT",409)
+        return source
     }
     fun editSummary(identity: VerifiedIdentity,id:UUID,index:Int,revision:Long,text:String):DocumentRunView {
         val state=checked(identity,runs.load(identity,id))

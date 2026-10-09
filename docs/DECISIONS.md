@@ -89,6 +89,8 @@ D-019 (Accepted, explicit UI requirement): move development diagnostics into the
 
 D-020 (Accepted, delegated local-pilot decision): use optional local Keycloak with Spring Security OIDC/PKCE before storing career evidence. This provides real authentication without a paid provider or custom password service. Implement owned name/language/revision first, with CSRF, same-origin proxies and PostgreSQL isolation/conflict tests. No private data goes to Groq. Production IdP, HTTPS and private-document/privacy policy remain separate work. See ADR 0013 and IDENTITY_SETUP.md.
 
+D-021 (Accepted, explicit profile UX request): add an optional private profile photo to the signed-in owner's compact profile identity card. Accept bounded JPG/PNG input, validate and normalize it server-side, store the JPEG against the existing profile owner, and serve it uncached only through authenticated same-origin proxies. Photo changes do not change profile facts/revision and do not enter AI requests. Keep profile preferences limited to existing name/language until additional personal data and visibility are explicitly designed. See ADR 0036.
+
 
 ## 2026-10-07: approved delivery scope and defaults
 

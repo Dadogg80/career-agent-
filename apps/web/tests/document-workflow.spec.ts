@@ -1,4 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
+import { isClaim } from "../lib/claims";
+import { isEntry } from "../lib/career-entries";
+import { isDocumentRun } from "../lib/document-workflow";
 const id="12345678-1234-1234-1234-123456789abc",second="22345678-1234-1234-1234-123456789abc",runId="32345678-1234-1234-1234-123456789abc",key="42345678-1234-1234-1234-123456789abc";
 const time="2026-10-08T00:00:00Z";
 const text="## Example AS\nSenior Developer 2021 – 2024\nBuilt APIs using Kotlin and PostgreSQL.";
@@ -28,6 +31,8 @@ test("full source is approved once and automatically sequenced; editable skills 
   return r.fulfill({json:url.endsWith(id)?{document:doc,text}:[doc]});
  });
  await open(page);const outer=page.locator(".document-workspace-sheet");const start=outer.getByRole("button",{name:"Bygg profil fra dokumentene",exact:true});await expect(start).toBeDisabled();expect(calls).toBe(0);
+ const buttonState=await start.evaluate(element=>({opacity:getComputedStyle(element).opacity,color:getComputedStyle(element).color}));
+ expect(buttonState.opacity).toBe("1");expect(buttonState.color).not.toBe("rgba(0, 0, 0, 0.5)");
  await outer.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Groq for denne analysen"}).check();await start.click();
  await expect(outer.getByText("Gjennomgangen er klar",{exact:true})).toBeVisible();expect(calls).toBe(2);expect(starts).toBe(1);expect(claims).toBe(0);expect(entries).toBe(0);
  await outer.locator(".competency-proposal-grid").getByRole("button",{name:"Rediger",exact:true}).first().click();const draft=page.locator(".document-draft-sheet");
@@ -148,13 +153,15 @@ test("automatic document population links skills and history to the profile and 
   return r.fulfill({json:url.endsWith(id)?{document:doc,text}:[doc]});
  });
  await page.goto("/career/profile");await expect(page.locator(".candidate-presentation")).toContainText("Erfaring med API-er, Kotlin og PostgreSQL.");
- await page.locator(".candidate-presentation").getByText("Se grunnlaget",{exact:true}).click();await expect(page.locator(".candidate-presentation")).toContainText("cv.md");
+ await page.locator(".candidate-presentation").getByText("Se AI-ens kildeutdrag",{exact:true}).click();await expect(page.locator(".candidate-presentation")).toContainText("cv.md");
  await page.getByRole("button",{name:"Analyser dokumentet",exact:true}).click();const outer=page.locator(".document-workspace-sheet");
  await expect(outer.getByRole("checkbox",{name:"Fyll ut kompetanse og karrierehistorikk automatisk",exact:true,includeHidden:true})).toBeChecked();
  await expect(outer).toContainText("Profilen fylles ut underveis");await expect(outer.getByText("Ingen forslag venter i dette utvalget",{exact:true})).toBeVisible();await outer.getByRole("button",{name:/^Godkjent \/ dokumentert/}).click();await expect(outer.getByRole("link",{name:"Åpne i din kompetanse",exact:true})).toHaveCount(2);
  await expect(outer.getByRole("button",{name:"Rediger",exact:true})).toHaveCount(0);
- await outer.getByRole("button",{name:"Karrierehistorikk",exact:true}).click();await expect(outer.getByRole("link",{name:"Åpne i karrierehistorikken",exact:true})).toBeVisible();expect(profileReads).toBeGreaterThan(0);
+ const profileTab=outer.getByRole("button",{name:"Profilsammendrag",exact:true});await profileTab.click();await expect(profileTab).toHaveAttribute("aria-pressed","true");await expect(outer.locator("#document-results-profile")).not.toHaveAttribute("hidden","");await expect(outer.locator("#document-results-competencies")).toHaveAttribute("hidden","");
+ const historyTab=outer.getByRole("button",{name:"Karrierehistorikk",exact:true});await historyTab.click();await expect(historyTab).toHaveAttribute("aria-pressed","true");await expect(outer.locator("#document-results-competencies")).toHaveAttribute("hidden","");await expect(outer.locator("#document-results-profile")).toHaveAttribute("hidden","");await expect(outer.locator("#document-results-history")).not.toHaveAttribute("hidden","");const selectedCounterColor=await historyTab.locator('[data-slot="badge"]').evaluate(e=>getComputedStyle(e).color);expect(selectedCounterColor).toBe("rgb(255, 255, 255)");await expect(outer.getByRole("link",{name:"Åpne i karrierehistorikken",exact:true})).toBeVisible();expect(profileReads).toBeGreaterThan(0);
  await page.screenshot({path:"/tmp/career-automatic-profile-review.png",fullPage:false});
+ await page.setViewportSize({width:390,height:844});await expect.poll(()=>outer.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);await page.screenshot({path:"/tmp/career-automatic-profile-review-mobile.png",fullPage:false});
  await outer.getByRole("link",{name:"Åpne i karrierehistorikken",exact:true}).click();await expect(outer).toHaveCount(0);await expect(page).toHaveURL(/#profile-career-history$/);
 });
 
@@ -227,10 +234,10 @@ test("source coverage shows bounded follow-up and literal missing passages witho
   const check=sheet.locator(".document-coverage");await expect(check).toContainText("1 kan trenge gjennomgang");
   await check.locator("summary").click();await expect(check).toContainText("Mentored two developers and coordinated releases.");
   await check.getByRole("button",{name:"Om kildekontrollen"}).focus();
-  await expect(check.getByRole("tooltip")).toBeVisible();await expect(check.getByRole("tooltip")).toContainText("ikke en garanti");
+  await expect(check.getByRole("tooltip")).toBeVisible();await expect(check.getByRole("tooltip")).toContainText("ikke om all kompetanse er funnet");
   await page.keyboard.press("Escape");await expect(check.getByRole("tooltip")).toBeHidden();await expect(sheet).toBeVisible();
-  await check.getByRole("textbox",{name:"Søk i kildepassasjer"}).fill("absent source");await expect(check.locator("tbody tr")).toHaveCount(0);
-  await check.getByRole("textbox",{name:"Søk i kildepassasjer"}).fill("Mentored");await expect(check.locator("tbody tr")).toHaveCount(1);
+  await check.getByRole("textbox",{name:"Søk i kildepassasjer"}).fill("absent source");await expect(check.locator(".coverage-passage-card")).toHaveCount(0);
+  await check.getByRole("textbox",{name:"Søk i kildepassasjer"}).fill("Mentored");await expect(check.locator(".coverage-passage-card")).toHaveCount(1);
   await check.scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/career-coverage-desktop.png"});
  }finally{finishRepair();}
  await expect(sheet.getByText("Gjennomgangen er klar",{exact:true})).toBeVisible();
@@ -241,4 +248,68 @@ test("source coverage shows bounded follow-up and literal missing passages witho
  await page.setViewportSize({width:390,height:844});
  await sheet.locator(".document-coverage").scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/career-coverage-mobile.png"});
  const bounds=await sheet.evaluate(el=>({width:el.clientWidth,scroll:el.scrollWidth}));expect(bounds.scroll).toBeLessThanOrEqual(bounds.width+1);
+});
+
+test("missed passages can become sourced profile claims and career entries",async({page})=>{
+ await profile(page);
+ const first="Interested in mentoring and open source.";
+ const secondPassage="Led delivery of customer-facing platform improvements.";
+ const source=`${text}\n${first}\n${secondPassage}`;
+ const initial={...run(),coverageReview:true,coverage:{detected:2,represented:0,remaining:2,limited:false,repairCalls:0,passages:[
+  {documentId:id,kind:"INTERESTS",sourceStart:source.indexOf(first),quote:first},
+  {documentId:id,kind:"EXPERIENCE",sourceStart:source.indexOf(secondPassage),quote:secondPassage},
+ ]}};
+ let saved:typeof initial=initial;let claimCalls=0;let entryCalls=0;
+ await page.route("**/api/profile/me/documents**",async r=>{
+  const url=r.request().url(),method=r.request().method();
+  if(url.includes("/workflow")){
+   if(url.endsWith("/coverage/claim")){
+    const input=r.request().postDataJSON();claimCalls++;
+    expect(input).toMatchObject({revision:3,index:0,skill:"Interesser",statement:first,confirm:true});
+    saved={...saved,revision:4,coverage:{...saved.coverage,passages:saved.coverage.passages.map((item,index)=>index===0?{...item,profileClaimId:second,reviewState:"CONFIRMED"}:item)}};
+    const claim={id:second,skill:input.skill,statement:input.statement,context:input.context,sourceNote:"Document: cv.md",sourceDocumentId:id,sourceQuote:first,status:"CONFIRMED",confirmationBasis:"USER",revision:1,createdAt:time,updatedAt:time};
+    expect(isDocumentRun(saved),JSON.stringify(saved.coverage)).toBe(true);expect(isClaim(claim)).toBe(true);
+    return r.fulfill({json:{run:saved,claim}});
+   }
+   if(url.endsWith("/coverage/entry")){
+    const input=r.request().postDataJSON();entryCalls++;
+    expect(input).toMatchObject({revision:4,index:1,confirm:false,content:{kind:"EMPLOYMENT",title:"Platform delivery lead",organization:"Example AS",description:secondPassage}});
+    saved={...saved,revision:5,coverage:{...saved.coverage,passages:saved.coverage.passages.map((item,index)=>index===1?{...item,profileEntryId:key,reviewState:"DRAFT"}:item)}};
+    const entry={id:key,content:{...input.content,sourceNote:`cv.md: ${secondPassage}`},status:"UNVERIFIED",revision:1,createdAt:time,updatedAt:time};
+    expect(isDocumentRun(saved)).toBe(true);expect(isEntry(entry)).toBe(true);
+    return r.fulfill({json:{run:saved,entry}});
+   }
+   if(method==="GET")return r.fulfill({json:saved});
+   return r.fulfill({json:saved});
+  }
+  return r.fulfill({json:url.endsWith(id)?{document:{...doc,textCharacters:source.length},text:source}:[doc]});
+ });
+
+ await open(page);const sheet=page.locator(".document-workspace-sheet");const coverage=sheet.locator(".document-coverage");
+ await coverage.locator("summary").click();
+ await coverage.getByRole("textbox",{name:"Søk i kildepassasjer"}).fill("Interested");
+ await coverage.getByRole("button",{name:"Behandle som profilutkast",exact:true}).click();
+ const editor=page.locator(".coverage-review-sheet");
+ await expect(editor.getByLabel("Kompetanse / tema",{exact:true})).toHaveValue("Interesser");
+ await editor.getByRole("checkbox",{name:"Jeg har kontrollert dette og bekrefter at det beskriver meg"}).check();
+ await editor.getByRole("button",{name:"Lagre og bekreft",exact:true}).click();
+ await expect(coverage).toContainText("Bekreftet av deg");expect(claimCalls).toBe(1);
+ await coverage.getByRole("textbox",{name:"Søk i kildepassasjer"}).fill("Led delivery");
+ await coverage.getByRole("button",{name:"Behandle som profilutkast",exact:true}).click();
+ await expect(editor.getByLabel("Arbeidsgiver / organisasjon",{exact:true})).toHaveValue("");
+ await editor.getByLabel("Formell tittel / navn",{exact:true}).fill("Platform delivery lead");
+ await editor.getByLabel("Arbeidsgiver / organisasjon",{exact:true}).fill("Example AS");
+ await editor.getByRole("button",{name:"Lagre som ubekreftet",exact:true}).click();
+ await expect(coverage).toContainText("Lagt til i profilen");expect(entryCalls).toBe(1);
+ await page.setViewportSize({width:390,height:844});
+ await coverage.scrollIntoViewIfNeeded();
+ expect(await sheet.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
+});
+
+test("coverage proxy routes reject malformed claim and entry payloads",async({request})=>{
+ const path=`/api/profile/me/documents/workflow/${runId}/coverage`;
+ for(const destination of ["claim","entry"]){
+  const response=await request.post(`${path}/${destination}`,{data:{}});
+  expect(response.status()).toBe(400);expect(await response.json()).toEqual({code:"DOCUMENT_AI_INPUT_INVALID"});
+ }
 });

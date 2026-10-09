@@ -50,7 +50,7 @@ test("one skill card combines evidence across projects while drafts stay separat
   await dialog.getByRole("textbox", { name: "Hva gjorde du selv?", exact: true }).fill("Reviewed emissions implementation.");
   await dialog.getByRole("button", { name: "Lagre opplysning", exact: true }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(card.locator('[data-group-status="CONFIRMED"]')).toHaveText("2 bekreftet");
+  await expect(card.locator('[data-group-status="CONFIRMED"]')).toHaveText("2 bekreftet av deg");
   await expect(card.locator('[data-group-status="DRAFT"]')).toHaveText("2 utkast");
   expect(claims[0].status).toBe("CONFIRMED"); expect(claims[2].status).toBe("CONFIRMED"); expect(writes).toBe(1); expect(aiCalls).toBe(0);
   await page.screenshot({ path: "/tmp/career-grouped-skills-desktop.png", fullPage: true });

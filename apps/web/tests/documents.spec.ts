@@ -9,6 +9,7 @@ test("upload retains the source, selecting a CV quote creates an unverified clai
   await page.route("**/api/profile/me/claims", route => route.fulfill({ json:claim ? [claim] : [] }));
   await page.route("**/api/profile/me/documents**", route => {
     const method = route.request().method(); const url = route.request().url();
+    if (url.includes("/workflow")) return route.fulfill({ json:null });
     if (method === "GET") return route.fulfill({ json:url.endsWith(id) ? { document, text } : document ? [document] : [] });
     expect(route.request().headers()["x-csrf-token"]).toBe("synthetic-csrf");
     if (method === "DELETE") { deletes++; document = null; return route.fulfill({ status:204 }); }

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Upload, FileText, Download, Star, Trash2, RefreshCw, ScanText, CheckCircle2, AlertCircle } from "lucide-react";
+import { Upload, FileText, Download, Star, Trash2, RefreshCw, ScanText, CheckCircle2, AlertCircle, ChevronDown, FileSearch, Quote, FolderOpen, ShieldCheck } from "lucide-react";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -77,21 +77,88 @@ export function DocumentPanel({ locale, csrfToken, onAuthRequired }: { locale: L
     {list.data && (list.data.length ? <div className="document-list">{list.data.map(document => <article key={document.id} aria-label={document.originalName} className="document-tile"><div className="claim-heading"><h3>{document.originalName}</h3>{document.isMaster && <Badge>{t.masterLabel}</Badge>}</div><div className="document-read-status" data-readable={document.textCharacters === undefined ? "unknown" : document.textCharacters > 0 ? "yes" : "no"}>{document.textCharacters === 0 ? <AlertCircle size={16}/> : <CheckCircle2 size={16}/>}<span>{document.textCharacters === undefined ? locale === "nb" ? "Åpne for å kontrollere teksten" : "Open to check extracted text" : document.textCharacters === 0 ? locale === "nb" ? "Ingen lesbar tekst · prøv OCR" : "No readable text · try OCR" : `${document.textCharacters.toLocaleString(locale)} ${locale === "nb" ? "tegn lest" : "characters read"}${document.extractionMethod === "OCR" ? " · OCR" : ""}`}</span></div><p className="hint">{Math.ceil(document.byteSize/1024)} KB · {document.language === "nb" ? "Norsk" : "English"}</p><div className="claim-actions">
       <Button variant="outline" size="sm" onClick={() => open(document, "read")} disabled={mutation.isPending}>{t.open}</Button><Button variant="ghost" size="sm" asChild><a href={`/api/profile/me/documents/${document.id}/original`}><Download size={14}/>{t.download}</a></Button>
       {!document.isMaster && ["application/pdf","application/vnd.openxmlformats-officedocument.wordprocessingml.document"].includes(document.mediaType) && <Button variant="ghost" size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate({ kind:"master", document })}><Star size={14}/>{t.master}</Button>}<Button variant="ghost" size="sm" disabled={mutation.isPending} onClick={() => open(document, "delete")}><Trash2 size={14}/>{t.remove}</Button>
-    </div></article>)}</div> : <p className="hint mt-4">{t.empty}</p>)}
+    </div></article>)}</div> : null)}
+    {list.data?.length === 0 && <section className="document-empty-state">
+      <div className="document-empty-icon"><FolderOpen size={25} aria-hidden="true"/></div>
+      <div className="document-empty-copy">
+        <span className="profile-overline">{locale === "nb" ? "Kildene dine, samlet" : "Your sources, in one place"}</span>
+        <h3>{locale === "nb" ? "La erfaringen din bli søkbar" : "Make your experience easier to find"}</h3>
+        <p>{t.empty}</p>
+        <p className="document-empty-boundary">{locale === "nb" ? "Du bestemmer selv når en kilde skal analyseres." : "You decide when a source is analyzed."}</p>
+        <div className="document-empty-steps">
+          <span><strong>01</strong>{locale === "nb" ? "Last opp CV eller attest" : "Upload a CV or certificate"}</span>
+          <span><strong>02</strong>{locale === "nb" ? "Kontroller den lokale tekstlesingen" : "Review the local text reading"}</span>
+          <span><strong>03</strong>{locale === "nb" ? "Velg selv om du vil analysere" : "Choose if you want AI analysis"}</span>
+        </div>
+        <div className="document-empty-actions">
+          <Button type="button" variant="outline" disabled={mutation.isPending} onClick={() => fileField.current?.click()}><Upload size={16} aria-hidden="true"/>{locale === "nb" ? "Velg et dokument" : "Choose a document"}</Button>
+          <p><ShieldCheck size={14} aria-hidden="true"/>{locale === "nb" ? "Opplasting og tekstlesing er lokale. AI krever et eget samtykke." : "Uploads and text reading are local. AI needs separate consent."}</p>
+        </div>
+      </div>
+    </section>}
     {!!list.data?.length && <Button className="mt-4" variant="outline" disabled={mutation.isPending} onClick={() => open(list.data![0], "collection")}>{locale === "nb" ? "Oppsummer alle dokumentene med AI" : "Summarize all documents with AI"}</Button>}
     {!!list.data?.length && <DocumentChecks key={list.data.map(d=>`${d.id}-${d.textCharacters}`).join(",")} documents={list.data} csrfToken={csrfToken} locale={locale} onAuthRequired={onAuthRequired} onOpen={document=>open(document,"read")}/> }
     {list.isError && <Button variant="outline" onClick={() => void list.refetch()}>{t.refresh}</Button>}
-    <Sheet open={!!modal} onOpenChange={value => { if (!value) close(); }}><SheetContent className="document-workspace-sheet document-reader-sheet" closeLabel={t.close}><SheetHeader className="document-review-header"><SheetTitle>{modal?.kind === "delete" ? t.deleteTitle : modal?.kind === "collection" ? locale === "nb" ? "Samlet kompetanseoversikt" : "Combined competency overview" : modal?.document.originalName}</SheetTitle><SheetDescription>{modal?.kind === "delete" ? t.deleteHint : modal?.kind === "collection" ? locale === "nb" ? "CV, attester, kursbevis og andre dokumenter vurderes samlet. Kontroller hvilke dokumenter som sendes." : "CVs, certificates and other documents are considered together. Review the documents before sending." : t.select}</SheetDescription></SheetHeader>
+    <Sheet open={!!modal} onOpenChange={value => { if (!value) close(); }}><SheetContent className="document-workspace-sheet document-reader-sheet" closeLabel={t.close}><SheetHeader className="document-review-header"><SheetTitle>{modal?.kind === "read" && <FileSearch size={20} aria-hidden="true"/>}{modal?.kind === "delete" ? t.deleteTitle : modal?.kind === "collection" ? locale === "nb" ? "Samlet kompetanseoversikt" : "Combined competency overview" : modal?.document.originalName}</SheetTitle><SheetDescription>{modal?.kind === "delete" ? t.deleteHint : modal?.kind === "collection" ? locale === "nb" ? "CV, attester, kursbevis og andre dokumenter vurderes samlet. Kontroller hvilke dokumenter som sendes." : "CVs, certificates and other documents are considered together. Review the documents before sending." : t.select}</SheetDescription></SheetHeader>
       {mutation.isError && <Alert variant="destructive" role="alert"><AlertDescription>{message(mutation.error)}</AlertDescription></Alert>}
       {modal?.kind === "collection" && <>{collection.isPending && <p role="status">{t.loading}</p>}{collection.isError && <Alert variant="destructive"><AlertDescription>{message(collection.error)}</AlertDescription></Alert>}{collection.data && <DocumentWorkflow scope="collection" documents={collection.data} locale={locale} csrfToken={csrfToken} onAuthRequired={onAuthRequired} onOpenProfile={close}/> }</>}
       {modal?.kind === "delete" && <Button variant="destructive" disabled={mutation.isPending} onClick={() => mutation.mutate({ kind:"delete", document:modal.document })}>{mutation.isPending ? t.busy : t.deleteAction}</Button>}
       {modal?.kind === "read" && <><div className="document-reading-tools"><Button variant="outline" size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate({ kind:"reread", document:modal.document, ocr:false })}><RefreshCw size={15}/>{locale === "nb" ? "Les originalen på nytt" : "Reread original"}</Button>{modal.document.mediaType === "application/pdf" && <Button variant="outline" size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate({ kind:"reread", document:modal.document, ocr:true })}><ScanText size={15}/>{locale === "nb" ? "Les skannet PDF med OCR" : "Read scanned PDF with OCR"}</Button>}<p className="hint">{mutation.isPending ? t.busy : locale === "nb" ? "Lokal lesing. Originalen og lagret kompetanse beholdes. OCR-tekst kan inneholde feil og må kontrolleres." : "Local reading. The original and saved competencies are retained. OCR text may contain errors and needs checking."}</p></div>{detail.isPending && <p role="status">{t.loading}</p>}{detail.isError && <Alert variant="destructive" role="alert"><AlertDescription>{message(detail.error)}</AlertDescription></Alert>}{detail.data && (detail.data.text ? <>
         <DocumentWorkflow key={`${selectedId}-${readingRevision}`} scope={selectedId!} documents={[detail.data]} locale={locale} csrfToken={csrfToken} onAuthRequired={onAuthRequired} onOpenProfile={close}/>
-        <details className="manual-source-tools"><summary>{locale === "nb" ? "Originaltekst og manuell registrering" : "Extracted text and manual entry"}</summary><label htmlFor="document-text">{t.text}</label><Textarea id="document-text" ref={source} value={detail.data.text} readOnly rows={12}/><Button variant="outline" size="sm" onClick={selected}>{t.selected}</Button>
-        <form className="claim-form" onSubmit={submit}><div><label htmlFor="document-quote">{t.quote}</label><Textarea id="document-quote" value={draft.quote} onChange={event => setDraft({ ...draft, quote:event.target.value })} maxLength={1000} required rows={3} disabled={mutation.isPending}/></div>
-          {(["skill", "statement", "context"] as const).map(key => <div key={key}><label htmlFor={`document-${key}`}>{t[key]}</label>{key === "skill" ? <Input id={`document-${key}`} required maxLength={120} value={draft[key]} onChange={event => setDraft({ ...draft, [key]:event.target.value })} disabled={mutation.isPending}/> : <Textarea id={`document-${key}`} required maxLength={key === "statement" ? 1000 : 500} value={draft[key]} onChange={event => setDraft({ ...draft, [key]:event.target.value })} disabled={mutation.isPending}/>}</div>)}
-          <p className="hint">{t.review}</p><Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? t.busy : t.save}</Button>
-        </form></details>
+        <details className="manual-source-tools">
+          <summary>
+            <span className="manual-source-summary-icon"><FileText size={18} aria-hidden="true"/></span>
+            <span className="manual-source-summary-copy">
+              <strong>{locale === "nb" ? "Originaltekst og manuell registrering" : "Source text and manual entry"}</strong>
+              <small>{locale === "nb" ? "Kontroller kilden og legg til et punkt ved behov" : "Review the source and add a competency if needed"}</small>
+            </span>
+            <ChevronDown size={17} aria-hidden="true"/>
+          </summary>
+          <div className="manual-source-body">
+            <section className="manual-source-preview">
+              <div className="manual-source-section-heading">
+                <span className="manual-source-step">1</span>
+                <div>
+                  <h3 id="document-text-heading">{t.text}</h3>
+                  <p>{locale === "nb" ? "Marker et relevant utdrag som dokumenterer kompetansen." : "Select a relevant excerpt that supports the competency."}</p>
+                </div>
+              </div>
+              <Textarea id="document-text" aria-labelledby="document-text-heading" ref={source} value={detail.data.text} readOnly rows={12}/>
+              <div className="manual-source-actions">
+                <p>{locale === "nb" ? "Velg teksten du vil bruke som kildebevis." : "Select the text you want to use as source evidence."}</p>
+                <Button variant="outline" size="sm" onClick={selected}><Quote size={15} aria-hidden="true"/>{t.selected}</Button>
+              </div>
+            </section>
+            {draft.quote.trim() ? (
+              <form className="claim-form manual-source-entry" onSubmit={submit}>
+                <div className="manual-source-section-heading">
+                  <span className="manual-source-step">2</span>
+                  <div>
+                    <h3>{locale === "nb" ? "Gjør sitatet om til et forslag" : "Turn the quote into a proposal"}</h3>
+                    <p>{locale === "nb" ? "Rediger opplysningene før du lagrer dem som ubekreftet." : "Edit the details before saving them as unverified."}</p>
+                  </div>
+                </div>
+                <div className="manual-source-form-grid">
+                  <div className="manual-source-quote-field">
+                    <label htmlFor="document-quote">{t.quote}</label>
+                    <Textarea id="document-quote" value={draft.quote} onChange={event => setDraft({ ...draft, quote:event.target.value })} maxLength={1000} required rows={3} disabled={mutation.isPending}/>
+                  </div>
+                  {(["skill", "statement", "context"] as const).map(key => <div key={key}><label htmlFor={`document-${key}`}>{t[key]}</label>{key === "skill" ? <Input id={`document-${key}`} required maxLength={120} value={draft[key]} onChange={event => setDraft({ ...draft, [key]:event.target.value })} disabled={mutation.isPending}/> : <Textarea id={`document-${key}`} required maxLength={key === "statement" ? 1000 : 500} value={draft[key]} onChange={event => setDraft({ ...draft, [key]:event.target.value })} disabled={mutation.isPending}/>}</div>)}
+                </div>
+                <p className="hint">{t.review}</p>
+                <Button type="submit" disabled={mutation.isPending}><CheckCircle2 size={16} aria-hidden="true"/>{mutation.isPending ? t.busy : t.save}</Button>
+              </form>
+            ) : (
+              <div className="manual-source-prompt" role="status">
+                <FileSearch size={19} aria-hidden="true"/>
+                <div>
+                  <strong>{locale === "nb" ? "Velg et sitat for å begynne" : "Select a source quote to begin"}</strong>
+                  <p>{locale === "nb" ? "Marker tekst ovenfor, og velg «Bruk valgt tekst». Feltene vises når kildebeviset er klart." : "Select text above, then choose “Use selected text”. The form appears when the source quote is ready."}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </details>
       </> : <p>{t.noText}</p>)}</>}
       <Button variant="outline" disabled={mutation.isPending} onClick={close}>{t.cancel}</Button>
     </SheetContent></Sheet>

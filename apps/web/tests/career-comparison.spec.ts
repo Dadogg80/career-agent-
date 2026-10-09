@@ -51,7 +51,7 @@ test("career comparison loads both sources on demand, keeps facts untouched and 
   await page.goto("/career/profile");
   await page.getByRole("button", { name: "Arbeid og utdanning", exact: true }).click();
   const panel = page.locator("#profile-career-history");
-  await panel.getByRole("button", { name: "Se karrierehistorikk", exact: true }).click();
+  await expect(panel.locator(".career-entry")).toHaveCount(3);
   await expect(panel.getByText("1 mulige periodeforskjeller", { exact: true })).toBeVisible();
   expect(sourceReads).toBe(0);
   await panel.getByRole("button", { name: "Sammenlign historikk", exact: true }).click();
@@ -92,7 +92,7 @@ test("one unavailable source does not hide the other record and manual compariso
   await page.goto("/career/profile");
   await page.getByRole("button", { name: "Arbeid og utdanning", exact: true }).click();
   const panel = page.locator("#profile-career-history");
-  await panel.getByRole("button", { name: "Se karrierehistorikk", exact: true }).click();
+  await expect(panel.locator(".career-entry")).toHaveCount(2);
   await panel.getByRole("button", { name: "Sammenlign historikk", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByRole("alert")).toContainText("Kildene kunne ikke hentes");

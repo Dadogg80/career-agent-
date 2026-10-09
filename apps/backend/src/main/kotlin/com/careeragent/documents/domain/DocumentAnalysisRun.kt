@@ -4,7 +4,8 @@ import java.time.OffsetDateTime
 import java.util.UUID
 
 data class AnalysisBatch(val documentId: UUID, val text: String, val characters: Int, val sourceStart: Int = 0, val repair: Boolean = false)
-data class DocumentCoveragePassage(val documentId: UUID, val kind: String, val sourceStart: Int, val quote: String)
+data class DocumentCoveragePassage(val documentId: UUID, val kind: String, val sourceStart: Int, val quote: String,
+    val profileClaimId: UUID? = null, val profileEntryId: UUID? = null, val reviewState: String? = null)
 data class DocumentCoverageReport(val detected: Int, val represented: Int, val remaining: Int,
     val passages: List<DocumentCoveragePassage>, val limited: Boolean, val repairCalls: Int)
 data class DocumentRunState(val id: UUID, val scope: String, val revision: Long, val locale: String,

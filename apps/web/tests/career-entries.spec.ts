@@ -45,7 +45,7 @@ test("career timeline confirms actual roles separately and editing resets confir
  await expect(panel.getByRole("heading",{name:"Employment, projects and education"})).toBeVisible();
  await panel.getByRole("button",{name:"Delete",exact:true}).click();
  await page.getByRole("dialog").getByRole("button",{name:"Delete entry and history",exact:true}).click();
- await expect(panel.getByText("No timeline yet. Add employment, a project or education; confirm it separately before CV use.",{exact:true})).toBeVisible();
+ await expect(panel.getByRole("heading",{name:"Start with one chapter",exact:true})).toBeVisible();
 });
 test("entry proxies reject external origins spoofed status invalid dates and anonymous history",async({request})=>{
  const path="/api/profile/me/entries";const content={kind:"EMPLOYMENT",title:"Developer",organization:"Example AS",client:"",deliveryRole:"",startMonth:"2020-01",endMonth:null,ongoing:true,description:"Built APIs",sourceNote:"Own statement"};

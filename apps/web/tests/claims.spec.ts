@@ -53,7 +53,7 @@ test("manual entry, explicit review, edit reset, history and delete require sepa
   await page.getByRole("combobox", { name: "Språk", exact: true }).selectOption("en");
   await card.getByRole("button", { name: "Delete", exact: true }).click(); expect(writes).toBe(4);
   await dialog.getByRole("button", { name: "Delete statement and history", exact: true }).click();
-  await expect(page.getByText("No competencies recorded yet.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Build competencies from what you have actually done", exact: true })).toBeVisible();
   expect(writes).toBe(5);
 });
 

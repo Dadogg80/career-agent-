@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.oauth2.core.oidc.OidcIdToken
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin
+import org.springframework.mock.web.MockMultipartFile
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
@@ -18,8 +19,12 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
+import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.time.Instant
 import java.util.UUID
+import javax.imageio.ImageIO
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -86,6 +91,52 @@ class ProfileSecurityIntegrationTest {
         mvc.perform(put("/api/profile/me").with(caller(subject)).with(csrf()).contentType("application/json").content(input("Conflict", 9))).andExpect(status().isConflict)
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM app_user WHERE oidc_subject = ?", Long::class.java, subject)).isZero()
         mvc.perform(get("/api/profile/me").header("X-User-Id", subject).header("Authorization", "Bearer fake-token")).andExpect(status().isUnauthorized)
+    }
+
+    @Test
+    fun `profile avatars are validated normalized private and owner isolated`() {
+        val owner = caller(UUID.randomUUID().toString())
+        val other = caller(UUID.randomUUID().toString())
+        mvc.perform(put("/api/profile/me").with(owner).with(csrf()).contentType("application/json").content(input("Owner"))).andExpect(status().isOk)
+        mvc.perform(put("/api/profile/me").with(other).with(csrf()).contentType("application/json").content(input("Other"))).andExpect(status().isOk)
+        mvc.perform(get("/api/profile/me/avatar").with(owner)).andExpect(status().isNotFound).andExpect(header().string("Cache-Control", "no-store"))
+        mvc.perform(get("/api/profile/me/avatar")).andExpect(status().isUnauthorized)
+        mvc.perform(get("/api/profile/me/avatar").with(other)).andExpect(status().isNotFound)
+
+        val png = ByteArrayOutputStream().use { output ->
+            ImageIO.write(BufferedImage(32, 24, BufferedImage.TYPE_INT_RGB), "png", output)
+            output.toByteArray()
+        }
+        val mismatch = MockMultipartFile("file", "avatar.png", "image/jpeg", png)
+        mvc.perform(multipart("/api/profile/me/avatar").file(mismatch).with(owner).with(csrf()).with { request ->
+            request.method = "PUT"
+            request
+        }).andExpect(status().isBadRequest).andExpect(header().string("Cache-Control", "no-store"))
+
+        val tooLarge = MockMultipartFile("file", "avatar.png", "image/png", ByteArray(2_000_001))
+        mvc.perform(multipart("/api/profile/me/avatar").file(tooLarge).with(owner).with(csrf()).with { request ->
+            request.method = "PUT"
+            request
+        }).andExpect(status().isPayloadTooLarge)
+
+        val upload = MockMultipartFile("file", "avatar.png", "image/png", png)
+        mvc.perform(multipart("/api/profile/me/avatar").file(upload).with(owner).with(csrf()).with { request ->
+            request.method = "PUT"
+            request
+        }).andExpect(status().isOk).andExpect(jsonPath("$.updated").value(true)).andExpect(header().string("Cache-Control", "no-store"))
+
+        val image = mvc.perform(get("/api/profile/me/avatar").with(owner)).andExpect(status().isOk)
+            .andExpect(content().contentType("image/jpeg"))
+            .andExpect(header().string("Cache-Control", "no-store"))
+            .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+            .andReturn().response.contentAsByteArray
+        val normalized = ImageIO.read(ByteArrayInputStream(image))
+        assertThat(normalized.width).isEqualTo(512)
+        assertThat(normalized.height).isEqualTo(512)
+        mvc.perform(get("/api/profile/me/avatar").with(other)).andExpect(status().isNotFound)
+        mvc.perform(delete("/api/profile/me/avatar").with(owner)).andExpect(status().isForbidden)
+        mvc.perform(delete("/api/profile/me/avatar").with(owner).with(csrf())).andExpect(status().isNoContent).andExpect(header().string("Cache-Control", "no-store"))
+        mvc.perform(get("/api/profile/me/avatar").with(owner)).andExpect(status().isNotFound)
     }
 
     companion object {

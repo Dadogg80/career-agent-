@@ -26,6 +26,7 @@ Milestone: a candidate reaches useful reviewed role-specific text proposals with
 | Public ad text analysis, NAV API and bounded FINN browser import | Implemented and merged; FINN excerpts may be partial/stale |
 | Compact requirement filters/detail dialogs, pacing and DEV diagnostics Sheet | Implemented and merged |
 | PostgreSQL/Flyway and local OIDC/PKCE basic profile | Implemented and merged, PR #12 |
+| Responsive document checks/reader, missed-passage recovery and compact profile identity with private photo | Implemented and locally verified: backend suite, frontend production build/typecheck and all 127 production Playwright tests pass |
 | Wrapped FINN title repair / handled-error console warning | Implemented and merged, PR #13 |
 | Two-column original-wording ad overview / visible ad on AI failure | Implemented and merged, PR #14 |
 | Owned competency statements, explicit review and revision history | Implemented and merged, PR #14 |

@@ -1,4 +1,7 @@
 import {expect,test,type Page} from "@playwright/test";
+import {tailoringPassages,isTailoringResult,reviewedCvText} from "../lib/cv-tailoring";
+import {isPersonalMatch} from "../lib/personal-match";
+import {matchInsights,relationLabel} from "../lib/match-insights";
 const jobId="52345678-1234-1234-1234-123456789abc",claimId="62345678-1234-1234-1234-123456789abc",documentId="72345678-1234-1234-1234-123456789abc",matchId="82345678-1234-1234-1234-123456789abc",time="2026-10-07T00:00:00Z";
 const cv="Fictional engineer\n\nBuilt Kotlin APIs for a fictional employer and improved service reliability.";
 const claim={id:claimId,skill:"Kotlin",statement:cv.split("\n\n")[1],context:"Fictional employer",sourceNote:"Own statement",status:"CONFIRMED",revision:2,createdAt:time,updatedAt:time};
@@ -53,7 +56,7 @@ test("quota retains proposals and changing recipient requires renewed consent wi
  await expect(page.locator(".tailoring-proposal").getByRole("button",{name:"Godkjenn teksten"})).toBeDisabled();
 });
 test("literal segmentation handles a whole long CV and rejects malformed metadata",async()=>{
- const {tailoringPassages,isTailoringResult}=await import("../lib/cv-tailoring");const source="start "+"Full literal source. ".repeat(2800)+" end";
+ const source="start "+"Full literal source. ".repeat(2800)+" end";
  expect(tailoringPassages(source).join("")).toBe(source);const unicode="a".repeat(3999)+"😀"+"b".repeat(100);expect(tailoringPassages(unicode).join("")).toBe(unicode);expect(tailoringPassages(unicode)[0]).toHaveLength(3999);expect(tailoringPassages(source).every(s=>s.length<=4000)).toBe(true);expect(isTailoringResult(result)).toBe(true);expect(isTailoringResult({...result,documentId:undefined})).toBe(false);
 });
 test("tailoring proxy rejects anonymous spoofed consent owner injection and foreign origins",async({request})=>{
@@ -100,7 +103,6 @@ test("application priorities distinguish direct transferable and formal evidence
 });
 
 test("relation validation preserves legacy results and never gives full coverage to transferable or unknown claims",async()=>{
- const {isPersonalMatch}=await import("../lib/personal-match");const {matchInsights,relationLabel}=await import("../lib/match-insights");
  const direct={...match,assessments:[{...match.assessments[0],evidenceRelation:"DIRECT" as const,requirementNature:"FORMAL" as const}]};
  expect(isPersonalMatch(match)).toBe(true);expect(isPersonalMatch(direct)).toBe(true);expect(matchInsights(direct as import("../lib/personal-match").PersonalMatch,job.content as import("../lib/saved-jobs").SavedJobContent).formal).toHaveLength(0);
  for(const evidenceRelation of ["TRANSFERABLE","UNKNOWN","EQUIVALENT"])expect(isPersonalMatch({...direct,assessments:[{...direct.assessments[0],evidenceRelation}]})).toBe(false);
@@ -128,7 +130,7 @@ test("invalid CV visibility preserves prior proposals and legacy responses discl
 });
 
 test("CV visibility metadata rejects duplicate indexes and unsupported absence or evidence references",async()=>{
- const {isTailoringResult}=await import("../lib/cv-tailoring");expect(isTailoringResult({...result,visibility})).toBe(true);
+ expect(isTailoringResult({...result,visibility})).toBe(true);
  expect(isTailoringResult({...result,visibility:[...visibility,...visibility]})).toBe(false);
  expect(isTailoringResult({...result,visibility:[{...visibility[0],status:"NOT_VISIBLE"}]})).toBe(false);
  expect(isTailoringResult({...result,visibility:[{...visibility[0],claimIds:[]}]})).toBe(false);
@@ -155,7 +157,7 @@ test("clipboard denial retains a selectable preview and rejection restores the o
 });
 
 test("reviewed substitutions preserve repeated passages whitespace untouched history and long-source boundaries",async()=>{
- const {reviewedCvText,tailoringPassages}=await import("../lib/cv-tailoring");const source="Contact details\n \nRepeated contribution\n\nRepeated contribution\n\n2021–2023: Historical title\n\n";
+ const source="Contact details\n \nRepeated contribution\n\nRepeated contribution\n\n2021–2023: Historical title\n\n";
  expect(reviewedCvText(source,[])).toBe(source);expect(reviewedCvText(source,[{paragraphIndex:2,oldText:"Repeated contribution",text:"Approved second contribution"}])).toBe(source.replace("Repeated contribution\n\n2021","Approved second contribution\n\n2021"));
  expect(reviewedCvText(source,[{paragraphIndex:1,oldText:"Wrong original",text:"Changed"}])).toBeNull();const change={paragraphIndex:1,oldText:"Repeated contribution",text:"Changed"};expect(reviewedCvText(source,[change,change])).toBeNull();
  const long="a".repeat(3999)+"😀"+"b".repeat(4100);const parts=tailoringPassages(long);expect(reviewedCvText(long,[{paragraphIndex:1,oldText:parts[1],text:"Reviewed section"}])).toBe(parts[0]+"Reviewed section"+parts[2]);

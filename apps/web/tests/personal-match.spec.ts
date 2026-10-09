@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { automaticMatchEvidence, matchCoverage, matchSourcePreview } from "../lib/match-planning";
+import { isPersonalMatch } from "../lib/personal-match";
+import { isExtraction } from "../lib/job-requirements";
 const jobId = "52345678-1234-1234-1234-123456789abc";
 const claimId = "62345678-1234-1234-1234-123456789abc";
 const pendingId = "72345678-1234-1234-1234-123456789abc";
@@ -147,7 +150,6 @@ test("Groq quota recovery keeps selected evidence and requires Gemini approval b
 });
 
 test("automatic evidence planning keeps all skill identities and the whole advertisement",async()=>{
- const {automaticMatchEvidence,matchCoverage,matchSourcePreview}=await import("../lib/match-planning");
  const duplicate={...confirmed,id:pendingId,skill:"APIs",status:"CONFIRMED" as const};
  expect(automaticMatchEvidence([{...confirmed,status:"CONFIRMED"},duplicate,{...confirmed,id:jobId,status:"REJECTED"}],job.content as Parameters<typeof automaticMatchEvidence>[1],text)).toEqual([claimId,pendingId]);
  expect(matchCoverage(result as Parameters<typeof matchCoverage>[0],job.content as Parameters<typeof matchCoverage>[1])).toMatchObject({percent:67,upper:100,assessed:1,total:2});
@@ -243,7 +245,6 @@ test("a previously confirmed clarification stays visible and edits the same clai
 });
 
 test("validators retain criterion 127 while rejecting unsupported overflow and duplicate assessment indices",async()=>{
- const {isExtraction}=await import("../lib/job-requirements");const {isPersonalMatch}=await import("../lib/personal-match");
  const requirements=Array.from({length:128},(_,i)=>({label:`Criterion ${i}`,kind:"REQUIRED",quote:"Literal source requirement"}));
  const extraction={requirements,facts:[],omittedItems:0};expect(isExtraction(extraction)).toBe(true);expect(isExtraction({...extraction,requirements:[...requirements,requirements[0]]})).toBe(false);
  const expanded={...result,assessments:requirements.map((_,i)=>({...result.assessments[0],requirementIndex:i}))};expect(isPersonalMatch(expanded)).toBe(true);expect(isPersonalMatch({...expanded,assessments:[...expanded.assessments,result.assessments[0]]})).toBe(false);

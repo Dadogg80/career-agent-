@@ -52,3 +52,4 @@ Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert i
 - [0032 — Requirement coverage and persistent clarification review](0032-requirement-coverage-and-clarification-review.md) — Accepted for implementation.
 
 - [0033 — Evidence relations and qualification guidance](0033-match-evidence-relations.md) — accepted local-pilot slice; conservative scoring and source-backed application priorities.
+- [0036 — Private profile photo and compact identity](0036-private-profile-photo.md) — accepted local-pilot slice; owner-bound normalized image storage, no-cache delivery and explicit user control.

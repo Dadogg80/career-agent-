@@ -462,3 +462,19 @@ From the owned preparation page, select the base CV and approve the displayed re
 ## Approved CV wording handoff
 
 After approving individual text changes in preparation, open the full plain-text preview and choose Copy CV text. Only approved replacements are applied to the exact selected source snapshot; pending/rejected items preserve original wording and separators. A later edit returns its proposal to pending. Changed/unavailable required evidence disables copying as current; earlier text remains readable. Clipboard denial retains the selectable preview for manual copying. Nothing is sent, saved to the profile or written to the original file. Decisions/preview remain page-session-only (ADR 0035).
+
+## Profile identity and private photo (ADR 0036)
+
+Open **Min profil** → review the compact identity card, privacy, language and profile revision → optionally choose a JPG/PNG photo and inspect its local preview → explicitly save or remove it. The server validates the actual image, enforces upload/dimension limits and stores a normalized JPEG bound to the signed-in owner. The image is never sent to AI or cached. Photo changes do not modify the name/language profile revision. Existing profile settings remain limited to name and preferred language; additional personal preferences require a separately agreed data and visibility design.
+
+Selecting an empty profile section loads that section's owned data and shows a clear loading/error state. With no saved records, documents lead to local reading and optional approved AI analysis; competencies can begin from a source or manual draft; career history can begin with one role/project/education entry. Each route stays within the profile, and no counts, confirmation or AI work are fabricated.
+
+## Document-check result and source reader refresh
+
+Open **Kontroller dokumentene** → review the timestamped technical result, grouped pass/review/not-run counts, per-source checks and exact limitation → rerun locally or open the named original in the document reader. The reader separates source reading, full-document AI review and manual evidence entry; it shows contextual guidance before manual fields, which are revealed after selecting a source quote. No extra AI call is made by the check view. A passing result does not establish semantic correctness or complete extraction.
+
+## Reviewing potentially missed document passages
+
+In a completed, explicitly approved document analysis, expand **Se passasjer som kan være oversett** to inspect bounded source excerpts, their category and original document. Search filters the displayed cards but never changes their source identity. Choose **Behandle som profilutkast**, select a competency/interest or career-history destination, edit the fields and retain the original excerpt as evidence. Save as an unverified draft, or separately check the confirmation box only when the information is personally accurate. The server checks the saved run revision, excerpt offset and exact quotation in both approved text and the retained original before creating the owned profile item. Repeating a successful action reuses its linked item; changed/deleted sources or a stale analysis are surfaced instead of silently creating a replacement. This does not rerun AI or change the original analysis coverage count.
+
+The profile presentation remains separately labeled as AI-written draft wording. Its cited document excerpts show provenance, not that the generated wording is a confirmed personal fact. Editing that wording changes the saved text only; competency and career-history review retain their own source and confirmation states.
