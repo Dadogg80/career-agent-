@@ -4,4 +4,5 @@ package com.careeragent.jobs.application
 object JobAnalysisLimits {
     const val REQUIREMENTS = 128
     const val ASSESSMENT_ITEMS = REQUIREMENTS * 2
+    const val SAVED_JOB_FACTS = 20
 }

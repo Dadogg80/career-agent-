@@ -50,10 +50,16 @@ class SavedJobIntegrationTest {
   mvc.perform(get("$path/$id").with(caller(user))).andExpect(status().isOk)
   verifyNoInteractions(ai)
  }
- @Test fun `partial results with many omitted items can still be saved and reopened`() {
-  val user = profile(); val id = save(user, content() + ("omittedItems" to 188))
+ @Test fun `manual source details are saved up to their separate bound and partial results remain visible`() {
+  val user = profile()
+  val manualFacts = (1..20).map { index -> mapOf("kind" to "OTHER", "label" to "Manual detail $index", "value" to "Detail $index", "quote" to "Kotlin experience is required") }
+  val body = content() + ("omittedItems" to 188) + ("facts" to manualFacts)
+  val id = save(user, body)
   mvc.perform(get("$path/$id").with(caller(user))).andExpect(status().isOk)
    .andExpect(jsonPath("$.content.omittedItems").value(188)).andExpect(jsonPath("$.content.requirements[0].label").value("Kotlin"))
+   .andExpect(jsonPath("$.content.facts.length()").value(20)).andExpect(jsonPath("$.content.facts[19].label").value("Manual detail 20"))
+  mvc.perform(post(path).with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(body + ("facts" to (manualFacts + mapOf("kind" to "OTHER", "label" to "Too many", "value" to "Overflow", "quote" to "Kotlin experience is required"))))))
+   .andExpect(status().isBadRequest).andExpect(jsonPath("$.code").value("SAVED_JOB_INVALID"))
   verifyNoInteractions(ai)
  }
  @Test fun `subjects issuers anonymous requests CSRF and ownership injection cannot access other saved jobs`() {

@@ -55,6 +55,8 @@ Arbeidsmåten er `main` med korte arbeidsbranches, uten permanent `development`,
 
 D-017 (Accepted, local pilot): Support modern FINN job URLs through Groq's documented browser_search capability using the existing key/model. Separate provider-mediated source retrieval from structured analysis; use exact-link tool output only, show provenance and potential incompleteness, and bound attempts. The earlier R-012 investigation is completed for API feasibility, with production terms/quota questions remaining. ADR-0010. No plan upgrade, paid fallback or direct FINN website scraper.
 
+ADR 0037 extends the FINN retrieval choice without replacing the Groq default: the user may separately select Gemini 3.8 Flash URL Context or Groq Browser Search for public FINN links. Retrieval and analysis approvals remain distinct; exact-URL retrieval and citation checks are mandatory, and Gemini output is labeled as an AI-prepared excerpt. No automatic fallback or paid upgrade is authorized.
+
 ## Compact analysis and profile-first follow-up — 2026-10-07
 
 D-018 (Accepted delegated UI decision): use compact grouped tiles/category filters and the official shadcn Dialog for per-requirement inspection. Keep quote/category guidance/source context distinct; no new model calls. TanStack Query/shadcn remain mandatory.

@@ -74,25 +74,27 @@ class GroqBrowserTransport(
 class GroqAdvertisementBrowser(
     private val transport: GroqBrowserTransport,
     private val mapper: ObjectMapper,
-    @Value("\${GROQ_MODEL:openai/gpt-oss-20b}") private val model: String,
+    @Value("\${GROQ_BROWSER_MODEL:\${GROQ_MODEL:openai/gpt-oss-20b}}") private val model: String,
     @Value("\${GROQ_BROWSER_MAX_REQUESTS:10}") private val maxRequests: Int,
     @Value("\${GROQ_BROWSER_SEARCH_ENABLED:true}") private val enabled: Boolean,
-) : AdvertisementBrowser {
+) : FinnAdvertisementRetriever {
     private val permits = Semaphore(1)
     private val used = AtomicInteger()
 
-    override fun load(url: String): ImportedJob {
+    fun load(url: String): ImportedJob = load(url, model)
+
+    override fun load(url: String, model: String): ImportedJob {
         val canonical = JobImporter.finnUrl(url)
         if (!enabled) throw ImportFailure("SOURCE_SEARCH_DISABLED", 503)
         if (!permits.tryAcquire()) throw ImportFailure("SOURCE_BUSY", 429)
         try {
             if (used.get() >= maxRequests) throw ImportFailure("SOURCE_BUDGET_REACHED", 429)
             used.incrementAndGet()
-            return parse(canonical, transport.complete(requestBody(canonical), model))
+            return parse(canonical, transport.complete(requestBody(canonical, model), model))
         } finally { permits.release() }
     }
 
-    internal fun requestBody(url: String): Map<String, Any> = mapOf(
+    internal fun requestBody(url: String, model: String = this.model): Map<String, Any> = mapOf(
         "model" to model, "reasoning_effort" to "low", "max_completion_tokens" to 4000,
         "tool_choice" to "required", "tools" to listOf(mapOf("type" to "browser_search")),
         "messages" to listOf(

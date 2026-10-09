@@ -17,7 +17,7 @@ export type DiagnosticEvent = {
     httpStatus?: number;
     durationMs?: number;
     characters?: number;
-    sourceType?: "NAV_API" | "GROQ_BROWSER_EXCERPT" | "PASTED_TEXT";
+    sourceType?: "NAV_API" | "GROQ_BROWSER_EXCERPT" | "GEMINI_URL_CONTEXT_EXCERPT" | "PASTED_TEXT";
     reused?: boolean;
     seconds?: number;
     code?: string;

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { isImportedJob } from "../lib/job-import";
 const url = "https://arbeidsplassen.nav.no/stillinger/stilling/12345678-1234-1234-1234-123456789abc";
 const text = "Utvikler\nDu må ha erfaring med Kotlin og PostgreSQL.";
 test("URL analysis runs from one action and source evidence stays available", async ({ page }) => {
@@ -10,8 +11,8 @@ test("URL analysis runs from one action and source evidence stays available", as
   await page.getByRole("button", { name: "Analyser lenke", exact: true }).click();
   await expect(page.getByRole("textbox", { name: "Stillingsannonse", exact: true })).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Kotlin", exact: true })).toBeVisible();
-  await page.getByText("Se kildegrunnlaget", { exact: true }).click();
-  await expect(page.locator("pre")).toHaveText(text);
+  await page.getByText("Les hele teksten vi har mottatt", { exact: true }).click();
+  await expect(page.locator(".received-advertisement > div")).toHaveText(["Utvikler", "Du må ha erfaring med Kotlin og PostgreSQL."]);
   expect(calls).toBe(1);
 });
 test("real unsupported source keeps URL and offers manual fallback in both languages", async ({ page }) => {
@@ -40,10 +41,18 @@ test("FINN direct analysis retains provenance in both languages", async ({ page 
   let analyzed = false;
   await page.route("**/api/jobs/import", route => route.fulfill({ json: { sourceUrl: finn, title: "Backend engineer", text, retrievedAt: "2026-10-07T00:00:00Z", sourceType: "GROQ_BROWSER_EXCERPT", aiSelection: {provider:"Groq",model:"openai/gpt-oss-20b"} } }));
   await page.route("**/api/jobs/requirements", route => { analyzed = true; return route.fulfill({ json: { facts: [], requirements: [] } }); });
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1000));
   await page.goto("/jobs/analyze");
   await page.getByRole("textbox", { name: "Lenke til stillingsannonse" }).fill(finn);
   await page.getByRole("button", { name: "Analyser lenke", exact: true }).click();
-  await expect(page.getByText(/Kildeutdrag via Groq/)).toBeVisible({ timeout: 15000 });
+  await expect(page.getByText(/Annonsen er hentet\. Analysen starter om/)).toBeVisible();
+  await page.clock.fastForward(10000);
+  await expect(page.getByRole("heading", { name: "Backend engineer", exact: true })).toBeVisible();
+  const sourceNotice = page.locator(".analysis-quality-source");
+  await expect(sourceNotice.locator("summary")).toBeVisible();
+  await sourceNotice.locator("summary").click();
+  await expect(sourceNotice).toContainText(/Kildeutdrag via Groq/);
   await expect(page.getByText("Groq · openai/gpt-oss-20b", {exact:true}).last()).toBeVisible();
   await expect(page.getByText("Kildeinnhenting", {exact:true})).toBeVisible();
   await expect(page.getByRole("link", { name: "Åpne originalannonsen" })).toHaveAttribute("href", finn);
@@ -54,10 +63,12 @@ test("FINN direct analysis retains provenance in both languages", async ({ page 
   await expect(page.getByText("No explicit requirements were found.")).toBeVisible();
   await expect(page.getByText(/Source excerpt through Groq/)).toHaveCount(1);
 });
-test("real FINN import reaches Groq adapter and handles missing configuration", async ({ request }) => {
-  const response = await request.post("/api/jobs/import", { data: { url: "https://www.finn.no/job/ad/478077416" } });
-  expect(response.status()).toBe(503);
-  expect(await response.json()).toEqual({ code: "SOURCE_AI_NOT_CONFIGURED" });
+test("real FINN import proxy rejects a stale retrieval approval before a provider call", async ({ request }) => {
+  const response = await request.post("/api/jobs/import", {
+    data: { url: "https://www.finn.no/job/ad/478077416", aiApproval: "0".repeat(64) },
+  });
+  expect(response.status()).toBe(409);
+  expect(await response.json()).toEqual({ code: "SOURCE_MODEL_SELECTION_INVALID" });
 });
 test("FINN import cannot label an excerpt as a direct NAV original", async ({ page }) => {
   await page.route("**/api/jobs/import", route => route.fulfill({ json: { sourceUrl: "https://www.finn.no/job/ad/478077416", title: "Engineer", text, retrievedAt: "2026-10-07T00:00:00Z", sourceType: "NAV_API" } }));
@@ -82,7 +93,7 @@ test("overview shows variable sourced details without additional model calls", a
   const overview = page.getByRole("region", { name: "Forstå stillingen" });
   await expect(overview.getByText("Snarest", { exact: true })).toBeVisible();
   await expect(overview.locator(".employer-card")).toContainText("Example AS");
-  await expect(overview.getByText("Test Contact – contact@example.test", { exact: true })).toBeVisible();
+  await expect(overview.locator(".job-fact-contact .fact-value")).toHaveText("Test Contact – contact@example.test");
   expect(calls).toBe(1);
 });
 test("failed automatic analysis keeps retrieved text for manual retry", async ({ page }) => {
@@ -140,7 +151,6 @@ test("rate limited analysis reuses fetched text after countdown without another 
 
 // Browser retrieval and advertisement analysis have independent provider identities.
 test("source metadata rejects an analysis provider pretending to be the FINN browser", async()=>{
- const {isImportedJob}=await import("../lib/job-import");
  const source={sourceUrl:"https://www.finn.no/job/ad/478077416",title:"Engineer",text,retrievedAt:"2026-10-07T00:00:00Z",sourceType:"GROQ_BROWSER_EXCERPT"};
  expect(isImportedJob({...source,aiSelection:{provider:"Groq",model:"openai/gpt-oss-20b"}})).toBe(true);
  expect(isImportedJob({...source,aiSelection:{provider:"Gemini",model:"gemini-3.5-flash"}})).toBe(false);

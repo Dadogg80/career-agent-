@@ -51,14 +51,14 @@ const sheetVariants = cva(
 
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
-    VariantProps<typeof sheetVariants> { closeLabel?: string }
+    VariantProps<typeof sheetVariants> { closeLabel?: string; showOverlay?: boolean }
 
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, closeLabel = "Close", onEscapeKeyDown, ...props }, ref) => (
+>(({ side = "right", className, children, closeLabel = "Close", showOverlay = true, onEscapeKeyDown, ...props }, ref) => (
   <SheetPortal>
-    <SheetOverlay />
+    {showOverlay && <SheetOverlay />}
     <SheetPrimitive.Content
       ref={ref}
       onEscapeKeyDown={event => {

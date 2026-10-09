@@ -13,13 +13,21 @@ interface VacancySource {
 
 interface AdvertisementBrowser {
     fun load(url: String): ImportedJob
+    fun load(url: String, aiApproval: String?): ImportedJob = load(url)
+}
+
+interface FinnAdvertisementRetriever {
+    fun load(url: String, model: String): ImportedJob
 }
 
 @Service
 class JobImporter(private val source: VacancySource, private val browser: AdvertisementBrowser) {
-    fun import(url: String): ImportedJob {
+    fun import(url: String, aiApproval: String? = null): ImportedJob {
         val host = validatedUri(url).host?.lowercase()
-        return if (host in setOf("www.finn.no", "finn.no")) browser.load(finnUrl(url))
+        return if (host in setOf("www.finn.no", "finn.no")) {
+            val canonical = finnUrl(url)
+            if (aiApproval == null) browser.load(canonical) else browser.load(canonical, aiApproval)
+        }
             else source.load(advertisementId(url))
     }
 

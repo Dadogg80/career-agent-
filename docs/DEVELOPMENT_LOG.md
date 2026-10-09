@@ -521,3 +521,25 @@ Fixed selected-tab badge styling by exposing the shared badge slot expected by t
 Normalized document-run timestamps to UTC before returning and persisting them. This keeps replayed progress identical after PostgreSQL/Jackson round-trips and preserves the no-duplicate-call resume behavior.
 
 Validation: `cd apps/backend && JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home PATH=/opt/homebrew/opt/openjdk@21/bin:$PATH ./gradlew test` passed (231 tests, 0 failures/errors, 5 skipped); the same environment with `./gradlew bootJar` passed. `cd apps/web && npm run typecheck` and `npm run build` passed. `cd apps/web && npm run test:e2e` passed all 127 tests against the production frontend/backend with provider keys explicitly empty; no live AI calls were made. Focused document/profile coverage also passed all 32 selected tests. `git diff --check` passed. Reviewed desktop and 390px mobile result screenshots; selected history labels/counters remain readable and the page has no horizontal overflow. No personal documents, images or provider responses were committed.
+
+## 2026-10-09 — Job-analysis workspace refresh
+
+Refined the job-analysis page into a clearer source-to-insight workspace, removed the repeated page title, strengthened the input and result hierarchy, and replaced decorative empty-state lines with three concrete explanations of the analysis output. Results now show a compact required/preferred/clarification count summary and a visible reminder that AI categories must be checked against source quotations. Added responsive styling while preserving existing source handling, AI approval, error recovery, and evidence behavior.
+
+Validation: `cd apps/web && npm run typecheck`, `cd apps/web && npm run build`, and `cd apps/web && npx playwright test tests/job-analysis.spec.ts` passed; the focused browser suite passed all 9 tests. The browser suite was run with the installed JDK 21 for its managed backend. Desktop and 390px mobile empty states were visually inspected, and the responsive result summary was verified without horizontal overflow. No full regression suite or live AI calls were run.
+
+## 2026-10-09 — Independent job retrieval and analysis model selection
+
+On `feat/job-analysis-refresh`, added separate model selection and approval for advertisement retrieval and requirement analysis, including Gemini 3.8 Flash for FINN URL Context. Kept NAV retrieval on its direct NAV API, Groq Browser Search as an explicit alternative, and source acceptance bound to a completed request, the exact canonical URL and a matching citation. Retrieval remains an AI-prepared excerpt, never a verified complete original. The analysis workspace, model menus, progress and sourced overview were refreshed; the developer diagnostics drawer no longer dims the workspace.
+
+Final review also moved invalid approval-token validation inside the import semaphore's `finally` scope; a regression verifies that a subsequent valid import is not blocked.
+
+Validation: the focused backend selection passed 51 tests (Gemini URL Context, Gemini/Groq model routing, FINN import, both job-import suites, and saved-job integration), and `bootJar` passed. A fresh isolated Next.js production build passed; its 34 focused browser tests passed for analysis, retrieval, overview, progress and recovery. All three focused developer-diagnostics browser tests passed against the existing development server. `npm run typecheck` and `git diff --check` passed. The first production browser attempt used a stale prebuilt `.next` directory and failed; rerunning against the fresh isolated production build passed all 34 tests. The ordinary production build directory was not changed while the user's development server was running.
+
+No live Gemini provider call was made during final validation; an earlier Gemini 3.8 generation attempt returned HTTP 503. Model availability in the selector is not a readiness guarantee. Antigravity was not added because no supported provider/API integration was confirmed. No automatic fallback, merge or deployment is claimed.
+
+## 2026-10-09 — PR #34 diagnostics CI stabilization
+
+Investigated the failing push workflow and passing pull-request workflow on the same commit. The diagnostics language test closed the drawer, switched language, then incorrectly expected the closed drawer's heading to be visible. Exit-animation timing made that assertion intermittent. The test now explicitly reopens the English drawer and scopes the heading assertion to its dialog; application behavior, retries and timeouts are unchanged.
+
+Validation: the affected development-mode Playwright test passed three consecutive repetitions (24.4 seconds) using local fixtures, and `git diff --check` passed. No live AI calls or full local regression rerun were needed for this test-only correction. GitHub CI will validate the updated PR head.

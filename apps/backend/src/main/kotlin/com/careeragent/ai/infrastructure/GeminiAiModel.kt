@@ -26,6 +26,17 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
             "thinkingConfig" to mapOf("thinkingLevel" to "LOW"),
             "maxOutputTokens" to if (task == AiTask.PROFILE_SUMMARY) 4096 else 8192))
 
+    internal fun interactionsRequestBody(system: String, user: String, schema: Map<String, Any>, task: AiTask): Map<String, Any> = mapOf(
+        "model" to "gemini-3.8-flash",
+        "system_instruction" to system,
+        "input" to user,
+        "response_format" to mapOf("type" to "text", "mime_type" to "application/json", "schema" to schema),
+        "generation_config" to mapOf(
+            "thinking_level" to "low",
+            "max_output_tokens" to if (task == AiTask.PROFILE_SUMMARY) 4096 else 8192,
+        ),
+    )
+
     internal fun providerFailure(status: Int, body: String, retryAfter: String?, model: String): AiFailure? = when (status) {
         200 -> null
         401, 403 -> AiFailure("AI_ACCESS_DENIED", 503)
@@ -62,6 +73,17 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
         return output
     }
 
+    internal fun interactionsContent(body: String): String {
+        val root = try { mapper.readTree(body) } catch (_: Exception) { throw AiFailure("AI_INVALID_RESULT", 502, reason = "MALFORMED_JSON") }
+        if (root?.path("status")?.asText() != "completed") throw AiFailure("AI_INVALID_RESULT", 502, reason = "OUTPUT_INCOMPLETE")
+        val output = root.path("output_text").takeIf { it.isTextual }?.asText()
+            ?: throw AiFailure("AI_INVALID_RESULT", 502, reason = "EMPTY_OUTPUT")
+        if (output.isBlank()) throw AiFailure("AI_INVALID_RESULT", 502, reason = "EMPTY_OUTPUT")
+        try { if (!mapper.readTree(output).isObject) throw IllegalArgumentException() }
+        catch (_: Exception) { throw AiFailure("AI_INVALID_RESULT", 502, reason = "MALFORMED_JSON") }
+        return output
+    }
+
     override fun generateJson(system: String, user: String, schema: Map<String, Any>) = generateJson(system, user, schema, AiTask.JOB_ANALYSIS)
     override fun generateJson(system: String, user: String, schema: Map<String, Any>, task: AiTask): String = generateJson(system,user,schema,task,routing.selection(task))
     override fun generateJson(system: String, user: String, schema: Map<String, Any>, task: AiTask, selection: AiSelection): String {
@@ -71,10 +93,14 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
             throw AiFailure("AI_NOT_CONFIGURED", 503)
         val remaining = cooldowns.forModel("Gemini", selected.model).remainingSeconds()
         if (remaining > 0) throw AiFailure("AI_RATE_LIMITED", 429, remaining)
-        val request = HttpRequest.newBuilder(URI.create("https://generativelanguage.googleapis.com/v1beta/models/${selected.model}:generateContent"))
+        val interactions = selected.model == "gemini-3.8-flash"
+        val endpoint = if (interactions) "https://generativelanguage.googleapis.com/v1beta/interactions"
+            else "https://generativelanguage.googleapis.com/v1beta/models/${selected.model}:generateContent"
+        val body = if (interactions) interactionsRequestBody(system, user, schema, task) else requestBody(system, user, schema, task)
+        val request = HttpRequest.newBuilder(URI.create(endpoint))
             .timeout(Duration.ofSeconds(if (task in setOf(AiTask.PERSONAL_MATCH,AiTask.CV_TAILORING)) 75 else 25)).header("x-goog-api-key", apiKey)
             .header("Content-Type", "application/json").header("User-Agent", "career-agent/0.1")
-            .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(requestBody(system, user, schema, task)))).build()
+            .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body))).build()
         try {
             val response = client.send(request, HttpResponse.BodyHandlers.ofString())
             providerFailure(response.statusCode(), response.body(), response.headers().firstValue("retry-after").orElse(null), selected.model)?.let {
@@ -85,7 +111,7 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
             logger.info("gemini_usage task={} model={} inputTokens={} outputTokens={} thinkingTokens={} cachedTokens={} totalTokens={}",
                 task, selected.model, usage.path("promptTokenCount").asLong(0), usage.path("candidatesTokenCount").asLong(0),
                 usage.path("thoughtsTokenCount").asLong(0), usage.path("cachedContentTokenCount").asLong(0), usage.path("totalTokenCount").asLong(0))
-            return content(response.body())
+            return if (interactions) interactionsContent(response.body()) else content(response.body())
         } catch (error: AiFailure) { throw error }
         catch (_: InterruptedException) { Thread.currentThread().interrupt(); throw AiFailure("AI_UNAVAILABLE", 503) }
         catch (error: Exception) {

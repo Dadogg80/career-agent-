@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   if (!request.headers.get("content-type")?.startsWith("application/json")) {
     return Response.json({ code: "INVALID_URL" }, { status: 400 });
   }
-  let input: { url: string };
+  let input: { url: string; aiApproval?: string };
   try {
     const reader = request.body?.getReader();
     if (!reader) throw new Error("Missing body");
@@ -31,7 +31,8 @@ export async function POST(request: Request) {
     }
     const value = JSON.parse(Buffer.concat(chunks).toString("utf8"));
     if (typeof value.url !== "string" || value.url.length > 2048 || !value.url.trim()) throw new Error("Invalid URL");
-    input = { url: value.url };
+    if (value.aiApproval !== undefined && (typeof value.aiApproval !== "string" || !/^[a-f0-9]{64}$/.test(value.aiApproval))) throw new Error("Invalid model approval");
+    input = { url: value.url, ...(value.aiApproval === undefined ? {} : { aiApproval: value.aiApproval }) };
 
   } catch {
     return Response.json({ code: "INVALID_URL" }, { status: 400 });
@@ -44,11 +45,11 @@ export async function POST(request: Request) {
     });
     const value: unknown = await response.json();
     if (!response.ok) {
-      const codes = ["INVALID_URL", "SOURCE_UNSUPPORTED", "SOURCE_NOT_AVAILABLE", "SOURCE_INVALID", "SOURCE_TOO_LARGE", "SOURCE_UNAVAILABLE", "SOURCE_BUSY", "SOURCE_AI_NOT_CONFIGURED", "SOURCE_ACCESS_DENIED", "SOURCE_RATE_LIMITED", "SOURCE_SEARCH_UNAVAILABLE", "SOURCE_SEARCH_DISABLED", "SOURCE_BUDGET_REACHED"];
+      const codes = ["INVALID_URL", "SOURCE_UNSUPPORTED", "SOURCE_NOT_AVAILABLE", "SOURCE_INVALID", "SOURCE_TOO_LARGE", "SOURCE_UNAVAILABLE", "SOURCE_BUSY", "SOURCE_AI_NOT_CONFIGURED", "SOURCE_ACCESS_DENIED", "SOURCE_RATE_LIMITED", "SOURCE_SEARCH_UNAVAILABLE", "SOURCE_SEARCH_DISABLED", "SOURCE_BUDGET_REACHED", "SOURCE_MODEL_SELECTION_INVALID", "SOURCE_MODEL_UNSUPPORTED", "SOURCE_MODEL_UNAVAILABLE"];
       const code = value && typeof value === "object" && "code" in value && codes.includes(String(value.code)) ? value.code : "SOURCE_UNAVAILABLE";
       const seconds = Number(response.headers.get("retry-after"));
       const retryAfterSeconds = response.status === 429 ? parseRetryAfter(seconds) : undefined;
-      return Response.json({ code, ...(retryAfterSeconds ? { retryAfterSeconds } : {}) }, { headers: { "Cache-Control": "no-store", ...(retryAfterSeconds ? { "Retry-After": String(retryAfterSeconds) } : {}) }, status: [400, 404, 413, 429, 502, 503].includes(response.status) ? response.status : 503 });
+      return Response.json({ code, ...(retryAfterSeconds ? { retryAfterSeconds } : {}) }, { headers: { "Cache-Control": "no-store", ...(retryAfterSeconds ? { "Retry-After": String(retryAfterSeconds) } : {}) }, status: [400, 404, 409, 413, 429, 502, 503].includes(response.status) ? response.status : 503 });
     }
     if (!isImportedJob(value)) throw new Error("Invalid result");
     return Response.json(value, { headers: { "Cache-Control": "no-store" } });
