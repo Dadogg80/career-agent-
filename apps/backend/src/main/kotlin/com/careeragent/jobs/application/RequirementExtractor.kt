@@ -25,7 +25,15 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
         val language = if (locale == "nb") "Norwegian Bokmål" else "English"
         val result = (if(plan!=null && routing!=null)ApprovedAiModel(model,routing,plan) else model).generateJson(
             """
-            Extract up to 12 explicit job requirements and up to 10 useful facts from the provided advertisement.
+            Extract every distinct explicit candidate requirement from the entire provided advertisement, and up to 10 useful facts.
+            Do not select only the first, strongest or technical requirements. Review the beginning, middle and end.
+            Include stated responsibilities, expertise, education, licenses/authorizations, experience, methods/tools,
+            safety/compliance, leadership, communication, collaboration, language and working-pattern expectations
+            across professions. Split independently assessable qualifications even when they share a source sentence.
+            Preserve qualifiers and alternatives: "A or equivalent B" is one criterion, never two mandatory criteria.
+            Do not turn company descriptions, benefits or a mentioned technology stack into candidate requirements.
+            Avoid repeated criteria with identical meaning. Return at most ${JobAnalysisLimits.REQUIREMENTS} items as a defensive payload bound;
+            this is not a target count. Prefer short complete source quotes and concise labels to avoid output truncation.
             Facts should cover employer/company description, role/responsibilities, the applicant sought, what is offered, deadline, location/work model,
             contact names/details, salary, benefits, employment type, application process or language when stated.
             Omit missing facts. Never research the company, invent details or calculate a date from ambiguous text.
@@ -65,18 +73,18 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
             val requirements = mutableListOf<ExtractedRequirement>()
             val facts = mutableListOf<JobFact>()
             // Inspect a bounded number of items; a bad item must not discard other supported content.
-            for (item in items.take(128)) {
+            for (item in items.take(JobAnalysisLimits.REQUIREMENTS)) {
                 val label = item.boundedText("label", 200)
                 val quote = item.boundedText("quote", 600)
                 val kind = RequirementKind.entries.find { it.name == item.path("kind").textValue() }
                 when {
                     label == null || quote == null || kind == null -> omit("INVALID_REQUIREMENT_FIELDS")
                     !source.contains(normalize(quote)) -> omit("UNSUPPORTED_REQUIREMENT_QUOTE")
-                    requirements.size >= 12 -> omit("REQUIREMENT_LIMIT")
+                    requirements.any { normalRequirement(it) == listOf(normalize(label).lowercase(), kind.name, normalize(quote)) } -> omit("DUPLICATE_REQUIREMENT")
                     else -> requirements.add(ExtractedRequirement(label, kind, quote))
                 }
             }
-            omit("INSPECTION_LIMIT", (items.size() - 128).coerceAtLeast(0))
+            omit("INSPECTION_LIMIT", (items.size() - JobAnalysisLimits.REQUIREMENTS).coerceAtLeast(0))
             for (item in factItems.take(128)) {
                 val label = item.boundedText("label", 100)
                 val value = item.boundedText("value", 500)
@@ -111,6 +119,8 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
         if (!value.isTextual) return null
         return value.textValue().takeIf { it.isNotBlank() && it.length <= maxLength }
     }
+
+    private fun normalRequirement(item: ExtractedRequirement) = listOf(normalize(item.label).lowercase(), item.kind.name, normalize(item.quote))
 
     private fun normalize(text: String) = Normalizer.normalize(text, Normalizer.Form.NFC).replace(Regex("(?U)\\s+"), " ").trim()
 

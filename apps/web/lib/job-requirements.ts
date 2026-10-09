@@ -1,3 +1,5 @@
+/** Defensive ad payload limit; mirrors JobAnalysisLimits.REQUIREMENTS on the server. */
+export const MAX_JOB_REQUIREMENTS = 128;
 import { isAiSelection, type AiSelection } from "./ai-configuration";
 export type RequirementKind = "REQUIRED" | "PREFERRED" | "UNCLEAR";
 export type Requirement = { label: string; kind: RequirementKind; quote: string };
@@ -17,7 +19,7 @@ export function isExtraction(value: unknown): value is { requirements: Requireme
   if ("aiSelection" in value && value.aiSelection!==null && !isAiSelection(value.aiSelection))return false;
   if (!("facts" in value) || !Array.isArray(value.facts) || value.facts.length > 10 || !value.facts.every(isFact)) return false;
   if ("omittedItems" in value && (typeof value.omittedItems !== "number" || !Number.isInteger(value.omittedItems) || value.omittedItems < 0 || value.omittedItems > 2147483647)) return false;
-  return value.requirements.length <= 12 && value.requirements.every((r: unknown) => {
+  return value.requirements.length <= MAX_JOB_REQUIREMENTS && value.requirements.every((r: unknown) => {
     if (!r || typeof r !== "object") return false;
     return "label" in r && typeof r.label === "string" && r.label.length > 0 && r.label.length <= 200 &&
       "quote" in r && typeof r.quote === "string" && r.quote.length > 0 && r.quote.length <= 600 &&

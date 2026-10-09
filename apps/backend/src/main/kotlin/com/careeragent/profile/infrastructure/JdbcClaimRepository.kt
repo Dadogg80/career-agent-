@@ -56,6 +56,15 @@ class JdbcClaimRepository(private val jdbc: JdbcTemplate) : ClaimRepository {
     @Transactional
     override fun create(identity: VerifiedIdentity, content: ClaimContent): CompetencyClaim {
         val owner = owner(identity, true)
+        // Retrying the same personally confirmed job answer must not create another contribution.
+        if (content.sourceDocumentId == null && content.sourceQuote == null && content.sourceNote.startsWith("User clarification for ")) {
+            val existing = jdbc.query("SELECT * FROM competency_claim WHERE owner_id=? AND source_note=? AND source_document_id IS NULL", mapper, owner, content.sourceNote)
+                .firstOrNull { normalized(it.skill) == normalized(content.skill) && normalized(it.statement) == normalized(content.statement) && normalized(it.context) == normalized(content.context) }
+            if (existing != null) {
+                if (existing.status == ClaimStatus.REJECTED) throw ClaimFailure("CLAIM_CONFLICT", 409)
+                return existing
+            }
+        }
         val knownContext=normalized(content.context) !in setOf("kontekst ikke oppgitt","context not stated")
         val existing=jdbc.query("SELECT * FROM competency_claim WHERE owner_id=?",mapper,owner).firstOrNull { normalized(it.skill)==normalized(content.skill) && normalized(it.statement)==normalized(content.statement) && normalized(it.context)==normalized(content.context) && (knownContext || it.sourceDocumentId==content.sourceDocumentId && it.sourceNote==content.sourceNote) }
         if(existing!=null) { attach(owner,existing.id,content);return existing }

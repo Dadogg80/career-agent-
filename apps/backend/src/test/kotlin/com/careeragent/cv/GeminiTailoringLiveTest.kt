@@ -32,7 +32,7 @@ class GeminiTailoringLiveTest {
   `when`(jobs.get(identity,jobId)).thenReturn(job)
   `when`(documents.detail(identity,documentId)).thenReturn(DocumentDetail(CareerDocument(documentId,"fictional.txt","text/plain",text.length.toLong(),"a".repeat(64),"en",false,now),text))
   `when`(matching.load(identity,jobId)).thenReturn(match)
-  `when`(matching.compactInput(anyString(),anyList(),anyList())).thenReturn(mapper.writeValueAsString(mapOf("advertisement" to ad,"requirements" to listOf(mapOf("index" to 0,"label" to "Kotlin APIs","quote" to ad)),"confirmedClaims" to listOf(mapOf("id" to claimId,"revision" to 2,"skill" to "Kotlin","passageIndex" to 0)),"candidatePassages" to listOf(mapOf("statement" to claim.statement,"context" to claim.context)))))
+  `when`(matching.compactInput(anyString(),anyList(),anyList(),anyList())).thenReturn(mapper.writeValueAsString(mapOf("advertisement" to ad,"requirements" to listOf(mapOf("index" to 0,"label" to "Kotlin APIs","quote" to ad)),"confirmedClaims" to listOf(mapOf("id" to claimId,"revision" to 2,"skill" to "Kotlin","passageIndex" to 0)),"candidatePassages" to listOf(mapOf("statement" to claim.statement,"context" to claim.context)))))
   val routing=AiRouting(MockEnvironment().withProperty("AI_PROVIDER","gemini"))
   val service=CvTailoringService(jobs,documents,matching,routing,GeminiAiModel(mapper,System.getenv("GEMINI_API_KEY") ?: "",routing),mapper,1)
   val result=service.propose(identity,jobId,TailoringRequest(documentId,text,matchId,"en",true,routing.preview(AiTask.CV_TAILORING).token))

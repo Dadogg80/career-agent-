@@ -195,3 +195,7 @@ Priority is the joined candidate journey through editable CV text proposals, wit
 ## 2026-10-09 — Job-specific wording proposals
 
 Accepted implementation slice: [ADR 0031](adr/0031-job-specific-cv-wording.md). A dedicated owned preparation page connects saved jobs/current full-profile matching to a separate approved AI writing request. Exact source passages and confirmed-reference indexes constrain output, while semantic wording remains a user-reviewed draft. Review state is explicitly page-session-only; no original, knowledge fact or CV version is written. Broader visibility/recruiter assessment and durable changesets remain pending.
+
+## 2026-10-09 — Requirement coverage and persistent answer review
+
+Accepted implementation slice: [ADR 0032](adr/0032-requirement-coverage-and-clarification-review.md). Request distinct whole-source requirements and preserve up to 128 across the joined pipeline. Separate absent AI assessments from personal questions and label incomplete coverage provisional. Persist/reuse personal answers with revision-aware editing, and provide compact source tables and help. Do not equate personal confirmation with direct requirement relevance or silently retain previous model classifications as facts. No migration, automatic retry, provider default change or destructive duplicate cleanup.

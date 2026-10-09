@@ -226,7 +226,11 @@ test("source coverage shows bounded follow-up and literal missing passages witho
   await expect(sheet).toContainText("Går gjennom mulige mangler");
   const check=sheet.locator(".document-coverage");await expect(check).toContainText("1 kan trenge gjennomgang");
   await check.locator("summary").click();await expect(check).toContainText("Mentored two developers and coordinated releases.");
-  await expect(check).toContainText("ikke en garanti");
+  await check.getByRole("button",{name:"Om kildekontrollen"}).focus();
+  await expect(check.getByRole("tooltip")).toBeVisible();await expect(check.getByRole("tooltip")).toContainText("ikke en garanti");
+  await page.keyboard.press("Escape");await expect(check.getByRole("tooltip")).toBeHidden();await expect(sheet).toBeVisible();
+  await check.getByRole("textbox",{name:"Søk i kildepassasjer"}).fill("absent source");await expect(check.locator("tbody tr")).toHaveCount(0);
+  await check.getByRole("textbox",{name:"Søk i kildepassasjer"}).fill("Mentored");await expect(check.locator("tbody tr")).toHaveCount(1);
   await check.scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/career-coverage-desktop.png"});
  }finally{finishRepair();}
  await expect(sheet.getByText("Gjennomgangen er klar",{exact:true})).toBeVisible();

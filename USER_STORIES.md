@@ -411,3 +411,10 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - A candidate compares exact old/new wording with references, edits it and approves/rejects it; pending counts exclude processed proposals. The original and profile facts are unchanged.
 - Quota failures retain existing proposals. Model changes clear consent and permit an explicit alternate-model request; no automatic fallback/retry occurs.
 - Limits: up to 12 text changes, current matching's 12 criteria, page-session review only, no generated tailored file and no deterministic guarantee of factual/semantic completeness.
+
+## Requirement coverage and answer continuity — 2026-10-09
+
+- As a candidate, I can review later source-backed criteria after saving/matching, rather than losing everything beyond twelve. Defensive bound: 128; no promise of exhaustive extraction.
+- I can distinguish unassessed AI output from a question about my experience. Missing output does not ask me to create a competency, and incomplete coverage is provisional.
+- I can see, edit and retry confirmation of an existing personal answer without duplicating it. Editing uses current revision checks; rejected answers are not silently restored. AI still assesses actual relevance.
+- I can search and filter a long match and inspect document-source passages in a compact table, including by keyboard and on mobile. Supplementary help dismisses before the containing reader on Escape.

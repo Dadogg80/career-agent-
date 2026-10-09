@@ -117,3 +117,12 @@ Based on verified merged PR #27 (`217192c`). Saved cards and match results now l
 A separate recipient/model-approved `CV_TAILORING` task receives the entire supported base text and confirmed match snapshot; long paragraphs are automatically divided into literal passages, not sampled. Suggestions expose exact original text, editable proposed wording, reasons and claim/criterion references. Approved/rejected wording leaves the pending queue. No profile fact, original or exported CV version is written. Suggestions/decisions are page-session-only and disappear on navigation/reload. Changes to match/evidence/source invalidate current approval; valid references are not a guarantee that generated prose is semantically true.
 
 Next: measure cross-profession requirement recall (including the existing 12-criterion ceiling), improve CV visibility/transferability assessments and broader joined onboarding. Durable proposal review/export, letter writing and submission remain deferred.
+
+## Requirement and clarification quality slice — 2026-10-09
+
+Implemented on `feat/job-requirement-coverage` (ADR 0032): whole-source criterion instructions, removal of the twelve-criterion selection across storage/matching/tailoring references, defensive 128 requirement bound, explicit unassessed status/provisional coverage, search/filters, saved personal-answer continuity and compact document review/source tables. Exact source checks, full confirmed evidence and separate AI approvals remain.
+
+Next priorities:
+1. Independently benchmark criterion recall and clarify semantic mismatches; add explicit transferability/formal-barrier explanations and base-CV visibility outcomes.
+2. Review the joined upload/profile → advertisement → match → application-preparation journey, including guidance and source/context uncertainty. Existing duplicates are retained safely, not destructively repaired.
+3. Durable reviewed writing proposals and conflict decisions, then tailored file/version generation, letters and later roadmap features. The current milestone remains reviewed wording suggestions, not a completed application package.

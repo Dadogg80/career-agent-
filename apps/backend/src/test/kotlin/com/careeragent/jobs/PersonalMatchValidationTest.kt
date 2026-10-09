@@ -47,4 +47,24 @@ class PersonalMatchValidationTest {
   assertThat(packed["candidatePassages"][1]["context"].asText()).isEqualTo("Other company")
  }
 
+ @Test fun `all 128 requirement indices survive and incomplete output is not a candidate gap`() {
+  val assessments=(0 until 128).map { i -> mapOf("requirementIndex" to i,"classification" to "PARTIAL",
+   "reason" to "Related contribution; exact scope needs review", "question" to "",
+   "evidence" to listOf(mapOf("claimId" to claim.id,"quote" to claim.statement))) }
+  val complete=service.parse(mapper.writeValueAsString(mapOf("assessments" to assessments)),128,(0 until 128).toSet(),listOf(claim),"en")
+  assertThat(complete.first).hasSize(128)
+  assertThat(complete.first).allMatch { it.evaluated }
+  assertThat(complete.first.last().requirementIndex).isEqualTo(127)
+  val partial=service.parse(mapper.writeValueAsString(mapOf("assessments" to assessments.take(13))),128,(0 until 128).toSet(),listOf(claim),"en")
+  assertThat(partial.first.count { it.evaluated }).isEqualTo(13)
+  assertThat(partial.first.last().reason).contains("no valid assessment")
+  assertThat(partial.first.last().question).isEmpty()
+  assertThat(partial.first.last().classification).isEqualTo(MatchKind.CLARIFY)
+ }
+ @Test fun `older persisted assessments remain readable without the new completion flag`() {
+  val stored="""{"requirementIndex":0,"classification":"CLARIFY","reason":"Unknown experience","evidence":[],"question":"Any relevant experience?"}"""
+  val value=com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().readValue(stored,RequirementMatch::class.java)
+  assertThat(value.evaluated).isTrue()
+ }
+
 }

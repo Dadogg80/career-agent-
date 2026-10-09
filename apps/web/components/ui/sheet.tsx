@@ -56,11 +56,16 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, closeLabel = "Close", ...props }, ref) => (
+>(({ side = "right", className, children, closeLabel = "Close", onEscapeKeyDown, ...props }, ref) => (
   <SheetPortal>
     <SheetOverlay />
     <SheetPrimitive.Content
       ref={ref}
+      onEscapeKeyDown={event => {
+        // Dismiss focused supplementary help before closing the reader itself.
+        if (document.activeElement?.closest(".help-tip")?.querySelector('[role="tooltip"]:not([hidden])')) event.preventDefault()
+        onEscapeKeyDown?.(event)
+      }}
       className={cn(sheetVariants({ side }), className)}
       {...props}
     >
