@@ -537,3 +537,9 @@ Final review also moved invalid approval-token validation inside the import sema
 Validation: the focused backend selection passed 51 tests (Gemini URL Context, Gemini/Groq model routing, FINN import, both job-import suites, and saved-job integration), and `bootJar` passed. A fresh isolated Next.js production build passed; its 34 focused browser tests passed for analysis, retrieval, overview, progress and recovery. All three focused developer-diagnostics browser tests passed against the existing development server. `npm run typecheck` and `git diff --check` passed. The first production browser attempt used a stale prebuilt `.next` directory and failed; rerunning against the fresh isolated production build passed all 34 tests. The ordinary production build directory was not changed while the user's development server was running.
 
 No live Gemini provider call was made during final validation; an earlier Gemini 3.8 generation attempt returned HTTP 503. Model availability in the selector is not a readiness guarantee. Antigravity was not added because no supported provider/API integration was confirmed. No automatic fallback, merge or deployment is claimed.
+
+## 2026-10-09 — PR #34 diagnostics CI stabilization
+
+Investigated the failing push workflow and passing pull-request workflow on the same commit. The diagnostics language test closed the drawer, switched language, then incorrectly expected the closed drawer's heading to be visible. Exit-animation timing made that assertion intermittent. The test now explicitly reopens the English drawer and scopes the heading assertion to its dialog; application behavior, retries and timeouts are unchanged.
+
+Validation: the affected development-mode Playwright test passed three consecutive repetitions (24.4 seconds) using local fixtures, and `git diff --check` passed. No live AI calls or full local regression rerun were needed for this test-only correction. GitHub CI will validate the updated PR head.

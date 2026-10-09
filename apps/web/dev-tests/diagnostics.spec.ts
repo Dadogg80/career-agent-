@@ -61,7 +61,10 @@ test("right-side diagnostics show actual source, stages and sanitized console ev
   expect(JSON.stringify(logged)).not.toContain(url);
   expect(new Set(logged.map(event => event.runId)).size).toBe(1);
   await page.getByRole("combobox", { name: "Språk" }).selectOption("en");
-  await expect(page.getByRole("heading", { name: /Developer diagnostics/ })).toBeVisible();
+  // Closed sheet contents may remain mounted briefly during their exit animation.
+  // Reopen explicitly instead of asserting visibility inside a closed panel.
+  await page.getByRole("button", { name: "Developer diagnostics", exact: true }).click();
+  await expect(page.getByRole("dialog").getByRole("heading", { name: /Developer diagnostics/ })).toBeVisible();
 });
 
 test("red diagnostic light retains HTTP error and cooldown without automatic retries", async ({ page }) => {
