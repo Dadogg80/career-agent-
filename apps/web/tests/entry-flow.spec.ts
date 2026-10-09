@@ -52,6 +52,7 @@ test("signed-in login opens the dashboard with honest counts and review prioriti
  await page.route("**/api/profile/me", r => r.fulfill({ json: profile }));
  await page.route("**/api/profile/me/claims", r => r.fulfill({ json: [claim, { ...claim, id: "22345678-1234-1234-1234-123456789abc", status: "UNVERIFIED", revision: 1 }] }));
  await page.route("**/api/profile/me/jobs", r => r.fulfill({ json: [] }));
+ await page.route("**/api/profile/me/documents", r => r.fulfill({ json: [] }));
  await page.route("**/api/jobs/**", r => { aiCalls++; return r.fulfill({ status: 503 }); });
  await page.goto("/login"); await expect(page).toHaveURL(/\/dashboard$/);
  await expect(page.getByRole("heading", { name: "Se gjennom kompetanseforslagene" })).toBeVisible();
@@ -93,8 +94,33 @@ test("dashboard failures do not present missing data as zero or invent a next ac
  await page.route("**/api/profile/me", r => r.fulfill({ json: profile }));
  await page.route("**/api/profile/me/claims", r => r.fulfill({ status: 503, json: { code: "CLAIM_UNAVAILABLE" } }));
  await page.route("**/api/profile/me/jobs", r => r.fulfill({ status: 503, json: { code: "SAVED_JOB_UNAVAILABLE" } }));
+ await page.route("**/api/profile/me/documents", r => r.fulfill({ status: 503, json: { code: "DOCUMENT_UNAVAILABLE" } }));
  await page.goto("/dashboard");
  await expect(page.locator("main").getByRole("alert")).toContainText("Noen tall kunne ikke hentes");
- await expect(page.locator(".dashboard-stat strong")).toHaveText(["—", "—", "—"]);
+ await expect(page.locator(".dashboard-stat strong")).toHaveText(["—", "—", "—", "—"]);
  await expect(page.getByRole("heading", { name: "Utforsk ditt arbeidsområde" })).toBeVisible();
+});
+
+test("saved opportunities lead to matching and the optional bilingual guide makes no AI requests", async ({page})=>{
+ let posts=0;page.on("request",r=>{if(r.method()==="POST")posts++;});
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{...session,authenticated:true}}));
+ await page.route("**/api/profile/me",r=>r.fulfill({json:profile}));
+ await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[claim]}));
+ await page.route("**/api/profile/me/documents",r=>r.fulfill({json:[]}));
+ const job={id,createdAt:claim.createdAt,content:{title:"Fictional Kotlin role",sourceUrl:null,sourceType:"PASTED_TEXT",locale:"nb",text:"A fictional role requiring documented Kotlin API development experience.",requirements:[{label:"Kotlin",kind:"REQUIRED",quote:"Kotlin API development experience"}],facts:[],omittedItems:0,retrievedAt:null}};
+ await page.route("**/api/profile/me/jobs",r=>r.fulfill({json:[job]}));
+ await page.goto("/dashboard");await expect(page.getByRole("heading",{name:"Sammenlign mulighetene dine"})).toBeVisible();await expect(page.getByRole("link",{name:"Åpne mine stillinger",exact:true})).toHaveAttribute("href","/jobs/saved");
+ const guide=page.locator(".workspace-journey");await expect(guide.locator("ol")).toHaveCount(0);await guide.getByRole("button",{name:"Vis guiden",exact:true}).click();await expect(guide.locator("ol button")).toHaveCount(5);
+ await expect(guide.locator(".workspace-journey-detail")).toContainText("DOCX eller tekstbasert PDF");await guide.getByRole("button",{name:"Neste",exact:true}).click();await expect(guide.locator(".workspace-journey-detail")).toContainText("Utkast og avviste punkter");
+ await guide.locator("ol button").nth(3).click();await expect(guide.locator(".workspace-journey-detail")).toContainText("bekreftet kompetanse automatisk");await guide.getByRole("button",{name:"Neste",exact:true}).click();await expect(guide.locator(".workspace-journey-detail")).toContainText("ingen søknad sendes");await expect(guide.getByRole("button",{name:"Neste",exact:true})).toBeDisabled();
+ await guide.getByRole("button",{name:"Om guiden og fremdrift",exact:true}).click();await expect(page.getByRole("tooltip")).toContainText("ikke en ferdigstatus");await page.keyboard.press("Escape");
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:"/tmp/career-journey-mobile.png",fullPage:true});
+ await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await expect(guide.locator(".workspace-journey-detail")).toContainText("no application is submitted");await guide.getByRole("button",{name:"Hide guide",exact:true}).click();await expect(guide.locator("ol")).toHaveCount(0);expect(posts).toBe(0);
+});
+
+test("saved unread documents suggest reading while unavailable metadata never implies an empty profile",async({page})=>{
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{...session,authenticated:true}}));await page.route("**/api/profile/me",r=>r.fulfill({json:profile}));await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[]}));await page.route("**/api/profile/me/jobs",r=>r.fulfill({json:[]}));
+ await page.route("**/api/profile/me/documents",r=>r.fulfill({json:[{id,originalName:"fictional.pdf",mediaType:"application/pdf",byteSize:100,sha256:"a".repeat(64),language:"nb",isMaster:true,createdAt:claim.createdAt,textCharacters:0}]}));
+ await page.goto("/dashboard");await expect(page.getByRole("heading",{name:"La dokumentene bygge profilen"})).toBeVisible();await expect(page.getByRole("link",{name:"Gjennomgå dokumentene",exact:true})).toHaveAttribute("href","/career/profile#profile-documents");
+ await page.route("**/api/profile/me/documents",r=>r.fulfill({status:503,json:{code:"DOCUMENT_UNAVAILABLE"}}));await page.reload();await expect(page.getByRole("heading",{name:"Utforsk ditt arbeidsområde"})).toBeVisible();await expect(page.locator(".dashboard-stat").filter({hasText:"Dokumenter"}).locator("strong")).toHaveText("—");
 });

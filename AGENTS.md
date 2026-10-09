@@ -118,3 +118,7 @@ PR #28 is verified merged at `e0f87ca1fb6bf5533f011c2ad5a6f38f40134830`. Continu
 ## Evidence relation continuation — 2026-10-09
 
 PR #29 is verified merged at `8e88d1f0832b1ae673f7f01a110733b740b713da`; both Foundation checks passed. Continue on `feat/match-evidence-explanations` under ADR 0033: nullable source-backed AI relation/nature metadata, conservative transferable/formal score constraints, compact saved-card qualification hints and existing-result application priorities. Do not label older results, promote factual status or claim base-CV visibility is complete. Preserve full evidence, consent, sources and staleness. Prepare a tested PR without automatic merge.
+
+## Guided workspace continuation — 2026-10-09
+
+Continue on `feat/guided-workspace-journey` from verified PR #30/main `9df2ae4`. PR #31 remains open with successful Foundation checks; this frontend onboarding slice is independent. Use metadata-only dashboard guidance and an optional local five-step guide, not inferred match completeness or new AI work. The owner requested lower token use: use concise reads/output and focused affected checks, no live provider calls by default. Required CI still runs the full regression. Document actual test scope and prepare a PR; do not merge automatically.

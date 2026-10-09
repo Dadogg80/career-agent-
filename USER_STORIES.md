@@ -428,3 +428,10 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 
 - I can inspect the saved answer/status/context, edit its wording and confirm it with clear feedback. Related-scope writing aids do not falsely establish a complete match.
 - I can reject a saved clarification with a confirmation dialog, cancel it or retry a failed rejection. The rejected answer remains visible after reopening, excluded from matching, and can later be deliberately corrected/reconfirmed under the same identity. No automatic AI call or factual resurrection occurs.
+
+## Optional guided workspace journey
+
+- I can open a short guide, skip among five steps and follow real links without starting an AI call.
+- I know which document formats and information are useful, how automatic matching uses confirmed evidence, and what CV preparation does.
+- My next action reflects saved documents/competencies/jobs; unavailable information does not become a false empty-profile recommendation.
+- I can reach document upload from the dashboard without searching through profile panels. Guide position is local display state, not stored application progress.

@@ -205,3 +205,9 @@ Accepted implementation slice: [ADR 0032](adr/0032-requirement-coverage-and-clar
 Accepted ADR [0033](adr/0033-match-evidence-relations.md): new matching output distinguishes DIRECT/TRANSFERABLE/UNKNOWN and FORMAL/PRACTICAL/OTHER. Apply conservative classification guards without inventing positive qualifications or actual gaps. Store nullable metadata in existing result JSON, retain legacy shape/readability, and derive compact application priorities from saved sources without extra AI calls. The relation/nature remain AI judgments; base-CV visibility and semantic factual verification are not completed by these tags.
 
 The owner additionally requested clearer clarification confirmation/rejection UX. Reuse the existing revision-checked claim review API and all owned answer statuses for display. Rejection is an excluded statement, not negative competency evidence or an actual skill gap. Keep history and allow deliberate same-entry correction/reconfirmation. Compact writing-scope aids are local guidance, not persisted match classifications.
+
+## 2026-10-09 — Lightweight workspace onboarding
+
+Use existing owned metadata queries and a local optional tutorial for next-step guidance. Do not infer match readiness from saved-job existence, require a separate competency selection or start unapproved AI work. Unavailable metadata remains unknown. Keep guide position transient rather than introducing a persisted journey state. This is a UI slice, with no migration or provider/default change.
+
+The owner requested lower development token consumption: prefer affected checks, terse output and no live provider test calls by default. Retain required CI validation and meaningful checks; local tests do not themselves spend provider tokens.
