@@ -459,3 +459,9 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - I can see published contact endpoints, deadline, location and employment fields from received text even when AI supplies a partial answer or fails, regardless of the source website.
 - I can inspect literal source quotations and save these details with the original received text. Missing details are not invented; exceeding the existing snapshot bound is disclosed before saving.
 - A vague qualification heading does not silently become a mandatory requirement. Explicit mandatory/preferred wording governs new results; unsupported importance remains unclear.
+
+## Recovering AI configuration
+
+- I can tell whether the app is retrieving AI configuration or could not retrieve it, instead of waiting indefinitely beside a disabled button.
+- I can retry configuration retrieval without sending documents or starting an AI analysis. If a task has no configuration, the app explains that explicitly.
+- After recovery I see the selected provider/model and approve private analysis separately. Missing historical attribution is not presented as ongoing work.

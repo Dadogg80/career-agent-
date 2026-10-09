@@ -228,3 +228,7 @@ Accepted [ADR 0035](adr/0035-reviewed-cv-text-handoff.md). Offer explicit local 
 ## Source-neutral advertisement details — 2026-10-09
 
 Accepted [ADR 0038](adr/0038-source-neutral-advertisement-details.md): literal received-text practical fields supplement partial AI results and saved snapshots; conservative source wording governs new requirement importance. No provider default, consent, URL adapter or database migration changes. Complete original received text remains available, with explicit disclosure of missing details and existing snapshot bounds.
+
+### AI configuration recovery — implemented 2026-10-09
+
+Shared model selectors expose metadata retrieval failures and missing task configuration with an explicit retry of `/api/ai/config`. Recovery does not start an AI request, silently choose an alternate provider or reuse consent for a changed selection. Historical missing attribution is labeled as unrecorded. This is a frontend recovery improvement within the existing approval contract, with no new provider routing or persistence decision.

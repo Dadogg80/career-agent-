@@ -251,8 +251,8 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
           <div><p className="job-analysis-overline">{locale === "nb" ? "ANNONSE → INNSIKT" : "ADVERTISEMENT → INSIGHT"}</p><h2 id="analyzer-title">{t.workspaceTitle}</h2><p>{t.workspaceDescription}</p></div>
         </div>
         <div className="job-analysis-model-choices" aria-label={locale==="nb"?"Modellvalg per oppgave":"Model selection by task"}>
-          <AiChoice area="sourceRetrieval" label={locale==="nb"?"Hent annonse":"Retrieve ad"} approval={sourceChoice.approval} options={sourceChoice.options} choose={sourceChoice.choose} disabled={pending || mode!=="url"} locale={locale}/>
-          <AiChoice area="job" label={locale==="nb"?"Analyser krav":"Analyze requirements"} approval={choice.approval} options={choice.options} choose={token=>{choice.choose(token);setCooldownUntil(0);setRetryIn(0);extraction.reset();}} disabled={pending} locale={locale}/>
+          <AiChoice configuration={sourceChoice.configuration} area="sourceRetrieval" label={locale==="nb"?"Hent annonse":"Retrieve ad"} approval={sourceChoice.approval} options={sourceChoice.options} choose={sourceChoice.choose} disabled={pending || mode!=="url"} locale={locale}/>
+          <AiChoice configuration={choice.configuration} area="job" label={locale==="nb"?"Analyser krav":"Analyze requirements"} approval={choice.approval} options={choice.options} choose={token=>{choice.choose(token);setCooldownUntil(0);setRetryIn(0);extraction.reset();}} disabled={pending} locale={locale}/>
         </div>
       </div>
       <div className={`analysis-grid ${result ? "has-result" : ""} ${!result && !pending && mode === "text" ? "is-paste-entry" : ""}`}>
