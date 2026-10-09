@@ -407,3 +407,7 @@ Approve a complete document as usual → portions are handled automatically → 
 ## Complete profile matching — 2026-10-09
 
 Open a saved job, inspect the compact recipient/model preview and approve one analysis. All confirmed competency contributions are included automatically, including documented imports; there is no skill checkbox selection or 30-item match cutoff. Expand evidence/ad readers when needed. A saved weighted coverage percentage appears in the assessment and on the job card. New confirmed evidence marks automatic assessments stale. Failures retain the previous result and require explicit approval before changing recipient/model.
+
+## Compare career history and documentary periods
+
+Open Work and education → expand career history → inspect counted possible period differences or choose Compare career entries → view two saved records and documentary quotations side by side (stacked on mobile). Sources load only when opened. Choose another entry to compare employer/client/role wording explicitly. An old ongoing CV and a newer end date are possible differences, not automatic errors. Closing changes nothing. Correct this entry opens the existing prefilled editor; saving resets confirmation and refreshes the derived comparison. Source failure leaves the other record and quotations visible; reopen to retry. Deleted originals keep their existing labelled quotations.

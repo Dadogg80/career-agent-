@@ -390,3 +390,8 @@ As a document reviewer, I can switch between competencies, profile summary and c
 ## Complete profile matching — 2026-10-09
 
 As a candidate, I want matching to use all of my confirmed document-derived and personal competencies without selecting them manually. Acceptance: the final contribution beyond item 30 is sent and usable as validated evidence; repeated literal source passages share one payload passage without removing skills; drafts/rejections remain excluded; changed/new confirmed revisions require renewed approval or reassessment. The saved-job card shows the same persisted explained percentage without initiating AI.
+
+## Career period comparison
+
+- As a candidate, I can inspect possible period differences without parallel roles, different clients, unknown dates or separate rehires being labelled contradictory. Acceptance: exact identity and known overlapping unequal endpoints only; rejected records are excluded.
+- As a candidate, I can compare any two active career entries with their exact sources, then correct one using its current revision. Acceptance: no background AI/writes, bounded readers, responsive dialog, source-error/deleted-original states, and editing resets only the selected record's confirmation.
