@@ -4,7 +4,7 @@ Status checked against remote main on 2026-10-08; the owner authorized publishin
 
 ## Current status
 
-Remote main `f0223f5` includes documentary profile imports, grouped skill cards, persistent review, candidate presentation, automatic matching evidence, explained percentages and inline clarification. PRs #20–22 add selectable Flash/Lite models, source inventories, bounded follow-up and corrected context/date precision. PR #23 adds revision-aware sourced competency-to-career relationships (ADR 0029); its Foundation checks passed. Current `feat/document-semantic-benchmark` adds an offline reviewed-fact evaluator and corrects named-list recovery across automatic portions. Full semantic judging, generalized relationships and conflict reconciliation remain pending.
+Remote main `dafe2c3` includes documentary profile imports, grouped skill cards, persistent review, candidate presentation, automatic matching evidence, explained percentages and inline clarification. PRs #20–22 add selectable Flash/Lite models, source inventories, bounded follow-up and corrected context/date precision. PR #23 adds revision-aware sourced competency-to-career relationships (ADR 0029); its Foundation checks passed. PR #24 merged the offline reviewed-fact evaluator and cross-portion list recovery. Current `feat/full-profile-job-match` removes manual evidence selection and the 30-contribution cutoff, includes the complete confirmed profile and exposes persisted coverage on saved-job cards. Full semantic judging, generalized relationships and conflict reconciliation remain pending.
 
 | Capability | Actual status |
 | --- | --- |
@@ -27,7 +27,7 @@ Remote main `f0223f5` includes documentary profile imports, grouped skill cards,
 | Documentary profile imports, history drafts and persistent review queue | Merged in PR #18 (ADR 0027) |
 | Candidate presentation, automatic matching evidence, percentages and inline clarification | Merged in PR #18; newest-analysis synthesis, deterministic coverage |
 | Revision-aware competency-to-career links and compact review | Merged in PR #23 (ADR 0029) |
-| Offline expected-fact benchmark and cross-portion list recovery | Implemented on the current branch; pending review/merge |
+| Offline expected-fact benchmark and cross-portion list recovery | Merged in PR #24; main Foundation CI passed |
 | Adjacent-skill inference, full normalized employment/project graph | Not implemented |
 | Owned saved job snapshots and searchable library | Merged in the tested local pilot |
 | Approved personal requirement-to-claim matching | Merged in the tested local pilot |
@@ -88,3 +88,7 @@ The current continuation measures independently selected competencies, responsib
 A failing regression demonstrated local list-state loss when a long skills section crossed automatic portions. Recovery now carries source section state locally, emits complete rows once and preserves global/employer boundaries. Existing approved workflow persistence and review rules remain. No extra AI calls, schema migration or model changes are needed.
 
 Next: collect recipient-approved recorded model outputs against independently reviewed private checklists, use measured misses for targeted extraction improvements, then add explicit employer/project/date conflict review. The evaluator checks the chosen expectations and literal evidence; it does not prove every competency or every generated description is correct.
+
+## Full-profile matching continuation — 2026-10-09
+
+The owner prioritized complete automatic matching and job-card percentages ahead of career-period conflict review. On the current branch: all supported CONFIRMED contributions are approved together, literal repeated passages are packed once without losing skill/revision identities, full saved advertisement text is included, and new confirmations invalidate automatic-evidence results. Cards read the saved percentage without another AI request. Provider quotas/context remain external limits. Explicit company/project/date reconciliation is still next; no conflict records or resolution UI were added in this slice.

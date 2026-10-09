@@ -44,3 +44,5 @@ Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert i
 - [0028 — Source coverage checks and bounded document follow-up](0028-document-evidence-coverage.md) — accepted local pilot.
 
 - [0029 — Revision-aware competency and career relationships](0029-competency-career-context.md) — accepted local pilot; owned source-supported links and explicit local review.
+
+- [0030 — Complete confirmed-profile matching](0030-complete-profile-matching.md) — accepted continuation; whole evidence, compact passages and saved-job coverage.

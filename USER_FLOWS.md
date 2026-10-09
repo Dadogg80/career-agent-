@@ -403,3 +403,7 @@ Choose Link to work or a project → search existing history → choose an entry
 ## Long skills sections across automatic portions
 
 Approve a complete document as usual → portions are handled automatically → local list recovery retains preceding section state across a portion boundary → complete literal list rows are recovered once, with the same source employer/project rules → supported findings follow existing profile population/review. A global or education/interests boundary ends the previous list/context. No extra consent, user-managed splitting or AI call is introduced. The developer expected-fact benchmark remains outside the user-facing coverage panel.
+
+## Complete profile matching — 2026-10-09
+
+Open a saved job, inspect the compact recipient/model preview and approve one analysis. All confirmed competency contributions are included automatically, including documented imports; there is no skill checkbox selection or 30-item match cutoff. Expand evidence/ad readers when needed. A saved weighted coverage percentage appears in the assessment and on the job card. New confirmed evidence marks automatic assessments stale. Failures retain the previous result and require explicit approval before changing recipient/model.

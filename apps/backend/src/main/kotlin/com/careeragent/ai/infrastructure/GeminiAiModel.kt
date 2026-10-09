@@ -72,7 +72,7 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
         val remaining = cooldowns.forModel("Gemini", selected.model).remainingSeconds()
         if (remaining > 0) throw AiFailure("AI_RATE_LIMITED", 429, remaining)
         val request = HttpRequest.newBuilder(URI.create("https://generativelanguage.googleapis.com/v1beta/models/${selected.model}:generateContent"))
-            .timeout(Duration.ofSeconds(25)).header("x-goog-api-key", apiKey)
+            .timeout(Duration.ofSeconds(if (task == AiTask.PERSONAL_MATCH) 75 else 25)).header("x-goog-api-key", apiKey)
             .header("Content-Type", "application/json").header("User-Agent", "career-agent/0.1")
             .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(requestBody(system, user, schema, task)))).build()
         try {

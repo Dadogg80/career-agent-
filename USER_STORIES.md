@@ -386,3 +386,7 @@ As a document reviewer, I can switch between competencies, profile summary and c
 
 - As a candidate, I want a long skills section to remain intact when automatic processing divides my document. Acceptance: complete named list labels survive later portions, each source row is recovered once, unrelated company/education/interests sections do not acquire the preceding context, and approved profile population persists later findings without additional AI calls.
 - As a developer, I need independently reviewed expected facts to expose omissions that quotation-usage counts cannot show. Acceptance: recorded outputs are measured for individual competencies, employer/project attribution, career date precision and selected substantive profile terms, with unsupported literal evidence counted separately. Private manifests/results remain outside Git; normal tests use fictional fixtures and make no provider calls.
+
+## Complete profile matching — 2026-10-09
+
+As a candidate, I want matching to use all of my confirmed document-derived and personal competencies without selecting them manually. Acceptance: the final contribution beyond item 30 is sent and usable as validated evidence; repeated literal source passages share one payload passage without removing skills; drafts/rejections remain excluded; changed/new confirmed revisions require renewed approval or reassessment. The saved-job card shows the same persisted explained percentage without initiating AI.

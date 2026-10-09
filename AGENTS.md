@@ -92,3 +92,7 @@ PR #22 is verified merged at `182c22ca71dff1776258e81ebd222af8e82a530e`; push/PR
 ## Expected-fact benchmark continuation — 2026-10-08
 
 PR #23 is verified merged at `f0223f51cb18271f753fbe28b05343cbebf9bf53`; both pre-merge Foundation checks succeeded. Continue on `feat/document-semantic-benchmark` with a developer-only offline expected-fact evaluator and a demonstrated skills-list continuation correction. Independently select expectations; measure facts, context, explicit date precision and profile substance separately from quotation usage. Recorded private analyses/checklists/originals remain outside Git. No automatic provider calls, new table, default/model change or user review reset. Full semantic judging and company/project/date conflict reconciliation remain future increments. Test and prepare a PR; do not merge it automatically.
+
+## Complete matching continuation — 2026-10-09
+
+PR #24 is verified merged at `dafe2c385152d9993f9225abbbd5b4d6b21b7758`; main Foundation passed. The owner prioritized automatic full-profile matching over period conflict review. Continue on `feat/full-profile-job-match`: remove manual competency selection and the 30-item match cutoff, preserve exact owned CONFIRMED revision sets, literal evidence and recipient-bound consent, pack repeated statement/context pairs without dropping skill IDs, and display persisted coverage on saved-job cards. Do not imply provider quotas or context limits are removed. Do not merge automatically.

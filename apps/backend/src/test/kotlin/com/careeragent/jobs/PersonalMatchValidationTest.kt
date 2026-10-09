@@ -37,4 +37,14 @@ class PersonalMatchValidationTest {
   assertThatThrownBy { service.parse("{broken",1,setOf(0),listOf(claim),"en") }.isInstanceOf(AiFailure::class.java)
   assertThatThrownBy { service.parse("{\"assessments\":[],\"ownerId\":\"spoof\"}",1,setOf(0),listOf(claim),"en") }.isInstanceOf(AiFailure::class.java)
  }
+ @Test fun `packing retains all 500 skill identities and distinct literal contexts`() {
+  val selected=(0 until 500).map { MatchClaim(UUID.randomUUID(),2,"Skill $it",claim.statement,if(it<250)claim.context else "Other company") }
+  val packed=mapper.readTree(service.compactInput("Fictional ad",emptyList(),selected))
+  assertThat(packed["confirmedClaims"].size()).isEqualTo(500)
+  assertThat(packed["candidatePassages"].size()).isEqualTo(2)
+  assertThat(packed["confirmedClaims"].map { it["id"].asText() }).containsExactlyElementsOf(selected.map { it.id.toString() })
+  assertThat(packed["confirmedClaims"][499]["passageIndex"].asInt()).isEqualTo(1)
+  assertThat(packed["candidatePassages"][1]["context"].asText()).isEqualTo("Other company")
+ }
+
 }

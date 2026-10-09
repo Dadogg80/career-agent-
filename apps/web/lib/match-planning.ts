@@ -2,38 +2,12 @@ import type { CompetencyClaim } from "./claims";
 import type { PersonalMatch } from "./personal-match";
 import type { SavedJobContent } from "./saved-jobs";
 
-const terms=(value:string)=>new Set(value.toLocaleLowerCase().match(/[\p{L}\p{N}+#.]+/gu)?.filter(t=>t.length>2)??[]);
-
-/** Local evidence planning spends no model calls and never changes claim status. */
-export function automaticMatchEvidence(claims:CompetencyClaim[],job:SavedJobContent,text:string):string[] {
- const requirementTerms=job.requirements.map(r=>terms(`${r.label} ${r.quote}`));
- const scored=claims.filter(c=>c.status==="CONFIRMED").map((c,index)=>{
-  const words=terms(`${c.skill} ${c.statement} ${c.context}`);
-  const score=requirementTerms.reduce((sum,required,i)=>sum+[...required].filter(t=>words.has(t)).length*(job.requirements[i].kind==="REQUIRED"?2:1),0);
-  return {c,score,index};
- }).sort((a,b)=>b.score-a.score || a.index-b.index);
- let remaining=12000-text.length;const chosen:string[]=[];const passages=new Set<string>();
- for(const {c} of scored) {
-  const passage=`${c.statement.trim().toLocaleLowerCase()}\u0000${c.context.trim().toLocaleLowerCase()}`;
-  if(passages.has(passage))continue;
-  const size=c.skill.length+c.statement.length+c.context.length;
-  if(chosen.length<30 && size<=remaining){chosen.push(c.id);remaining-=size;passages.add(passage);}
- }
- return chosen;
+/** Include every confirmed contribution; repeated passages are packed once by the server. */
+export function automaticMatchEvidence(claims:CompetencyClaim[],_job:SavedJobContent,_text:string):string[] {
+ return claims.filter(c=>c.status==="CONFIRMED").map(c=>c.id);
 }
 
-export function matchSourcePreview(job:SavedJobContent):string {
- if(job.text.length<=6000)return job.text;
- // Whole source lines preserve the API's evidence checks, including requirements near the end.
- const lines=job.text.split(/\r?\n/);
- const required=job.requirements.flatMap(r=>r.quote.split(/\r?\n/).filter(Boolean));
- const priority=lines.map((line,index)=>({line,index,important:required.some(q=>line.includes(q)||q.includes(line.trim())&&!!line.trim())}));
- let size=0;const indexes=new Set<number>();
- for(const item of [...priority.filter(x=>x.important),...priority.filter(x=>!x.important)]) {
-  if(size+item.line.length+1<=6000){indexes.add(item.index);size+=item.line.length+1;}
- }
- return lines.filter((_,i)=>indexes.has(i)).join("\n");
-}
+export function matchSourcePreview(job:SavedJobContent):string { return job.text; }
 
 /** Explainable coverage of the stored requirements, never a probability of employment. */
 export function matchCoverage(result:PersonalMatch,job:SavedJobContent) {

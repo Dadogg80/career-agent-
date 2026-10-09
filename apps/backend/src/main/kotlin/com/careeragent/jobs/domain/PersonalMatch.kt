@@ -12,4 +12,4 @@ data class RequirementMatch(val requirementIndex: Int, val classification: Match
     val evidence: List<MatchEvidence>, val question: String)
 data class PersonalMatch(val id: UUID, val locale: String, val createdAt: OffsetDateTime,
     val assessments: List<RequirementMatch>, val claims: List<MatchClaim>, val omittedItems: Int,
-    val inputCharacters: Int, val stale: Boolean = false, val provider: String = "Groq", val model: String? = null)
+    val inputCharacters: Int, val stale: Boolean = false, val provider: String = "Groq", val model: String? = null, val automaticEvidence: Boolean = false)
