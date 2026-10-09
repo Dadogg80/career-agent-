@@ -167,3 +167,7 @@ Next priority resumes the joined document/profile → saved job/full-profile mat
 ### Joined journey: AI configuration recovery
 
 Implemented compact, shared configuration loading/failure/unavailable states and an explicit metadata-only retry across model selectors, including CV preparation. Source/results, actual attribution and recipient-bound consent remain unchanged. This is configuration recovery, not provider quota removal, silent fallback or automatic analysis resumption. Continue with joined-flow verification and source/profile/match quality; durable tailoring decisions and file generation remain deferred.
+
+### Joined journey: base-CV selection
+
+Application preparation now defaults only to an explicitly marked master CV. With no master, it asks for the wording source without guessing document type. Added local short-text recovery guidance and preserved full confirmed evidence, source checks and consent reset. This does not add semantic CV detection, automatic OCR or tailored file generation.

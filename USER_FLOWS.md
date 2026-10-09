@@ -497,3 +497,7 @@ New analyses conservatively validate importance from explicit wording/context. U
 ## AI configuration recovery
 
 Model selectors in advertisement retrieval/analysis, full-document/excerpt review, personal matching and CV preparation distinguish active configuration retrieval, a failed retrieval and a missing task configuration. **Prøv igjen / Try again** refreshes `/api/ai/config` only; it never sends source material or starts an AI analysis. Successful recovery shows the actual selected provider/model. Private analysis remains blocked until task configuration and explicit consent are available; a changed selection clears consent through the existing approval-bound flow. Existing results and sources remain readable. Missing historical attribution is labeled as not recorded instead of indefinite loading.
+
+## Selecting the CV for wording proposals
+
+Application preparation preselects a document only when it is explicitly marked as the master CV. Without a master, select the CV document from the list; the first uploaded certificate or project description is never silently treated as the CV. This selects the wording source, not the competencies: matching/tailoring retain the full confirmed evidence. Clearing or changing the choice clears consent and makes older wording historical. A selected document with fewer than 40 text characters after trimming leading/trailing whitespace shows a local rereading/OCR guidance link before an AI call; originals and prior results are retained.

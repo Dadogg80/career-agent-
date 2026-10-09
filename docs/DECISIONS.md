@@ -232,3 +232,7 @@ Accepted [ADR 0038](adr/0038-source-neutral-advertisement-details.md): literal r
 ### AI configuration recovery — implemented 2026-10-09
 
 Shared model selectors expose metadata retrieval failures and missing task configuration with an explicit retry of `/api/ai/config`. Recovery does not start an AI request, silently choose an alternate provider or reuse consent for a changed selection. Historical missing attribution is labeled as unrecorded. This is a frontend recovery improvement within the existing approval contract, with no new provider routing or persistence decision.
+
+### Explicit base-CV identity — implemented 2026-10-09
+
+Use the existing master-document designation for automatic CV preselection; otherwise require a source choice in application preparation. Upload order and filename are insufficient to establish CV identity. This frontend guard preserves all available confirmed matching evidence and existing backend source/consent validation. Short extraction guidance uses a bounded text-length check, not a semantic claim that a document is a complete CV.

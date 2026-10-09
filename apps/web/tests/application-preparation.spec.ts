@@ -162,3 +162,37 @@ test("reviewed substitutions preserve repeated passages whitespace untouched his
  expect(reviewedCvText(source,[{paragraphIndex:1,oldText:"Wrong original",text:"Changed"}])).toBeNull();const change={paragraphIndex:1,oldText:"Repeated contribution",text:"Changed"};expect(reviewedCvText(source,[change,change])).toBeNull();
  const long="a".repeat(3999)+"😀"+"b".repeat(4100);const parts=tailoringPassages(long);expect(reviewedCvText(long,[{paragraphIndex:1,oldText:parts[1],text:"Reviewed section"}])).toBe(parts[0]+"Reviewed section"+parts[2]);
 });
+
+test("without a master CV preparation does not silently select a certificate and changing CV clears consent",async({page})=>{
+ await fixtures(page);let sourceReads=0,calls=0;
+ const certificate={...doc,id:"92345678-1234-1234-1234-123456789abc",originalName:"course-certificate.txt",isMaster:false};
+ await page.route("**/api/profile/me/documents",r=>r.fulfill({json:[certificate,{...doc,isMaster:false}]}));
+ await page.route(`**/api/profile/me/documents/${documentId}`,r=>{sourceReads++;return r.fulfill({json:{document:{...doc,isMaster:false},text:cv}});});
+ await page.route(`**/api/profile/me/documents/${certificate.id}`,r=>{sourceReads++;return r.fulfill({json:{document:certificate,text:"Course certificate. This is not the user's CV."}});});
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{calls++;return r.fulfill({status:503,json:{code:"UNAVAILABLE"}});});
+ await page.goto(`/jobs/${jobId}/apply`);
+ const select=page.getByLabel("Velg CV som utgangspunkt"),submit=page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true});
+ const consent=page.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for CV-forslag",exact:true});
+ await expect(select).toHaveValue("");await expect(page.getByText("Velg en CV for å fortsette",{exact:false})).toBeVisible();
+ await expect(consent).toBeDisabled();await expect(submit).toBeDisabled();expect(sourceReads).toBe(0);
+ await page.screenshot({path:"/tmp/career-base-cv-choice.png",fullPage:true});
+ await select.selectOption(documentId);await expect(consent).toBeEnabled();await consent.check();await expect(submit).toBeEnabled();
+ await select.selectOption("");await expect(consent).not.toBeChecked();await expect(submit).toBeDisabled();
+ expect(sourceReads).toBe(1);expect(calls).toBe(0);
+});
+
+test("short CV extraction explains rereading instead of leaving an unexplained disabled action",async({page})=>{
+ await fixtures(page);let calls=0;
+ await page.route(`**/api/profile/me/documents/${documentId}`,r=>r.fulfill({json:{document:{...doc,textCharacters:3},text:"CV "}}));
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{calls++;return r.fulfill({status:503});});
+ await page.goto(`/jobs/${jobId}/apply`);
+ await page.setViewportSize({width:390,height:844});
+ await expect(page.getByText("Det ble hentet for lite tekst",{exact:false})).toBeVisible();
+ await expect(page.getByRole("link",{name:"Åpne dokumentene mine",exact:true})).toHaveAttribute("href","/career/profile");
+ await expect(page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true})).toBeDisabled();
+ expect(calls).toBe(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.getByRole("combobox",{name:"Språk"}).selectOption("en");
+ await expect(page.getByText("Too little text was extracted",{exact:false})).toBeVisible();
+ await expect(page.getByRole("link",{name:"Open my documents",exact:true})).toHaveAttribute("href","/career/profile");
+ await page.screenshot({path:"/tmp/career-short-cv-mobile.png",fullPage:true});
+});
