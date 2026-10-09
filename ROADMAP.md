@@ -126,3 +126,9 @@ Next priorities:
 1. Independently benchmark criterion recall and clarify semantic mismatches; add explicit transferability/formal-barrier explanations and base-CV visibility outcomes.
 2. Review the joined upload/profile → advertisement → match → application-preparation journey, including guidance and source/context uncertainty. Existing duplicates are retained safely, not destructively repaired.
 3. Durable reviewed writing proposals and conflict decisions, then tailored file/version generation, letters and later roadmap features. The current milestone remains reviewed wording suggestions, not a completed application package.
+
+## Evidence relation and application priorities slice — 2026-10-09
+
+Implemented on `feat/match-evidence-explanations` from merged PR #29 (ADR 0033): explicit direct/transferable/unknown relations and formal/practical/other criterion nature, conservative server classification constraints, source-backed match tags and saved-card qualification counts. Preparation uses the saved assessment to organize documented examples, transferability limits and unresolved mandatory qualification requirements. This adds no AI call or new factual confirmation. Old snapshots remain readable without retroactive labels.
+
+Next: base-CV visibility outcomes against confirmed evidence, then a measured cross-profession joined journey review and broader onboarding. Independent semantic recall/qualification benchmarks and durable writing review/conflict decisions remain pending. Tailored versions, letters and submission remain deferred; current preparation stops at reviewed wording suggestions.

@@ -114,3 +114,7 @@ PR #27 is verified merged at `217192cd856dbac14ca05eb3640483c94130d9ac`. Continu
 ## Requirement coverage continuation — 2026-10-09
 
 PR #28 is verified merged at `e0f87ca1fb6bf5533f011c2ad5a6f38f40134830`. Continue on `feat/job-requirement-coverage` under ADR 0032: whole-source distinct criteria, defensive 128-criterion end-to-end bound, explicit unassessed output/provisional coverage, persisted answer continuity and compact source review. Keep personal confirmation separate from semantic relevance; never freeze a previous model judgment as a fact or silently resurrect rejection. Existing duplicates/legacy snapshots remain source-preserving. No new schema migration or provider defaults. Validate and prepare a PR without merging automatically; transferability/visibility and durable proposals remain next slices.
+
+## Evidence relation continuation — 2026-10-09
+
+PR #29 is verified merged at `8e88d1f0832b1ae673f7f01a110733b740b713da`; both Foundation checks passed. Continue on `feat/match-evidence-explanations` under ADR 0033: nullable source-backed AI relation/nature metadata, conservative transferable/formal score constraints, compact saved-card qualification hints and existing-result application priorities. Do not label older results, promote factual status or claim base-CV visibility is complete. Preserve full evidence, consent, sources and staleness. Prepare a tested PR without automatic merge.

@@ -2,6 +2,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Sparkles, LoaderCircle } from "lucide-react";
 import { isPersonalMatch, type PersonalMatch } from "../lib/personal-match";
+import { matchInsights } from "../lib/match-insights";
 import { matchCoverage } from "../lib/match-planning";
 import type { SavedJob } from "../lib/saved-jobs";
 import type { Locale } from "../lib/translations";
@@ -20,7 +21,7 @@ export function JobMatchBadge({job,locale}:{job:SavedJob;locale:Locale}) {
  return <div className="saved-job-match" aria-live="polite">
   {match.isPending?<span className="hint flex items-center gap-2"><LoaderCircle size={13} className="animate-spin"/>{nb?"Henter vurdering …":"Loading assessment …"}</span>:
    match.isError?<span className="hint">{nb?"Vurdering kunne ikke hentes":"Assessment unavailable"}</span>:
-   coverage?<><Badge className="gap-1" variant={match.data?.stale || coverage.pending>0?"outline":"secondary"}><Sparkles size={13}/>{coverage.percent}% {nb?"kravmatch":"requirement match"}</Badge><span className="hint">{match.data?.stale?(nb?"Profilen er endret · vurder på nytt":"Profile changed · reassess"):coverage.pending>0?`${nb?"Foreløpig":"Provisional"} · ${coverage.evaluated}/${coverage.total} ${nb?"krav vurdert":"requirements assessed"}`:`${coverage.assessed}/${coverage.total} ${nb?"krav med grunnlag":"requirements with evidence"}`}</span></>:
+   coverage?<><Badge className="gap-1" variant={match.data?.stale || coverage.pending>0?"outline":"secondary"}><Sparkles size={13}/>{coverage.percent}% {nb?"kravmatch":"requirement match"}</Badge><span className="hint">{match.data?.stale?(nb?"Profilen er endret · vurder på nytt":"Profile changed · reassess"):coverage.pending>0?`${nb?"Foreløpig":"Provisional"} · ${coverage.evaluated}/${coverage.total} ${nb?"krav vurdert":"requirements assessed"}`:`${coverage.assessed}/${coverage.total} ${nb?"krav med grunnlag":"requirements with evidence"}`}</span>{match.data && matchInsights(match.data,job.content).formal.length>0 && <span className="match-formal-note">{matchInsights(match.data,job.content).formal.length} {nb?"kvalifikasjonskrav til kontroll":"qualification requirements to review"}</span>}</>:
    <span className="hint">{nb?"Klar for personlig match":"Ready for personal matching"}</span>}
  </div>;
 }

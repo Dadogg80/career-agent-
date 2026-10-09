@@ -107,10 +107,10 @@ class SavedJobIntegrationTest {
   mvc.perform(get("$path/$job").with(caller(user))).andExpect(jsonPath("$.content.requirements.length()").value(20)).andExpect(jsonPath("$.content.requirements[19].label").value("API criterion 19"))
   `when`(ai.generateJson(anyString(),anyString(),anyMap(),(any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))).thenAnswer { invocation ->
    val input=json.readTree(invocation.getArgument<String>(1)); assertThat(input["requirements"].size()).isEqualTo(20); assertThat(input["requirements"][19]["quote"].asText()).isEqualTo(quotes.last())
-   json.writeValueAsString(mapOf("assessments" to listOf(mapOf("requirementIndex" to 19,"classification" to "STRONG","reason" to "Literal API contribution","evidence" to listOf(mapOf("claimId" to claimant,"quote" to "Built APIs using Kotlin")),"question" to ""))))
+   json.writeValueAsString(mapOf("assessments" to listOf(mapOf("requirementIndex" to 19,"classification" to "STRONG","reason" to "Literal API contribution","evidenceRelation" to "DIRECT","requirementNature" to "PRACTICAL","evidence" to listOf(mapOf("claimId" to claimant,"quote" to "Built APIs using Kotlin")),"question" to ""))))
   }
   mvc.perform(post("$path/$job/match").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(matchInput(claimant)+("text" to source)))).andExpect(status().isOk).andExpect(jsonPath("$.assessments.length()").value(20)).andExpect(jsonPath("$.assessments[19].evaluated").value(true)).andExpect(jsonPath("$.assessments[0].evaluated").value(false)).andExpect(jsonPath("$.assessments[0].question").value(""))
-  mvc.perform(get("$path/$job/match").with(caller(user))).andExpect(jsonPath("$.analysis.assessments[19].classification").value("STRONG")).andExpect(jsonPath("$.analysis.assessments[0].evaluated").value(false))
+  mvc.perform(get("$path/$job/match").with(caller(user))).andExpect(jsonPath("$.analysis.assessments[19].classification").value("STRONG")).andExpect(jsonPath("$.analysis.assessments[19].evidenceRelation").value("DIRECT")).andExpect(jsonPath("$.analysis.assessments[19].requirementNature").value("PRACTICAL")).andExpect(jsonPath("$.analysis.assessments[0].evaluated").value(false))
  }
 
  private fun claim(user: String, confirmed: Boolean = true, suffix: String = "", skill: String = "Kotlin"): String {

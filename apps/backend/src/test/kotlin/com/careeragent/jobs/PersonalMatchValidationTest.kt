@@ -67,4 +67,26 @@ class PersonalMatchValidationTest {
   assertThat(value.evaluated).isTrue()
  }
 
+ @Test fun `transferable evidence cannot earn full credit or establish formal qualifications`() {
+  fun item(index:Int,relation:String,nature:String)=mapOf("requirementIndex" to index,"classification" to "STRONG","reason" to "Related API experience","question" to "","evidence" to listOf(mapOf("claimId" to claim.id,"quote" to claim.statement)),"evidenceRelation" to relation,"requirementNature" to nature)
+  val output=mapper.writeValueAsString(mapOf("assessments" to listOf(item(0,"TRANSFERABLE","PRACTICAL"),item(1,"TRANSFERABLE","FORMAL"),item(2,"DIRECT","FORMAL"),item(3,"UNKNOWN","PRACTICAL"))))
+  val result=service.parse(output,4,(0..3).toSet(),listOf(claim),"en")
+  assertThat(result.first.map { it.classification }).containsExactly(MatchKind.PARTIAL,MatchKind.CLARIFY,MatchKind.STRONG,MatchKind.CLARIFY)
+  assertThat(result.first[0].evidenceRelation).isEqualTo(EvidenceRelation.TRANSFERABLE)
+  assertThat(result.first[1].requirementNature).isEqualTo(RequirementNature.FORMAL)
+  assertThat(result.first[1].reason).contains("does not establish the formal qualification").contains("not a confirmed gap")
+  assertThat(result.first[3].reason).contains("does not establish a skill gap")
+  assertThat(result.second).isZero()
+ }
+ @Test fun `bad relation metadata becomes unassessed while literal evidence and legacy results remain readable`() {
+  val good=mapOf("requirementIndex" to 0,"classification" to "STRONG","reason" to "Direct contribution","question" to "","evidence" to listOf(mapOf("claimId" to claim.id,"quote" to claim.statement)),"evidenceRelation" to "DIRECT","requirementNature" to "PRACTICAL")
+  val bad=good + mapOf("requirementIndex" to 1,"evidenceRelation" to "EQUIVALENT")
+  val result=service.parse(mapper.writeValueAsString(mapOf("assessments" to listOf(good,bad))),2,setOf(0,1),listOf(claim),"nb")
+  assertThat(result.first[0].evidenceRelation).isEqualTo(EvidenceRelation.DIRECT)
+  assertThat(result.first[1].evaluated).isFalse();assertThat(result.first[1].question).isEmpty()
+  assertThat(result.second).isEqualTo(1)
+  val saved=com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().readValue(com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().writeValueAsString(result.first[0]),RequirementMatch::class.java)
+  assertThat(saved).isEqualTo(result.first[0])
+ }
+
 }

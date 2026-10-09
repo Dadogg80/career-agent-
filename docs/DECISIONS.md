@@ -199,3 +199,7 @@ Accepted implementation slice: [ADR 0031](adr/0031-job-specific-cv-wording.md). 
 ## 2026-10-09 — Requirement coverage and persistent answer review
 
 Accepted implementation slice: [ADR 0032](adr/0032-requirement-coverage-and-clarification-review.md). Request distinct whole-source requirements and preserve up to 128 across the joined pipeline. Separate absent AI assessments from personal questions and label incomplete coverage provisional. Persist/reuse personal answers with revision-aware editing, and provide compact source tables and help. Do not equate personal confirmation with direct requirement relevance or silently retain previous model classifications as facts. No migration, automatic retry, provider default change or destructive duplicate cleanup.
+
+### 2026-10-09 — Source-backed evidence relations and application guidance
+
+Accepted ADR [0033](adr/0033-match-evidence-relations.md): new matching output distinguishes DIRECT/TRANSFERABLE/UNKNOWN and FORMAL/PRACTICAL/OTHER. Apply conservative classification guards without inventing positive qualifications or actual gaps. Store nullable metadata in existing result JSON, retain legacy shape/readability, and derive compact application priorities from saved sources without extra AI calls. The relation/nature remain AI judgments; base-CV visibility and semantic factual verification are not completed by these tags.
