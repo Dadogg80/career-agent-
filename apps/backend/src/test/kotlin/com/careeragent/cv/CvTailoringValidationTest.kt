@@ -33,7 +33,7 @@ class CvTailoringValidationTest {
   `when`(documents.detail(identity,documentId)).thenReturn(DocumentDetail(CareerDocument(documentId,"fictional.txt","text/plain",100,"a".repeat(64),"en",true,now),text))
   val match=PersonalMatch(matchId,"en",now,emptyList(),listOf(MatchClaim(claimId,2,"Kotlin",text.substringAfter("\n\n"),"Fictional employer")),0,100,automaticEvidence=true)
   `when`(matching.load(identity,jobId)).thenReturn(match)
-  `when`(matching.compactInput(anyString(),anyList(),anyList())).thenReturn("""{"confirmedClaims":[],"candidatePassages":[]}""")
+  `when`(matching.compactInput(anyString(),anyList(),anyList(),anyList())).thenReturn("""{"confirmedClaims":[],"candidatePassages":[]}""")
   return match
  }
  private fun proposal(id:UUID=claimId,index:Int=1,criterion:Int=0)=mapOf("paragraphIndex" to index,"newText" to "Developed Kotlin APIs for a fictional employer.","reason" to "Makes the documented API contribution visible.","claimIds" to listOf(id.toString()),"requirementIndexes" to listOf(criterion))
@@ -96,4 +96,13 @@ class CvTailoringValidationTest {
   verify(documents,times(2)).detail(identity,documentId)
   assertThat(mockingDetails(jobs).invocations.map {it.method.name}).containsOnly("get")
  }
+ @Test fun `tailoring references beyond criterion twelve retain exact source and reject nonexistent indices`() {
+  val item=proposal()+("requirementIndexes" to (0 until 128).toList())
+  val parsed=service.parse(mapper.writeValueAsString(mapOf("proposals" to listOf(item))),listOf("Original text","Other original"),setOf(claimId),128)
+  assertThat(parsed.first.single().requirementIndexes).hasSize(128).contains(127)
+  assertThat(parsed.second).isZero()
+  val invalid=service.parse(mapper.writeValueAsString(mapOf("proposals" to listOf(item+("requirementIndexes" to listOf(128))))),listOf("Original text","Other original"),setOf(claimId),128)
+  assertThat(invalid.first).isEmpty();assertThat(invalid.second).isEqualTo(1)
+ }
+
 }

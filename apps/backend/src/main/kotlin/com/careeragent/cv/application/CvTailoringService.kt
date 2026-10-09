@@ -2,6 +2,7 @@ package com.careeragent.cv.application
 
 import com.careeragent.ai.application.*
 import com.careeragent.documents.application.DocumentRepository
+import com.careeragent.jobs.application.JobAnalysisLimits
 import com.careeragent.jobs.application.PersonalMatchService
 import com.careeragent.jobs.application.SavedJobRepository
 import com.careeragent.profile.application.VerifiedIdentity
@@ -81,7 +82,7 @@ class CvTailoringService(private val jobs: SavedJobRepository, private val docum
             val newText = text("newText",4000); require(newText != paragraphs[index.intValue()])
             val ids = item.path("claimIds"); require(ids.isArray && ids.size() in 1..10)
             val references = ids.map { require(it.isTextual); UUID.fromString(it.textValue()).also { id -> require(id in claims) } }.distinct()
-            val criteria = item.path("requirementIndexes"); require(criteria.isArray && criteria.size() in 1..12)
+            val criteria = item.path("requirementIndexes"); require(criteria.isArray && criteria.size() in 1..JobAnalysisLimits.REQUIREMENTS)
             val indexes = criteria.map { require(it.isIntegralNumber && it.canConvertToInt() && it.intValue() in 0 until requirements); it.intValue() }.distinct()
             found.add(CvTextProposal(index.intValue(),paragraphs[index.intValue()],newText,text("reason",600),references,indexes))
         } catch (_: Exception) { omitted++ }

@@ -48,3 +48,5 @@ Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert i
 - [0030 — Complete confirmed-profile matching](0030-complete-profile-matching.md) — accepted continuation; whole evidence, compact passages and saved-job coverage.
 
 - [0031 — Job-specific CV wording preparation](0031-job-specific-cv-wording.md) — accepted local-pilot slice; approved source-bound, page-session-only text suggestions.
+
+- [0032 — Requirement coverage and persistent clarification review](0032-requirement-coverage-and-clarification-review.md) — Accepted for implementation.

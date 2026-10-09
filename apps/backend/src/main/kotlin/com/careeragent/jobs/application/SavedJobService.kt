@@ -28,7 +28,7 @@ class SavedJobService(private val repository: SavedJobRepository) {
         try {
             require(bounded(content.title, 200) && content.text.trim().length >= 40 && bounded(content.text, 15000))
             require(content.locale in setOf("nb", "en") && content.sourceType in setOf("PASTED_TEXT", "NAV_API", "GROQ_BROWSER_EXCERPT"))
-            require(content.omittedItems >= 0 && content.requirements.size <= 12 && content.facts.size <= 10)
+            require(content.omittedItems >= 0 && content.requirements.size <= JobAnalysisLimits.REQUIREMENTS && content.facts.size <= 10)
             require(content.requirements.all { bounded(it.label, 200) && quote(it.quote, 600) })
             require(content.facts.all { bounded(it.label, 100) && bounded(it.value, 500) && quote(it.quote, 1000) })
             if (content.sourceUrl != null) {

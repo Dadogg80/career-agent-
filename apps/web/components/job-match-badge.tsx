@@ -20,7 +20,7 @@ export function JobMatchBadge({job,locale}:{job:SavedJob;locale:Locale}) {
  return <div className="saved-job-match" aria-live="polite">
   {match.isPending?<span className="hint flex items-center gap-2"><LoaderCircle size={13} className="animate-spin"/>{nb?"Henter vurdering …":"Loading assessment …"}</span>:
    match.isError?<span className="hint">{nb?"Vurdering kunne ikke hentes":"Assessment unavailable"}</span>:
-   coverage?<><Badge className="gap-1" variant={match.data?.stale?"outline":"secondary"}><Sparkles size={13}/>{coverage.percent}% {nb?"kravmatch":"requirement match"}</Badge><span className="hint">{match.data?.stale?(nb?"Profilen er endret · vurder på nytt":"Profile changed · reassess"):`${coverage.assessed}/${coverage.total} ${nb?"krav med grunnlag":"requirements with evidence"}`}</span></>:
+   coverage?<><Badge className="gap-1" variant={match.data?.stale || coverage.pending>0?"outline":"secondary"}><Sparkles size={13}/>{coverage.percent}% {nb?"kravmatch":"requirement match"}</Badge><span className="hint">{match.data?.stale?(nb?"Profilen er endret · vurder på nytt":"Profile changed · reassess"):coverage.pending>0?`${nb?"Foreløpig":"Provisional"} · ${coverage.evaluated}/${coverage.total} ${nb?"krav vurdert":"requirements assessed"}`:`${coverage.assessed}/${coverage.total} ${nb?"krav med grunnlag":"requirements with evidence"}`}</span></>:
    <span className="hint">{nb?"Klar for personlig match":"Ready for personal matching"}</span>}
  </div>;
 }

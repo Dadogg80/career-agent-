@@ -427,3 +427,11 @@ Provide an optional skippable tutorial and short contextual guidance throughout.
 5. The AI proposes up to 12 changes across literal source passages. Review original/proposed wording, reason and references; edit, approve or reject. Processed proposals leave the pending list and remain in **Processed** while the page is open. These decisions approve wording only, never add candidate facts.
 6. Quota/provider failures retain previous proposals and source information. Choose an available alternate model explicitly and approve the new recipient. Per-choice waits do not carry to another model. Changed original text, knowledge revisions or match invalidate suggestions; their original references remain readable.
 7. This milestone stops here: no application submission, new CV artifact/version or durable proposal storage. Reload/navigation clears proposal review; the original remains unchanged.
+
+## Requirement and document review continuation — 2026-10-09
+
+Advertisement extraction now requests distinct candidate criteria from the whole source instead of selecting twelve. Up to 128 source-backed requirements survive saving/reopening and matching. Invalid or absent AI assessments appear as “Not assessed”, with provisional percentage and no personal clarification form. Search and classification filters help review long matches. An excluded source preview is also unassessed, not a candidate gap.
+
+A previously confirmed matching answer remains visible. Editing updates the same claim/revision and confirms it locally; retry after failed confirmation reuses the saved draft. Current approved matching input explicitly associates personal answers with the relevant criteria. No automatic new AI request or forced positive classification follows confirmation.
+
+The document reader uses compact headings, counted icon tabs and supplementary help. Potentially missed source passages appear in a searchable bounded table. An empty pending queue links directly to documented/approved competencies. Source controls, exact quotations, original/OCR reading and approval remain available. Existing stored analyses are not silently upgraded; new analysis uses the new assessment distinction.

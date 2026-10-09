@@ -173,7 +173,7 @@ test("clarification saves personal experience and confirms it locally without an
  const assessment=sheet.locator(".match-assessment").filter({has:page.locator("summary").filter({hasText:"Kafka"})});
  await assessment.locator(":scope > summary").click();await assessment.getByText("Avklar og legg til erfaring",{exact:true}).click();
  await assessment.getByLabel("Beskriv det du selv gjorde",{exact:true}).fill("Jeg bygget en Kafka-basert hendelsesflyt.");await assessment.getByLabel("Firma eller prosjekt",{exact:true}).fill("Fictional AS");
- await assessment.getByRole("button",{name:"Bekreft og lagre i profilen",exact:true}).click();await expect(assessment).toContainText("Lagret som bekreftet kompetanse");expect(created).toBe(1);expect(reviewed).toBe(1);expect(ai).toBe(0);
+ await assessment.getByRole("button",{name:"Bekreft og lagre i profilen",exact:true}).click();await expect(assessment).toContainText("Svaret ditt er lagret");expect(created).toBe(1);expect(reviewed).toBe(1);expect(ai).toBe(0);
 });
 
 test("matching approves all 35 contributions without skill checkboxes and updates the saved job card",async({page})=>{
@@ -202,4 +202,49 @@ test("matching approves all 35 contributions without skill checkboxes and update
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.screenshot({path:"/tmp/career-full-profile-match-card.png",fullPage:true});
  await page.reload();await expect(page.locator(".saved-job-card .saved-job-match")).toContainText("67% kravmatch");expect(calls).toBe(1);
+});
+
+test("twenty stored criteria expose provisional coverage and pending assessments without candidate questions",async({page})=>{
+ const requirements=Array.from({length:20},(_,i)=>({label:`API criterion ${i}`,kind:"REQUIRED",quote:`Criterion ${i} requires API experience.`}));
+ const expanded={...job,content:{...job.content,text:requirements.map(r=>r.quote).join("\n"),requirements}};
+ const assessments=requirements.map((_,i)=>i===19?{...result.assessments[0],requirementIndex:i,evaluated:true}:{requirementIndex:i,classification:"CLARIFY",reason:"AI returnerte ingen gyldig vurdering av dette kravet.",evidence:[],question:"",evaluated:false});
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
+ await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[confirmed]}));
+ await page.route("**/api/profile/me/jobs**",r=>r.fulfill({json:r.request().url().endsWith("/match")?{...result,assessments}:[expanded]}));
+ await page.goto("/jobs/saved");await expect(page.locator(".saved-job-match")).toContainText("Foreløpig");
+ await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();const sheet=page.getByRole("dialog");
+ await expect(sheet.locator(".match-score")).toContainText("5%");await expect(sheet.locator(".match-result")).toContainText("19 av 20 krav har ikke en gyldig AI-vurdering");
+ await expect(sheet.locator(".match-assessment")).toHaveCount(20);
+ await sheet.getByRole("button",{name:/Ikke vurdert\s*19/}).click();await expect(sheet.locator(".match-assessment")).toHaveCount(19);
+ await sheet.locator(".match-assessment summary").first().click();await expect(sheet.locator(".match-clarification")).toHaveCount(0);
+ await sheet.getByRole("button",{name:/Alle\s*20/}).click();await sheet.getByRole("textbox",{name:"Finn et krav eller en kompetanse"}).fill("API criterion 19");
+ await expect(sheet.locator(".match-assessment")).toHaveCount(1);await sheet.locator(".match-assessment summary").click();await expect(sheet.locator(".match-proof")).toContainText(confirmed.statement);
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test("a previously confirmed clarification stays visible and edits the same claim instead of creating duplicates",async({page})=>{
+ let answer={...confirmed,id:pendingId,skill:"Kafka",statement:"Built and operated Kafka integrations.",context:"Fictional AS",sourceNote:`User clarification for job ${jobId}; requirement 1`,revision:2};
+ let creates=0,updates=0,reviews=0,ai=0;
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
+ await page.route("**/api/profile/me/claims**",r=>{
+  if(r.request().method()==="GET")return r.fulfill({json:[confirmed,answer]});
+  if(r.request().url().endsWith("/review")){reviews++;expect(r.request().postDataJSON()).toEqual({decision:"CONFIRM",revision:3});if(reviews===1)return r.fulfill({status:503,json:{code:"CLAIM_UNAVAILABLE"}});answer={...answer,status:"CONFIRMED",revision:4};return r.fulfill({json:answer});}
+  if(r.request().method()==="PUT"){updates++;expect(r.request().url()).toContain(pendingId);const body=r.request().postDataJSON();expect(body.revision).toBe(2);answer={...answer,...body,status:"UNVERIFIED",revision:3};return r.fulfill({json:answer});}
+  creates++;return r.fulfill({status:500,json:{code:"UNEXPECTED_CREATE"}});
+ });
+ await page.route("**/api/profile/me/jobs**",r=>{if(r.request().url().endsWith("/match")){if(r.request().method()==="POST")ai++;return r.fulfill({json:result});}return r.fulfill({json:[job]});});
+ await page.goto("/jobs/saved");await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();const sheet=page.getByRole("dialog");
+ const assessment=sheet.locator(".match-assessment").filter({has:page.locator("summary").filter({hasText:"Kafka"})});await assessment.locator(":scope > summary").click();
+ await expect(assessment).toContainText("Svaret ditt er lagret og med i grunnlaget");await assessment.getByText("Rediger det lagrede svaret",{exact:true}).click();
+ await expect(assessment.getByLabel("Beskriv det du selv gjorde",{exact:true})).toHaveValue(answer.statement);
+ await assessment.getByLabel("Beskriv det du selv gjorde",{exact:true}).fill("Built Kafka integrations and monitored delivery errors.");await assessment.getByRole("button",{name:"Bekreft og lagre i profilen",exact:true}).click();
+ await expect(assessment.getByRole("alert")).toContainText("Teksten din er beholdt");await assessment.getByRole("button",{name:"Bekreft og lagre i profilen",exact:true}).click();
+ await expect(assessment).toContainText("Svaret ditt er lagret");expect(creates).toBe(0);expect(updates).toBe(1);expect(reviews).toBe(2);expect(ai).toBe(0);
+});
+
+test("validators retain criterion 127 while rejecting unsupported overflow and duplicate assessment indices",async()=>{
+ const {isExtraction}=await import("../lib/job-requirements");const {isPersonalMatch}=await import("../lib/personal-match");
+ const requirements=Array.from({length:128},(_,i)=>({label:`Criterion ${i}`,kind:"REQUIRED",quote:"Literal source requirement"}));
+ const extraction={requirements,facts:[],omittedItems:0};expect(isExtraction(extraction)).toBe(true);expect(isExtraction({...extraction,requirements:[...requirements,requirements[0]]})).toBe(false);
+ const expanded={...result,assessments:requirements.map((_,i)=>({...result.assessments[0],requirementIndex:i}))};expect(isPersonalMatch(expanded)).toBe(true);expect(isPersonalMatch({...expanded,assessments:[...expanded.assessments,result.assessments[0]]})).toBe(false);
 });

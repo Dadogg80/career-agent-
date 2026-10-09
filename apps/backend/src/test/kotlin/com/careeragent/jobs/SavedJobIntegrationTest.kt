@@ -77,6 +77,42 @@ class SavedJobIntegrationTest {
   verifyNoInteractions(ai)
  }
 
+ @Test fun `saved personal answer retries reuse identity and rematching includes the answer association`() {
+  val user=profile(); val job=save(user)
+  val body=mapOf("skill" to "Kotlin", "statement" to "Built APIs using Kotlin", "context" to "Fictional project", "sourceNote" to "User clarification for job $job; requirement 0")
+  fun create()=mvc.perform(post("/api/profile/me/claims").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isOk).andReturn().response.contentAsString
+  val first=json.readTree(create()); val id=first["id"].asText()
+  assertThat(json.readTree(create())["id"].asText()).isEqualTo(id)
+  mvc.perform(post("/api/profile/me/claims/$id/review").with(caller(user)).with(csrf()).contentType("application/json").content("""{"revision":1,"decision":"CONFIRM"}""")).andExpect(status().isOk)
+  val retried=json.readTree(create()); assertThat(retried["revision"].asInt()).isEqualTo(2); assertThat(retried["status"].asText()).isEqualTo("CONFIRMED")
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),(any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))).thenAnswer { invocation ->
+   val input=json.readTree(invocation.getArgument<String>(1))
+   assertThat(input["userClarifications"][0]["requirementIndex"].asInt()).isZero()
+   assertThat(input["userClarifications"][0]["claimIds"][0].asText()).isEqualTo(id)
+   assertThat(input["candidatePassages"][0]["statement"].asText()).isEqualTo(body["statement"])
+   output(id)
+  }
+  repeat(2) { mvc.perform(post("$path/$job/match").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(matchInput(id)))).andExpect(status().isOk).andExpect(jsonPath("$.assessments[0].classification").value("STRONG")) }
+  mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$.length()").value(1))
+  mvc.perform(post("/api/profile/me/claims/$id/review").with(caller(user)).with(csrf()).contentType("application/json").content("""{"revision":2,"decision":"REJECT"}""")).andExpect(status().isOk)
+  mvc.perform(post("/api/profile/me/claims").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isConflict)
+  verify(ai,times(2)).generateJson(anyString(),anyString(),anyMap(),(any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))
+ }
+ @Test fun `twenty criteria survive storage full matching and incomplete provider responses without fake questions`() {
+  val user=profile(); val claimant=claim(user)
+  val quotes=(0 until 20).map { "Criterion $it requires API experience." }
+  val requirements=quotes.mapIndexed { index,quote -> mapOf("label" to "API criterion $index","kind" to "REQUIRED","quote" to quote) }
+  val source=quotes.joinToString("\n")
+  val job=save(user,content() + mapOf("text" to source,"requirements" to requirements))
+  mvc.perform(get("$path/$job").with(caller(user))).andExpect(jsonPath("$.content.requirements.length()").value(20)).andExpect(jsonPath("$.content.requirements[19].label").value("API criterion 19"))
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),(any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))).thenAnswer { invocation ->
+   val input=json.readTree(invocation.getArgument<String>(1)); assertThat(input["requirements"].size()).isEqualTo(20); assertThat(input["requirements"][19]["quote"].asText()).isEqualTo(quotes.last())
+   json.writeValueAsString(mapOf("assessments" to listOf(mapOf("requirementIndex" to 19,"classification" to "STRONG","reason" to "Literal API contribution","evidence" to listOf(mapOf("claimId" to claimant,"quote" to "Built APIs using Kotlin")),"question" to ""))))
+  }
+  mvc.perform(post("$path/$job/match").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(matchInput(claimant)+("text" to source)))).andExpect(status().isOk).andExpect(jsonPath("$.assessments.length()").value(20)).andExpect(jsonPath("$.assessments[19].evaluated").value(true)).andExpect(jsonPath("$.assessments[0].evaluated").value(false)).andExpect(jsonPath("$.assessments[0].question").value(""))
+  mvc.perform(get("$path/$job/match").with(caller(user))).andExpect(jsonPath("$.analysis.assessments[19].classification").value("STRONG")).andExpect(jsonPath("$.analysis.assessments[0].evaluated").value(false))
+ }
+
  private fun claim(user: String, confirmed: Boolean = true, suffix: String = "", skill: String = "Kotlin"): String {
   val statement=(if(confirmed) "Built APIs using Kotlin" else "Proposed APIs using Kotlin") + suffix
   val r = mvc.perform(post("/api/profile/me/claims").with(caller(user)).with(csrf()).contentType("application/json").content("""{"skill":"$skill","statement":"$statement","context":"Fictional project","sourceNote":"User statement"}""")).andExpect(status().isOk).andReturn()

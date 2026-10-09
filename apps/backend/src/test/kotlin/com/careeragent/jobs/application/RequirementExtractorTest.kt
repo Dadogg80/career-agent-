@@ -167,10 +167,10 @@ class RequirementExtractorTest {
     @Test
     fun `oversized arrays retain bounded valid items and report every omission`() {
         val result = extractor(jacksonObjectMapper().writeValueAsString(mapOf(
-            "requirements" to List(13) { mapOf("label" to "Kotlin", "kind" to "REQUIRED", "quote" to "Kotlin") },
+            "requirements" to List(129) { mapOf("label" to "Criterion $it", "kind" to "REQUIRED", "quote" to "Kotlin") },
             "facts" to List(11) { mapOf("label" to "Rolle", "value" to "Utvikler", "kind" to "ROLE", "quote" to "utvikler") },
         ))).extract(source, "en")
-        assertThat(result.requirements).hasSize(12)
+        assertThat(result.requirements).hasSize(128)
         assertThat(result.facts).hasSize(10)
         assertThat(result.omittedItems).isEqualTo(2)
     }
@@ -188,11 +188,11 @@ class RequirementExtractorTest {
     @Test
     fun `inspection is bounded even when the model returns hundreds of items`() {
         val result = extractor(jacksonObjectMapper().writeValueAsString(mapOf(
-            "requirements" to List(200) { mapOf("label" to "Kotlin", "kind" to "REQUIRED", "quote" to "Kotlin") },
+            "requirements" to List(200) { mapOf("label" to "Criterion $it", "kind" to "REQUIRED", "quote" to "Kotlin") },
             "facts" to emptyList<Any>(),
         ))).extract(source, "nb")
-        assertThat(result.requirements).hasSize(12)
-        assertThat(result.omittedItems).isEqualTo(188)
+        assertThat(result.requirements).hasSize(128)
+        assertThat(result.omittedItems).isEqualTo(72)
     }
 
     @Test
@@ -201,6 +201,43 @@ class RequirementExtractorTest {
             assertThatThrownBy { extractor(json).extract(source, "nb") }
                 .isInstanceOfSatisfying(AiFailure::class.java) { assertThat(it.reason).isEqualTo("INVALID_STRUCTURE") }
         }
+    }
+
+    @Test
+    fun `all sourced nursing requirements including late licenses and shifts survive one extraction call`() {
+        val criteria = listOf("patient assessment", "medication administration", "infection prevention", "wound care",
+            "clinical documentation", "care planning", "patient safety", "family communication", "team collaboration",
+            "handover", "emergency response", "clinical equipment", "quality improvement", "confidentiality",
+            "Norwegian communication", "supervision", "electronic patient records", "shift work",
+            "a current nursing authorization", "documented intensive care experience")
+        val quotes = criteria.map { "You must have experience with $it." }
+        val text = "Fictional nursing role.\n" + quotes.joinToString("\n")
+        var calls = 0
+        val service = RequirementExtractor(object : AiModel {
+            override fun generateJson(system: String, user: String, schema: Map<String, Any>): String {
+                calls++
+                assertThat(system).contains("every distinct", "beginning, middle and end", "licenses/authorizations", "A or equivalent B")
+                assertThat(user).isEqualTo(text)
+                return jacksonObjectMapper().writeValueAsString(mapOf("requirements" to criteria.mapIndexed { i, label ->
+                    mapOf("label" to label, "kind" to "REQUIRED", "quote" to quotes[i]) }, "facts" to emptyList<Any>()))
+            }
+        }, jacksonObjectMapper())
+        val result = service.extract(text, "en")
+        assertThat(result.requirements.map { it.label }).containsExactlyElementsOf(criteria)
+        assertThat(result.requirements.last().quote).isEqualTo(quotes.last())
+        assertThat(result.omittedItems).isZero()
+        assertThat(calls).isEqualTo(1)
+    }
+
+    @Test
+    fun `exact repeated criteria cannot inflate matching while distinct qualifications sharing a sentence remain`() {
+        val items = listOf(
+            mapOf("label" to "Kotlin", "kind" to "REQUIRED", "quote" to "Du må ha erfaring med Kotlin."),
+            mapOf("label" to "kotlin", "kind" to "REQUIRED", "quote" to "Du må ha\n erfaring med Kotlin."),
+            mapOf("label" to "Practical experience", "kind" to "REQUIRED", "quote" to "Du må ha erfaring med Kotlin."))
+        val result = extractor(jacksonObjectMapper().writeValueAsString(mapOf("requirements" to items, "facts" to emptyList<Any>()))).extract(source,"en")
+        assertThat(result.requirements.map { it.label }).containsExactly("Kotlin", "Practical experience")
+        assertThat(result.omittedItems).isEqualTo(1)
     }
 
     private fun assertInvalid(result: String) {
