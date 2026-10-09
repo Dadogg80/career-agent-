@@ -248,3 +248,27 @@ test("validators retain criterion 127 while rejecting unsupported overflow and d
  const extraction={requirements,facts:[],omittedItems:0};expect(isExtraction(extraction)).toBe(true);expect(isExtraction({...extraction,requirements:[...requirements,requirements[0]]})).toBe(false);
  const expanded={...result,assessments:requirements.map((_,i)=>({...result.assessments[0],requirementIndex:i}))};expect(isPersonalMatch(expanded)).toBe(true);expect(isPersonalMatch({...expanded,assessments:[...expanded.assessments,result.assessments[0]]})).toBe(false);
 });
+
+
+test("clarification rejection retains identity has a reversible review and never silently confirms rejected evidence",async({page})=>{
+ let answer={...confirmed,id:pendingId,skill:"Kafka",statement:"Built and operated Kafka integrations.",context:"Fictional AS",sourceNote:`User clarification for job ${jobId}; requirement 1`,revision:2};
+ let creates=0,updates=0,rejections=0,confirmations=0,ai=0;
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
+ await page.route("**/api/profile/me/claims**",r=>{
+  if(r.request().method()==="GET")return r.fulfill({json:[confirmed,answer]});
+  expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf");expect(r.request().url()).toContain(pendingId);
+  if(r.request().url().endsWith("/review")){const body=r.request().postDataJSON();expect(body.revision).toBe(answer.revision);if(body.decision==="REJECT"){rejections++;if(rejections===1)return r.fulfill({status:503,json:{code:"CLAIM_UNAVAILABLE"}});answer={...answer,status:"REJECTED",revision:3};}else{confirmations++;expect(body.decision).toBe("CONFIRM");answer={...answer,status:"CONFIRMED",revision:answer.revision+1};}return r.fulfill({json:answer});}
+  if(r.request().method()==="PUT"){updates++;const body=r.request().postDataJSON();expect(body.revision).toBe(answer.revision);answer={...answer,...body,status:"UNVERIFIED",revision:answer.revision+1};return r.fulfill({json:answer});}
+  creates++;return r.fulfill({status:500,json:{code:"UNEXPECTED_CREATE"}});
+ });
+ await page.route("**/api/profile/me/jobs**",r=>{if(r.request().url().endsWith("/match")){if(r.request().method()==="POST")ai++;return r.fulfill({json:result});}return r.fulfill({json:[job]});});
+ await page.setViewportSize({width:390,height:844});await page.goto("/jobs/saved");await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();
+ const sheet=page.getByRole("dialog"),assessment=sheet.locator(".match-assessment").filter({has:page.locator("summary").filter({hasText:"Kafka"})});await assessment.locator(":scope > summary").click();
+ await assessment.getByRole("button",{name:"Avvis dette svaret",exact:true}).click();const rejection=page.getByRole("dialog",{name:"Avvise dette svaret?",exact:true});await rejection.getByRole("button",{name:"Behold svaret",exact:true}).click();expect(rejections).toBe(0);
+ await assessment.getByRole("button",{name:"Avvis dette svaret",exact:true}).click();await rejection.getByRole("button",{name:"Ja, avvis svaret",exact:true}).click();await expect(rejection.getByRole("alert")).toContainText("Svaret er beholdt");await rejection.getByRole("button",{name:"Ja, avvis svaret",exact:true}).click();
+ await expect(assessment).toContainText("Svaret er avvist og brukes ikke i matchen");await expect(sheet.locator(".clarification-feedback")).toContainText("Historikken er beholdt");expect(confirmations).toBe(0);
+ await page.reload();await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();await assessment.locator(":scope > summary").click();await expect(assessment).toContainText("Svaret er avvist");
+ await assessment.getByText("Rediger det lagrede svaret",{exact:true}).click();await assessment.getByRole("button",{name:"Delvis erfaring",exact:true}).click();await expect(assessment).toContainText("endrer ikke matchprosenten automatisk");
+ await assessment.getByLabel("Beskriv det du selv gjorde",{exact:true}).fill("Built Kafka integrations but did not operate production deployments.");await page.screenshot({path:"/tmp/career-clarification-mobile.png",fullPage:true});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await assessment.getByRole("button",{name:"Bekreft og lagre i profilen",exact:true}).click();await expect(assessment).toContainText("Svaret ditt er lagret og med i grunnlaget");expect(creates).toBe(0);expect(updates).toBe(1);expect(confirmations).toBe(1);expect(rejections).toBe(2);expect(ai).toBe(0);
+});

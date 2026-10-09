@@ -25,3 +25,7 @@ Carry relation limits into the CV wording prompt. Preparation readiness labels i
 No new migration, profile-status change, automatic provider retry/switch, default-model change or API approval scope is introduced. Existing full confirmed-evidence inclusion, consent, budgets, staleness and immutable originals remain. AI can misclassify the nature/relation or omit details; literal validation alone cannot prove semantics. Live model tests may conservatively request clarification of transferable experience instead of assigning partial credit.
 
 Next: independently measure cross-profession criterion/relation quality and implement source-bound base-CV visibility outcomes. Durable writing changesets, exports, letters and submission remain separate deliveries.
+
+## Owner-requested clarification review extension
+
+Use the existing owned claim/review API for explicit answer rejection. Show associated confirmed, draft and rejected answers with accurate status; rejected statements are excluded from matching and remain visible for deliberate correction/reconfirmation. A separate rejection dialog, revision checks, failure retention and saved-identity reuse protect against accidental removal and duplicates. Success feedback is in the containing match panel so cache refresh does not erase the outcome. Personal/related-scope controls are writing aids; only entered wording becomes confirmed evidence. No new negative-competency taxonomy or automatic positive relevance is introduced.

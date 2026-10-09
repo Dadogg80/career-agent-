@@ -425,3 +425,6 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - I can see unresolved mandatory qualification counts on saved cards and review sources before applying. Explicit alternatives offered by the employer remain relevant; an unknown qualification is not a proven gap.
 - I can expand documented examples, transferable experience and qualifications in application preparation, inspect their sources, and recognize stale guidance. No extra provider call or claim confirmation follows reading these groups.
 - Older stored results remain readable without invented labels. Actual base-CV visibility assessment is still pending.
+
+- I can inspect the saved answer/status/context, edit its wording and confirm it with clear feedback. Related-scope writing aids do not falsely establish a complete match.
+- I can reject a saved clarification with a confirmation dialog, cancel it or retry a failed rejection. The rejected answer remains visible after reopening, excluded from matching, and can later be deliberately corrected/reconfirmed under the same identity. No automatic AI call or factual resurrection occurs.

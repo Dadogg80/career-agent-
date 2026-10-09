@@ -203,3 +203,5 @@ Accepted implementation slice: [ADR 0032](adr/0032-requirement-coverage-and-clar
 ### 2026-10-09 — Source-backed evidence relations and application guidance
 
 Accepted ADR [0033](adr/0033-match-evidence-relations.md): new matching output distinguishes DIRECT/TRANSFERABLE/UNKNOWN and FORMAL/PRACTICAL/OTHER. Apply conservative classification guards without inventing positive qualifications or actual gaps. Store nullable metadata in existing result JSON, retain legacy shape/readability, and derive compact application priorities from saved sources without extra AI calls. The relation/nature remain AI judgments; base-CV visibility and semantic factual verification are not completed by these tags.
+
+The owner additionally requested clearer clarification confirmation/rejection UX. Reuse the existing revision-checked claim review API and all owned answer statuses for display. Rejection is an excluded statement, not negative competency evidence or an actual skill gap. Keep history and allow deliberate same-entry correction/reconfirmation. Compact writing-scope aids are local guidance, not persisted match classifications.
