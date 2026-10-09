@@ -26,6 +26,12 @@ Implementation is authorized in small coherent increments. The foundation is mer
 - Bevar originaldokumenter og dokumenter hvilken versjon som hører til en søknad.
 - Hold kandidatopplysninger, dokumentinnhold og hemmeligheter utenfor Git og prosjektdokumentasjon.
 
+## Product methodology and current journey priority — 2026-10-09
+
+Read [Job matching and CV tailoring standard](docs/JOB_MATCHING_AND_CV_TAILORING_STANDARD.md) before changing extraction, matching, clarification or CV/application behavior. The owner supplied this profession-independent methodology as product direction. Its 71 numbered sections and delivery matrix distinguish target rules from current implementation; it is not a prompt to send wholesale to a provider.
+
+Current priority: review/test the joined login → document/profile → advertisement → saved job → full-profile match → Apply for this job → editable CV tailoring journey. Add compact readiness guidance, an optional tutorial and contextual help. The next milestone stops at reviewed text proposals; tailored file/version generation and letters/submission are deferred. Preserve full confirmed evidence inclusion, explicit recipient/model-bound approvals, original documents and source/revision checks. Unknown evidence is not a proven gap. Do not silently trade these owner decisions for prompt instructions about token reduction, source ranking or new enums. PR #26 is verified merged at `289dcd15e20d5b9887202425cd9360e22082d19b`. Implement and test coherent slices of the joined journey; do not merge later PRs automatically.
+
 ## Før og under implementasjon
 
 Når implementasjon er eksplisitt autorisert:

@@ -395,3 +395,11 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 
 - As a candidate, I can inspect possible period differences without parallel roles, different clients, unknown dates or separate rehires being labelled contradictory. Acceptance: exact identity and known overlapping unequal endpoints only; rejected records are excluded.
 - As a candidate, I can compare any two active career entries with their exact sources, then correct one using its current revision. Acceptance: no background AI/writes, bounded readers, responsive dialog, source-error/deleted-original states, and editing resets only the selected record's confirmation.
+
+## Planned evidence-based preparation (not yet implemented)
+
+- As a candidate, I can move from login and document upload through saved-job matching into Apply for this job without reselecting competencies or guessing the next step. Acceptance: visible prerequisites, freshness, useful partial results and mobile/keyboard navigation.
+- As a candidate, I can understand what my documents should contain and which supported formats/readability yield useful evidence, with optional tutorial/contextual help that does not block returning users.
+- As a candidate, I can distinguish a real documented gap, an unresolved question, transferable experience and a confirmed capability that is missing from my CV. Absence alone is not a confirmed gap.
+- As a candidate, I can use a selected master CV to review exact old/new wording, evidence and reasons across relevant sections, then approve/edit/reject proposals. Acceptance: confirmed facts only, original preservation, correct chronology, stale revision protection and no new tailored file/version in the next milestone.
+- As a candidate in any profession, I get profession-appropriate terminology and evidence-based recommendations without invented qualifications, motivation, outcomes or hiring probabilities.
