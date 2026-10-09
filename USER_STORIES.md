@@ -465,3 +465,9 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - I can tell whether the app is retrieving AI configuration or could not retrieve it, instead of waiting indefinitely beside a disabled button.
 - I can retry configuration retrieval without sending documents or starting an AI analysis. If a task has no configuration, the app explains that explicitly.
 - After recovery I see the selected provider/model and approve private analysis separately. Missing historical attribution is not presented as ongoing work.
+
+## Choosing a trustworthy base CV
+
+- My master CV is selected automatically for wording proposals. If none is marked, I choose the CV instead of having a certificate silently selected for me.
+- I can clear/change that choice and approve the new source separately. Selecting a CV does not require selecting competency evidence.
+- If too little text was extracted, I see guidance to choose another CV or reread/OCR the original in my profile, without spending an AI call.
