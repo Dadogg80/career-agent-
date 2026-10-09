@@ -35,3 +35,10 @@ DATABASE_PASSWORD=""
 # GEMINI_PROFILE_MODEL=
 # GEMINI_MATCH_MODEL=
 # DOCUMENT_GEMINI_BATCH_DELAY_SECONDS=5
+
+# Optional job-specific CV text suggestions (explicit per-run approval).
+# AI_TAILORING_PROVIDER=
+# Gemini default is independently gemini-3.5-flash-lite.
+# GEMINI_TAILORING_MODEL=
+# GROQ_TAILORING_MODEL=
+# TAILORING_AI_MAX_REQUESTS=5

@@ -302,7 +302,7 @@ Understand the real candidate sufficiently to identify suitable opportunities an
 
 ## Delivery matrix and acceptance
 
-This matrix separates verified foundations from target behavior. Remote main `289dcd1` includes PR #26; this document does not implement new runtime behavior.
+This matrix separates verified foundations from target behavior. Remote main `217192c` includes PR #27. The current preparation branch adds the initial apply/text-proposal slice; statuses below distinguish it from the broader target.
 
 | Standard areas | Current foundation | Next acceptance / missing behavior |
 | --- | --- | --- |
@@ -310,11 +310,11 @@ This matrix separates verified foundations from target behavior. Remote main `28
 | 5–8, 52 | Source-backed ad overview and up to 12 analyzed requirements; bounded 15,000-character ad input | Measure requirement recall, especially formal/behavioral criteria; expose partial coverage; richer taxonomy is pending |
 | 9–18, 21–22, 53–56 | Confirmed-evidence STRONG/PARTIAL/CLARIFY, literal validation, deterministic weighted coverage, inline user clarification | Explicit transferability, positively evidenced gap/formal-barrier handling and richer assessment are pending |
 | 19–20, 65, 69 | Reason per requirement and score | Concise separately labelled recruiter/hiring-manager reasoning is pending, with evidence and uncertainty |
-| 24–29, 36, 40, 57–58 | Master-document selection, original text, independent standard CV export | Base-CV selection + revision-bound visibility + editable old/new text proposals is the next product slice |
+| 24–29, 36, 40, 57–58 | Master-document selection, original text, independent standard CV export | Owned base-CV selection and source/match-bound old/new proposals are implemented in the preparation slice; exhaustive visibility assessment and durable changesets remain pending |
 | 30–35, 38–39, 43, 50 | Source reading, typed career history, context links, side-by-side period review | Cross-profession evidence/chronology/reading-order checks; complete all-section text review is pending |
 | 41–42, 44–49, 59, 66 | Independent reviewed export and manual application tracking | Tailored file/version creation, letters/answers and final package gate are explicitly deferred |
-| 51, 60–64 | Structured AI calls, model/recipient approval, exact passage packing, retained quota progress | Task-specific tailoring contracts and resumable text review; no per-stage request explosion |
-| 64–65, 70 | Individual profile/job/match screens | Joined onboarding → upload → review → job → save → match → tailoring journey, contextual help and optional tutorial |
+| 51, 60–64 | Structured AI calls, model/recipient approval, exact passage packing, retained quota progress | Separate one-call tailoring contract implemented; review is page-session-only, durable resumption remains pending |
+| 64–65, 70 | Individual profile/job/match screens | Apply readiness and optional local guide implemented; broader joined onboarding/tutorial and quality checks remain pending |
 
 ### Prioritized implementation sequence
 

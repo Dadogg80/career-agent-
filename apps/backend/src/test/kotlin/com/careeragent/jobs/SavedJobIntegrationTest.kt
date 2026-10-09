@@ -146,6 +146,43 @@ class SavedJobIntegrationTest {
   mvc.perform(post(endpoint).with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(input))).andExpect(status().isConflict)
   verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),(any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))
  }
+ @Test fun `joined source match and tailoring preserves originals and enforces owner consent CSRF and revisions`() {
+  val user=profile();val other=profile();val job=save(user);val claim=claim(user)
+  val cvText="Fictional engineer\n\nBuilt APIs using Kotlin for a fictional project and operated reliable services."
+  val upload=org.springframework.mock.web.MockMultipartFile("file","fictional-cv.txt","text/plain",cvText.toByteArray())
+  val source=mvc.perform(multipart("/api/profile/me/documents").file(upload).param("language","nb").with(caller(user)).with(csrf())).andExpect(status().isOk).andReturn()
+  val documentId=json.readTree(source.response.contentAsString)["id"].asText()
+  val task=com.careeragent.ai.application.AiTask.PERSONAL_MATCH
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(task) ?: task)).thenReturn(output(claim))
+  val assessment=mvc.perform(post("$path/$job/match").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(matchInput(claim)))).andExpect(status().isOk).andReturn()
+  val matchId=json.readTree(assessment.response.contentAsString)["id"].asText()
+  clearInvocations(ai)
+  val tailoring=com.careeragent.ai.application.AiTask.CV_TAILORING
+  val approval=com.careeragent.ai.application.AiRouting().preview(tailoring).token
+  val input=mapOf("documentId" to documentId,"text" to cvText,"matchId" to matchId,"locale" to "nb","consent" to true,"aiApproval" to approval)
+  val endpoint="$path/$job/tailoring"
+  fun send(subject:String,body:Map<String,Any> = input)=mvc.perform(post(endpoint).with(caller(subject)).with(csrf()).contentType("application/json").content(json.writeValueAsString(body)))
+  send(other).andExpect(status().isNotFound)
+  send(user,input+("consent" to false)).andExpect(status().isBadRequest)
+  send(user,input+("ownerId" to other)).andExpect(status().isBadRequest)
+  mvc.perform(post(endpoint).with(caller(user)).contentType("application/json").content(json.writeValueAsString(input))).andExpect(status().isForbidden)
+  mvc.perform(post(endpoint).with(csrf()).contentType("application/json").content(json.writeValueAsString(input))).andExpect(status().isUnauthorized)
+  verifyNoInteractions(ai)
+  val generated=json.writeValueAsString(mapOf("proposals" to listOf(mapOf("paragraphIndex" to 1,"newText" to "Utviklet Kotlin-API-er for et fiktivt prosjekt.","reason" to "Synliggjør dokumentert API-erfaring.","claimIds" to listOf(claim),"requirementIndexes" to listOf(0)))))
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(tailoring) ?: tailoring)).thenAnswer { invocation ->
+   val sent=json.readTree(invocation.getArgument<String>(1))
+   assertThat(sent["baseParagraphs"].map {it["text"].asText()}).containsExactly("Fictional engineer",cvText.substringAfter("\n\n"))
+   assertThat(sent["jobAndEvidence"]["confirmedClaims"].size()).isEqualTo(1)
+   generated
+  }
+  send(user).andExpect(status().isOk).andExpect(header().string("Cache-Control","no-store"))
+   .andExpect(jsonPath("$.proposals[0].oldText").value(cvText.substringAfter("\n\n"))).andExpect(jsonPath("$.provider").value("Groq"))
+  mvc.perform(get("/api/profile/me/documents/$documentId").with(caller(user))).andExpect(jsonPath("$.text").value(cvText))
+  mvc.perform(get("/api/profile/me/cvs").with(caller(user))).andExpect(jsonPath("$.length()").value(0))
+  mvc.perform(post("/api/profile/me/claims/$claim/review").with(caller(user)).with(csrf()).contentType("application/json").content("""{"decision":"REJECT","revision":2}""")).andExpect(status().isOk)
+  send(user).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("CV_SOURCE_CONFLICT"))
+  verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),eq(tailoring) ?: tailoring)
+ }
  companion object {
   @Container @JvmStatic val postgres = PostgreSQLContainer<Nothing>("postgres@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826")
   @DynamicPropertySource @JvmStatic fun database(registry: DynamicPropertyRegistry) { registry.add("spring.datasource.url", postgres::getJdbcUrl); registry.add("spring.datasource.username", postgres::getUsername); registry.add("spring.datasource.password", postgres::getPassword) }

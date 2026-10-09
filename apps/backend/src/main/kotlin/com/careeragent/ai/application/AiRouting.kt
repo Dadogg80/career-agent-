@@ -19,13 +19,14 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
             AiTask.DOCUMENT_EXTRACTION -> "DOCUMENT"
             AiTask.PROFILE_SUMMARY -> "PROFILE"
             AiTask.PERSONAL_MATCH -> "MATCH"
+            AiTask.CV_TAILORING -> "TAILORING"
         }
         fun value(name: String, fallback: String) = environment.getProperty(name)?.trim()?.takeIf { it.isNotEmpty() } ?: fallback
         val provider = explicitProvider?.lowercase() ?: value("AI_${suffix}_PROVIDER", value("AI_PROVIDER", "groq")).lowercase()
         val defaultModel = when (provider) {
             "groq" -> "openai/gpt-oss-20b"
             "gemini" -> when (task) {
-                AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY -> "gemini-3.5-flash-lite"
+                AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY, AiTask.CV_TAILORING -> "gemini-3.5-flash-lite"
                 else -> value("GEMINI_MODEL", "gemini-3.5-flash")
             }
             else -> throw AiFailure("AI_NOT_CONFIGURED", 503)

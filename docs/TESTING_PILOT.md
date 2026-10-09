@@ -91,3 +91,11 @@ Backend integration tests use real PostgreSQL and a mocked model for large profi
 ## Career comparison regression
 
 Use fictional entries with the same formal title/employer/client/delivery role and overlapping unequal explicit periods. Verify the possible-difference count, then open the comparison: only two owned evidence reads, no AI or write. Correct one endpoint via the existing editor; verify UNVERIFIED status, refreshed count and both records retained. Compare different roles/companies manually without automatic contradiction labels. Unknown dates, distinct clients/roles, rejected entries and disjoint rehires must not enter the candidate list. Check deleted-original wording, one-source failure, English labels and 390px dialog/page overflow.
+
+## Job-specific wording preparation
+
+Open an owned saved job's **Apply for this job** action (not an external submission). Check experience/current full-profile match/base-CV readiness, open/close the guide, and inspect the complete source preview. A missing readable source or stale/legacy match must block new proposals while retaining the saved ad. Choose a model and separately approve the current request.
+
+Compare original/proposed wording and cited criteria/confirmed contributions. Edit and approve/reject; pending counts must decrease and processed wording remain inspectable. Changing source/claims/match invalidates current suggestions, whose original references remain available. On quota failure, retain previous proposals; changing model requires renewed consent and must never auto-send. Try English and 390px layouts. Reload/navigation clears page-session-only proposals and decisions. Original text/files, profile facts and existing CV versions must remain unchanged.
+
+The new browser tests use fictional endpoint fixtures. Backend tests exercise real PostgreSQL, authenticated MockMvc principals, original storage and CSRF, with a mocked model. They do not certify live provider prose or a real interactive OIDC sign-in. Normal tests make no provider calls or transmit owner documents.

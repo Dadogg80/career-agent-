@@ -46,3 +46,5 @@ Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert i
 - [0029 — Revision-aware competency and career relationships](0029-competency-career-context.md) — accepted local pilot; owned source-supported links and explicit local review.
 
 - [0030 — Complete confirmed-profile matching](0030-complete-profile-matching.md) — accepted continuation; whole evidence, compact passages and saved-job coverage.
+
+- [0031 — Job-specific CV wording preparation](0031-job-specific-cv-wording.md) — accepted local-pilot slice; approved source-bound, page-session-only text suggestions.

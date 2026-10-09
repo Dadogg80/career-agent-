@@ -403,3 +403,11 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - As a candidate, I can distinguish a real documented gap, an unresolved question, transferable experience and a confirmed capability that is missing from my CV. Absence alone is not a confirmed gap.
 - As a candidate, I can use a selected master CV to review exact old/new wording, evidence and reasons across relevant sections, then approve/edit/reject proposals. Acceptance: confirmed facts only, original preservation, correct chronology, stale revision protection and no new tailored file/version in the next milestone.
 - As a candidate in any profession, I get profession-appropriate terminology and evidence-based recommendations without invented qualifications, motivation, outcomes or hiring probabilities.
+
+## Implemented preparation slice
+
+- A candidate opens a saved job's dedicated preparation page, sees prerequisites and chooses their owned master/base CV without reselecting competencies.
+- A candidate explicitly approves the visible provider/model and complete supported source before one AI request. Wrong-task consent, other owners, missing CSRF and stale source/match revisions cannot produce current proposals.
+- A candidate compares exact old/new wording with references, edits it and approves/rejects it; pending counts exclude processed proposals. The original and profile facts are unchanged.
+- Quota failures retain existing proposals. Model changes clear consent and permit an explicit alternate-model request; no automatic fallback/retry occurs.
+- Limits: up to 12 text changes, current matching's 12 criteria, page-session review only, no generated tailored file and no deterministic guarantee of factual/semantic completeness.
