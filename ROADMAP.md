@@ -4,7 +4,7 @@ Status checked against remote main on 2026-10-09. Deliver tested slices of a joi
 
 ## Current status
 
-Remote main `289dcd1` includes documentary profile imports, grouped skills, source-backed history, persistent competency review, candidate presentation and explained matching/inline clarification. PRs #20–24 add selectable Flash/Lite, source inventories, bounded follow-up, context/date corrections, revision-aware career links and offline expected-fact benchmarking. PR #25 includes the full supported confirmed profile automatically and shows saved coverage on job cards. PR #26 adds conservative period/source comparison; it does not persist conflict decisions.
+Remote main `217192c` includes documentary profile imports, grouped skills, source-backed history, persistent competency review, candidate presentation and explained matching/inline clarification. PRs #20–24 add selectable Flash/Lite, source inventories, bounded follow-up, context/date corrections, revision-aware career links and offline expected-fact benchmarking. PR #25 includes the full supported confirmed profile automatically and shows saved coverage on job cards. PR #26 adds conservative period/source comparison; it does not persist conflict decisions.
 
 ## Current priority: joined journey through CV text tailoring
 
@@ -17,7 +17,7 @@ The owner adopted [the 71-section product standard](docs/JOB_MATCHING_AND_CV_TAI
 5. Verify the joined flow again with mobile/keyboard UX, quotas, invalid/partial model output, unreadable documents, consent changes, missing/stale evidence and source reading order. Publish actual validation and remaining limits.
 6. Later: tailored versions/export, application answers/letters, final package gate, discovery/interview support and online hosting. Durable period decisions and broader knowledge normalization remain later slices.
 
-Milestone: a candidate reaches useful reviewed role-specific text proposals with minimal manual work. This is not APPLICATION_READY. Existing standard export and manual tracking remain available independently. New apply preparation, visibility analysis, targeted AI writing and tutorial are not implemented by this documentation change.
+Milestone: a candidate reaches useful reviewed role-specific text proposals with minimal manual work. This is not APPLICATION_READY. Existing standard export and manual tracking remain available independently. The current preparation branch implements the apply entry, readiness/base-CV selection, a skippable local guide and evidence-linked old/new text proposals. Proposal review is page-session-only, not a durable changeset or exhaustive visibility analysis. Richer recommendations and broader tutorial coverage remain pending.
 
 | Capability | Actual status |
 | --- | --- |
@@ -109,3 +109,11 @@ The owner prioritized complete automatic matching and job-card percentages ahead
 ## Career history comparison — 2026-10-09
 
 PR #25 is verified merged at `d2fbf25`. Current `feat/career-period-review` adds a local candidate-difference panel for exact role/employer/client/delivery-role identities with known overlapping, unequal month periods. Unknown dates, different roles/clients and disjoint rehires are not automatically flagged. Any two active history entries can be compared manually, including company/project wording and on-demand exact documentary evidence. Corrections reuse existing revision-checked editing and require renewed factual confirmation. No automatic merging, AI request or new persistence is introduced. Durable keep-both/dismissal records, aliases, source-authority ranking and generalized company/project/period reconciliation remain pending.
+
+## Job-specific application preparation — 2026-10-09
+
+Based on verified merged PR #27 (`217192c`). Saved cards and match results now link to `/jobs/{jobId}/apply`. The page retains job context, checks confirmed evidence/current automatic match/readable base CV, defaults to the owned master document, and explains source formats and requirement percentages. An optional short guide is skippable.
+
+A separate recipient/model-approved `CV_TAILORING` task receives the entire supported base text and confirmed match snapshot; long paragraphs are automatically divided into literal passages, not sampled. Suggestions expose exact original text, editable proposed wording, reasons and claim/criterion references. Approved/rejected wording leaves the pending queue. No profile fact, original or exported CV version is written. Suggestions/decisions are page-session-only and disappear on navigation/reload. Changes to match/evidence/source invalidate current approval; valid references are not a guarantee that generated prose is semantically true.
+
+Next: measure cross-profession requirement recall (including the existing 12-criterion ceiling), improve CV visibility/transferability assessments and broader joined onboarding. Durable proposal review/export, letter writing and submission remain deferred.

@@ -98,3 +98,7 @@ AI_PROFILE_PROVIDER=gemini
 Provider selection is unchanged; an unset provider still uses Groq. No ignored `.env` is modified by this change. Restart after updating the application or configuration. An existing approved run does not silently change model: inspect and approve the displayed new selection before further private processing. Saved results retain actual original model attribution.
 
 Active project/tier/model quotas must be checked in AI Studio; model splitting cannot guarantee capacity. Antigravity is not a generateContent model ID and cannot be substituted into these variables. See [Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite) and [rate limits](https://ai.google.dev/gemini-api/docs/rate-limits).
+
+## CV wording suggestions
+
+`CV_TAILORING` has independent `AI_TAILORING_PROVIDER`, `GEMINI_TAILORING_MODEL` and `GROQ_TAILORING_MODEL` overrides. Unset provider still uses the general provider (Groq if unset); Gemini defaults independently to `gemini-3.5-flash-lite`. The same explicit Flash/Lite options and recipient/model fingerprints apply. Configure `TAILORING_AI_MAX_REQUESTS` (default 5 attempts per backend process) separately from matching. One request sends complete supported base text, advertisement and all confirmed match claims; source checks and quotas still apply. No automatic fallback, remote file upload or new CV artifact is introduced.

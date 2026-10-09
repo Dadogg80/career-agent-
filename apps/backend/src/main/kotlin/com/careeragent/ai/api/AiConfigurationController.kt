@@ -14,9 +14,9 @@ class AiConfigurationController(private val routing: AiRouting,
         "sourceBrowser" to AiSelection("Groq",browserModel),
         "documents" to routing.preview(AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY),
         "documentExcerpt" to routing.preview(AiTask.DOCUMENT_EXTRACTION),
-        "job" to routing.preview(AiTask.JOB_ANALYSIS), "matching" to routing.preview(AiTask.PERSONAL_MATCH),
+        "job" to routing.preview(AiTask.JOB_ANALYSIS), "matching" to routing.preview(AiTask.PERSONAL_MATCH), "tailoring" to routing.preview(AiTask.CV_TAILORING),
         "options" to mapOf("job" to routing.options(AiTask.JOB_ANALYSIS),"documents" to routing.options(AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY),
-            "documentExcerpt" to routing.options(AiTask.DOCUMENT_EXTRACTION), "matching" to routing.options(AiTask.PERSONAL_MATCH))))
+            "documentExcerpt" to routing.options(AiTask.DOCUMENT_EXTRACTION), "matching" to routing.options(AiTask.PERSONAL_MATCH), "tailoring" to routing.options(AiTask.CV_TAILORING))))
     @ExceptionHandler(AiFailure::class) fun failed(error: AiFailure) = ResponseEntity.status(error.httpStatus)
         .header("Cache-Control", "no-store").body(mapOf("code" to error.code))
 }

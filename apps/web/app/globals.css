@@ -227,6 +227,20 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 .career-entry p { margin-top:.4rem; font-size:.85rem; line-height:1.6; }
 .career-entry-description { white-space:pre-wrap; overflow-wrap:anywhere; }
 .career-entry-dialog { max-width:650px; max-height:92dvh; overflow:auto; }
+.application-preparation { display:grid; gap:1.25rem; }
+.preparation-readiness { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; }
+.preparation-readiness p { margin:.65rem 0; overflow-wrap:anywhere; }
+.preparation-readiness small { font-size:.8rem; line-height:1.5; }
+.application-preparation select { width:100%; margin:.6rem 0 1rem; }
+.preparation-guide { list-style:decimal; padding-left:1.3rem; display:grid; gap:.7rem; }
+.preparation-match>summary { cursor:pointer; font-weight:600; padding:.5rem 0; }
+.tailoring-proposal { border:1px solid var(--border); border-radius:.8rem; padding:1rem; margin-top:1rem; }
+.tailoring-text-columns { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; margin:1rem 0; }
+.tailoring-text-columns>div { min-width:0; }
+.tailoring-text-columns p { white-space:pre-wrap; overflow-wrap:anywhere; font-size:.85rem; line-height:1.6; max-height:16rem; overflow:auto; }
+.tailoring-proposal details { font-size:.85rem; max-height:16rem; overflow:auto; }
+.tailoring-proposal blockquote,.tailoring-proposal details p { margin:.6rem 0; overflow-wrap:anywhere; }
+@media(max-width:700px) { .preparation-readiness,.tailoring-text-columns { grid-template-columns:1fr; } }
 .career-comparison { margin:1rem 0; padding:1rem; border:1px solid var(--border); border-radius:.8rem; background:var(--background); }
 .career-comparison summary { cursor:pointer; margin-top:.7rem; font-size:.85rem; font-weight:600; }
 .career-difference-list { display:grid; gap:.5rem; margin-top:.75rem; }

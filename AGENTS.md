@@ -106,3 +106,7 @@ PR #24 is verified merged at `dafe2c385152d9993f9225abbbd5b4d6b21b7758`; main Fo
 ## Career comparison continuation — 2026-10-09
 
 PR #25 is verified merged at `d2fbf252bf52063b4729b682f23327eb3a037b35`. Continue on `feat/career-period-review`: a conservative local history comparison, exact identity/known overlapping period candidate detection and on-demand documentary evidence. Never infer that parallel roles or older ongoing CVs are wrong; no fuzzy alias merge or automatic factual edit. Corrections reuse existing revision/confirmation rules. Durable dismissals and generalized conflicts remain pending. Test and prepare a PR; do not merge automatically.
+
+## Job-specific preparation continuation — 2026-10-09
+
+PR #27 is verified merged at `217192cd856dbac14ca05eb3640483c94130d9ac`. Continue on `feat/job-application-preparation`, ADR 0031. The current slice joins owned saved jobs/current automatic full-profile matching to selected base-CV text proposals. Retain complete supported confirmed evidence, exact source-text rechecks, CSRF/ownership and separate `CV_TAILORING` recipient/model consent. Wording review is page-session-only; never imply persisted changesets, factual promotion, a new tailored file or external submission. Original/reference snapshots remain readable after staleness. Broader requirement recall/visibility/transferability and onboarding are next slices. Test and prepare a PR; no automatic merge authorization.

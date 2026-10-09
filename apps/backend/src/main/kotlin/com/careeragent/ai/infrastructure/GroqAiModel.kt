@@ -26,6 +26,7 @@ class GroqAiModel(
     @Value("\${GROQ_DOCUMENT_MODEL:}") private val documentModel: String = "",
     @Value("\${GROQ_PROFILE_MODEL:}") private val profileModel: String = "",
     @Value("\${GROQ_MATCH_MODEL:}") private val matchModel: String = "",
+    @Value("\${GROQ_TAILORING_MODEL:}") private val tailoringModel: String = "",
 ) : AiModel {
     private val logger = LoggerFactory.getLogger(javaClass)
     private val client: HttpClient = HttpClient.newBuilder()
@@ -57,7 +58,7 @@ class GroqAiModel(
     override fun generateJson(system: String, user: String, schema: Map<String, Any>): String = generateJson(system,user,schema,AiTask.JOB_ANALYSIS)
 
     internal fun requestBody(system:String,user:String,schema:Map<String,Any>,task:AiTask, explicitModel:String? = null):Map<String,Any> {
-        val selected=explicitModel ?: when(task) { AiTask.JOB_ANALYSIS->jobModel; AiTask.DOCUMENT_EXTRACTION->documentModel; AiTask.PROFILE_SUMMARY->profileModel; AiTask.PERSONAL_MATCH->matchModel }.ifBlank { model }
+        val selected=explicitModel ?: when(task) { AiTask.JOB_ANALYSIS->jobModel; AiTask.DOCUMENT_EXTRACTION->documentModel; AiTask.PROFILE_SUMMARY->profileModel; AiTask.PERSONAL_MATCH->matchModel; AiTask.CV_TAILORING->tailoringModel }.ifBlank { model }
         // Only models verified by Groq's strict-JSON documentation can be configured here.
         if(selected !in setOf("openai/gpt-oss-20b","openai/gpt-oss-120b","qwen/qwen3.8-27b"))throw AiFailure("AI_NOT_CONFIGURED",503)
         val result=linkedMapOf<String,Any>("model" to selected,"reasoning_effort" to "low",
