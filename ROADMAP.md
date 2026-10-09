@@ -1,10 +1,23 @@
 # Career Agent roadmap
 
-Status checked against remote main on 2026-10-08; the owner authorized publishing and merging the tested local-pilot delivery. Deliver small tested increments; branch implementation is not a merged release.
+Status checked against remote main on 2026-10-09. Deliver tested slices of a joined user journey; a specification or branch is not a released capability. Do not assume authorization to merge subsequent PRs.
 
 ## Current status
 
-Remote main `dafe2c3` includes documentary profile imports, grouped skill cards, persistent review, candidate presentation, automatic matching evidence, explained percentages and inline clarification. PRs #20–22 add selectable Flash/Lite models, source inventories, bounded follow-up and corrected context/date precision. PR #23 adds revision-aware sourced competency-to-career relationships (ADR 0029); its Foundation checks passed. PR #24 merged the offline reviewed-fact evaluator and cross-portion list recovery. Current `feat/full-profile-job-match` removes manual evidence selection and the 30-contribution cutoff, includes the complete confirmed profile and exposes persisted coverage on saved-job cards. Full semantic judging, generalized relationships and conflict reconciliation remain pending.
+Remote main `289dcd1` includes documentary profile imports, grouped skills, source-backed history, persistent competency review, candidate presentation and explained matching/inline clarification. PRs #20–24 add selectable Flash/Lite, source inventories, bounded follow-up, context/date corrections, revision-aware career links and offline expected-fact benchmarking. PR #25 includes the full supported confirmed profile automatically and shows saved coverage on job cards. PR #26 adds conservative period/source comparison; it does not persist conflict decisions.
+
+## Current priority: joined journey through CV text tailoring
+
+The owner adopted [the 71-section product standard](docs/JOB_MATCHING_AND_CV_TAILORING_STANDARD.md). That document maps product principles to current foundations, missing behavior and acceptance fixtures. Prioritize the following sequence over further isolated period-review work:
+
+1. Review and test login → documents/profile → ad analysis → saved job → complete-evidence match; identify real UX and failure-recovery defects. Distinguish mocked browser, real persistence/identity and actual provider tests.
+2. Add “Apply for this job” on cards/results, guided readiness, base-CV selection and clear upload prerequisites. This opens preparation and never submits externally. Introduce short page guidance, contextual help and an optional skippable tutorial.
+3. Compare current-CV visibility with confirmed evidence and propose section/paragraph changes: exact old/new text, reasons, requirement/evidence references and approve/edit/reject. Review all relevant sections, not just the opening summary. Preserve the original; no new tailored CV file/version in this milestone.
+4. Measure cross-profession requirement/evidence coverage, especially the current 12-requirement limit. Add explicit transferability, recruiter/hiring-manager assessment and positively evidenced barriers without confusing uncertainty with a real gap. Keep full confirmed evidence until a measured retrieval alternative is accepted.
+5. Verify the joined flow again with mobile/keyboard UX, quotas, invalid/partial model output, unreadable documents, consent changes, missing/stale evidence and source reading order. Publish actual validation and remaining limits.
+6. Later: tailored versions/export, application answers/letters, final package gate, discovery/interview support and online hosting. Durable period decisions and broader knowledge normalization remain later slices.
+
+Milestone: a candidate reaches useful reviewed role-specific text proposals with minimal manual work. This is not APPLICATION_READY. Existing standard export and manual tracking remain available independently. New apply preparation, visibility analysis, targeted AI writing and tutorial are not implemented by this documentation change.
 
 | Capability | Actual status |
 | --- | --- |

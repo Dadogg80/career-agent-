@@ -411,3 +411,9 @@ Open a saved job, inspect the compact recipient/model preview and approve one an
 ## Compare career history and documentary periods
 
 Open Work and education → expand career history → inspect counted possible period differences or choose Compare career entries → view two saved records and documentary quotations side by side (stacked on mobile). Sources load only when opened. Choose another entry to compare employer/client/role wording explicitly. An old ongoing CV and a newer end date are possible differences, not automatic errors. Closing changes nothing. Correct this entry opens the existing prefilled editor; saving resets confirmation and refreshes the derived comparison. Source failure leaves the other record and quotations visible; reopen to retry. Deleted originals keep their existing labelled quotations.
+
+## Planned joined preparation journey (not implemented)
+
+Sign in → upload a CV and optional project accounts/certificates → inspect document reading and generated profile → correct sourced knowledge → analyze/save an advertisement → approve automatic matching → clarify inline → choose Apply for this job from the saved card or match result → inspect readiness and choose the base CV → approve the displayed AI recipient/text → review visibility and section-specific changes → approve, edit or reject text proposals. Preserve the original and stop before creating a new tailored CV version.
+
+Provide an optional skippable tutorial and short contextual guidance throughout. Missing evidence links directly to relevant upload/review actions; explain useful document contents and actually supported formats. A score is documented coverage, not hiring probability. Unresolved criteria/formal barriers remain visible; no arbitrary score gate, forced manual skill selection or automatic external submission. See the product standard for contract and quality rules.
