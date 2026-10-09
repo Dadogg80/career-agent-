@@ -224,3 +224,7 @@ Accepted [ADR 0034](adr/0034-base-cv-visibility.md). Combine visibility and word
 ## 2026-10-09 — Approved wording plain-text handoff
 
 Accepted [ADR 0035](adr/0035-reviewed-cv-text-handoff.md). Offer explicit local preview/copy from the exact base source and approved changes, preserve untouched text and reject stale/current-invalid output. Clipboard denial is recoverable through the preview. No persistent CV version, original mutation, provider request or profile confirmation is implied.
+
+## Source-neutral advertisement details — 2026-10-09
+
+Accepted [ADR 0038](adr/0038-source-neutral-advertisement-details.md): literal received-text practical fields supplement partial AI results and saved snapshots; conservative source wording governs new requirement importance. No provider default, consent, URL adapter or database migration changes. Complete original received text remains available, with explicit disclosure of missing details and existing snapshot bounds.

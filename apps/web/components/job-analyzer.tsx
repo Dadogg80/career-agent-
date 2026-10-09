@@ -1,4 +1,5 @@
 "use client";
+import { practicalOverviewFacts } from "../lib/advertisement-text";
 import { retryAfterSeconds as parseRetryAfter, retryWaitLabel } from "../lib/retry-after";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -236,7 +237,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
   const outdated = result !== null && result.source !== text;
   const currentManualFacts = result ? manualFacts.filter(item => item.source === result.source) : [];
   const isSourceExcerpt = Boolean(result?.imported && ["GROQ_BROWSER_EXCERPT", "GEMINI_URL_CONTEXT_EXCERPT"].includes(result.imported.sourceType ?? ""));
-  const overviewFacts = result ? [...result.facts, ...currentManualFacts.map(item => item.fact)] : [];
+  const overviewFacts = result ? practicalOverviewFacts(result.source, [...result.facts, ...currentManualFacts.map(item => item.fact)]) : [];
   const requirementCounts = result ? [
     { label: t.requiredCount, count: result.requirements.filter(requirement => requirement.kind === "REQUIRED").length, icon: ShieldCheck, tone: "required" },
     { label: t.preferredCount, count: result.requirements.filter(requirement => requirement.kind === "PREFERRED").length, icon: Sparkles, tone: "preferred" },
@@ -331,7 +332,8 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
             {result.locale !== locale && <p className="hint">{t.otherLanguage}</p>}
             {(result.analysisFailed || result.refreshFailed) && <WorkflowNotice code={error ?? "AI_INVALID_RESULT"} locale={locale} retained previous={!!result.refreshFailed}/> }
             <JobOverview locallyOrganized={!!result.analysisFailed} sourceText={result.source} facts={overviewFacts} locale={locale} sourceLocale={result.locale} fallbackText={result.analysisFailed ? result.source : undefined} sourceReaderRef={sourceReaderRef} />
-            <SaveJob key={`save-${resultRevision}`} disabled={outdated || pending} content={{ title: result.imported?.title.slice(0, 200) ?? (locale === "nb" ? "Stillingsannonse" : "Job advertisement"), text: result.source, locale: result.locale, sourceUrl: result.imported?.sourceUrl ?? null, sourceType: result.imported?.sourceType ?? (result.imported ? "NAV_API" : "PASTED_TEXT"), retrievedAt: result.imported?.retrievedAt ?? null, requirements: result.requirements, facts: overviewFacts, omittedItems: result.omittedItems }}/>
+            {overviewFacts.length > 20 && <p className="notice">{locale === "nb" ? "Mer enn 20 kildeopplysninger er funnet. Hele teksten vises, men denne stillingsversjonen kan ikke lagres med alle opplysningene ennå." : "More than 20 sourced details were found. All text remains readable, but this job snapshot cannot yet save every detail."}</p>}
+            <SaveJob key={`save-${resultRevision}`} disabled={outdated || pending || overviewFacts.length > 20} content={{ title: result.imported?.title.slice(0, 200) ?? (locale === "nb" ? "Stillingsannonse" : "Job advertisement"), text: result.source, locale: result.locale, sourceUrl: result.imported?.sourceUrl ?? null, sourceType: result.imported?.sourceType ?? (result.imported ? "NAV_API" : "PASTED_TEXT"), retrievedAt: result.imported?.retrievedAt ?? null, requirements: result.requirements, facts: overviewFacts, omittedItems: result.omittedItems }}/>
             {!result.analysisFailed && <RequirementResults key={`requirements-${resultRevision}`} requirements={result.requirements} source={result.source} locale={locale} resultLocale={result.locale} browserExcerpt={isSourceExcerpt} outdated={outdated} />}
             <details className="source-evidence"><summary>{t.evidence}</summary><p className="hint">{t.sourceTitle}</p>{result.imported && <p><a href={result.imported.sourceUrl} target="_blank" rel="noopener noreferrer">{t.sourceLink}</a> · {t.retrieved}: {new Date(result.imported.retrievedAt).toLocaleString(locale === "nb" ? "nb-NO" : "en-US")}</p>}</details>
           </section>}

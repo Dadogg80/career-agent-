@@ -453,3 +453,9 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - I can preview and copy the complete plain CV text containing only the changes I approved, without assembling paragraphs manually.
 - Unreviewed/rejected suggestions keep the original wording; changed or unavailable evidence prevents copying as current.
 - Clipboard failure preserves a readable/selectable preview. I understand this is plain text, not preserved DOCX/PDF layout, a saved CV version or an application submission.
+
+## Reliable practical advertisement information
+
+- I can see published contact endpoints, deadline, location and employment fields from received text even when AI supplies a partial answer or fails, regardless of the source website.
+- I can inspect literal source quotations and save these details with the original received text. Missing details are not invented; exceeding the existing snapshot bound is disclosed before saving.
+- A vague qualification heading does not silently become a mandatory requirement. Explicit mandatory/preferred wording governs new results; unsupported importance remains unclear.

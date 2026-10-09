@@ -45,7 +45,7 @@ test("analysis rejection still displays the received advertisement and permits a
   await page.getByRole("button", { name: "Analyser lenke", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Example developer", exact: true })).toBeVisible();
   await expect(page.locator(".fallback-advertisement")).toHaveText(text);
-  await expect(page.locator(".job-fact-contact")).toContainText("Ikke identifisert i analysen. Se annonseteksten eller originalannonsen.");
+  await expect(page.locator(".job-fact-contact")).toContainText("Ikke oppgitt i hentet tekst. Se annonseteksten eller originalannonsen.");
   await expect(page.locator(".empty-state")).toHaveCount(0);
   await page.getByRole("button", { name: "Analyser lenke", exact: true }).click();
   await expect(page.locator(".employer-card")).toContainText("Example AS bygger tjenester.");
@@ -115,6 +115,9 @@ test("an omitted AI detail can be reviewed and added manually with an exact sour
   await dialog.getByRole("button", { name: "Lagre versjonen" }).click();
   await expect(page.getByRole("link", { name: "Lagret · Se mine stillinger" })).toBeVisible();
   expect(savedOmissions).toBe(8);
-  expect(savedFacts).toEqual([{ kind: "LOCATION", label: "Manuelt fra annonsen", value: "Oslo og Bergen", quote: "Arbeidssted: Oslo og Bergen" }]);
+  expect(savedFacts).toEqual([
+    { kind: "LOCATION", label: "Manuelt fra annonsen", value: "Oslo og Bergen", quote: "Arbeidssted: Oslo og Bergen" },
+    { kind: "DEADLINE", label: "Søknadsfrist", value: "30.10.2026", quote: "Søknadsfrist: 30.10.2026" },
+  ]);
   expect(analysisCalls).toBe(1);
 });
