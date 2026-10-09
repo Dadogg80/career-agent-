@@ -118,6 +118,13 @@ A separate recipient/model-approved `CV_TAILORING` task receives the entire supp
 
 Next: measure cross-profession requirement recall (including the existing 12-criterion ceiling), improve CV visibility/transferability assessments and broader joined onboarding. Durable proposal review/export, letter writing and submission remain deferred.
 
+
+## Guided workspace continuation — 2026-10-09
+
+An independent frontend slice from PR #30/main `9df2ae4` adds an optional five-step dashboard guide, document metadata counts/direct navigation and saved-data-aware next actions. PR #31 (base-CV visibility) remained open with both Foundation checks successful when this work started; this slice does not depend on it or merge it. Opening the guide spends no AI quota.
+
+Next: measure matching/visibility semantics against independently reviewed cross-profession expectations, then inspect the joined document/profile → saved match → preparation journey for concrete UX defects. Durable proposal persistence, tailored files, letters/submission and hosting remain later. Development validation is focused on affected behavior, with no live provider calls by default; GitHub retains the required full regression.
+
 ## Requirement and clarification quality slice — 2026-10-09
 
 Implemented on `feat/job-requirement-coverage` (ADR 0032): whole-source criterion instructions, removal of the twelve-criterion selection across storage/matching/tailoring references, defensive 128 requirement bound, explicit unassessed status/provisional coverage, search/filters, saved personal-answer continuity and compact document review/source tables. Exact source checks, full confirmed evidence and separate AI approvals remain.
@@ -134,9 +141,3 @@ Implemented on `feat/match-evidence-explanations` from merged PR #29 (ADR 0033):
 Next: base-CV visibility outcomes against confirmed evidence, then a measured cross-profession joined journey review and broader onboarding. Independent semantic recall/qualification benchmarks and durable writing review/conflict decisions remain pending. Tailored versions, letters and submission remain deferred; current preparation stops at reviewed wording suggestions.
 
 The same slice also improves clarification review: compact status/context cards, personal/related-scope writing guidance, explicit reversible rejection with retained history, feedback and same-entry editing. Rejected answers are shown as excluded and are not automatically restored or sent to AI.
-
-## Guided workspace continuation — 2026-10-09
-
-An independent frontend slice from PR #30/main `9df2ae4` adds an optional five-step dashboard guide, document metadata counts/direct navigation and saved-data-aware next actions. PR #31 (base-CV visibility) remained open with both Foundation checks successful when this work started; this slice does not depend on it or merge it. Opening the guide spends no AI quota.
-
-Next: measure matching/visibility semantics against independently reviewed cross-profession expectations, then inspect the joined document/profile → saved match → preparation journey for concrete UX defects. Durable proposal persistence, tailored files, letters/submission and hosting remain later. Development validation is focused on affected behavior, with no live provider calls by default; GitHub retains the required full regression.

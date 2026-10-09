@@ -111,6 +111,11 @@ PR #25 is verified merged at `d2fbf252bf52063b4729b682f23327eb3a037b35`. Continu
 
 PR #27 is verified merged at `217192cd856dbac14ca05eb3640483c94130d9ac`. Continue on `feat/job-application-preparation`, ADR 0031. The current slice joins owned saved jobs/current automatic full-profile matching to selected base-CV text proposals. Retain complete supported confirmed evidence, exact source-text rechecks, CSRF/ownership and separate `CV_TAILORING` recipient/model consent. Wording review is page-session-only; never imply persisted changesets, factual promotion, a new tailored file or external submission. Original/reference snapshots remain readable after staleness. Broader requirement recall/visibility/transferability and onboarding are next slices. Test and prepare a PR; no automatic merge authorization.
 
+
+## Guided workspace continuation — 2026-10-09
+
+Continue on `feat/guided-workspace-journey` from verified PR #30/main `9df2ae4`. PR #31 remains open with successful Foundation checks; this frontend onboarding slice is independent. Use metadata-only dashboard guidance and an optional local five-step guide, not inferred match completeness or new AI work. The owner requested lower token use: use concise reads/output and focused affected checks, no live provider calls by default. Required CI still runs the full regression. Document actual test scope and prepare a PR; do not merge automatically.
+
 ## Requirement coverage continuation — 2026-10-09
 
 PR #28 is verified merged at `e0f87ca1fb6bf5533f011c2ad5a6f38f40134830`. Continue on `feat/job-requirement-coverage` under ADR 0032: whole-source distinct criteria, defensive 128-criterion end-to-end bound, explicit unassessed output/provisional coverage, persisted answer continuity and compact source review. Keep personal confirmation separate from semantic relevance; never freeze a previous model judgment as a fact or silently resurrect rejection. Existing duplicates/legacy snapshots remain source-preserving. No new schema migration or provider defaults. Validate and prepare a PR without merging automatically; transferability/visibility and durable proposals remain next slices.
@@ -118,7 +123,3 @@ PR #28 is verified merged at `e0f87ca1fb6bf5533f011c2ad5a6f38f40134830`. Continu
 ## Evidence relation continuation — 2026-10-09
 
 PR #29 is verified merged at `8e88d1f0832b1ae673f7f01a110733b740b713da`; both Foundation checks passed. Continue on `feat/match-evidence-explanations` under ADR 0033: nullable source-backed AI relation/nature metadata, conservative transferable/formal score constraints, compact saved-card qualification hints and existing-result application priorities. Do not label older results, promote factual status or claim base-CV visibility is complete. Preserve full evidence, consent, sources and staleness. Prepare a tested PR without automatic merge.
-
-## Guided workspace continuation — 2026-10-09
-
-Continue on `feat/guided-workspace-journey` from verified PR #30/main `9df2ae4`. PR #31 remains open with successful Foundation checks; this frontend onboarding slice is independent. Use metadata-only dashboard guidance and an optional local five-step guide, not inferred match completeness or new AI work. The owner requested lower token use: use concise reads/output and focused affected checks, no live provider calls by default. Required CI still runs the full regression. Document actual test scope and prepare a PR; do not merge automatically.

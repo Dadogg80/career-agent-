@@ -192,6 +192,13 @@ Accepted: the owner-supplied 71-section work-agent methodology is preserved as a
 
 Priority is the joined candidate journey through editable CV text proposals, with readiness guidance and optional onboarding/help. Tailored file/version creation, letters and final application-package readiness are deferred; the independent existing export is unchanged. New taxonomy, gap/visibility/recommendation enums and per-stage AI calls are target design, not implemented contracts. No new paid service, infrastructure, API, model default or auto-submission is authorized by adopting the document.
 
+
+## 2026-10-09 — Lightweight workspace onboarding
+
+Use existing owned metadata queries and a local optional tutorial for next-step guidance. Do not infer match readiness from saved-job existence, require a separate competency selection or start unapproved AI work. Unavailable metadata remains unknown. Keep guide position transient rather than introducing a persisted journey state. This is a UI slice, with no migration or provider/default change.
+
+The owner requested lower development token consumption: prefer affected checks, terse output and no live provider test calls by default. Retain required CI validation and meaningful checks; local tests do not themselves spend provider tokens.
+
 ## 2026-10-09 — Job-specific wording proposals
 
 Accepted implementation slice: [ADR 0031](adr/0031-job-specific-cv-wording.md). A dedicated owned preparation page connects saved jobs/current full-profile matching to a separate approved AI writing request. Exact source passages and confirmed-reference indexes constrain output, while semantic wording remains a user-reviewed draft. Review state is explicitly page-session-only; no original, knowledge fact or CV version is written. Broader visibility/recruiter assessment and durable changesets remain pending.
@@ -205,9 +212,3 @@ Accepted implementation slice: [ADR 0032](adr/0032-requirement-coverage-and-clar
 Accepted ADR [0033](adr/0033-match-evidence-relations.md): new matching output distinguishes DIRECT/TRANSFERABLE/UNKNOWN and FORMAL/PRACTICAL/OTHER. Apply conservative classification guards without inventing positive qualifications or actual gaps. Store nullable metadata in existing result JSON, retain legacy shape/readability, and derive compact application priorities from saved sources without extra AI calls. The relation/nature remain AI judgments; base-CV visibility and semantic factual verification are not completed by these tags.
 
 The owner additionally requested clearer clarification confirmation/rejection UX. Reuse the existing revision-checked claim review API and all owned answer statuses for display. Rejection is an excluded statement, not negative competency evidence or an actual skill gap. Keep history and allow deliberate same-entry correction/reconfirmation. Compact writing-scope aids are local guidance, not persisted match classifications.
-
-## 2026-10-09 — Lightweight workspace onboarding
-
-Use existing owned metadata queries and a local optional tutorial for next-step guidance. Do not infer match readiness from saved-job existence, require a separate competency selection or start unapproved AI work. Unavailable metadata remains unknown. Keep guide position transient rather than introducing a persisted journey state. This is a UI slice, with no migration or provider/default change.
-
-The owner requested lower development token consumption: prefer affected checks, terse output and no live provider test calls by default. Retain required CI validation and meaningful checks; local tests do not themselves spend provider tokens.
