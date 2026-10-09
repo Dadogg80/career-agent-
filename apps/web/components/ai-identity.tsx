@@ -1,5 +1,5 @@
 "use client";
-import { Sparkles, ArrowRightLeft, LoaderCircle, Hourglass, ChevronDown, Check } from "lucide-react";
+import { Sparkles, ArrowRightLeft, LoaderCircle, Hourglass, ChevronDown, Check, RefreshCw, Info } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import type { AiSelection, AiOption, AiApproval } from "../lib/ai-configuration";
@@ -14,15 +14,25 @@ export function AiActivity({label,detail,waiting=false}:{label:string;detail?:st
   </div>;
 }
 
-export function AiIdentity({selections,provider,locale,label}: {selections?:AiSelection[];provider?:string;locale:Locale;label?:string}) {
+export function AiIdentity({selections,provider,locale,label,pending=false}: {selections?:AiSelection[];provider?:string;locale:Locale;label?:string;pending?:boolean}) {
   const values=selections?.length?selections:provider?provider.split(" + ").map(p=>({provider:p,model:""})):[];
-  return <div className="ai-identity" aria-label={locale==="nb"?"AI-leverandør og modell":"AI provider and model"}>{label && <small>{label}</small>}{values.map(s=><Badge key={`${s.provider}:${s.model}`} variant="outline" className={`ai-identity-chip ${s.provider==="Gemini"?"ai-gemini":"ai-groq"}`}><Sparkles size={12}/><span>{s.provider} · {s.model || (locale==="nb"?"modell ikke lagret":"model not recorded")}</span></Badge>)}{!values.length && <small>{locale==="nb"?"Henter AI-oppsett …":"Loading AI configuration …"}</small>}</div>;
+  return <div className="ai-identity" aria-label={locale==="nb"?"AI-leverandør og modell":"AI provider and model"}>{label && <small>{label}</small>}{values.map(s=><Badge key={`${s.provider}:${s.model}`} variant="outline" className={`ai-identity-chip ${s.provider==="Gemini"?"ai-gemini":"ai-groq"}`}><Sparkles size={12}/><span>{s.provider} · {s.model || (locale==="nb"?"modell ikke lagret":"model not recorded")}</span></Badge>)}{!values.length && <small>{pending?(locale==="nb"?"Henter AI-oppsett …":"Loading AI configuration …"):(locale==="nb"?"Leverandør og modell ikke registrert":"Provider and model not recorded")}</small>}</div>;
 }
-export function AiChoice({approval,options,choose,disabled,locale,label,area}: {approval?:AiApproval;options:AiOption[];choose:(token:string)=>void;disabled?:boolean;locale:Locale;label?:string;area?:string}) {
+type ConfigurationStatus = {isFetching:boolean;isError:boolean;refetch:()=>unknown};
+
+export function AiChoice({approval,options,choose,disabled,locale,label,area,configuration}: {approval?:AiApproval;options:AiOption[];choose:(token:string)=>void;disabled?:boolean;locale:Locale;label?:string;area?:string;configuration?:ConfigurationStatus}) {
   const selected = approval?.token;
+  const loading=!!configuration?.isFetching && !approval;
+  const unavailable=!!configuration && !loading && (configuration.isError || !approval);
+  const nb=locale==="nb";
   return <div className="ai-choice" data-choice-area={area}>
     {label && <span className="ai-choice-label">{label}</span>}
-    <AiIdentity selections={approval?.selections} locale={locale}/>
+    {(approval || loading) && <AiIdentity selections={approval?.selections} locale={locale} pending={loading}/>}
+    {unavailable && <div className="ai-configuration-status" role="status" aria-live="polite">
+      <Info size={16} aria-hidden="true"/>
+      <span><strong>{configuration.isError?(nb?"AI-oppsettet kunne ikke hentes":"AI configuration could not be retrieved"):(nb?"Ingen AI-modell tilgjengelig for denne oppgaven":"No AI model available for this task")}</strong><small>{nb?"Hent oppsettet på nytt. Dette sender ingen dokumenter og starter ingen analyse.":"Retry configuration retrieval. This sends no documents and starts no analysis."}</small></span>
+      <Button type="button" variant="outline" size="sm" disabled={disabled || configuration.isFetching} onClick={()=>void configuration.refetch()}><RefreshCw size={14} aria-hidden="true"/>{configuration.isFetching?(nb?"Henter …":"Loading …"):(nb?"Prøv igjen":"Try again")}</Button>
+    </div>}
     {options.some(option=>option.approval.token!==selected) && <details className="ai-choice-menu">
       <summary aria-label={locale==="nb"?"Bytt AI-modell":"Change AI model"}>
         <span className="ai-choice-trigger-icon"><ArrowRightLeft size={14}/></span>

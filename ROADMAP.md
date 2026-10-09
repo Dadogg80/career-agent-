@@ -163,3 +163,7 @@ Next priorities remain independent cross-profession semantic matching/visibility
 Prepared from merged PR #34/main `c07244e`: literal practical-field recovery and merged saved facts across received sources, plus conservative source-based requirement importance (ADR 0038). Direct URL adapters remain FINN/NAV; other employers' received/pasted text is supported. No automatic caching, platform-summary stripping, full linguistic guarantee or new provider default is claimed.
 
 Next priority resumes the joined document/profile → saved job/full-profile match → reviewed CV wording journey. Keep independent semantic evaluation, broader source adapters, durable review decisions and tailored file/version generation as distinct follow-ups. Avoid additional live-provider comparison by default.
+
+### Joined journey: AI configuration recovery
+
+Implemented compact, shared configuration loading/failure/unavailable states and an explicit metadata-only retry across model selectors, including CV preparation. Source/results, actual attribution and recipient-bound consent remain unchanged. This is configuration recovery, not provider quota removal, silent fallback or automatic analysis resumption. Continue with joined-flow verification and source/profile/match quality; durable tailoring decisions and file generation remain deferred.

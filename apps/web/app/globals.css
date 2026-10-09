@@ -1804,3 +1804,10 @@ button:disabled { cursor:not-allowed; }
 @media(prefers-reduced-motion:reduce) {
   .job-analysis-input-card .privacy-note>summary svg:last-child { transition:none; }
 }
+
+/* Configuration recovery is metadata-only; keep it beside the model choice. */
+.ai-configuration-status { display:flex; align-items:center; flex-wrap:wrap; gap:8px; width:100%; grid-column:1/-1; padding:10px; border:1px solid var(--border); border-radius:10px; background:var(--muted); }
+.ai-configuration-status > svg { flex:none; color:var(--muted-foreground); }
+.ai-configuration-status > span { display:grid; flex:1; min-width:140px; gap:3px; }
+.ai-configuration-status strong { font-size:.78rem; line-height:1.4; }
+.ai-configuration-status small { color:var(--muted-foreground); font-size:.73rem; line-height:1.5; }
