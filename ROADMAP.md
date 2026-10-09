@@ -147,3 +147,9 @@ The same slice also improves clarification review: compact status/context cards,
 ADR 0034 adds source-bound criterion visibility to the existing approved tailoring request: compact search/count filters, exact CV excerpts, confirmed contribution sources, conservative uncertainty and explicit unassessed recovery. This shares one call with wording proposals; original files and profile facts are unchanged. PR #30 is now verified merged at `9df2ae4`; this follow-up is prepared against that main without automatic merging.
 
 Next: independently measure semantic visibility/criterion recall across professions and review the joined onboarding → documents/profile → saved job/match → preparation journey. Improve concrete mobile/readiness defects from those tests. Durable text changesets, tailored file/version creation, letters, submission and online hosting remain separate later work. Citation validation and source coverage are not guarantees of semantic completeness.
+
+## Reviewed CV text handoff — 2026-10-09
+
+PR #31 and #32 are verified merged, with successful pre-merge Foundation checks. From main `e7f18bf`, ADR 0035 adds local full-text preview/copy incorporating approved wording substitutions only, exact-source preservation and clipboard-failure recovery. No AI calls, backend change or tailored file/version is introduced.
+
+Next priorities remain independent cross-profession semantic matching/visibility evaluation and concrete joined-flow improvements. Durable reviewed changesets, export/layout, letters and submission stay separate later milestones. Keep local validation focused and avoid live provider calls by default.

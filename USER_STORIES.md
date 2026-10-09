@@ -443,3 +443,9 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - I can search/filter outcomes and inspect literal CV excerpts and established candidate evidence before deciding what to change.
 - Unknown experience/authorization is a clarification, not an asserted skill gap. Invalid/missing output is unassessed, not absent competence.
 - I can still read earlier/legacy wording proposals; changed evidence makes the CV review historical. No confirmation, new CV version or durable changeset is implied.
+
+## Approved CV wording handoff
+
+- I can preview and copy the complete plain CV text containing only the changes I approved, without assembling paragraphs manually.
+- Unreviewed/rejected suggestions keep the original wording; changed or unavailable evidence prevents copying as current.
+- Clipboard failure preserves a readable/selectable preview. I understand this is plain text, not preserved DOCX/PDF layout, a saved CV version or an application submission.

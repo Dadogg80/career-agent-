@@ -14,6 +14,7 @@ import { useAiChoice } from "../lib/use-ai-configuration";
 import { aiRecipients } from "../lib/ai-configuration";
 import { retryAfterSeconds,retryWaitLabel } from "../lib/retry-after";
 import type { Locale } from "../lib/translations";
+import { ReviewedCvText } from "./reviewed-cv-text";
 import { CvVisibilityReview } from "./cv-visibility-review";
 import { MatchApplicationFocus } from "./match-application-focus";
 import { PersonalJobMatch } from "./personal-job-match";
@@ -28,7 +29,7 @@ export function JobApplicationPreparation({jobId,locale}:{jobId:string;locale:Lo
  const nb=locale==="nb",session=useWorkspaceSession(),choice=useAiChoice("tailoring");
  const [selected,setSelected]=useState(""),[consent,setConsent]=useState(false),[tutorial,setTutorial]=useState(false),[showProcessed,setShowProcessed]=useState(false);
  const [waits,setWaits]=useState<Record<string,number>>({}),[seconds,setSeconds]=useState(0);
- const [saved,setSaved]=useState<{result:TailoringResult;fingerprint:string;claims:PersonalMatch["claims"];quotes:string[]}|null>(null);
+ const [saved,setSaved]=useState<{result:TailoringResult;text:string;fingerprint:string;claims:PersonalMatch["claims"];quotes:string[]}|null>(null);
  const [edits,setEdits]=useState<Record<number,string>>({}),[decisions,setDecisions]=useState<Record<number,"ACCEPTED"|"REJECTED">>({});
  const job=useQuery({queryKey:["private-job",jobId],gcTime:0,retry:false,queryFn:async()=>{const v=await read(`/api/profile/me/jobs/${jobId}`);if(!isSavedJob(v))throw new Error("UNAVAILABLE");return v;}});
  const documents=useQuery({queryKey:["private-documents"],gcTime:0,retry:false,queryFn:async()=>{const v=await read("/api/profile/me/documents");if(!isDocumentList(v))throw new Error("UNAVAILABLE");return v;}});
@@ -49,11 +50,11 @@ export function JobApplicationPreparation({jobId,locale}:{jobId:string;locale:Lo
   const paragraphs=tailoringPassages(input.text);
   if(!isTailoringResult(v) || v.documentId!==input.documentId || v.matchId!==input.matchId || v.proposals.some(p=>p.oldText!==paragraphs[p.paragraphIndex] || p.claimIds.some(id=>!input.claims.some(c=>c.id===id)) || p.requirementIndexes.some(i=>i>=input.quotes.length)) || v.visibility && (v.visibility.length!==input.quotes.length || v.visibility.some(a=>a.requirementIndex>=input.quotes.length || a.claimIds.some(id=>!input.claims.some(c=>c.id===id)) || a.passages.some(p=>!paragraphs[p.paragraphIndex]?.includes(p.quote)))))throw new Error("AI_INVALID_RESULT");
   return v;
- },onSuccess:(result,input)=>{setSaved({result,fingerprint:input.fingerprint,claims:input.claims,quotes:input.quotes});setEdits({});setDecisions({});setConsent(false);setShowProcessed(false);}});
- const current=!!saved && saved.fingerprint===fingerprint && !stale;
+ },onSuccess:(result,input)=>{setSaved({result,text:input.text,fingerprint:input.fingerprint,claims:input.claims,quotes:input.quotes});setEdits({});setDecisions({});setConsent(false);setShowProcessed(false);}});
+ const error=job.error??documents.error??claims.error??match.error??base.error;
+ const current=!!saved && saved.fingerprint===fingerprint && !stale && !error;
  const pending=saved?.result.proposals.filter(p=>!decisions[p.paragraphIndex])??[];
  const visible=showProcessed?saved?.result.proposals.filter(p=>!!decisions[p.paragraphIndex])??[]:pending;
- const error=job.error??documents.error??claims.error??match.error??base.error;
  const ready=!!job.data && !!match.data && !stale && !error && !!base.data?.text && base.data.text.length>=40 && confirmed.length>0;
  const coverage=match.data && job.data?matchCoverage(match.data,job.data.content):null;
  if(job.isPending)return <AiActivity label={nb?"Henter stillingen …":"Loading your job …"}/>;
@@ -82,6 +83,7 @@ export function JobApplicationPreparation({jobId,locale}:{jobId:string;locale:Lo
    {analyze.error && <p role="status" className="notice">{analyze.error.message==="AI_BUDGET_REACHED"?nb?"Denne AI-økten har nådd bruksgrensen for tekstforslag. Grunnlaget og tidligere forslag er beholdt.":"This AI session reached its text-suggestion usage limit. Evidence and earlier proposals are retained.":analyze.error.message==="CV_SOURCE_CONFLICT"?nb?"Grunnlaget er endret. Hent CV og match på nytt før du prøver igjen.":"Evidence changed. Refresh your CV and match before retrying.":nb?"AI-forslagene kunne ikke fullføres nå. Grunnlaget og tidligere forslag beholdes. Du kan prøve igjen eller velge en annen tilgjengelig modell med ny godkjenning.":"AI suggestions could not complete now. Evidence and earlier proposals are retained. Retry or select another available model with renewed approval."}</p>}
   </CardContent></Card>
   {saved && <CvVisibilityReview result={saved.result} claims={saved.claims} quotes={saved.quotes} locale={locale} current={current}/>}
+  {saved && saved.result.proposals.length>0 && <ReviewedCvText source={saved.text} proposals={saved.result.proposals} decisions={decisions} edits={edits} locale={locale} current={current}/>}
   {saved && <Card><CardHeader><div className="workspace-heading"><h3>{nb?"Gjennomgå tekstforslag":"Review text suggestions"}</h3><Badge variant="outline">{pending.length} {nb?"venter på gjennomgang":"pending review"}</Badge></div><AiIdentity selections={[{provider:saved.result.provider,model:saved.result.model}]} locale={locale}/><p className="hint">{nb?"Forslag og valg finnes bare mens denne siden er åpen. Ingen ny CV-fil lagres. Kontroller fakta og behold bare tekst du kan stå inne for.":"Proposals and decisions last only while this page is open. No new CV file is saved. Review facts and keep only wording you can defend."}</p></CardHeader><CardContent>
    {!current && <p role="alert" className="notice">{nb?"Grunnlaget eller språk/modellvalget er endret. Disse forslagene kan leses, men må lages på nytt før godkjenning.":"Evidence or language/model choice changed. These proposals remain readable but need regeneration before approval."}</p>}
    {saved.result.omittedItems>0 && <p>{saved.result.omittedItems} {nb?"forslag uten gyldige referanser ble utelatt":"proposals with invalid references were omitted"}</p>}
