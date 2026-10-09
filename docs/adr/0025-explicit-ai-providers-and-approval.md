@@ -12,7 +12,7 @@ Keep the modular monolith and `AiModel` port. A primary routing facade delegates
 
 Publish non-secret task/recipient/model previews. Bind explicit private-data consent to a configuration fingerprint; store it with owned workflow state and verify before continuation. Preserve backward compatibility only for old Groq-approved requests. Never move a run to another recipient without new approval. Model changes also invalidate the new fingerprint. Ownership, CSRF, source validation and explicit factual confirmation remain independent.
 
-Keep source retrieval separate: FINN uses Groq/Exa and must retain partial-excerpt labeling. Native Gemini PDF/URL tools are a later adapter experiment, not an implicit part of this integration. No automatic quota/provider/model rotation or billing activation. Gemini and Groq have independent process-local cooldowns; errors preserve prior artifacts and manual continuation.
+Keep source retrieval separate from analysis. The initial FINN route uses Groq/Exa and retains partial-excerpt labeling. ADR 0037 later adds a separately selected Gemini 3.8 URL Context route for public FINN links; a Gemini analysis approval does not authorize retrieval, and a retrieval selection does not authorize analysis. No automatic quota/provider/model rotation or billing activation. Gemini and Groq have independent process-local cooldowns; errors preserve prior artifacts and manual continuation. Native Gemini PDF or private-document URL retrieval remains outside this decision.
 
 ## Consequences
 

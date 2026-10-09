@@ -34,6 +34,8 @@ test("right-side diagnostics show actual source, stages and sanitized console ev
   releaseSource();
   await expect(panel.locator('[data-stage="source"]')).toHaveAttribute("data-state", "success");
   await expect(panel.locator('[data-stage="wait"]')).toHaveAttribute("data-state", "running");
+  await expect(panel.locator(".diagnostic-call-card").nth(0)).toContainText("/api/jobs/import");
+  await expect(panel.locator(".diagnostic-call-card").nth(0)).toContainText("GROQ_BROWSER_EXCERPT");
   await page.getByText("Se teksten som faktisk ble hentet", { exact: true }).click();
   await expect(panel.locator("pre")).toHaveText(source);
   await expect(panel).toContainText(`${source.length} tegn`);
@@ -45,6 +47,14 @@ test("right-side diagnostics show actual source, stages and sanitized console ev
   releaseAnalysis();
   await expect(page.getByRole("heading", { name: "Kotlin", exact: true })).toBeVisible();
   await expect(panel.locator('[data-stage="analysis"]')).toHaveAttribute("data-state", "success");
+  await expect(panel.locator(".diagnostic-call-card").nth(1)).toContainText("/api/jobs/requirements");
+  await expect(panel.locator(".diagnostic-call-card").nth(1)).toContainText("1 / 0 / 0");
+  await panel.getByRole("button", { name: "Lukk diagnostikk", exact: true }).click();
+  await expect(panel).toHaveAttribute("data-state", "closed");
+  const sourceNote = page.locator(".analysis-quality-source");
+  await expect(sourceNote.locator("summary")).toContainText("Ubekreftet kildeutdrag");
+  await sourceNote.locator("summary").click();
+  await expect(sourceNote).toContainText("ikke en bekreftet komplett originalannonse");
   await expect.poll(() => logged.filter(event => event.state === "success").length).toBe(3);
   expect(logged.map(event => `${event.stage}:${event.state}`)).toEqual(["source:running", "source:success", "wait:running", "wait:success", "analysis:running", "analysis:success"]);
   expect(JSON.stringify(logged)).not.toContain("PRIVATE_");
@@ -52,8 +62,6 @@ test("right-side diagnostics show actual source, stages and sanitized console ev
   expect(new Set(logged.map(event => event.runId)).size).toBe(1);
   await page.getByRole("combobox", { name: "Språk" }).selectOption("en");
   await expect(page.getByRole("heading", { name: /Developer diagnostics/ })).toBeVisible();
-  await page.getByRole("button", { name: "Close diagnostics", exact: true }).click();
-  await expect(panel.locator(".diagnostic-body")).not.toBeVisible();
 });
 
 test("red diagnostic light retains HTTP error and cooldown without automatic retries", async ({ page }) => {
@@ -78,6 +86,7 @@ test("red diagnostic light retains HTTP error and cooldown without automatic ret
   const panel = page.locator(".analysis-diagnostics");
   await expect(panel.locator('[data-stage="analysis"]')).toHaveAttribute("data-state", "error");
   await expect(panel).toContainText("HTTP 429"); await expect(panel).toContainText("AI_RATE_LIMITED");
+  await expect(panel.locator(".diagnostic-call-card").filter({ hasText: "/api/jobs/requirements" })).toContainText(`${source.length} tegn`);
   await expect.poll(() => failures.length).toBe(1);
   expect(failures[0].type).toBe("warning");
   expect(failures[0].event.details.code).toBe("AI_RATE_LIMITED");
@@ -105,6 +114,7 @@ test("failed URL retrieval is a warning with its actual code and preserves the l
   await expect(panel.locator('[data-stage="source"]')).toHaveAttribute("data-state", "error");
   await expect(panel).toContainText("SOURCE_INVALID");
   await expect(panel).toContainText("HTTP 422");
+  await expect(panel.locator(".diagnostic-call-card").filter({ hasText: "/api/jobs/import" })).toContainText("SOURCE_INVALID");
   await expect(page.getByRole("textbox", { name: "Lenke til stillingsannonse" })).toHaveValue(url);
   await expect.poll(() => failures).toEqual([{ type: "warning", code: "SOURCE_INVALID" }]);
 });

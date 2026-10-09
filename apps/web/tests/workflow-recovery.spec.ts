@@ -38,7 +38,7 @@ test("local fallback organizes explicit advertisement sections and practical fie
  await page.route("**/api/jobs/requirements",r=>{calls++;return r.fulfill({status:502,json:{code:"AI_INVALID_RESULT"}});});
  await page.goto("/jobs/analyze");await page.getByRole("button",{name:"Lim inn tekst",exact:true}).click();await page.getByRole("textbox",{name:"Stillingsannonse",exact:true}).fill(source);await page.getByRole("button",{name:"Analyser",exact:true}).click();
  await expect(page.locator(".employer-card")).toContainText("Vi er et team med 30 kollegaer.");
- await expect(page.locator(".employer-sections")).toContainText("Du lager integrasjoner og følger dem i produksjon.");
+ await expect(page.locator(".job-overview-role")).toContainText("Du lager integrasjoner og følger dem i produksjon.");
  await expect(page.locator(".job-facts")).toContainText("Kari Test, kari@example.test");await expect(page.locator(".job-facts")).toContainText("Snarest");
  await expect(page.getByText("Teksten er sortert lokalt etter tydelige overskrifter og felt.",{exact:false})).toBeVisible();await page.locator(".advertisement-reader summary").click();await expect(page.locator(".received-advertisement")).toContainText("Annen tekst vi ikke skal miste.");expect(calls).toBe(1);
 });

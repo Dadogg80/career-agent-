@@ -1,6 +1,6 @@
 package com.careeragent.ai.application
 
-enum class AiTask { JOB_ANALYSIS, DOCUMENT_EXTRACTION, PROFILE_SUMMARY, PERSONAL_MATCH, CV_TAILORING }
+enum class AiTask { JOB_ANALYSIS, JOB_SOURCE_RETRIEVAL, DOCUMENT_EXTRACTION, PROFILE_SUMMARY, PERSONAL_MATCH, CV_TAILORING }
 
 interface AiModel {
     fun generateJson(system: String, user: String, schema: Map<String, Any>): String

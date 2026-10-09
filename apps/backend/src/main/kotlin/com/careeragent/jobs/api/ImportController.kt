@@ -7,7 +7,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.annotation.*
 import java.util.concurrent.Semaphore
 
-data class ImportRequest(val url: String = "")
+data class ImportRequest(val url: String = "", val aiApproval: String? = null)
 
 @RestController
 @RequestMapping("/api/jobs")
@@ -17,7 +17,12 @@ class ImportController(private val importer: JobImporter) {
     @PostMapping("/import", consumes = ["application/json"])
     fun import(@RequestBody request: ImportRequest): ResponseEntity<ImportedJob> {
         if (!permits.tryAcquire()) throw ImportFailure("SOURCE_BUSY", 429)
-        try { return ResponseEntity.ok().header("Cache-Control", "no-store").body(importer.import(request.url)) } finally { permits.release() }
+        try {
+            if (request.aiApproval != null && !Regex("^[a-f0-9]{64}$").matches(request.aiApproval)) {
+                throw ImportFailure("SOURCE_MODEL_SELECTION_INVALID", 400)
+            }
+            return ResponseEntity.ok().header("Cache-Control", "no-store").body(importer.import(request.url, request.aiApproval))
+        } finally { permits.release() }
     }
     @ExceptionHandler(ImportFailure::class)
     fun failure(error: ImportFailure): ResponseEntity<Map<String, String>> {

@@ -24,6 +24,7 @@ Milestone: a candidate reaches useful reviewed role-specific text proposals with
 | Next.js + Kotlin/Spring Boot, Norwegian default / English | Implemented and merged |
 | TanStack Query and shadcn/ui foundation | Implemented, required by AGENTS.md |
 | Public ad text analysis, NAV API and bounded FINN browser import | Implemented and merged; FINN excerpts may be partial/stale |
+| Independent job-ad retrieval and requirement-analysis model choices, including Gemini 3.8 Flash URL Context for FINN | Implemented and locally tested on `feat/job-analysis-refresh`; not yet merged. Gemini output remains an AI-prepared excerpt, not a verified complete original; provider generation readiness is not established |
 | Compact requirement filters/detail dialogs, pacing and DEV diagnostics Sheet | Implemented and merged |
 | PostgreSQL/Flyway and local OIDC/PKCE basic profile | Implemented and merged, PR #12 |
 | Responsive document checks/reader, missed-passage recovery and compact profile identity with private photo | Implemented and locally verified: backend suite, frontend production build/typecheck and all 127 production Playwright tests pass |
@@ -50,6 +51,8 @@ Milestone: a candidate reaches useful reviewed role-specific text proposals with
 | Local advertisement recovery, richer received text, UTF-8 TXT/Markdown and conservative multi-source deduplication | Merged in the tested local pilot; real identity/storage and automated checks |
 | Source-selected document competencies, context proof and local original/text/quote check | Merged initial evidence checks; current recovery/refinements tracked separately |
 | Automatic CV rewriting, discovery, interview/academy/analytics and browser submission | Not implemented |
+
+The current job-analysis branch also refreshes the workspace and independently routes advertisement retrieval and requirement analysis, with separate user approvals. Gemini 3.8 is an available configured choice, not a guarantee that a live provider request will succeed. FINN URL Context is accepted only when it completes for the exact canonical URL and cites that URL; its result is still an AI-prepared excerpt. NAV retrieval remains the direct NAV API, and no automatic provider fallback is used. Antigravity is not offered because no supported provider/API integration was confirmed.
 
 The previous delivery scope was the three deliveries already listed: ad overview, competency review and initial CV import. Saved jobs/matching were excluded from that earlier delivery; the latest instruction authorizes publishing and merging the tested local pilot workflow. The owner subsequently added AI competency summarization across uploaded documents before merge. Upload/extraction remain local; a separately approved Groq call creates stored source-backed suggestions, and an explicit user save creates UNVERIFIED claims. See docs/CV_IMPORT.md and the actual validation in docs/DEVELOPMENT_LOG.md.
 

@@ -1,13 +1,14 @@
 import { isExtraction, type Requirement, type JobFact } from "./job-requirements";
 import { claimId } from "./claims";
-export type SavedJobContent = { title: string; sourceUrl: string | null; sourceType: "PASTED_TEXT" | "NAV_API" | "GROQ_BROWSER_EXCERPT"; text: string; locale: "nb" | "en"; requirements: Requirement[]; facts: JobFact[]; omittedItems: number; retrievedAt: string | null };
+export const MAX_SAVED_JOB_FACTS = 20;
+export type SavedJobContent = { title: string; sourceUrl: string | null; sourceType: "PASTED_TEXT" | "NAV_API" | "GROQ_BROWSER_EXCERPT" | "GEMINI_URL_CONTEXT_EXCERPT"; text: string; locale: "nb" | "en"; requirements: Requirement[]; facts: JobFact[]; omittedItems: number; retrievedAt: string | null };
 export type SavedJob = { id: string; content: SavedJobContent; createdAt: string };
 export function isSavedContent(value: unknown): value is SavedJobContent {
   if (!value || typeof value !== "object") return false;
   const c = value as Record<string, unknown>;
   let validUrl = c.sourceUrl === null;
   if (typeof c.sourceUrl === "string" && c.sourceUrl.length <= 2048) { try { const u = new URL(c.sourceUrl); validUrl = u.protocol === "https:" && !!u.hostname && !u.username && !u.password && !u.port; } catch {} }
-  return typeof c.title === "string" && c.title.trim().length > 0 && c.title.length <= 200 && typeof c.text === "string" && c.text.trim().length >= 40 && c.text.length <= 15000 && ["nb", "en"].includes(String(c.locale)) && ["PASTED_TEXT", "NAV_API", "GROQ_BROWSER_EXCERPT"].includes(String(c.sourceType)) && validUrl && (c.retrievedAt === null || typeof c.retrievedAt === "string" && Number.isFinite(Date.parse(c.retrievedAt))) && (c.sourceType === "PASTED_TEXT" || c.sourceUrl !== null && c.retrievedAt !== null) && isExtraction(c);
+  return typeof c.title === "string" && c.title.trim().length > 0 && c.title.length <= 200 && typeof c.text === "string" && c.text.trim().length >= 40 && c.text.length <= 15000 && ["nb", "en"].includes(String(c.locale)) && ["PASTED_TEXT", "NAV_API", "GROQ_BROWSER_EXCERPT", "GEMINI_URL_CONTEXT_EXCERPT"].includes(String(c.sourceType)) && validUrl && (c.retrievedAt === null || typeof c.retrievedAt === "string" && Number.isFinite(Date.parse(c.retrievedAt))) && (c.sourceType === "PASTED_TEXT" || c.sourceUrl !== null && c.retrievedAt !== null) && isExtraction(c, MAX_SAVED_JOB_FACTS);
 }
 export function isSavedJob(value: unknown): value is SavedJob { if (!value || typeof value !== "object") return false; const v = value as Record<string, unknown>; return typeof v.id === "string" && claimId.test(v.id) && typeof v.createdAt === "string" && Number.isFinite(Date.parse(v.createdAt)) && isSavedContent(v.content); }
 export const isSavedJobs = (value: unknown): value is SavedJob[] => Array.isArray(value) && value.length <= 100 && value.every(isSavedJob);

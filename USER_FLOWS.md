@@ -130,30 +130,39 @@ flowchart TD
     F --> G
     G --> H[User selects Analyze]
     H --> I[Bounded Groq extraction]
-    I --> J[Show required, preferred and unclear requirements with quotes]
-    J --> K[Inspect source evidence]
-    J -->|Edit source text| L[Mark result outdated]
+    I --> J[Show employer, role and practical advertisement overview]
+    J --> K[Review required, preferred and unclear requirements with quotes]
+    K --> L[Inspect source evidence]
+    J -->|Edit source text| M[Mark result outdated]
 ```
 
-The pilot does not save input or results across reload. NAV URL import makes no AI call. FINN import uses one Groq Browser Search API call before review, with its own bounded attempt limit. A fetched page is never automatically sent to Groq; the user reviews normalized text first. API-returned application links are not fetched. The current interface does not offer automated submission or personal match scores.
+The result places the employer/role overview, applicant profile, offered benefits and practical details (location, contact and deadline) before requirement cards. Literal labeled practical fields may fill an otherwise missing extracted fact; other unknowns remain explicit. Applicant and offer excerpts have compact previews with scrollable source readers. Full source wording is expandable and stays distinct from AI-extracted requirements. If source-backed suggestions were omitted, the user sees the count and can inspect the received text, add a manually labeled detail with a verbatim source quote, and remove it again. Manual details stay in the current page session and are persisted only when the user explicitly saves the job snapshot; they never create another AI call or alter the omitted count. Retrieval and requirement analysis have separate model choices and approval fingerprints. NAV URL import makes no AI call. FINN retrieval offers Groq Browser Search or Gemini 3.8 Flash URL Context. The Gemini result requires successful retrieval plus a citation to the exact requested URL and remains labeled as an AI-prepared excerpt, not original page text. Missing/mismatched evidence remains `SOURCE_NOT_AVAILABLE`; there is no automatic provider switch. The pilot does not save input or results across reload unless the user saves a job snapshot. API-returned application links are not fetched. The current interface does not offer automated submission or personal match scores.
 
 ## FINN source branch
 
 ```mermaid
 flowchart TD
     A[Paste modern FINN job URL] --> B[Validate and canonicalize exact advertisement link]
-    B --> C[Bounded Groq Browser Search]
-    C --> D{Exact browser.open source result available?}
-    D -->|No| E[Keep URL, explain error and offer pasted text]
-    D -->|Yes| F[Retain exact source context and show retrieval complete]
-    F --> G[Show configurable pause countdown]
-    G --> H{Stopped before analysis?}
-    H -->|Yes| K[Keep source for manual continuation]
-    H -->|No| I[Separate structured Groq requirement extraction]
-    I --> J[Quotes validated against the submitted excerpt, provenance remains visible]
+    B --> C{Selected retrieval plan}
+    C -->|Groq| D[Bounded Groq Browser Search]
+    C -->|Gemini| E[Gemini 3.8 URL Context]
+    D --> F{Exact browser.open source result available?}
+    E --> G{Successful exact-URL retrieval and citation?}
+    F -->|No| H[Keep URL, explain error and offer pasted text]
+    G -->|No| H
+    F -->|Yes| I[Retain excerpt and show retrieval complete]
+    G -->|Yes| I
+    I --> J{Groq retrieval and Groq analysis?}
+    J -->|Yes| K[Show configurable pause countdown]
+    J -->|No| L[Continue without Groq-to-Groq pause]
+    K --> M{Stopped before analysis?}
+    L --> M
+    M -->|Yes| N[Keep source for manual continuation]
+    M -->|No| O[Analyze using separately selected model and approval]
+    O --> P[Keep source type, excerpt label and exact link visible]
 ```
 
-The excerpt is provider-mediated source context, not the model's generated summary, a complete advertisement guarantee, or independently verified live source data. The website's update time and ad's active status are not established by a successful provider read.
+The excerpt is provider-mediated source context, not the model's generated summary, a complete advertisement guarantee, or independently verified live source data. A citation check establishes URL attribution, not semantic completeness or correctness. The website's update time and ad's active status are not established by a successful provider read.
 
 ## Compact requirement inspection (implemented, PR merge pending)
 
@@ -371,7 +380,7 @@ Load the non-secret AI configuration (Gemini document/profile defaults: 3.5 Flas
 
 ## Approved provider recovery — 2026-10-08
 
-AI quota/failure → retain result and source → Try with alternate configured provider → update compact provider/model identity → clear private consent → review approved source selection → approve new recipient → continue unfinished document portion or retry matching/public extraction. No request runs merely because a provider is selected. Public extraction reuses received text. A changed document preview requires a new run or explicit restoration of saved text. FINN retrieval remains Groq/Exa.
+AI quota/failure → retain result and source → Try with alternate configured provider → update compact provider/model identity → clear private consent → review approved source selection → approve new recipient → continue unfinished document portion or retry matching/public extraction. No request runs merely because a provider is selected. Public extraction reuses received text. A changed document preview requires a new run or explicit restoration of saved text. FINN retrieval separately offers configured Groq Browser Search and Gemini URL Context plans; changing the source provider requires its own approval and never happens automatically.
 
 ## Profile population and compact review queue (ADR 0027)
 

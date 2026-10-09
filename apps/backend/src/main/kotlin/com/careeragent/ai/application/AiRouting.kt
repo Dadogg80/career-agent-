@@ -16,6 +16,7 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
     fun selection(task: AiTask, explicitProvider: String? = null, explicitModel: String? = null): AiSelection {
         val suffix = when (task) {
             AiTask.JOB_ANALYSIS -> "JOB"
+            AiTask.JOB_SOURCE_RETRIEVAL -> "JOB_SOURCE"
             AiTask.DOCUMENT_EXTRACTION -> "DOCUMENT"
             AiTask.PROFILE_SUMMARY -> "PROFILE"
             AiTask.PERSONAL_MATCH -> "MATCH"
@@ -26,6 +27,7 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
         val defaultModel = when (provider) {
             "groq" -> "openai/gpt-oss-20b"
             "gemini" -> when (task) {
+                AiTask.JOB_SOURCE_RETRIEVAL -> "gemini-3.8-flash"
                 AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY, AiTask.CV_TAILORING -> "gemini-3.5-flash-lite"
                 else -> value("GEMINI_MODEL", "gemini-3.5-flash")
             }
@@ -33,7 +35,10 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
         }
         val prefix = provider.uppercase()
         // Document/profile tasks have independent defaults; explicit task overrides still win.
-        val modelFallback = if (provider == "groq") value("GROQ_MODEL", defaultModel) else defaultModel
+        val modelFallback = if (provider == "groq") {
+            if (task == AiTask.JOB_SOURCE_RETRIEVAL) value("GROQ_BROWSER_MODEL", defaultModel)
+            else value("GROQ_MODEL", defaultModel)
+        } else defaultModel
         return AiSelection(if (provider == "gemini") "Gemini" else "Groq",
             explicitModel ?: value("${prefix}_${suffix}_MODEL", modelFallback))
     }
@@ -45,11 +50,18 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
             .joinToString("") { "%02x".format(it) }
         return AiPlan(AiApprovalPreview(token, selected.values.distinct()), selected)
     }
-    private fun candidatePlans(tasks: Array<out AiTask>) = listOf(
-        plan(tasks), plan(tasks, "Groq"), plan(tasks, "Gemini"),
-        plan(tasks, "Gemini", "gemini-3.5-flash"),
-        plan(tasks, "Gemini", "gemini-3.5-flash-lite"),
-    ).distinctBy { it.approval.token }
+    private fun candidatePlans(tasks: Array<out AiTask>): List<AiPlan> {
+        val taskSet = tasks.toSet()
+        val plans = if (taskSet == setOf(AiTask.JOB_SOURCE_RETRIEVAL)) mutableListOf(
+            plan(tasks), plan(tasks, "Groq"), plan(tasks, "Gemini", "gemini-3.8-flash"),
+        ) else mutableListOf(
+            plan(tasks), plan(tasks, "Groq"), plan(tasks, "Gemini"),
+            plan(tasks, "Gemini", "gemini-3.5-flash"),
+            plan(tasks, "Gemini", "gemini-3.5-flash-lite"),
+        )
+        if (taskSet == setOf(AiTask.JOB_ANALYSIS)) plans += plan(tasks, "Gemini", "gemini-3.8-flash")
+        return plans.distinctBy { it.approval.token }
+    }
 
     fun preview(vararg tasks: AiTask) = plan(tasks).approval
     private fun available(plan: AiPlan) = plan.tasks.values.all {

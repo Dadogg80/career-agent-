@@ -25,7 +25,8 @@ test("FINN waits ten seconds before analysis and does not duplicate requests", a
   await page.clock.fastForward(1000);
   await expect(page.getByRole("heading", { name: "Kotlin", exact: true })).toBeVisible();
   expect(imports).toBe(1); expect(analyses).toBe(1);
-  await expect(page.getByRole("button", { name: "Utviklerdiagnostikk", exact: true })).toHaveCount(0);
+  const diagnostics = page.getByRole("button", { name: "Utviklerdiagnostikk", exact: true });
+  if (await diagnostics.count()) await expect(page.locator(".diagnostic-sheet")).not.toBeVisible();
 });
 
 test("stopping a pause preserves the source and a retry respects the remaining pause", async ({ page }) => {

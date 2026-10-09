@@ -29,6 +29,35 @@ class GeminiAiModelTest {
         assertThat(body).doesNotContainKeys("tools", "cachedContent")
     }
 
+    @Test fun `Gemini 3 point 8 uses the Interactions API structured-output contract`() {
+        val schema = mapOf<String,Any>("type" to "object", "additionalProperties" to false)
+        val model = adapter()
+        val body = model.interactionsRequestBody("system rules", "untrusted input", schema, AiTask.JOB_ANALYSIS)
+        assertThat(body["model"]).isEqualTo("gemini-3.8-flash")
+        assertThat(body["system_instruction"]).isEqualTo("system rules")
+        assertThat(body["input"]).isEqualTo("untrusted input")
+        assertThat(body["response_format"]).isEqualTo(mapOf("type" to "text", "mime_type" to "application/json", "schema" to schema))
+        assertThat(model.interactionsContent("""{"status":"completed","output_text":"{}"}""")).isEqualTo("{}")
+        for (invalid in listOf("""{"status":"in_progress","output_text":"{}"}""", """{"status":"completed","output_text":"not json"}""")) {
+            assertThatThrownBy { model.interactionsContent(invalid) }.isInstanceOf(AiFailure::class.java)
+        }
+    }
+
+    @Test fun `Gemini 3 point 8 analysis uses Interactions endpoint and keeps actual selected model`() {
+        val client = mock(HttpClient::class.java)
+        @Suppress("UNCHECKED_CAST") val response = mock(HttpResponse::class.java) as HttpResponse<String>
+        `when`(response.statusCode()).thenReturn(200)
+        `when`(response.headers()).thenReturn(HttpHeaders.of(emptyMap()) { _,_ -> true })
+        `when`(response.body()).thenReturn("""{"status":"completed","output_text":"{}","usage":{"input_tokens":10}}""")
+        `when`(client.send(any(HttpRequest::class.java), any<HttpResponse.BodyHandler<String>>())).thenReturn(response)
+        val model = GeminiAiModel(mapper, "fictional-key", routing, client, AiCooldowns())
+        assertThat(model.generateJson("rules", "source", emptyMap(), AiTask.JOB_ANALYSIS, AiSelection("Gemini", "gemini-3.8-flash"))).isEqualTo("{}")
+        val capture = ArgumentCaptor.forClass(HttpRequest::class.java)
+        verify(client, times(1)).send(capture.capture(), any<HttpResponse.BodyHandler<String>>())
+        assertThat(capture.value.uri().toString()).isEqualTo("https://generativelanguage.googleapis.com/v1beta/interactions")
+        assertThat(capture.value.headers().firstValue("x-goog-api-key")).isEqualTo(Optional.of("fictional-key"))
+    }
+
     @Test fun `thought text is excluded and blocked truncated empty or malformed outputs remain recoverable`() {
         val model = adapter()
         assertThat(model.content("""{"candidates":[{"finishReason":"STOP","content":{"parts":[{"thought":true,"text":"PRIVATE REASONING"},{"text":"{\"skills\":[]}"}]}}]}""")).isEqualTo("""{"skills":[]}""")
@@ -138,13 +167,25 @@ class GeminiAiModelTest {
         val routing=AiRouting(MockEnvironment()
             .withProperty("GEMINI_API_KEY","fictional-key")
             .withProperty("GROQ_API_KEY","fictional-key"))
-        for (task in AiTask.entries) {
+        for (task in AiTask.entries.filter { it != AiTask.JOB_SOURCE_RETRIEVAL }) {
             val lite=routing.options(task).single {
                 it.available && it.approval.selections.singleOrNull()==AiSelection("Gemini","gemini-3.5-flash-lite")
             }
             assertThat(routing.resolveApproval(lite.approval.token,task).tasks.getValue(task))
                 .isEqualTo(AiSelection("Gemini","gemini-3.5-flash-lite"))
         }
+    }
+    @Test fun `3 point 8 Flash is selectable for job analysis while source retrieval offers only compatible models`() {
+        val routing = AiRouting(MockEnvironment().withProperty("GROQ_API_KEY","fictional-key").withProperty("GEMINI_API_KEY","fictional-key"))
+        val jobModel = routing.options(AiTask.JOB_ANALYSIS).single {
+            it.available && it.approval.selections.singleOrNull() == AiSelection("Gemini", "gemini-3.8-flash")
+        }
+        assertThat(routing.resolveApproval(jobModel.approval.token, AiTask.JOB_ANALYSIS).tasks.getValue(AiTask.JOB_ANALYSIS))
+            .isEqualTo(AiSelection("Gemini", "gemini-3.8-flash"))
+        val sourceOptions = routing.options(AiTask.JOB_SOURCE_RETRIEVAL)
+        assertThat(sourceOptions.map { it.approval.selections.single() })
+            .containsExactly(AiSelection("Groq", "openai/gpt-oss-20b"), AiSelection("Gemini", "gemini-3.8-flash"))
+        assertThat(sourceOptions).allMatch { it.available }
     }
     @Test fun `Lite defaults apply to document and profile tasks while analytical and Groq overrides remain intact`() {
         val env = MockEnvironment().withProperty("AI_PROVIDER", "gemini")

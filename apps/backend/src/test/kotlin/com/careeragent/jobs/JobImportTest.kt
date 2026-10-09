@@ -104,4 +104,14 @@ class JobImportApiTest {
         mvc.perform(post("/api/jobs/import").contentType("application/json").content("{\"url\":\"${JobImporter.canonicalUrl(id)}\"}"))
             .andExpect(status().isOk).andExpect(jsonPath("$.title").value("Utvikler"))
     }
+    @Test fun `invalid model approval releases the source permit for subsequent imports`() {
+        val id = "12345678-1234-1234-1234-123456789abc"
+        mvc.perform(post("/api/jobs/import").contentType("application/json")
+            .content("{\"url\":\"${JobImporter.canonicalUrl(id)}\",\"aiApproval\":\"invalid\"}"))
+            .andExpect(status().isBadRequest).andExpect(jsonPath("$.code").value("SOURCE_MODEL_SELECTION_INVALID"))
+        `when`(source.load(id)).thenReturn(ImportedJob(JobImporter.canonicalUrl(id), "Utvikler", "Kotlin er et krav for denne spennende stillingen.", "2026-10-07T00:00:00Z"))
+        mvc.perform(post("/api/jobs/import").contentType("application/json")
+            .content("{\"url\":\"${JobImporter.canonicalUrl(id)}\"}"))
+            .andExpect(status().isOk).andExpect(jsonPath("$.title").value("Utvikler"))
+    }
 }
