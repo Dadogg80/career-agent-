@@ -157,3 +157,9 @@ Next: independently measure semantic visibility/criterion recall across professi
 PR #31 and #32 are verified merged, with successful pre-merge Foundation checks. From main `e7f18bf`, ADR 0035 adds local full-text preview/copy incorporating approved wording substitutions only, exact-source preservation and clipboard-failure recovery. No AI calls, backend change or tailored file/version is introduced.
 
 Next priorities remain independent cross-profession semantic matching/visibility evaluation and concrete joined-flow improvements. Durable reviewed changesets, export/layout, letters and submission stay separate later milestones. Keep local validation focused and avoid live provider calls by default.
+
+## Source-neutral advertisement quality — 2026-10-09
+
+Prepared from merged PR #34/main `c07244e`: literal practical-field recovery and merged saved facts across received sources, plus conservative source-based requirement importance (ADR 0038). Direct URL adapters remain FINN/NAV; other employers' received/pasted text is supported. No automatic caching, platform-summary stripping, full linguistic guarantee or new provider default is claimed.
+
+Next priority resumes the joined document/profile → saved job/full-profile match → reviewed CV wording journey. Keep independent semantic evaluation, broader source adapters, durable review decisions and tailored file/version generation as distinct follow-ups. Avoid additional live-provider comparison by default.

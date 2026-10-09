@@ -33,16 +33,69 @@ export function narrativeText(source: string, facts: JobFact[], target: Narrativ
   }))];
 }
 
-// Literal labelled fields only; no guessed dates, names, locations or requirement categories.
+// Source-neutral literal fields. No inferred names, dates or person/contact associations.
 export function localPracticalFacts(source: string): JobFact[] {
-  const fields: {kind: JobFact["kind"]; pattern: RegExp}[] = [
-    {kind:"CONTACT",pattern:/^(?:kontaktperson(?:er)?|kontakt|contact(?: person)?|contact details)\s*:\s*(.+)$/i},
-    {kind:"LOCATION",pattern:/^(?:arbeidssted|sted|lokasjon|location|work location)\s*:\s*(.+)$/i},
-    {kind:"DEADLINE",pattern:/^(?:søknadsfrist|frist|application deadline|deadline)\s*:\s*(.+)$/i},
+  const fields: { kind: JobFact["kind"]; pattern: RegExp }[] = [
+    { kind: "CONTACT", pattern: /^(kontaktperson(?:er)?|kontakt|spørsmål om stillingen|contact(?: person| details)?|enquiries)/i },
+    { kind: "CONTACT", pattern: /^(e-?post|e-?mail|telefon|tlf\.?|phone|telephone|mobile)/i },
+    { kind: "LOCATION", pattern: /^(arbeidssted|sted|lokasjon|location|work location)/i },
+    { kind: "DEADLINE", pattern: /^(søknadsfrist|application deadline|closing date|deadline)/i },
+    { kind: "OTHER", pattern: /^(ansettelsesform|stillingstype|stillingsprosent|employment type|contract type|salary|lønn)/i },
   ];
-  return source.split(/\r?\n/).flatMap(line=>{
-    const text=line.replace(/^\s*[-*]\s+/,"").trim();
-    const match=fields.map(field=>({kind:field.kind,match:field.pattern.exec(text)})).find(field=>field.match);
-    return match && text.length<=1000 && match.match![1].length<=500 ? [{kind:match.kind,label:text.slice(0,text.indexOf(":")),value:match.match![1],quote:text}] : [];
-  }).slice(0,10);
+  const lines = source.split(/\r?\n/);
+  const facts: JobFact[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const raw = lines[i].trim();
+    const text = raw.replace(/^[-*]\s+/, "").replace(/^#{1,6}\s+/, "").replace(/\*\*/g, "").trim();
+    const field = fields.map(field => ({ ...field, match: field.pattern.exec(text) })).find(field => {
+      if (!field.match) return false;
+      const rest = text.slice(field.match[0].length);
+      return !rest || /^\s*[:：]\s*/.test(rest);
+    });
+    if (!field?.match) continue;
+    const title = field.match[0];
+    const inline = text.slice(title.length).replace(/^\s*[:：]\s*/, "").trim();
+    let value = inline; let quote = raw;
+    if (!value) {
+      // A standalone label can govern the next nonempty line, but never another label.
+      let next = i + 1;
+      while (next < lines.length && !lines[next].trim()) next++;
+      const candidate = lines[next]?.trim();
+      if (candidate && !fields.some(f => f.pattern.test(candidate)) && !isHeading(candidate)) {
+        value = candidate; quote = lines.slice(i, next + 1).join("\n").trim();
+      }
+    }
+    if (value && value.length <= 500 && quote.length <= 1000) facts.push({ kind: field.kind, label: title, value, quote });
+  }
+  // An explicit email address is useful even without a labelled contact block.
+  for (const line of lines) {
+    const phones = line.match(/(?:\+47[ -]?(?:\d[ -]?){7}\d|\+[1-9]\d{7,14})(?!\d)/g) ?? [];
+    for (const phone of phones) {
+      if (line.trim().length <= 1000 && !facts.some(f => f.kind === "CONTACT" && f.value.includes(phone))) {
+        facts.push({ kind: "CONTACT", label: "Telefon / Phone", value: phone, quote: line.trim() });
+      }
+    }
+    const addresses = line.match(/[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9.-]*[A-Z0-9])?\.[A-Z]{2,}/gi) ?? [];
+    for (const address of addresses) {
+      if (line.trim().length <= 1000 && !facts.some(f => f.kind === "CONTACT" && f.value.includes(address))) {
+        facts.push({ kind: "CONTACT", label: "E-post / Email", value: address, quote: line.trim() });
+      }
+    }
+  }
+  return facts.filter((fact, i) => facts.findIndex(other => other.kind === fact.kind && other.value === fact.value) === i);
+}
+
+/** Keep all literal contact endpoints even when an AI fact only supplies a person's name. */
+export function practicalOverviewFacts(source: string, facts: JobFact[]): JobFact[] {
+  const normalize = (value: string) => value.replace(/\s+/g, " ").trim();
+  const merged = [...facts];
+  for (const local of localPracticalFacts(source)) {
+    const found = merged.findIndex(f => f.kind === local.kind && normalize(f.quote) === normalize(local.quote));
+    if (found >= 0) {
+      // Keep manual corrections; otherwise restore the complete literal labelled value.
+      if (!/^(Manuelt fra annonsen|Manually added from advertisement)(?::|$)/.test(merged[found].label)) merged[found] = local;
+    } else if (!merged.some(f => f.kind === local.kind && normalize(f.value).includes(normalize(local.value)))) merged.push(local);
+  }
+  // Do not silently drop reviewed/manual facts to meet the saved snapshot limit.
+  return merged;
 }

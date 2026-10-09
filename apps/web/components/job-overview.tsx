@@ -1,7 +1,7 @@
 import { BriefcaseBusiness, Building2, CalendarDays, ChevronDown, Gift, MapPin, UserRound, UsersRound } from "lucide-react";
 import type { Ref } from "react";
 import { Card, CardContent, CardHeader } from "./ui/card";
-import { narrativeText, localPracticalFacts } from "../lib/advertisement-text";
+import { narrativeText, practicalOverviewFacts } from "../lib/advertisement-text";
 import type { JobFact } from "../lib/job-requirements";
 import type { Locale } from "../lib/translations";
 
@@ -18,8 +18,8 @@ const copy = {
     location: "Arbeidssted",
     contact: "Kontaktperson",
     deadline: "Søknadsfrist",
-    missing: "Ikke identifisert i analysen. Se originalannonsen.",
-    missingContact: "Ikke identifisert i analysen. Se annonseteksten eller originalannonsen.",
+    missing: "Ikke oppgitt i hentet tekst. Se originalannonsen.",
+    missingContact: "Ikke oppgitt i hentet tekst. Se annonseteksten eller originalannonsen.",
     quote: "Sitat fra kilden",
     manualOrigin: "Manuelt fra annonsen",
     manualAdded: "Manuelt lagt til",
@@ -41,8 +41,8 @@ const copy = {
     location: "Location",
     contact: "Contact person",
     deadline: "Application deadline",
-    missing: "Not identified in the analysis. Check the original advertisement.",
-    missingContact: "Not identified in the analysis. Check the advertisement text or original page.",
+    missing: "Not stated in the received text. Check the original advertisement.",
+    missingContact: "Not stated in the received text. Check the advertisement text or original page.",
     quote: "Source quote",
     manualOrigin: "Manually added from advertisement",
     manualAdded: "Added manually",
@@ -54,14 +54,19 @@ const copy = {
   },
 };
 
-type NarrativeKind = "COMPANY" | "ROLE" | "APPLICANT" | "OFFER";
+function ContactValue({ value }: { value: string }) {
+  const email = /^[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
+  const phone = /^\+?[0-9][0-9 ()-]{6,24}$/;
+  if (email.test(value)) return <a className="underline" href={`mailto:${value}`}>{value}</a>;
+  if (phone.test(value) && value.replace(/\D/g, "").length <= 15) return <a className="underline" href={`tel:${value.replace(/[^+0-9]/g, "")}`}>{value}</a>;
+  return <>{value}</>;
+}
 
 export function JobOverview({ facts, locale, sourceLocale, fallbackText, sourceText = "", locallyOrganized = false, sourceReaderRef }: { facts: JobFact[]; locale: Locale; sourceLocale: Locale; fallbackText?: string; sourceText?: string; locallyOrganized?: boolean; sourceReaderRef?: Ref<HTMLDetailsElement> }) {
   const t = copy[locale];
-  const localFacts = localPracticalFacts(sourceText);
+  const allFacts = practicalOverviewFacts(sourceText, facts);
   const group = (kind: JobFact["kind"]) => {
-    const extracted = facts.filter(fact => fact.kind === kind);
-    return extracted.length ? extracted : localFacts.filter(fact => fact.kind === kind);
+    return allFacts.filter(fact => fact.kind === kind);
   };
   const narratives = {
     COMPANY: narrativeText(sourceText, facts, "COMPANY"),
@@ -113,7 +118,7 @@ export function JobOverview({ facts, locale, sourceLocale, fallbackText, sourceT
           <div className="overview-card-heading"><Icon size={16} aria-hidden="true"/><h5>{label}</h5></div>
           {group(kind).length ? group(kind).map((fact, index) => <div key={index} className="metadata-entry">
             {fact.label.startsWith(t.manualOrigin) && <span className="job-fact-manual-badge">{t.manualAdded}</span>}
-            <p className="fact-value" lang={sourceLocale}>{fact.value}</p>
+            <p className="fact-value" lang={sourceLocale}>{kind === "CONTACT" ? <ContactValue value={fact.value}/> : fact.value}</p>
             <details><summary>{t.quote}</summary><blockquote lang={sourceLocale}>{fact.quote}</blockquote></details>
           </div>) : <p className="hint metadata-entry">{kind === "CONTACT" ? t.missingContact : t.missing}</p>}
         </CardContent></Card>)}
