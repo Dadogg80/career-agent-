@@ -92,3 +92,7 @@ Next: collect recipient-approved recorded model outputs against independently re
 ## Full-profile matching continuation — 2026-10-09
 
 The owner prioritized complete automatic matching and job-card percentages ahead of career-period conflict review. On the current branch: all supported CONFIRMED contributions are approved together, literal repeated passages are packed once without losing skill/revision identities, full saved advertisement text is included, and new confirmations invalidate automatic-evidence results. Cards read the saved percentage without another AI request. Provider quotas/context remain external limits. Explicit company/project/date reconciliation is still next; no conflict records or resolution UI were added in this slice.
+
+## Career history comparison — 2026-10-09
+
+PR #25 is verified merged at `d2fbf25`. Current `feat/career-period-review` adds a local candidate-difference panel for exact role/employer/client/delivery-role identities with known overlapping, unequal month periods. Unknown dates, different roles/clients and disjoint rehires are not automatically flagged. Any two active history entries can be compared manually, including company/project wording and on-demand exact documentary evidence. Corrections reuse existing revision-checked editing and require renewed factual confirmation. No automatic merging, AI request or new persistence is introduced. Durable keep-both/dismissal records, aliases, source-authority ranking and generalized company/project/period reconciliation remain pending.
