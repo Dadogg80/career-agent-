@@ -131,8 +131,13 @@ test("empty profile areas guide the owner through a truthful source-first setup"
   await expect(competencyPanel.locator(".competency-stats")).toHaveCount(0);
   await competencyPanel.getByRole("link", { name: "Start med CV eller dokument" }).click();
   await expect(page.getByRole("button", { name: "Dokumenter og AI-profil", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("link", { name: "Åpne dokumentbiblioteket", exact: true }).click();
+  await expect(page).toHaveURL(/\/documents$/);
+  await expect(page.getByLabel("Dokumentfil", { exact: true })).toBeVisible();
   await expect(page.locator(".document-empty-state")).toBeVisible();
   await expect(page.locator(".document-empty-steps")).toContainText("Kontroller den lokale tekstlesingen");
+  await page.getByRole("link", { name: "Åpne profil og gjennomgang", exact: true }).click();
+  await expect(page).toHaveURL(/\/career\/profile#profile-documents$/);
 
   await page.getByRole("button", { name: "Din kompetanse", exact: true }).click();
   await competencyPanel.getByRole("button", { name: "Legg til manuelt" }).click();
