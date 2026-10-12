@@ -273,3 +273,40 @@ test("clarification rejection retains identity has a reversible review and never
  await assessment.getByLabel("Beskriv det du selv gjorde",{exact:true}).fill("Built Kafka integrations but did not operate production deployments.");await page.screenshot({path:"/tmp/career-clarification-mobile.png",fullPage:true});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await assessment.getByRole("button",{name:"Bekreft og lagre i profilen",exact:true}).click();await expect(assessment).toContainText("Svaret ditt er lagret og med i grunnlaget");expect(creates).toBe(0);expect(updates).toBe(1);expect(confirmations).toBe(1);expect(rejections).toBe(2);expect(ai).toBe(0);
 });
+
+test("confirming one job answer refreshes every visible saved match without creating an AI call",async({page})=>{
+ const otherId="92345678-1234-1234-1234-123456789abc";
+ const other={...job,id:otherId,content:{...job.content,title:"Another fictional opportunity"}};
+ let answer={...confirmed,id:pendingId,skill:"Kafka",statement:"Built Kafka integrations.",context:"Fictional AS",sourceNote:`User clarification for job ${jobId}; requirement 1`,status:"UNVERIFIED",revision:1};
+ let edited=false,aiCalls=0,creates=0,reviews=0;
+ const reads:Record<string,number>={[jobId]:0,[otherId]:0};
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
+ await page.route("**/api/profile/me/claims**",r=>{
+  if(r.request().method()==="GET")return r.fulfill({json:[confirmed,answer]});
+  if(r.request().url().endsWith(`/claims/${pendingId}/review`)){
+   const input=r.request().postDataJSON();expect(input).toEqual({decision:"CONFIRM",revision:answer.revision});reviews++;
+   answer={...answer,status:"CONFIRMED",revision:2};edited=true;return r.fulfill({json:answer});
+  }
+  creates++;return r.fulfill({status:500,json:{code:"UNEXPECTED_CREATE"}});
+ });
+ await page.route("**/api/profile/me/jobs**",r=>{
+  const id=r.request().url().includes(otherId)?otherId:jobId;
+  if(r.request().url().endsWith("/match")){
+   if(r.request().method()==="POST")aiCalls++;else reads[id]++;
+   return r.fulfill({json:{...result,automaticEvidence:true,stale:edited}});
+  }
+  return r.fulfill({json:[job,other]});
+ });
+ await page.goto("/jobs/saved");
+ const cards=page.locator(".saved-job-card");await expect(cards).toHaveCount(2);
+ await expect(cards.nth(1).locator(".saved-job-match")).toContainText("krav med grunnlag");
+ const before=reads[otherId];
+ await cards.first().getByRole("button",{name:"Åpne stilling",exact:true}).click();
+ const assessment=page.getByRole("dialog").locator(".match-assessment").filter({has:page.locator("summary").filter({hasText:"Kafka"})});
+ await assessment.locator(":scope > summary").click();
+ await assessment.getByText("Rediger det lagrede svaret",{exact:true}).click();
+ await assessment.getByRole("button",{name:"Bekreft og lagre i profilen",exact:true}).click();
+ await expect(assessment).toContainText("Svaret ditt er lagret og med i grunnlaget");
+ await expect(cards.nth(1).locator(".saved-job-match")).toContainText("Profilen er endret · vurder på nytt");
+ expect(reads[otherId]).toBeGreaterThan(before);expect(reviews).toBe(1);expect(creates).toBe(0);expect(aiCalls).toBe(0);
+});

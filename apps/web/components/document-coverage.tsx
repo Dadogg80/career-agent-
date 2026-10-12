@@ -1,4 +1,5 @@
 "use client";
+import { refreshProfileEvidence } from "../lib/profile-evidence-cache";
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -93,7 +94,7 @@ export function DocumentCoverage({ run, nb, csrfToken, onAuthRequired, onRunUpda
       onRunUpdate(result.run);
       cache.setQueryData(["private-document-workflow", run.scope], result.run);
       await Promise.all([
-        cache.invalidateQueries({ queryKey: ["private-claims"] }),
+        refreshProfileEvidence(cache),
         cache.invalidateQueries({ queryKey: ["private-entries"] }),
         cache.invalidateQueries({ queryKey: ["private-claim-context"] }),
       ]);

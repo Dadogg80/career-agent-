@@ -1,4 +1,5 @@
 "use client";
+import { refreshProfileEvidence } from "../lib/profile-evidence-cache";
 import { ClaimEvidence } from "./claim-evidence";
 import { ClaimCareerLinks } from "./claim-career-context";
 import { ClaimGroupCard } from "./claim-group-card";
@@ -69,7 +70,7 @@ export function ClaimPanel({ locale, csrfToken, onAuthRequired }: { locale: Loca
     setDraft(empty);
     setNotice(command.kind === "create" ? existing ? "existing" : "created" : command.kind === "edit" ? "changed" : command.kind === "delete" ? "deleted" : "reviewed");
     cache.removeQueries({ queryKey: ["private-claim-history"] });
-    await cache.invalidateQueries({ queryKey: ["private-claims"] });
+    await refreshProfileEvidence(cache);
     await cache.invalidateQueries({ queryKey: ["private-claim-context"] });
     if (reviewQueue && command.kind !== "create") advanceReview(command.claim.id);
   } });

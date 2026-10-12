@@ -1,4 +1,5 @@
 "use client";
+import { refreshProfileEvidence } from "../lib/profile-evidence-cache";
 
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -25,7 +26,7 @@ export function MatchClarification({question,requirement,requirementIndex,existi
  }
  async function refreshed(decision:"CONFIRM"|"REJECT"){
   onSaved(decision);
-  await cache.invalidateQueries({queryKey:["private-claims"]});await cache.invalidateQueries({queryKey:["private-job-match",jobId]});
+  await refreshProfileEvidence(cache);
  }
  const save=useMutation({retry:false,mutationFn:async()=>{
   const content={skill,statement,context,sourceNote:existing?.sourceNote??`User clarification for job ${jobId}; requirement ${requirementIndex}`};

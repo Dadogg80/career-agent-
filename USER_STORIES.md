@@ -471,3 +471,9 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - My master CV is selected automatically for wording proposals. If none is marked, I choose the CV instead of having a certificate silently selected for me.
 - I can clear/change that choice and approve the new source separately. Selecting a CV does not require selecting competency evidence.
 - If too little text was extracted, I see guidance to choose another CV or reread/OCR the original in my profile, without spending an AI call.
+
+## Match freshness across the profile
+
+- After a competency change, every visible saved-job card rechecks whether its assessment is still current, including jobs other than the one I am clarifying.
+- During that check I see a freshness status rather than an old percentage presented as current. The prior result remains readable.
+- Refreshing evidence and saved status does not start AI or change my confirmed facts, percentages or recipient approval.

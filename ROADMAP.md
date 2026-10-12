@@ -171,3 +171,7 @@ Implemented compact, shared configuration loading/failure/unavailable states and
 ### Joined journey: base-CV selection
 
 Application preparation now defaults only to an explicitly marked master CV. With no master, it asks for the wording source without guessing document type. Added local short-text recovery guidance and preserved full confirmed evidence, source checks and consent reset. This does not add semantic CV detection, automatic OCR or tailored file generation.
+
+### Joined journey: shared profile/match freshness
+
+Competency/profile mutations now invalidate the full cached saved-match family alongside owned claims. This closes the stale-card gap when an answer for one job changes the candidate evidence used by other jobs. Document population/source promotion/deletion share the same refresh; server revision checks remain authoritative. Visible status refreshes are read-only, with no AI rerun. Cross-tab synchronization and broader end-to-end identity/persistence review remain subsequent work.

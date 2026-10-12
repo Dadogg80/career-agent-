@@ -236,3 +236,7 @@ Shared model selectors expose metadata retrieval failures and missing task confi
 ### Explicit base-CV identity — implemented 2026-10-09
 
 Use the existing master-document designation for automatic CV preselection; otherwise require a source choice in application preparation. Upload order and filename are insufficient to establish CV identity. This frontend guard preserves all available confirmed matching evidence and existing backend source/consent validation. Short extraction guidance uses a bounded text-length check, not a semantic claim that a document is a complete CV.
+
+### Shared profile-evidence freshness — implemented 2026-10-12
+
+Use one frontend cache-refresh helper for competency mutations: invalidate owned claims and all saved-match query keys. Confirmed evidence is shared across jobs, so refreshing only the open job after an inline clarification is insufficient. Refetch active saved assessments through existing owned GET endpoints; keep inactive assessments invalidated for their next mount. Preserve server staleness/revision checks, historical results and explicit approval for AI reruns. This adds no provider call, score recomputation or persistence schema.
