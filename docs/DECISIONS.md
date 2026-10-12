@@ -254,3 +254,7 @@ Collapse processing/source-check details by default after completion, while keep
 Library search/filtering uses metadata locally and does not change the collection used by combined analysis. Reading status remains technical, separate from competence truth/analysis status; unknown metadata is not a success indicator.
 
 The owner requires advance notice and a joint discussion of their external assistant's flow before further CV-tailoring implementation. Document/profile/competency work continues; current CV functionality is retained. This explicit instruction overrides earlier continuation priorities.
+
+### Long technology-list recovery — implemented 2026-10-12
+
+Raise the local per-row item bound from 30 to 300, matching the existing retained-suggestion bound, so otherwise valid explicit lists are not entirely lost. Keep the 600-character row bound, per-label constraints, exact quotations, context proof, deduplication and total workflow limits. No new inference, provider request, storage migration or historical-result rewrite is introduced.

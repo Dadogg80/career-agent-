@@ -41,7 +41,9 @@ internal object DocumentCompetencyInventory {
                 else proof.trimStart('#',' ').replace(Regex("(?iu)^(?:project|prosjekt|client|kunde|employer|arbeidsgiver)\\s*:\\s*"),"").take(200)
             val words=contents.split(Regex("\\s*[,;•|]\\s*|\\s+[-–]\\s+")).map { it.trim().trimEnd('.') }.filter { it.isNotBlank() }
             // Lists only: reject sentences, contact data, empty labels and overlong free text.
-            if(words.size !in 1..30 || words.any { it.length>120 || it.split(Regex("\\s+")).size>5 || it.contains('@') || it.contains("https://") })return@forEach
+            // Keep valid long lists within the existing 300-suggestion workflow bound.
+            // Source-row length and per-item validation still reject unbounded/free-form text.
+            if(words.size !in 1..300 || words.any { it.length>120 || it.split(Regex("\\s+")).size>5 || it.contains('@') || it.contains("https://") })return@forEach
             words.distinctBy(::normal).forEach { skill ->
                 if((existing+result).none { normal(it.skill)==normal(skill) && normal(it.context)==normal(context) && it.quote.contains(text) }) {
                     val statement=if(locale=="nb")"Dokumentet oppgir $skill i denne kompetanselisten." else "The document lists $skill in this skills section."

@@ -517,3 +517,7 @@ After processing completes, the reader shows a compact **Review ready** strip an
 ## Finding documents in the profile
 
 The document library uses compact rows with original names, local text-reading status and existing file actions. Search matches filenames only; filters show missing text, unknown legacy metadata or the designated master CV. These are display filters, not AI evidence selection. The combined-analysis shortcut stays above the list and still previews the complete collection, including unreadable sources requiring attention. Unknown metadata uses an inspection icon rather than a success check. A contextual explanation distinguishes text extraction from competency analysis/confirmation.
+
+## Local recovery of long technology lists
+
+The document extractor no longer discards an otherwise valid explicit technology list solely because it has more than 30 items on one line. Local recovery retains each literal label and its independently sourced employer/project context; repeated occurrences are not borrowed across employers. Existing source-row length, per-item validation, quotation and workflow-size bounds remain in force. This needs no additional model request and does not claim exhaustive extraction or change factual confirmation rules.

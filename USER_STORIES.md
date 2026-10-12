@@ -495,3 +495,9 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - I can find a document by filename and quickly locate sources with missing text, unknown text status or the master-CV designation.
 - I can clear an empty search/filter result and access combined analysis without scrolling through every file.
 - Filtering the list never silently narrows the combined-analysis preview. Reading status does not imply AI analysis or confirmed competencies.
+
+## Preserve a long explicit competency list
+
+- A valid technology list with more than 30 items is not silently discarded as a whole by local recovery.
+- Repeated labels under different employers keep their own literal source and context. Existing suggestions are not duplicated by recovery.
+- A sparse AI answer can be supplemented locally without another model call; source validation and existing defensive bounds remain unchanged.

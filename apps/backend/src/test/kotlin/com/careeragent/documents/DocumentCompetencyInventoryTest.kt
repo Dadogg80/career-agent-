@@ -70,4 +70,16 @@ class DocumentCompetencyInventoryTest {
         assertThat(recovered.map { it.skill }).containsExactly("FrameworkTechnology","PlatformRuntime","LibraryPackage")
         assertThat(recovered.map { it.quote }).containsOnly(row)
     }
+    @Test fun `a long explicit list retains every item and each employer occurrence`() {
+        val skills=listOf("React Native","C++","C#")+(1..35).map { "Tool$it" }
+        val row="Technology: "+skills.joinToString(", ")
+        val source="## First AS\nSenior Developer\n$row\n## Second AS\nSenior Developer\n$row"
+        val found=DocumentAnalysisPlanner.batches(mapOf(id to source)).flatMap {
+            DocumentCompetencyInventory.recover(it,source,"en",emptyList())
+        }
+        assertThat(found.filter { it.context=="First AS" }.map { it.skill }).containsExactlyElementsOf(skills)
+        assertThat(found.filter { it.context=="Second AS" }.map { it.skill }).containsExactlyElementsOf(skills)
+        assertThat(found).allMatch { it.quote==row && source.contains(it.quote) && it.recovered && !it.drafted }
+        assertThat(found.first { it.context=="Second AS" }.contextQuote).isEqualTo("## Second AS")
+    }
 }
