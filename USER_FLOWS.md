@@ -501,3 +501,7 @@ Model selectors in advertisement retrieval/analysis, full-document/excerpt revie
 ## Selecting the CV for wording proposals
 
 Application preparation preselects a document only when it is explicitly marked as the master CV. Without a master, select the CV document from the list; the first uploaded certificate or project description is never silently treated as the CV. This selects the wording source, not the competencies: matching/tailoring retain the full confirmed evidence. Clearing or changing the choice clears consent and makes older wording historical. A selected document with fewer than 40 text characters after trimming leading/trailing whitespace shows a local rereading/OCR guidance link before an AI call; originals and prior results are retained.
+
+## Profile evidence changes and saved-match freshness
+
+Confirming, editing, rejecting or deleting competency evidence refreshes the owned claims list and invalidates all cached saved-job match queries, not only the open job. The same refresh applies to documented profile population, manual source promotion and document deletion. Visible cards recheck saved assessments through read-only requests; while checking they label their percentage as being refreshed. The server decides whether a saved result is stale from the confirmed revision set. Historical percentages are retained and not silently recomputed. Updating an AI assessment still requires separate approval.
