@@ -189,3 +189,9 @@ Current delivery concentrates on usability and integrated quality: compact compl
 ### Completed-document overview
 
 Added a compact completion strip and on-demand processing/source-check disclosure; active/paused runs retain expanded progress. Review actions, literal quotations, saved model attribution and completion limitations are preserved. This changes presentation only, with no provider call or automatic factual confirmation.
+
+### Document library and owner CV-tailoring gate — 2026-10-12
+
+Implemented filename search, technical reading/master filters, compact source rows and a combined-analysis shortcut above the library. Retained complete collection preview, source actions and explicit AI approval. Continue document/profile/competency usability and quality work.
+
+Further CV-tailoring development is explicitly paused by the owner: notify them clearly before starting, wait for their supplied user/process flow, and discuss the approach before implementation. A generic continuation does not lift this gate. Existing CV proposal functionality is retained.

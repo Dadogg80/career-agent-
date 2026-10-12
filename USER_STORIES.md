@@ -489,3 +489,9 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - When an analysis is complete, I reach competency/profile/history review without scrolling through expanded technical processing details.
 - I can open source checks and processing details on demand, including missed-passage review, with no new AI request.
 - During processing or a quota pause, progress/recovery information stays expanded. Completion does not imply that every competency was found.
+
+## Navigating document sources
+
+- I can find a document by filename and quickly locate sources with missing text, unknown text status or the master-CV designation.
+- I can clear an empty search/filter result and access combined analysis without scrolling through every file.
+- Filtering the list never silently narrows the combined-analysis preview. Reading status does not imply AI analysis or confirmed competencies.

@@ -513,3 +513,7 @@ Choose **Rediger først / Edit first** in the guided review dialog to adjust the
 ## Completed document analysis: results first
 
 After processing completes, the reader shows a compact **Review ready** strip and the result-review navigation. **Show source checks and analysis details** expands the retained processing counts, source-character coverage, actual saved model plan and source-usage review. It starts no request or AI analysis. While processing or paused, progress and source checks remain expanded for recovery. Completion is explicitly not a guarantee of complete extraction; originals, source quotations and all review/promotion actions retain their existing rules. The processing/source-check subtree stays mounted during the transition to preserve local review state.
+
+## Finding documents in the profile
+
+The document library uses compact rows with original names, local text-reading status and existing file actions. Search matches filenames only; filters show missing text, unknown legacy metadata or the designated master CV. These are display filters, not AI evidence selection. The combined-analysis shortcut stays above the list and still previews the complete collection, including unreadable sources requiring attention. Unknown metadata uses an inspection icon rather than a success check. A contextual explanation distinguishes text extraction from competency analysis/confirmation.
