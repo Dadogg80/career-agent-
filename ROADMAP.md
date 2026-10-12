@@ -229,3 +229,8 @@ Implemented for review: unclipped shared model menu; saved owner-scoped library 
 Completed for review: immutable reviewed-text CV draft/library handoff (ADR 0041), grouped competency/career confirmation using existing review endpoints, shared dialog/sheet styling and non-expanding public model menus. No new AI calls or migrations.
 
 Next priority from owner feedback: explicit individual profile-summary adoption into a durable chosen presentation, preserved across new analyses; current presentation still reads the newest saved document synthesis and edits that analysis. Follow with generated standard DOCX/PDF draft artifacts and independent final-document review. This delivery does not implement those next stages or CV_READY.
+
+
+## 2026-10-12 — CV tailoring readiness guidance
+
+Delivered: actionable CV-tailoring readiness explanations and direct navigation to update stale matching. Durable presentation-section adoption and generated tailored artifacts with independent final review remain subsequent slices.

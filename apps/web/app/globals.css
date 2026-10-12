@@ -2055,3 +2055,13 @@ button:disabled { cursor:not-allowed; }
 .preparation-empty-evidence>div { padding:20px 22px; }
 .preparation-empty-evidence h3 { font-size:16px; margin-bottom:8px; }
 .preparation-empty-evidence p { font-size:12px; line-height:1.7; margin:0 0 12px; color:#657b6a; }
+
+/* Explain tailoring prerequisites beside the consent they block. */
+.preparation-blockers { margin:16px 0; padding:16px; border:1px solid #ead9b8; border-radius:12px; background:#fff9ee; color:#6b512b; font-size:13px; line-height:1.65; }
+.preparation-blockers h5 { display:flex; align-items:center; gap:8px; margin:0 0 10px; font-size:14px; font-weight:650; }
+.preparation-blockers ul { margin:0; padding-left:18px; }
+.preparation-blockers li+li { margin-top:12px; }
+.preparation-blockers li button,.preparation-blockers li a { display:flex; width:fit-content; margin-top:8px; }
+.preparation-blockers li a { text-decoration:underline; font-weight:600; }
+.preparation-blockers p { margin:12px 0 0; font-size:12px; }
+#preparation-match { scroll-margin-top:100px; }

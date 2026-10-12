@@ -652,3 +652,8 @@ Limits: wording drafts contain unchanged original text that is not newly semanti
 Owner feedback also refreshed application preparation: compact icon-led evidence/match/base-CV metrics, a clear job heading/back action, expandable matching and a two-column source/AI-approval setup that stacks on mobile. Existing source previews, recipient approval, readiness and review logic remain unchanged.
 
 Application-preparation follow-up validation: three focused cases passed for full-source consent, saved wording/reload and draft handoff; the two affected source/draft cases passed again after replacing transient zero counts with loading states. Reviewed the complete desktop preparation screenshot with settled source data.
+
+
+## 2026-10-12 — CV tailoring readiness guidance
+
+Added localized inline tailoring blockers, accessible checkbox description, focused match-recovery navigation and readable mobile styling. Preserve existing source/revision/provider consent safeguards and allow unresolved questions. Frontend production build/typecheck passed; three focused browser cases passed for the normal consent flow, missing/stale evidence recovery, unreadable CV guidance in NB/EN and non-blocking clarification on mobile. No backend changes or live provider calls.
