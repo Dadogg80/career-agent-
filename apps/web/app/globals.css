@@ -2065,3 +2065,8 @@ button:disabled { cursor:not-allowed; }
 .preparation-blockers li a { text-decoration:underline; font-weight:600; }
 .preparation-blockers p { margin:12px 0 0; font-size:12px; }
 #preparation-match { scroll-margin-top:100px; }
+
+.selected-presentation { margin-bottom:24px; border-color:#b5d6c5; }
+.selected-presentation h3 { display:flex; gap:9px; align-items:center; }
+.presentation-adopt { margin:14px 0 8px; }
+.presentation-adopt button { white-space:normal; height:auto; min-height:36px; text-align:left; }

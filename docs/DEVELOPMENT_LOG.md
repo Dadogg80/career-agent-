@@ -657,3 +657,10 @@ Application-preparation follow-up validation: three focused cases passed for ful
 ## 2026-10-12 — CV tailoring readiness guidance
 
 Added localized inline tailoring blockers, accessible checkbox description, focused match-recovery navigation and readable mobile styling. Preserve existing source/revision/provider consent safeguards and allow unresolved questions. Frontend production build/typecheck passed; three focused browser cases passed for the normal consent flow, missing/stale evidence recovery, unreadable CV guidance in NB/EN and non-blocking clarification on mobile. No backend changes or live provider calls.
+
+
+## 2026-10-12 — Selected presentation sections and Documents navigation
+
+Verified PR #49 merged at daa8f46 (checks still running at initial inspection). Added V18 selected presentation storage, owned private read/selection endpoints, strict proxy, per-summary selection/replacement and a separate selected-presentation display. Source lookup and exact run/presentation revisions precede writes. Draft edits use the existing workflow summary endpoint. No live providers used. Dedicated document-page separation is queued immediately after this delivery.
+
+Validation: PostgreSQL/Flyway integration case passed for owned persistence, source/run/presentation conflicts, language isolation, CSRF/anonymous rejection and injected wording rejection. Frontend production build/typecheck and three focused production-browser cases passed (existing automatic population, adoption/replacement across newer analyses and reloads with mobile bounds, strict private proxy). The two new browser cases passed again after retaining legacy provider identity. No live AI calls; GitHub CI follows publication.

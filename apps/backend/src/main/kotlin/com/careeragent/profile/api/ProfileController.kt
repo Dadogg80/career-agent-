@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/api/profile/me")
-class ProfileController(private val profiles: ObjectProvider<ProfileService>) {
+class ProfileController(private val profiles: ObjectProvider<ProfileService>, private val presentations: ObjectProvider<com.careeragent.profile.application.PresentationService>) {
     private fun identity(principal: OidcUser?): VerifiedIdentity {
         val token = principal?.idToken ?: throw ProfileFailure("AUTH_REQUIRED", 401)
         return VerifiedIdentity(token.issuer.toString(), token.subject)
@@ -37,6 +37,22 @@ class ProfileController(private val profiles: ObjectProvider<ProfileService>) {
         val service = profiles.ifAvailable ?: throw ProfileFailure("PROFILE_DISABLED", 503)
         return ResponseEntity.ok().header("Cache-Control", "no-store").body(service.save(caller, name, language, (revision as Number).toLong()))
     }
+    @GetMapping("/presentation")
+    fun presentation(@AuthenticationPrincipal principal: OidcUser?, @RequestParam locale: String): ResponseEntity<Any> =
+        ResponseEntity.ok().header("Cache-Control","no-store").body((presentations.ifAvailable ?: throw ProfileFailure("PROFILE_DISABLED",503)).read(identity(principal),locale))
+    @PutMapping("/presentation",consumes=["application/json"])
+    fun selectPresentation(@AuthenticationPrincipal principal: OidcUser?,@RequestBody input: Map<String,Any?>):ResponseEntity<Any> {
+        val caller=identity(principal)
+        if(input.keys!=setOf("runId","runRevision","index","revision") || input["runId"] !is String || input["index"] !is Int ||
+            input["runRevision"] !is Number || input["revision"] !is Number || input["runRevision"] is Double || input["revision"] is Double)
+            throw ProfileFailure("PROFILE_INVALID",400)
+        val id=try {java.util.UUID.fromString(input["runId"] as String)}catch(_:IllegalArgumentException){throw ProfileFailure("PROFILE_INVALID",400)}
+        return ResponseEntity.ok().header("Cache-Control","no-store").body((presentations.ifAvailable ?: throw ProfileFailure("PROFILE_DISABLED",503))
+            .select(caller,id,(input["runRevision"] as Number).toLong(),input["index"] as Int,(input["revision"] as Number).toLong()))
+    }
+    @ExceptionHandler(com.careeragent.documents.application.DocumentFailure::class)
+    fun sourceRejected(error:com.careeragent.documents.application.DocumentFailure):ResponseEntity<Map<String,String>> =
+        ResponseEntity.status(error.status).header("Cache-Control","no-store").body(mapOf("code" to error.code))
     @GetMapping("/avatar")
     fun avatar(@AuthenticationPrincipal principal: OidcUser?): ResponseEntity<ByteArray> {
         val image = (profiles.ifAvailable ?: throw ProfileFailure("PROFILE_DISABLED", 503))

@@ -297,3 +297,8 @@ Queued owner request: choose individual generated profile sections for a durable
 ## 2026-10-12 — CV tailoring readiness guidance
 
 Keep tailoring consent unavailable until the existing evidence/source/current automatic-match gates pass. Explain active blockers beside consent rather than weakening source freshness. Source refresh temporarily blocks new consent while checks run; recovery buttons only reload metadata or open existing review, never start an AI request.
+
+
+## 2026-10-12 — Selected presentation sections and Documents navigation
+
+ADR 0042 accepts an owner/language presentation row with six selected section kinds and revision-checked source snapshots. New document analyses never silently mutate it; wording selection is independent from competency/history confirmation. Dedicated Documents navigation is the next owner-authorized slice.
