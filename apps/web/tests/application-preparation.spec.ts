@@ -315,3 +315,33 @@ test("unsupported edited quantities retain the editor and can be saved as pendin
  await page.getByRole("button",{name:"Lagre tekstutkast"}).click();await expect(page.getByText("Arbeidet er lagret. Du kan lukke siden og fortsette senere.")).toBeVisible();expect(stored.reviews[0].decision).toBe("PENDING");
  await editor.fill("Developed Kotlin APIs for the fictional employer.");await proposal.getByRole("button",{name:"Godkjenn teksten"}).click();await expect(page.getByRole("button",{name:"Til gjennomgang · 0",exact:true})).toBeVisible();expect(stored.reviews[0].decision).toBe("ACCEPTED");expect(aiCalls).toBe(0);
 });
+
+test("saved approved wording becomes a separate readable CV draft without AI or export approval",async({page})=>{
+ await fixtures(page);const sessionId="55555555-5555-4555-8555-555555555555",versionId="99999999-9999-4999-8999-999999999999";
+ const stored={id:sessionId,jobId,revision:2,createdAt:time,stale:false,snapshot:{result:{...result,sessionId},text:cv,claims:match.claims,quotes:job.content.requirements.map(r=>r.quote),locale:"nb",promptVersion:"cv-wording-v1"},reviews:[{paragraphIndex:1,text:result.proposals[0].newText,decision:"ACCEPTED"}]};
+ const draft={id:versionId,title:"CV · Fictional developer",status:"DRAFT",revision:1,templateVersion:"reviewed-text-v1",createdAt:time,approvedAt:null,stale:false,artifacts:[],content:{locale:"nb",identity:{name:"Fictional Pilot",headline:"",email:"",phone:"",location:"",summary:""},claims:[],entries:[],jobId,jobTitle:job.content.title,reviewedSource:{sessionId,sessionRevision:2,documentId,sourceSha256:"a".repeat(64),text:cv.replace(claim.statement,result.proposals[0].newText),evidence:[{id:claimId,revision:2}]}}};
+ let ai=0,writes=0;
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>r.fulfill({json:stored}));
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{ai++;return r.fulfill({json:result});});
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/draft`,r=>{writes++;expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf");expect(r.request().postDataJSON()).toEqual({sessionId,revision:2});return r.fulfill({json:draft});});
+ await page.route("**/api/profile/me/cvs**",r=>r.fulfill({json:r.request().url().endsWith("cleanup")?{remaining:0}:[draft]}));
+ await page.route("**/api/profile/me/entries",r=>r.fulfill({json:[]}));
+ await page.goto(`/jobs/${jobId}/apply`);await expect(page.locator(".preparation-readiness")).toContainText(doc.originalName);await page.screenshot({path:"/tmp/career-preparation-reviewed-desktop.png",fullPage:true});await page.setViewportSize({width:390,height:844});
+ await page.getByRole("button",{name:"Lagre tilpasset CV-utkast",exact:true}).click();
+ await expect(page.getByText("CV-utkastet er lagret. Dokumentkontroll gjenstår.")).toBeVisible();
+ await page.getByRole("link",{name:"Se i Mine CV-er"}).click();
+ await page.getByRole("button",{name:"Gjennomgå utkast",exact:true}).click();
+ await expect(page.locator(".cv-paper")).toHaveText(draft.content.reviewedSource.text);
+ await expect(page.getByRole("button",{name:"Dokumentkontroll gjenstår",exact:true})).toBeDisabled();
+ await expect(page.getByText("Klar til å bruke",{exact:true})).toHaveCount(0);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:"/tmp/career-reviewed-cv-draft-mobile.png"});expect(ai).toBe(0);expect(writes).toBe(1);
+});
+
+test("reviewed draft proxy rejects injected text owner fields foreign origins and anonymous creation",async({request})=>{
+ const path=`/api/profile/me/jobs/${jobId}/tailoring/draft`,body={sessionId:"55555555-5555-4555-8555-555555555555",revision:2};
+ expect((await request.post(path,{data:{...body,text:"Injected wording"}})).status()).toBe(400);
+ expect((await request.post(path,{data:{...body,ownerId:claimId}})).status()).toBe(400);
+ expect((await request.post(path,{data:body,headers:{Origin:"https://unrelated.example"}})).status()).toBe(403);
+ expect((await request.post(path,{data:body})).status()).toBe(403);
+});

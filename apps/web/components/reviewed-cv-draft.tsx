@@ -1,0 +1,15 @@
+"use client";
+import { useMutation,useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
+import { FilePlus2,LoaderCircle,ArrowRight } from "lucide-react";
+import { Button } from "./ui/button";
+import { isCv,cvError } from "../lib/cvs";
+import type { TailoringSession } from "../lib/cv-tailoring-session";
+import type { Locale } from "../lib/translations";
+export function ReviewedCvDraft({session,current,pending,csrfToken,locale}:{session:TailoringSession;current:boolean;pending:boolean;csrfToken:string;locale:Locale}) {
+ const nb=locale==="nb",cache=useQueryClient();const accepted=session.reviews.filter(r=>r.decision==="ACCEPTED").length;
+ const resolved=session.snapshot.result.proposals.every(p=>session.reviews.some(r=>r.paragraphIndex===p.paragraphIndex && r.decision!=="PENDING"));
+ const save=useMutation({retry:false,mutationFn:async()=>{const response=await fetch(`/api/profile/me/jobs/${session.jobId}/tailoring/draft`,{method:"POST",cache:"no-store",headers:{"Content-Type":"application/json","X-CSRF-TOKEN":csrfToken},body:JSON.stringify({sessionId:session.id,revision:session.revision})});const v:unknown=await response.json();if(!response.ok)throw new Error((v as {code?:string}).code??"CV_UNAVAILABLE");if(!isCv(v)||v.content.jobId!==session.jobId||v.content.reviewedSource?.sessionId!==session.id||v.content.reviewedSource.sessionRevision!==session.revision)throw new Error("CV_UNAVAILABLE");return {version:v,revision:session.revision};},onSuccess:()=>void cache.invalidateQueries({queryKey:["private-cvs"]})});
+ const saved=save.data?.revision===session.revision;
+ return <section className="reviewed-draft-handoff"><span className="reviewed-draft-icon"><FilePlus2 size={23}/></span><div><h3>{nb?"Ta vare på den tilpassede CV-teksten":"Save your tailored CV wording"}</h3><p>{nb?"Opprett et eget CV-utkast fra lagrede godkjenninger. Avviste forslag tas ikke med, og øvrig originaltekst beholdes.":"Create a separate draft using saved approvals. Rejected changes are excluded; other original text is preserved."}</p><small>{nb?"Ingen AI-kall. Utkastet lagres i Mine CV-er; eksport og sluttkontroll av filene er neste trinn.":"No AI call. The draft is stored in My CVs; export and final file review are the next stage."}</small>{(!resolved || !accepted) && <p className="hint">{nb?"Godkjenn eller avvis alle forslag først. Minst én endring må være godkjent.":"Review every suggestion first. At least one change must be approved."}</p>}{save.isError && <p role="status">{cvError(save.error.message,locale)}</p>}{saved && <p role="status">{nb?"CV-utkastet er lagret. Dokumentkontroll gjenstår.":"CV draft saved. Document review remains pending."}</p>}</div>{saved?<Button asChild variant="outline"><Link href="/cv">{nb?"Se i Mine CV-er":"Open My CVs"}<ArrowRight size={15}/></Link></Button>:<Button disabled={!current || pending || !resolved || !accepted || save.isPending} onClick={()=>save.mutate()}>{save.isPending?<LoaderCircle size={15} className="animate-spin"/>:<FilePlus2 size={15}/>} {save.isPending?(nb?"Lagrer …":"Saving …"):(nb?"Lagre tilpasset CV-utkast":"Save tailored CV draft")}</Button>}</section>;
+}

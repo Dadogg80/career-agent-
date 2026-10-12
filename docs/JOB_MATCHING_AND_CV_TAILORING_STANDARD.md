@@ -347,3 +347,7 @@ New immutable wording sessions now contain conservative source-heading sections 
 ### Declared passage coverage and numerical wording checks
 
 New v3 section plans declare every ordered source passage. Partial/duplicate/reordered declarations remain unassessed, while legacy plans disclose missing coverage. Profile paragraphs and entire skills groups are reviewed together; experience/education instructions preserve actual roles and historical scope. A lexical guard withholds unsupported numeric additions individually and keeps affected sections open for review. New user wording approvals apply the same rule; unresolved drafts remain saveable. This supplements provenance validation without claiming semantic entailment, complete recall or CV_READY.
+
+### Immutable reviewed-text CV drafts
+
+ADR 0041 adds an owned CV-library wording draft from persisted accepted changes, requiring resolved decisions, exact current source/match/evidence and session revision. Accepted substitutions preserve other source text and do not confirm its facts. Source hash and full evidence references remain immutable; repeated creation is idempotent. Template reviewed-text-v1 is deliberately not exportable through the legacy standard-v1 approval flow. Actual file generation, independent document review and CV_READY remain pending.

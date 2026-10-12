@@ -28,7 +28,7 @@ class JdbcCvRepository(private val jdbc: JdbcTemplate, private val json: ObjectM
     @Transactional override fun create(identity: VerifiedIdentity,title: String,content: CvContent): CvVersion {
         val owner=owner(identity,true);sources(owner,content)
         if(jdbc.queryForObject("SELECT COUNT(*) FROM cv_version WHERE owner_id=?",Long::class.java,owner)!! >= 30) throw CvFailure("CV_LIMIT",409)
-        val id=UUID.randomUUID();jdbc.update("INSERT INTO cv_version(id,owner_id,job_id,title,content,status,revision,template_version,artifacts) VALUES(?,?,?,?,?::jsonb,'DRAFT',1,'standard-v1','[]'::jsonb)",id,owner,content.jobId,title,json.writeValueAsString(content))
+        val id=UUID.randomUUID();jdbc.update("INSERT INTO cv_version(id,owner_id,job_id,title,content,status,revision,template_version,artifacts) VALUES(?,?,?,?,?::jsonb,'DRAFT',1,?,'[]'::jsonb)",id,owner,content.jobId,title,json.writeValueAsString(content),if(content.reviewedSource==null)"standard-v1" else "reviewed-text-v1")
         return read(owner,id)
     }
     @Transactional override fun approve(identity: VerifiedIdentity,id: UUID,revision: Long,artifacts: List<CvArtifact>): CvVersion {

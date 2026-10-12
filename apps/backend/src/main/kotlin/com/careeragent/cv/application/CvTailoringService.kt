@@ -70,20 +70,7 @@ class CvTailoringService(private val jobs: SavedJobRepository, private val docum
                 sections = sections, sectionPlans = sectionPlans)
         } finally { permit.release() }
     }
-    internal fun paragraphs(text: String): List<String> = text.split(Regex("\\n\\s*\\n")).flatMap { block ->
-        val parts = mutableListOf<String>()
-        var offset = 0
-        while (offset < block.length) {
-            val limit = minOf(offset + 4000, block.length)
-            val newline = if (limit < block.length) block.lastIndexOf('\n', limit - 1) else -1
-            val split = if (newline >= offset + 2000) newline + 1 else limit
-            val end = if (split < block.length && block[split - 1].isHighSurrogate() && block[split].isLowSurrogate()) split - 1 else split
-            val part = block.substring(offset, end)
-            if (part.isNotBlank()) parts.add(part)
-            offset = end
-        }
-        parts
-    }
+    internal fun paragraphs(text: String) = CvReviewedText.paragraphs(text)
     internal fun parse(output: String, paragraphs: List<String>, claims: Set<UUID>, requirements: Int): Pair<List<CvTextProposal>,Int> {
         val root = try { mapper.readTree(output) } catch (_: Exception) { throw AiFailure("AI_INVALID_RESULT",502) }
         if (root == null || !root.isObject || "proposals" !in root.fieldNames().asSequence().toSet() || !setOf("proposals","visibility","sectionPlans").containsAll(root.fieldNames().asSequence().toSet()) || !root.path("proposals").isArray || root.path("proposals").size() > 100)

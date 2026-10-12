@@ -58,3 +58,5 @@ Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert i
 - [0039 — Durable owned CV wording sessions](0039-durable-cv-wording-sessions.md) — accepted incremental continuation; saved source/match snapshots and revision-checked wording review, distinct from profile confirmation and final artifacts.
 
 - [0040 — Source-bound CV sections and preliminary review plans](0040-source-bound-cv-section-review.md) — accepted incremental continuation; conservative source structure, explicit section outcomes and current wording navigation.
+
+- [0041 — Immutable reviewed CV wording drafts](0041-reviewed-cv-wording-drafts.md)

@@ -9,6 +9,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Badge } from "./ui/badge";
+import { BulkConfirmation } from "./bulk-confirmation";
 import { CareerComparison } from "./career-comparison";
 import { Dialog,DialogContent,DialogHeader,DialogTitle,DialogDescription } from "./ui/dialog";
 export function CareerEntryPanel({locale,csrfToken,onAuthRequired,sectionActive}:{locale:Locale;csrfToken:string;onAuthRequired:()=>void;sectionActive:boolean}) {
@@ -60,6 +61,7 @@ export function CareerEntryPanel({locale,csrfToken,onAuthRequired,sectionActive}
    {entries.error && <p role="alert" className="coverage-error">{entryError(entries.error.message,locale)}</p>}
    {entries.isPending && <p role="status" className="profile-section-loading">{nb ? "Henter historikk …" : "Loading history …"}</p>}
    {entries.data?.length === 0 && <p className="hint">{nb ? "Ingen tidslinje registrert. Legg til et arbeidsforhold, prosjekt eller utdanning; bekreft det separat før CV-bruk." : "No timeline yet. Add employment, a project or education; confirm it separately before CV use."}</p>}
+   {!!entries.data?.length && <BulkConfirmation area="entries" locale={locale} csrfToken={csrfToken} items={entries.data.filter(e=>e.status!=="CONFIRMED" && e.status!=="REJECTED" && (filter==="ALL" || e.content.kind===filter)).map(e=>({id:e.id,revision:e.revision,title:e.content.title,description:e.content.description,context:`${e.content.organization} · ${entryPeriod(e.content,locale)}`}))} onDone={async()=>{await cache.invalidateQueries({queryKey:["private-entries"]});await cache.invalidateQueries({queryKey:["private-entry-history"]});}}/>}
    {expanded && !!entries.data?.length && <>
     <div className="career-entry-overview">
      <div className="career-entry-stat"><span className="career-entry-stat-icon"><BriefcaseBusiness size={16}/></span><span>{nb?"Registrerte opplysninger":"Recorded entries"}</span><strong>{entries.data.length}</strong></div>

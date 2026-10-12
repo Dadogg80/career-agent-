@@ -24,20 +24,26 @@ interface CvRepository {
 @Service
 @Profile("persistence")
 class CvService(private val versions: CvRepository, private val claims: ClaimRepository, private val entries: CareerEntryRepository,
-                private val jobs: SavedJobRepository, private val renderer: CvRenderer, private val storage: DocumentStorage) {
+                private val jobs: SavedJobRepository, private val renderer: CvRenderer, private val storage: DocumentStorage, private val documents: com.careeragent.documents.application.DocumentService) {
     private val generating = Semaphore(1)
     private fun current(identity: VerifiedIdentity, version: CvVersion): CvVersion {
         if (version.status == CvStatus.APPROVED) return version
         val c = claims.list(identity).filter { it.status == ClaimStatus.CONFIRMED }.associate { it.id to it.revision }
         val e = entries.list(identity).filter { it.status == ClaimStatus.CONFIRMED }.associate { it.id to it.revision }
-        return version.copy(stale = version.content.claims.any { c[it.id] != it.revision } || version.content.entries.any { e[it.id] != it.revision })
+        return version.copy(stale = version.content.claims.any { c[it.id] != it.revision } || version.content.entries.any { e[it.id] != it.revision } || reviewedStale(identity,version,c))
+    }
+    private fun reviewedStale(identity: VerifiedIdentity, version: CvVersion, claims: Map<UUID,Long>): Boolean {
+        val source=version.content.reviewedSource ?: return false
+        if(claims!=source.evidence.associate { it.id to it.revision })return true
+        val text=try { documents.detail(identity,source.documentId).text } catch(_:com.careeragent.documents.application.DocumentFailure){return true}
+        return hash(text.toByteArray(Charsets.UTF_8))!=source.sourceSha256
     }
     fun list(identity: VerifiedIdentity): List<CvVersion> {
         val all = versions.list(identity)
         if (all.none { it.status == CvStatus.DRAFT }) return all
         val c = claims.list(identity).filter { it.status == ClaimStatus.CONFIRMED }.associate { it.id to it.revision }
         val e = entries.list(identity).filter { it.status == ClaimStatus.CONFIRMED }.associate { it.id to it.revision }
-        return all.map { version -> if (version.status == CvStatus.APPROVED) version else version.copy(stale = version.content.claims.any { c[it.id] != it.revision } || version.content.entries.any { e[it.id] != it.revision }) }
+        return all.map { version -> if (version.status == CvStatus.APPROVED) version else version.copy(stale = version.content.claims.any { c[it.id] != it.revision } || version.content.entries.any { e[it.id] != it.revision } || reviewedStale(identity,version,c)) }
     }
     fun get(identity: VerifiedIdentity, id: UUID) = current(identity, versions.get(identity, id))
     fun create(identity: VerifiedIdentity, request: CvDraftRequest): CvVersion {
@@ -63,6 +69,7 @@ class CvService(private val versions: CvRepository, private val claims: ClaimRep
         val written = mutableListOf<UUID>()
         try {
             val version = get(identity,id)
+            if(version.content.reviewedSource!=null)throw CvFailure("CV_FINAL_REVIEW_REQUIRED",409)
             if (version.status != CvStatus.DRAFT || version.revision != revision) throw CvFailure("CV_CONFLICT",409)
             if (version.stale) throw CvFailure("CV_SOURCE_CONFLICT",409)
             val files = renderer.generate(version.content)
