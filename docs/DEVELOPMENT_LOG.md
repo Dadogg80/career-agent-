@@ -1,5 +1,12 @@
 # Utviklingslogg
 
+## 2026-10-12 — Saved-job overview redesign
+
+Initially implemented from main d9197dc; rebased on document-feedback PR #46 (including its scrolling repair) to resolve shared stylesheet changes before handoff. Corrected dark primary-button text; refreshed responsive card layout, search/sort controls, metadata icons, source excerpt labels for both providers and unknown fact labels. Added distinct current/provisional/stale/unmatched saved-assessment panels, existing weighted scores, provider/model identity and score help. Existing full-profile matching, clarification refresh, score computation and application preparation remain unchanged. Fixed ineffective header/content CSS selectors by assigning explicit classes matching the local Card component API.
+
+Validation: frontend production build/TypeScript passed; five focused production browser cases passed, including current/stale/unmatched mock results, primary text/background colors, sorting/search/single-card/mobile layout, saved percentage after reload, 35-contribution automatic matching, cross-card freshness after clarification, bilingual reopen/delete and private proxy rejection. Screenshots inspected for desktop grid, single-result layout and mobile; affected visual cases rerun after selector correction. No live AI calls or backend changes. Next: approved wording into standard CV artifacts, then independent actual-file review.
+
+
 Loggen beskriver faktisk arbeid, ikke planlagt funksjonalitet. Datoer følger brukerens tidssone Europe/Oslo.
 
 ## 2026-10-07 — Produktdokumentasjon og brukerflyter
