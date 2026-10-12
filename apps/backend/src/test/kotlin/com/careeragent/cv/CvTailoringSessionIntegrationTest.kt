@@ -87,6 +87,8 @@ class CvTailoringSessionIntegrationTest {
         mvc.perform(put("${f.path}/session").with(caller(f.user)).contentType("application/json").content("{}" )).andExpect(status().isForbidden)
         mvc.perform(review(f,session).with(caller(other.user))).andExpect(status().isNotFound)
         mvc.perform(review(f,session,text=" ")).andExpect(status().isBadRequest)
+        mvc.perform(review(f,session,text="Led 100 staff.")).andExpect(status().isBadRequest).andExpect(jsonPath("$.code").value("CV_WORDING_UNSUPPORTED"))
+        mvc.perform(get("${f.path}/session").with(caller(f.user))).andExpect(jsonPath("$.revision").value(1)).andExpect(jsonPath("$.reviews.length()").value(0))
         val invalid = TailoringReviewRequest(session.id,1,listOf(WordingReview(3,"Unsupported section",WordingDecision.ACCEPTED)))
         mvc.perform(put("${f.path}/session").with(caller(f.user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(invalid))).andExpect(status().isBadRequest)
         jdbc.update("UPDATE career_document SET extracted_text='Changed CV source' WHERE id=?",f.doc)

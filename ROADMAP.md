@@ -209,3 +209,8 @@ Owner approval resumes CV tailoring after the supplied process/audit. First deli
 ## CV section-review checkpoint — 2026-10-12
 
 Implemented conservative explicit-heading sections and preliminary section outcomes/priorities within the existing approved wording call. Every literal passage remains available; invalid/missing outcomes cannot imply completed review. Section navigation/filtering and immutable session persistence are implemented. This is not a separately approved strategy-before-generation workflow. Next: deepen section-specific wording coverage and supported template structure, then connect approved changes to immutable standard artifacts; independent actual-DOCX/PDF review remains required before CV_READY.
+
+
+## CV review-coverage and numerical wording checkpoint — 2026-10-12
+
+New AI section plans declare all ordered source passages; incomplete declarations remain unassessed. Expanded profession-independent profile/skills/experience/education instructions and lexical numerical/source-year checks now apply to AI suggestions and new wording approvals. Unsupported wording remains a draft for clarification. This does not complete semantic fact verification, template fidelity or final document readiness. Next: connect current approved wording to immutable standard-document drafts, preserving readiness distinctions and actual-file review requirements.

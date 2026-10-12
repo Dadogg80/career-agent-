@@ -342,3 +342,8 @@ Next acceptance: stable source sections and explicit per-section assessment/stra
 ### Source-bound section review checkpoint
 
 New immutable wording sessions now contain conservative source-heading sections and preliminary section priority/outcome plans (ADR 0040). All literal passages remain in source order; source-edited IDs intentionally change. Explicit keep/change/review outcomes are validated against section membership and actual proposal/evidence references. Missing or contradictory plans stay unassessed. Legacy sessions remain usable with a missing-plan disclosure. This supports navigation and initial tailoring strategy alongside the existing approved generation call; separately approved strategy, complete template semantics, targeted files and independent quality review are still pending.
+
+
+### Declared passage coverage and numerical wording checks
+
+New v3 section plans declare every ordered source passage. Partial/duplicate/reordered declarations remain unassessed, while legacy plans disclose missing coverage. Profile paragraphs and entire skills groups are reviewed together; experience/education instructions preserve actual roles and historical scope. A lexical guard withholds unsupported numeric additions individually and keeps affected sections open for review. New user wording approvals apply the same rule; unresolved drafts remain saveable. This supplements provenance validation without claiming semantic entailment, complete recall or CV_READY.

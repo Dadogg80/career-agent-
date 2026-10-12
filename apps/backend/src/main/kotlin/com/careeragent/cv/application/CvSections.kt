@@ -9,7 +9,8 @@ enum class CvSectionAction { KEEP_UNCHANGED, PROPOSE_CHANGES, NEEDS_REVIEW }
 enum class CvSectionPriority { HIGH, MEDIUM, LOW }
 data class CvSection(val id: String, val kind: CvSectionKind, val heading: String?, val paragraphIndexes: List<Int>)
 data class CvSectionPlan(val sectionId: String, val action: CvSectionAction, val priority: CvSectionPriority,
-    val reason: String, val claimIds: List<UUID>, val requirementIndexes: List<Int>, val assessed: Boolean = true)
+    val reason: String, val claimIds: List<UUID>, val requirementIndexes: List<Int>, val assessed: Boolean = true,
+    val reviewedParagraphIndexes: List<Int>? = null)
 
 /** Source-bound section identity; explicit headings only, never inferred candidate facts. */
 object CvSections {
@@ -46,7 +47,7 @@ object CvSections {
         val parsed = mutableMapOf<String, CvSectionPlan>()
         val duplicates = mutableSetOf<String>()
         if (items.isArray && items.size() <= 1000) for (item in items) try {
-            require(item.isObject && item.fieldNames().asSequence().toSet() == setOf("sectionId","action","priority","reason","claimIds","requirementIndexes"))
+            require(item.isObject && item.fieldNames().asSequence().toSet() == setOf("sectionId","action","priority","reason","claimIds","requirementIndexes","reviewedParagraphIndexes"))
             val id = item.path("sectionId").asText(); val section = sections.find { it.id == id } ?: throw IllegalArgumentException()
             if (id in parsed) { duplicates.add(id); continue }
             val action = CvSectionAction.valueOf(item.path("action").asText())
@@ -56,10 +57,13 @@ object CvSections {
             val proof = ids.map { require(it.isTextual); UUID.fromString(it.asText()).also { id -> require(id in claims) } }.distinct()
             val indexes = item.path("requirementIndexes"); require(indexes.isArray && indexes.size() <= 128)
             val criteria = indexes.map { require(it.isInt && it.asInt() in 0 until requirements); it.asInt() }.distinct()
+            val coverage = item.path("reviewedParagraphIndexes"); require(coverage.isArray && coverage.size() <= 500)
+            val reviewed = coverage.map { require(it.isInt); it.asInt() }
+            require(reviewed == section.paragraphIndexes)
             val changes = proposals.filter { it.paragraphIndex in section.paragraphIndexes }
             if (action == CvSectionAction.KEEP_UNCHANGED) require(changes.isEmpty())
             if (action == CvSectionAction.PROPOSE_CHANGES) require(changes.isNotEmpty() && proof.isNotEmpty() && criteria.isNotEmpty())
-            parsed[id] = CvSectionPlan(id, action, priority, reason.asText(), proof, criteria)
+            parsed[id] = CvSectionPlan(id, action, priority, reason.asText(), proof, criteria, true, reviewed)
         } catch (_: IllegalArgumentException) { /* An invalid plan never establishes that a section was reviewed. */ }
         return sections.map { section -> parsed[section.id]?.takeUnless { section.id in duplicates } ?: CvSectionPlan(section.id,
             CvSectionAction.NEEDS_REVIEW, CvSectionPriority.LOW,
