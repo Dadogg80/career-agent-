@@ -521,3 +521,8 @@ The document library uses compact rows with original names, local text-reading s
 ## Local recovery of long technology lists
 
 The document extractor no longer discards an otherwise valid explicit technology list solely because it has more than 30 items on one line. Local recovery retains each literal label and its independently sourced employer/project context; repeated occurrences are not borrowed across employers. Existing source-row length, per-item validation, quotation and workflow-size bounds remain in force. This needs no additional model request and does not claim exhaustive extraction or change factual confirmation rules.
+
+
+## Durable CV wording review — 2026-10-12
+
+Application preparation reopens the latest owned wording session without AI calls. Approve/reject persists the selected wording; editing removes its approval locally, and Save wording draft persists PENDING. Unsaved drafts are labelled, block current copying/new generation and warn on browser unload. Failed saves preserve typed wording and pending state. Revision conflicts require explicit loading of saved work (which replaces local drafts). Changed/deleted CV or changed confirmed evidence retains historical reading but blocks review/copy. No new CV file or final approval is created.

@@ -13,6 +13,7 @@ const approval={token:"a".repeat(64),selections:[gemini]},other={token:"b".repea
 const result={documentId,matchId,...gemini,proposals:[{paragraphIndex:1,oldText:claim.statement,newText:"Developed Kotlin APIs with responsibility for service reliability.",reason:"Makes the supported API contribution visible for the role.",claimIds:[claimId],requirementIndexes:[0]}],omittedItems:0};
 const visibility=[{requirementIndex:0,status:"VISIBLE",reason:"The CV describes the confirmed Kotlin API contribution.",claimIds:[claimId],passages:[{paragraphIndex:1,quote:"Built Kotlin APIs"}]}];
 async function fixtures(page:Page,{missing=false,stale=false}={}) {
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>r.fulfill({json:null}));
  await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
  await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:gemini,DOCUMENT_EXTRACTION:gemini,PROFILE_SUMMARY:gemini,PERSONAL_MATCH:gemini},documents:approval,documentExcerpt:approval,matching:approval,job:approval,tailoring:approval,options:{documents:options,documentExcerpt:options,matching:options,job:options,tailoring:options}}}));
  await page.route("**/api/profile/me/documents",r=>r.fulfill({json:missing?[]:[doc]}));
@@ -195,4 +196,69 @@ test("short CV extraction explains rereading instead of leaving an unexplained d
  await expect(page.getByText("Too little text was extracted",{exact:false})).toBeVisible();
  await expect(page.getByRole("link",{name:"Open my documents",exact:true})).toHaveAttribute("href","/career/profile");
  await page.screenshot({path:"/tmp/career-short-cv-mobile.png",fullPage:true});
+});
+
+test("saved wording review reopens without AI and retains edits after failed approval",async({page})=>{
+ await fixtures(page);
+ const sessionId="55555555-5555-4555-8555-555555555555";
+ let stored={id:sessionId,jobId,revision:1,createdAt:time,stale:false,snapshot:{result:{...result,sessionId},text:cv,claims:match.claims,quotes:job.content.requirements.map(r=>r.quote),locale:"nb",promptVersion:"cv-wording-v1"},reviews:[] as {paragraphIndex:number;text:string;decision:string}[]};
+ let fail=true,aiCalls=0,writes=0;
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{aiCalls++;return r.fulfill({json:result});});
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>{
+  if(r.request().method()==="GET")return r.fulfill({json:stored});
+  writes++;if(fail)return r.fulfill({status:503,json:{code:"CV_UNAVAILABLE"}});
+  const body=r.request().postDataJSON();expect(body.revision).toBe(stored.revision);expect(body.sessionId).toBe(sessionId);
+  stored={...stored,revision:stored.revision+1,reviews:body.reviews};return r.fulfill({json:stored});
+ });
+ await page.goto(`/jobs/${jobId}/apply`);
+ const proposal=page.locator(".tailoring-proposal"),editor=proposal.getByRole("textbox");
+ await expect(proposal).toHaveCount(1);await page.setViewportSize({width:390,height:844});await expect(proposal.getByRole("button",{name:"Godkjenn teksten"})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await proposal.screenshot({path:"/tmp/career-cv-review-mobile.png"});await editor.fill("Built and maintained Kotlin APIs for Example AS.");
+ await proposal.getByRole("button",{name:"Godkjenn teksten"}).click();
+ await expect(page.getByText("Valget kunne ikke lagres. Teksten er beholdt; prøv lagringen igjen.")).toBeVisible();
+ await expect(editor).toHaveValue("Built and maintained Kotlin APIs for Example AS.");
+ await expect(page.getByRole("button",{name:"Til gjennomgang · 1",exact:true})).toBeVisible();
+ fail=false;await proposal.getByRole("button",{name:"Godkjenn teksten"}).click();
+ await expect(page.getByRole("button",{name:"Til gjennomgang · 0",exact:true})).toBeVisible();
+ await page.reload();await expect(page.getByRole("button",{name:"Behandlet · 1",exact:true})).toBeVisible();
+ await page.getByRole("button",{name:"Behandlet · 1",exact:true}).click();await expect(editor).toHaveValue(stored.reviews[0].text);
+ await editor.fill("Built Kotlin APIs for Example AS.");await page.getByRole("button",{name:"Lagre tekstutkast",exact:true}).click();
+ await expect(page.getByText("Arbeidet er lagret. Du kan lukke siden og fortsette senere.")).toBeVisible();
+ await page.reload();await expect(page.getByRole("button",{name:"Til gjennomgang · 1",exact:true})).toBeVisible();
+ await proposal.getByRole("button",{name:"Avvis forslaget"}).click();await expect(page.getByRole("button",{name:"Til gjennomgang · 0",exact:true})).toBeVisible();
+ await page.reload();await expect(page.getByRole("button",{name:"Behandlet · 1",exact:true})).toBeVisible();
+ expect(stored.reviews[0].decision).toBe("REJECTED");expect(aiCalls).toBe(0);expect(writes).toBe(4);
+});
+
+test("stale saved CV remains readable but cannot approve or copy and recovery detects concurrent review",async({page})=>{
+ await fixtures(page);const sessionId="55555555-5555-4555-8555-555555555555";
+ let stored={id:sessionId,jobId,revision:1,createdAt:time,stale:false,snapshot:{result:{...result,sessionId},text:cv,claims:match.claims,quotes:job.content.requirements.map(r=>r.quote),locale:"nb",promptVersion:"cv-wording-v1"},reviews:[] as {paragraphIndex:number;text:string;decision:string}[]};
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>r.request().method()==="GET"?r.fulfill({json:stored}):r.fulfill({status:409,json:{code:"CV_CONFLICT"}}));
+ await page.goto(`/jobs/${jobId}/apply`);const proposal=page.locator(".tailoring-proposal");
+ await expect(proposal.getByRole("button",{name:"Godkjenn teksten"})).toBeEnabled();
+ await proposal.getByRole("button",{name:"Godkjenn teksten"}).click();
+ await expect(page.getByText("Arbeidsøkten eller grunnlaget er endret. Teksten din beholdes her. Hent lagret arbeid før du fortsetter.")).toBeVisible();
+ await expect(proposal.getByRole("button",{name:"Godkjenn teksten"})).toBeDisabled();
+ stored={...stored,revision:2,stale:true,reviews:[{paragraphIndex:1,text:result.proposals[0].newText,decision:"ACCEPTED"}]};
+ await page.getByRole("button",{name:"Hent lagret arbeid – erstatt lokale utkast"}).click();
+ await page.getByRole("button",{name:"Behandlet · 1",exact:true}).click();
+ await expect(proposal.getByRole("button",{name:"Godkjenn teksten"})).toBeDisabled();
+ await expect(page.getByRole("button",{name:"Kopier CV-teksten",exact:true})).toBeDisabled();
+ await expect(proposal.getByRole("textbox")).toHaveValue(result.proposals[0].newText);
+});
+
+test("new generated wording gets a durable session and session proxies reject spoofed review requests",async({page,request})=>{
+ await fixtures(page);const sessionId="55555555-5555-4555-8555-555555555555";
+ const stored={id:sessionId,jobId,revision:1,createdAt:time,stale:false,snapshot:{result:{...result,sessionId},text:cv,claims:match.claims,quotes:job.content.requirements.map(r=>r.quote),locale:"nb",promptVersion:"cv-wording-v1"},reviews:[]};
+ let generated=false,calls=0;
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>r.fulfill({json:generated?stored:null}));
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{calls++;generated=true;return r.fulfill({json:stored.snapshot.result});});
+ await page.goto(`/jobs/${jobId}/apply`);await page.locator(".ai-consent input").check();await page.getByRole("button",{name:"Foreslå tilspisset CV-tekst"}).click();
+ await expect(page.getByText("Arbeidet er lagret. Du kan lukke siden og fortsette senere.")).toBeVisible();
+ await page.reload();await expect(page.locator(".tailoring-proposal")).toHaveCount(1);expect(calls).toBe(1);
+ const path=`/api/profile/me/jobs/${jobId}/tailoring/session`;
+ expect((await request.get(path,{headers:{Origin:"https://foreign.example.test"}})).status()).toBe(403);
+ expect((await request.get(path)).status()).toBe(401);
+ expect((await request.put(path,{data:{sessionId,revision:1,reviews:[],ownerId:claimId}})).status()).toBe(400);
+ expect((await request.put(path,{data:{sessionId,revision:1,reviews:[{paragraphIndex:1,text:" ",decision:"ACCEPTED"}]}})).status()).toBe(400);
+ expect((await request.put(path,{data:{sessionId,revision:1,reviews:[]}})).status()).toBe(403);
 });

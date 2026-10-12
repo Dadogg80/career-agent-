@@ -258,3 +258,8 @@ The owner requires advance notice and a joint discussion of their external assis
 ### Long technology-list recovery — implemented 2026-10-12
 
 Raise the local per-row item bound from 30 to 300, matching the existing retained-suggestion bound, so otherwise valid explicit lists are not entirely lost. Keep the 600-character row bound, per-label constraints, exact quotations, context proof, deduplication and total workflow limits. No new inference, provider request, storage migration or historical-result rewrite is introduced.
+
+
+## Durable CV wording and approved roadmap — 2026-10-12
+
+Accepted: retain existing providers, modules and truthful evidence model; extend CV workflow incrementally. The owner approved standard export first and automatic documentary profile information with explicit basis distinctions. Store generated source/match/model/prompt snapshots separately from user wording decisions under owner locks/expected revisions. New generation preserves earlier sessions. Review never promotes wording to knowledge facts or final document approval. Current bound: 30 private sessions per owner; latest session is exposed, older snapshots are retained. Session data follows saved-job/account deletion and may retain original source quotations after source-file deletion. Stable sections, historical-session selection/deletion, semantic edit validation and tailored artifacts remain follow-up scope.

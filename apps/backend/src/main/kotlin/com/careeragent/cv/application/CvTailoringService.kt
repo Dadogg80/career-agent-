@@ -19,7 +19,8 @@ data class TailoringRequest(val documentId: UUID, val text: String, val matchId:
 data class CvTextProposal(val paragraphIndex: Int, val oldText: String, val newText: String, val reason: String,
     val claimIds: List<UUID>, val requirementIndexes: List<Int>)
 data class CvTailoringResult(val documentId: UUID, val matchId: UUID, val provider: String, val model: String,
-    val proposals: List<CvTextProposal>, val omittedItems: Int, val visibility: List<CvVisibilityAssessment>? = null)
+    val proposals: List<CvTextProposal>, val omittedItems: Int, val visibility: List<CvVisibilityAssessment>? = null,
+    val sessionId: UUID? = null)
 
 /** Session-only suggestions: never write candidate facts, master files or exported CV versions. */
 @Service

@@ -45,6 +45,7 @@ test("CV preparation can recover a missing task configuration and still requires
  await page.route(`**/api/profile/me/documents/${documentId}`,r=>r.fulfill({json:{document:doc,text}}));
  await page.route(`**/api/profile/me/jobs/${jobId}`,r=>r.fulfill({json:job}));
  await page.route(`**/api/profile/me/jobs/${jobId}/match`,r=>r.fulfill({json:match}));
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>r.fulfill({json:null}));
  await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{aiCalls++;return r.fulfill({status:500,json:{}});});
  await page.goto(`/jobs/${jobId}/apply`);
  await expect(page.locator(".ai-configuration-status")).toContainText("Ingen AI-modell tilgjengelig");
