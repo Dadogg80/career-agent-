@@ -537,3 +537,8 @@ As a candidate I can distinguish declared full passage review from incomplete/le
 - Keep text approval separate from final DOCX/PDF approval; new wording drafts cannot use the legacy export path.
 - Explicitly select and confirm multiple eligible competencies or career entries, retaining displayed revisions and reporting partial failures.
 - Use readable consistent dialogs and a stable public model selector on desktop/mobile.
+
+
+## 2026-10-12 — CV tailoring readiness guidance
+
+As a candidate blocked from CV tailoring, I can see exactly which prerequisites are unmet and navigate to the existing repair flow without an unsolicited AI call. Once current automatic matching, readable CV and confirmed evidence are available, the consent checkbox becomes available without being preselected.

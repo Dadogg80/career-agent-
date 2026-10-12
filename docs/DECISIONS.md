@@ -292,3 +292,8 @@ Accepted ADR 0041: reuse owned CV versions for immutable reviewed-text drafts, w
 Use a shared frontend confirmation selection for competencies/history, reusing existing revision-checked mutations sequentially. Snapshot rows/revisions on dialog opening; no auto-selection or silent rejected-record revival. Preserve successful rows across retries and show partial failures/progress. This is not an all-or-nothing backend transaction. Shared modal styling retains Radix focus/escape behavior and contextual widths. Public model menus are positioned using trigger/viewport geometry, while document menus stay in card flow to avoid clipping.
 
 Queued owner request: choose individual generated profile sections for a durable presentation. Existing summary edits remain tied to the latest saved analysis; no adoption state is claimed in this delivery.
+
+
+## 2026-10-12 — CV tailoring readiness guidance
+
+Keep tailoring consent unavailable until the existing evidence/source/current automatic-match gates pass. Explain active blockers beside consent rather than weakening source freshness. Source refresh temporarily blocks new consent while checks run; recovery buttons only reload metadata or open existing review, never start an AI request.

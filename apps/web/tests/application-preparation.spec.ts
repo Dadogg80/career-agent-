@@ -45,7 +45,14 @@ test("saved job opens contextual preparation with whole source consent and edita
 test("missing evidence and stale matching guide the user without calling tailoring",async({page})=>{
  await fixtures(page,{missing:true});let calls=0;await page.route("**/tailoring",r=>{calls++;return r.fulfill({status:503});});
  await page.goto(`/jobs/${jobId}/apply`);await expect(page.getByRole("heading",{name:"Start med dokumentene dine",exact:true})).toBeVisible();await expect(page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true})).toBeDisabled();expect(calls).toBe(0);
- await fixtures(page,{stale:true});await page.reload();await expect(page.locator(".preparation-readiness")).toContainText("oppdater vurderingen");await expect(page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true})).toBeDisabled();expect(calls).toBe(0);
+ await fixtures(page,{stale:true});await page.reload();await expect(page.locator(".preparation-readiness")).toContainText("oppdater vurderingen");
+ const consent=page.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for CV-forslag",exact:true});
+ await expect(consent).toBeDisabled();await expect(consent).toHaveAttribute("aria-describedby","preparation-blockers");
+ await expect(page.locator("#preparation-blockers")).toContainText("Stillingsmatchen er utdatert");
+ await page.getByRole("button",{name:"Oppdater stillingsmatchen",exact:true}).click();await expect(page.locator("#preparation-match")).toHaveAttribute("open","");
+ await expect(page.locator("#preparation-match summary").first()).toBeFocused();
+ await expect(page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true})).toBeDisabled();expect(calls).toBe(0);
+ await fixtures(page);await page.reload();await expect(consent).toBeEnabled();await expect(consent).not.toBeChecked();await expect(page.locator("#preparation-blockers")).toHaveCount(0);expect(calls).toBe(0);
 });
 test("quota retains proposals and changing recipient requires renewed consent without carrying cooldown",async({page})=>{
  await fixtures(page);let calls=0;await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{calls++;return calls===2?r.fulfill({status:429,headers:{"Retry-After":"968"},json:{code:"AI_RATE_LIMITED"}}):r.fulfill({json:result});});
@@ -344,4 +351,16 @@ test("reviewed draft proxy rejects injected text owner fields foreign origins an
  expect((await request.post(path,{data:{...body,ownerId:claimId}})).status()).toBe(400);
  expect((await request.post(path,{data:body,headers:{Origin:"https://unrelated.example"}})).status()).toBe(403);
  expect((await request.post(path,{data:body})).status()).toBe(403);
+});
+
+test("unreadable CV explains consent blocker and open questions do not block supported tailoring",async({page})=>{
+ await fixtures(page);let calls=0;await page.route("**/tailoring",r=>{calls++;return r.fulfill({status:503});});
+ await page.route(`**/api/profile/me/documents/${documentId}`,r=>r.fulfill({json:{document:doc,text:"Too short"}}));
+ await page.goto(`/jobs/${jobId}/apply`);
+ const consent=page.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for CV-forslag",exact:true});
+ await expect(consent).toBeDisabled();await expect(page.locator("#preparation-blockers")).toContainText("for lite lesbar tekst");
+ await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await expect(page.locator("#preparation-blockers")).toContainText("too little readable text");
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await fixtures(page);await page.route(`**/api/profile/me/jobs/${jobId}/match`,r=>r.fulfill({json:{...match,assessments:[{requirementIndex:0,classification:"CLARIFY",reason:"More context is needed.",evidence:[],question:"Which APIs?"}]}}));
+ await page.reload();await expect(page.getByRole("checkbox",{name:"I approve sending this evidence to Gemini for CV suggestions",exact:true})).toBeEnabled();expect(calls).toBe(0);
 });

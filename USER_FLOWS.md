@@ -559,3 +559,8 @@ In competency and career-history lists, Confirm multiple opens the currently fil
 All shared Dialog/Sheet components use consistent typography, overlays, close buttons, mobile bounds and footer styling; competency review groups text/context/source. Public job model menus open above the page without stretching the task row. Document reader menus retain bounded in-card layout.
 
 Owner feedback also refreshed application preparation: compact icon-led evidence/match/base-CV metrics, a clear job heading/back action, expandable matching and a two-column source/AI-approval setup that stacks on mobile. Existing source previews, recipient approval, readiness and review logic remain unchanged.
+
+
+## 2026-10-12 — CV tailoring readiness guidance
+
+CV tailoring consent now explains each active prerequisite beside the checkbox. An outdated or manual-evidence match offers Update job match, opening/focusing the existing match review without starting AI. Missing CV, unreadable source, missing confirmed competencies, unsaved reviews and unavailable AI configuration have specific recovery guidance. Open clarification questions remain non-blocking; model-bound consent still requires an explicit user choice.
