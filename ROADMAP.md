@@ -195,3 +195,7 @@ Added a compact completion strip and on-demand processing/source-check disclosur
 Implemented filename search, technical reading/master filters, compact source rows and a combined-analysis shortcut above the library. Retained complete collection preview, source actions and explicit AI approval. Continue document/profile/competency usability and quality work.
 
 Further CV-tailoring development is explicitly paused by the owner: notify them clearly before starting, wait for their supplied user/process flow, and discuss the approach before implementation. A generic continuation does not lift this gate. Existing CV proposal functionality is retained.
+
+### Source-quality continuation: long explicit lists — 2026-10-12
+
+An independent expected-fact regression exposed local recovery dropping whole explicit technology rows over 30 items. Aligned that item bound with the existing 300-suggestion workflow bound, retaining row-length/per-item/source checks. Verified empty-model-output recovery, employer context, punctuation and deduplication against a two-employer expected inventory. This is a narrow recall fix, not a live model benchmark or complete semantic/document audit. Continue document/profile/competency quality; the owner gate for CV tailoring remains in force.

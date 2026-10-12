@@ -6,6 +6,7 @@ import com.careeragent.documents.DocumentExtractionBenchmark.ExpectedFact
 import com.careeragent.documents.DocumentExtractionBenchmark.Finding
 import com.careeragent.documents.DocumentExtractionBenchmark.Kind
 import com.careeragent.documents.application.DocumentAnalysisPlanner
+import com.careeragent.documents.application.DocumentCompetencyInventory
 import com.careeragent.documents.application.DocumentDraftExtractor
 import com.careeragent.documents.application.DocumentEvidenceInventory
 import com.careeragent.documents.domain.*
@@ -103,6 +104,26 @@ class DocumentExtractionBenchmarkTest {
         val measured=DocumentExtractionBenchmark.assess(mapOf(id to source),expected,result)
         assertThat(measured.captured).isEqualTo(300)
         assertThat(measured.unsupportedEvidence).isZero()
+        verify(model,times(batches.size)).generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
+    }
+    @Test fun `an empty model extraction does not lose long technology lists or employer context`() {
+        val skills=listOf("React Native","C++","C#")+(1..35).map { "Tool$it" }
+        val row="Technology: "+skills.joinToString(", ")
+        val companies=listOf("First AS","Second AS")
+        val source=companies.joinToString("\n") { "## $it\nSenior Developer\n$row" }
+        val expected=companies.flatMapIndexed { companyIndex, company -> skills.mapIndexed { skillIndex,skill ->
+            ExpectedFact("long-list-$companyIndex-$skillIndex",Kind.COMPETENCY,id,row,mapOf("skill" to skill,"context" to company),"## $company")
+        } }
+        val model=mock(AiModel::class.java)
+        `when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION)))
+            .thenReturn("""{"competencies":[],"profile":[],"history":[]}""")
+        val extractor=DocumentDraftExtractor(model,jacksonObjectMapper())
+        val batches=DocumentAnalysisPlanner.batches(mapOf(id to source))
+        val captured=analysis(batches.flatMap { extractor.extract(it,source,"en").suggestions })
+        val measured=DocumentExtractionBenchmark.assess(mapOf(id to source),expected,captured)
+        assertThat(measured.captured).isEqualTo(expected.size)
+        assertThat(measured.unsupportedEvidence).isZero()
+        assertThat(DocumentCompetencyInventory.recover(batches.single(),source,"en",captured.suggestions)).isEmpty()
         verify(model,times(batches.size)).generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
     }
 }
