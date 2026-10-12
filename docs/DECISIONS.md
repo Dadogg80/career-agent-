@@ -317,3 +317,8 @@ Reuse DocumentPanel in library and compact-review modes. Both open the existing 
 ## 2026-10-12 — One profile presentation and direct main CI repair
 
 Use one profile presentation, preserving explicit selection as the source of its content. Remove the latest-synthesis profile fetch/display. Reuse established presentation styling and maintain document-summary editing/adoption; do not promote new AI wording into selection automatically.
+
+
+## 2026-10-12 — Reviewed CV file drafts
+
+ADR 0043 extends reviewed-text drafts with immutable standard DOCX/PDF previews. Mechanical character readback must pass before artifacts are stored; source/revision guards are rechecked under the owner lock. DRAFT remains distinct from final document approval. No migration or provider call is needed.

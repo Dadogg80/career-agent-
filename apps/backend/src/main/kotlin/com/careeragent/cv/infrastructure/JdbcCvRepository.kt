@@ -38,6 +38,18 @@ class JdbcCvRepository(private val jdbc: JdbcTemplate, private val json: ObjectM
         jdbc.update("UPDATE cv_version SET status='APPROVED',revision=revision+1,approved_at=CURRENT_TIMESTAMP,artifacts=?::jsonb WHERE owner_id=? AND id=?",json.writeValueAsString(artifacts),owner,id)
         return read(owner,id)
     }
+    @Transactional override fun saveFiles(identity: VerifiedIdentity,id: UUID,revision: Long,artifacts: List<CvArtifact>): CvVersion {
+        val owner=owner(identity,true);val version=read(owner,id)
+        if(version.revision != revision || version.status != CvStatus.DRAFT || version.content.reviewedSource == null || version.artifacts.isNotEmpty()) throw CvFailure("CV_CONFLICT",409)
+        sources(owner,version.content)
+        val source=version.content.reviewedSource
+        val claims=jdbc.query("SELECT id,revision FROM competency_claim WHERE owner_id=? AND status='CONFIRMED'",{ row,_ -> row.getObject(1,UUID::class.java) to row.getLong(2) },owner).toMap()
+        val text=jdbc.query("SELECT extracted_text FROM career_document WHERE owner_id=? AND id=?",{ row,_ -> row.getString(1) },owner,source.documentId).singleOrNull() ?: throw CvFailure("CV_SOURCE_CONFLICT",409)
+        val hash=java.security.MessageDigest.getInstance("SHA-256").digest(text.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
+        if(claims != source.evidence.associate { it.id to it.revision } || hash != source.sourceSha256) throw CvFailure("CV_SOURCE_CONFLICT",409)
+        jdbc.update("UPDATE cv_version SET revision=revision+1,artifacts=?::jsonb WHERE owner_id=? AND id=?",json.writeValueAsString(artifacts),owner,id)
+        return read(owner,id)
+    }
     @Transactional override fun delete(identity: VerifiedIdentity,id: UUID,revision: Long): CvVersion {
         val owner=owner(identity,true);val version=read(owner,id)
         if(version.revision != revision) throw CvFailure("CV_CONFLICT",409)

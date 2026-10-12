@@ -18,6 +18,9 @@ import javax.xml.stream.XMLOutputFactory
 class StandardCvRenderer : CvRenderer {
     private data class Paragraph(val text: String, val style: String = "Normal")
     private fun paragraphs(content: CvContent): List<Paragraph> {
+        content.reviewedSource?.let { source ->
+            return source.text.replace('\t',' ').replace("\r\n","\n").replace('\r','\n').split('\n').mapIndexed { index, text -> Paragraph(text,if(index==0) "Title" else "Normal") }
+        }
         val nb=content.locale=="nb";val h=content.identity
         val result=mutableListOf(Paragraph(h.name,"Title"))
         if(h.headline.isNotBlank()) result.add(Paragraph(h.headline,"Subtitle"))

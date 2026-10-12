@@ -17,6 +17,7 @@ interface CvRepository {
     fun get(identity: VerifiedIdentity, id: UUID): CvVersion
     fun create(identity: VerifiedIdentity, title: String, content: CvContent): CvVersion
     fun approve(identity: VerifiedIdentity, id: UUID, revision: Long, artifacts: List<CvArtifact>): CvVersion
+    fun saveFiles(identity: VerifiedIdentity, id: UUID, revision: Long, artifacts: List<CvArtifact>): CvVersion
     fun delete(identity: VerifiedIdentity, id: UUID, revision: Long): CvVersion
     fun pendingCleanup(identity: VerifiedIdentity): List<UUID>
     fun acknowledgeCleanup(identity: VerifiedIdentity, id: UUID)
@@ -24,7 +25,7 @@ interface CvRepository {
 @Service
 @Profile("persistence")
 class CvService(private val versions: CvRepository, private val claims: ClaimRepository, private val entries: CareerEntryRepository,
-                private val jobs: SavedJobRepository, private val renderer: CvRenderer, private val storage: DocumentStorage, private val documents: com.careeragent.documents.application.DocumentService) {
+                private val jobs: SavedJobRepository, private val renderer: CvRenderer, private val storage: DocumentStorage, private val documents: com.careeragent.documents.application.DocumentService, private val extractor: com.careeragent.documents.infrastructure.DocumentTextExtractor) {
     private val generating = Semaphore(1)
     private fun current(identity: VerifiedIdentity, version: CvVersion): CvVersion {
         if (version.status == CvStatus.APPROVED) return version
@@ -85,9 +86,39 @@ class CvService(private val versions: CvRepository, private val claims: ClaimRep
             throw CvFailure("CV_EXPORT_FAILED",503)
         } finally { generating.release() }
     }
+    fun generateFiles(identity: VerifiedIdentity, id: UUID, revision: Long): CvVersion {
+        if (revision < 1) throw CvFailure("CV_INVALID",400)
+        if (!generating.tryAcquire()) throw CvFailure("CV_BUSY",429)
+        val written = mutableListOf<UUID>()
+        try {
+            val version = get(identity,id)
+            if (version.status != CvStatus.DRAFT || version.revision != revision || version.content.reviewedSource == null) throw CvFailure("CV_CONFLICT",409)
+            if (version.stale) throw CvFailure("CV_SOURCE_CONFLICT",409)
+            if (version.artifacts.isNotEmpty()) return version
+            val source = version.content.reviewedSource.text
+            if (source.length > 60000) throw CvFailure("CV_CONTENT_LIMIT",400)
+            val files = renderer.generate(version.content)
+            if (files.size != 2 || files.map { it.format }.toSet() != CvFormat.entries.toSet() || files.any { it.bytes.size !in 1..5_000_000 }) throw CvFailure("CV_EXPORT_FAILED",503)
+            // Read the actual files independently. This checks character preservation, not layout or factual accuracy.
+            fun characters(text: String) = text.filterNot { it.isWhitespace() || Character.isSpaceChar(it) }
+            files.forEach { file ->
+                val extracted = extractor.extract(file.bytes,file.format.name.lowercase())
+                if (characters(extracted) != characters(source)) throw CvFailure("CV_FILE_CONTENT_MISMATCH",503)
+            }
+            val artifacts = files.map { file ->
+                val objectId = UUID.randomUUID(); storage.put(objectId,file.bytes); written.add(objectId)
+                CvArtifact(objectId,file.format,file.bytes.size,hash(file.bytes))
+            }
+            return versions.saveFiles(identity,id,revision,artifacts)
+        } catch (error: Exception) {
+            written.forEach { try { storage.delete(it) } catch (_: Exception) { } }
+            if (error is CvFailure) throw error
+            throw CvFailure("CV_EXPORT_FAILED",503)
+        } finally { generating.release() }
+    }
     fun download(identity: VerifiedIdentity, id: UUID, format: CvFormat): ByteArray {
         val version = versions.get(identity,id)
-        if (version.status != CvStatus.APPROVED) throw CvFailure("CV_APPROVAL_REQUIRED",409)
+        if (version.status != CvStatus.APPROVED && !(version.content.reviewedSource != null && version.artifacts.size == 2)) throw CvFailure("CV_APPROVAL_REQUIRED",409)
         val artifact = version.artifacts.singleOrNull { it.format == format } ?: throw CvFailure("CV_EXPORT_FAILED",503)
         val bytes = try { storage.read(artifact.id) } catch (_: Exception) { throw CvFailure("CV_EXPORT_FAILED",503) }
         if (bytes.size != artifact.byteSize || hash(bytes) != artifact.sha256) throw CvFailure("CV_EXPORT_FAILED",503)

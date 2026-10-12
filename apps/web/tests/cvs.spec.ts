@@ -45,5 +45,37 @@ test("CV proxies reject cross origin, client-owned status and unauthorized downl
  expect((await request.get(`/api/profile/me/cvs/${id}/download/pdf`)).status()).toBe(401);
  expect((await request.post("/api/profile/me/cvs/cleanup",{headers:{Origin:"https://other.example"}})).status()).toBe(403);
  expect((await request.post("/api/profile/me/cvs",{data:{status:"APPROVED"}})).status()).toBe(400);
+ expect((await request.post(`/api/profile/me/cvs/${id}/files`,{headers:{Origin:"https://other.example"},data:{revision:1}})).status()).toBe(403);
+ expect((await request.post(`/api/profile/me/cvs/${id}/files`,{data:{revision:1,text:"Injected source"}})).status()).toBe(400);
+ expect((await request.post(`/api/profile/me/cvs/${id}/files`,{data:{revision:1}})).status()).toBe(403);
  expect((await request.post(`/api/profile/me/cvs/${id}/approve`,{data:{revision:1,approved:false}})).status()).toBe(400);
+});
+
+test("reviewed wording produces downloadable file drafts without final approval",async({page})=>{
+ let version:any={id,title:"Reviewed fictional CV",content:{locale:"nb",identity:{name:"Fictional Pilot",headline:"",email:"",phone:"",location:"",summary:""},claims:[],entries:[],jobId:id,jobTitle:"Fictional role",reviewedSource:{sessionId:id,sessionRevision:2,documentId:id,sourceSha256:"a".repeat(64),text:"Fictional developer\n\nBuilt Kotlin APIs",evidence:[{id,revision:2}]}},revision:1,status:"DRAFT",templateVersion:"reviewed-text-v1",createdAt:time,approvedAt:null,artifacts:[],stale:false};
+ let fileCalls=0;
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
+ for(const path of ["claims","entries","jobs"])await page.route(`**/api/profile/me/${path}`,r=>r.fulfill({json:[]}));
+ await page.route("**/api/profile/me/cvs**",r=>{
+  const path=new URL(r.request().url()).pathname;
+  if(path.endsWith("/cleanup"))return r.fulfill({json:{remaining:0}});
+  if(path.endsWith("/files")){
+   fileCalls++;expect(r.request().postDataJSON()).toEqual({revision:1});expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf");
+   if(fileCalls===1)return r.fulfill({status:503,json:{code:"CV_FILE_CONTENT_MISMATCH"}});
+   version={...version,revision:2,artifacts:[{id,format:"PDF",byteSize:12,sha256:"a".repeat(64)},{id:"a2345678-1234-1234-1234-123456789abc",format:"DOCX",byteSize:12,sha256:"b".repeat(64)}]};return r.fulfill({json:version});
+  }
+  if(path.endsWith("/download/pdf"))return r.fulfill({contentType:"application/pdf",body:"%PDF-synthetic"});
+  return r.fulfill({json:[version]});
+ });
+ await page.setViewportSize({width:390,height:900});await page.goto("/cv");await page.getByRole("button",{name:"Gjennomgå utkast",exact:true}).click();
+ await expect(page.getByRole("button",{name:"Dokumentkontroll gjenstår",exact:true})).toBeDisabled();
+ await page.getByRole("button",{name:"Lag DOCX- og PDF-utkast",exact:true}).click();
+ await expect(page.getByRole("alert")).toContainText("Filkontrollen fant endret eller manglende tekst");
+ await expect(page.locator(".cv-paper")).toContainText("Built Kotlin APIs");
+ await page.getByRole("button",{name:"Lag DOCX- og PDF-utkast",exact:true}).click();
+ await expect(page.getByText(/Filutkast er klare/)).toBeVisible();expect(fileCalls).toBe(2);
+ await expect(page.getByRole("button",{name:"Dokumentkontroll gjenstår",exact:true})).toBeDisabled();
+ const downloading=page.waitForEvent("download");await page.getByRole("button",{name:"Last ned PDF-utkast",exact:true}).click();expect((await downloading).suggestedFilename()).toContain("draft-");
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:"/tmp/reviewed-cv-files-mobile.png",fullPage:true});
 });

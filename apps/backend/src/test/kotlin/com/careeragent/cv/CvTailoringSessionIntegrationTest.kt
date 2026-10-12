@@ -36,6 +36,8 @@ class CvTailoringSessionIntegrationTest {
     @Autowired lateinit var jdbc: JdbcTemplate
     @Autowired lateinit var json: ObjectMapper
     @Autowired lateinit var repository: CvTailoringSessionRepository
+    @Autowired lateinit var versions: CvRepository
+    @org.springframework.test.context.bean.override.mockito.MockitoSpyBean lateinit var renderer: com.careeragent.cv.infrastructure.StandardCvRenderer
     @MockitoBean lateinit var ai: AiModel
     @MockitoBean lateinit var tailoring: CvTailoringService
     private val issuer = "https://identity.example.test"
@@ -107,7 +109,7 @@ class CvTailoringSessionIntegrationTest {
         assertThrows(CvFailure::class.java) { save(f) }
         verifyNoInteractions(ai)
     }
-    @Test fun `reviewed wording creates one immutable owned draft without exports or factual changes`() {
+    @Test fun `reviewed wording creates immutable owned file drafts without final approval or factual changes`() {
         val f=fixture();val session=save(f)
         fun draft(user:String=f.user, revision:Long=2)=post("${f.path}/draft").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("sessionId" to session.id,"revision" to revision)))
         mvc.perform(draft(revision=1)).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("CV_WORDING_REVIEW_REQUIRED"))
@@ -122,9 +124,39 @@ class CvTailoringSessionIntegrationTest {
         assertEquals(1L,jdbc.queryForObject("SELECT COUNT(*) FROM cv_version WHERE owner_id=?",Long::class.java,f.owner))
         mvc.perform(post("/api/profile/me/cvs/$id/approve").with(caller(f.user)).with(csrf()).contentType("application/json").content("""{"approved":true,"revision":1}""")).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("CV_FINAL_REVIEW_REQUIRED"))
         mvc.perform(get("/api/profile/me/cvs/$id").with(caller(f.user))).andExpect(status().isOk).andExpect(jsonPath("$.stale").value(false)).andExpect(jsonPath("$.artifacts.length()").value(0))
+        fun files(revision:Long=1,user:String=f.user)=post("/api/profile/me/cvs/$id/files").with(caller(user)).with(csrf()).contentType("application/json").content("""{"revision":$revision}""")
+        mvc.perform(files(user=fixture().user)).andExpect(status().isNotFound)
+        mvc.perform(post("/api/profile/me/cvs/$id/files").with(caller(f.user)).contentType("application/json").content("""{"revision":1}""")).andExpect(status().isForbidden)
+        mvc.perform(files(revision=99)).andExpect(status().isConflict)
+        val cvContent=versions.get(VerifiedIdentity(issuer,f.user),UUID.fromString(id)).content
+        val wrongFiles=renderer.generate(cvContent.copy(reviewedSource=cvContent.reviewedSource!!.copy(text="Wrong text")))
+        doReturn(wrongFiles).`when`(renderer).generate(cvContent)
+        mvc.perform(files()).andExpect(status().isServiceUnavailable).andExpect(jsonPath("$.code").value("CV_FILE_CONTENT_MISMATCH"))
+        mvc.perform(get("/api/profile/me/cvs/$id").with(caller(f.user))).andExpect(jsonPath("$.artifacts.length()").value(0)).andExpect(jsonPath("$.revision").value(1))
+        doAnswer { invocation ->
+            val files=invocation.callRealMethod()
+            jdbc.update("UPDATE competency_claim SET revision=revision+1 WHERE id=?",f.claim)
+            files
+        }.`when`(renderer).generate(cvContent)
+        mvc.perform(files()).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("CV_SOURCE_CONFLICT"))
+        mvc.perform(get("/api/profile/me/cvs/$id").with(caller(f.user))).andExpect(jsonPath("$.artifacts.length()").value(0))
+        jdbc.update("UPDATE competency_claim SET revision=2 WHERE id=?",f.claim)
+        doCallRealMethod().`when`(renderer).generate(cvContent)
+        mvc.perform(files()).andExpect(status().isOk).andExpect(jsonPath("$.status").value("DRAFT")).andExpect(jsonPath("$.revision").value(2)).andExpect(jsonPath("$.approvedAt").doesNotExist()).andExpect(jsonPath("$.artifacts.length()").value(2))
+        val extractor=com.careeragent.documents.infrastructure.DocumentTextExtractor()
+        for(format in listOf("docx","pdf")) {
+            val bytes=mvc.perform(get("/api/profile/me/cvs/$id/download/$format").with(caller(f.user))).andExpect(status().isOk).andExpect(header().string("Cache-Control","no-store")).andReturn().response.contentAsByteArray
+            assertEquals("FictionaldeveloperDevelopedAPIsusingKotlin",extractor.extract(bytes,format).filterNot { it.isWhitespace() })
+            mvc.perform(get("/api/profile/me/cvs/$id/download/$format").with(caller(fixture().user))).andExpect(status().isNotFound)
+        }
+        val persisted=jdbc.queryForObject("SELECT artifacts::text FROM cv_version WHERE id=?",String::class.java,java.util.UUID.fromString(id))
+        mvc.perform(files(revision=2)).andExpect(status().isOk).andExpect(jsonPath("$.revision").value(2))
+        assertEquals(persisted,jdbc.queryForObject("SELECT artifacts::text FROM cv_version WHERE id=?",String::class.java,java.util.UUID.fromString(id)))
+        mvc.perform(post("/api/profile/me/cvs/$id/approve").with(caller(f.user)).with(csrf()).contentType("application/json").content("""{"approved":true,"revision":2}""")).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("CV_FINAL_REVIEW_REQUIRED"))
         assertEquals(f.snapshot.text,jdbc.queryForObject("SELECT extracted_text FROM career_document WHERE id=?",String::class.java,f.doc))
         assertEquals(2L,jdbc.queryForObject("SELECT revision FROM competency_claim WHERE id=?",Long::class.java,f.claim))
         jdbc.update("UPDATE career_document SET extracted_text=? WHERE id=?",f.snapshot.text+" changed",f.doc)
+        mvc.perform(files(revision=2)).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("CV_SOURCE_CONFLICT"))
         mvc.perform(draft()).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("CV_SOURCE_CONFLICT"))
         mvc.perform(get("/api/profile/me/cvs/$id").with(caller(f.user))).andExpect(status().isOk).andExpect(jsonPath("$.stale").value(true)).andExpect(jsonPath("$.content.reviewedSource.text").value("Fictional developer\n\nDeveloped APIs using Kotlin"))
         verifyNoInteractions(ai)

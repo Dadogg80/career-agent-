@@ -584,3 +584,8 @@ Only upload and the full document library move to /documents. Min profil keeps i
 ## 2026-10-12 — One profile presentation and direct main CI repair
 
 The profile now has one Your presentation card using the prior latest-suggestions design: gradient header, colored section icons, collapsible sections and saved sources/models. Only explicitly selected wording appears. Unselected/new draft summaries stay in document review, with existing editing and Use/Replace actions. The empty presentation directs users to review rather than silently adopting AI text.
+
+
+## 2026-10-12 — Reviewed CV file drafts
+
+From the reviewed CV draft in /cv, explicitly generate DOCX and PDF file drafts. Download each for inspection; both retain DRAFT status. The system reads both files back to check ordered character preservation. Standard layout is used; final factual, structural and visual checks remain required. Stale source evidence blocks generation; historical stored drafts remain downloadable.

@@ -39,6 +39,11 @@ class CvController(private val services: ObjectProvider<CvService>,private val j
         if(input.keys!=setOf("revision","approved") || input["approved"]!=true)throw CvFailure("CV_APPROVAL_REQUIRED",400)
         return response(service().approve(identity(user),id(versionId),revision(input),true))
     }
+    @PostMapping("/{versionId}/files",consumes=["application/json"])
+    fun files(@AuthenticationPrincipal user:OidcUser?,@PathVariable versionId:String,@RequestBody input:Map<String,Any?>):ResponseEntity<CvVersion> {
+        if(input.keys!=setOf("revision"))throw CvFailure("CV_INVALID",400)
+        return response(service().generateFiles(identity(user),id(versionId),revision(input)))
+    }
     @GetMapping("/{versionId}/download/{format}")
     fun download(@AuthenticationPrincipal user:OidcUser?,@PathVariable versionId:String,@PathVariable format:String):ResponseEntity<ByteArray> {
         val type=try { CvFormat.valueOf(format.uppercase()) } catch (_:Exception) {throw CvFailure("CV_INVALID",400)}
