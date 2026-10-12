@@ -63,3 +63,32 @@ test("private saved-job proxies reject anonymous cross-origin spoofed owners and
  expect((await request.post(path, { data: { ...content, text: "x".repeat(15001) } })).status()).toBe(400);
  expect((await request.post(path, { data: { ...content, sourceUrl: "javascript:alert(1)" } })).status()).toBe(400);
 });
+
+test("saved overview shows current stale and missing matches with readable actions and responsive cards",async({page})=>{
+ const second="62345678-1234-1234-1234-123456789abc",third="72345678-1234-1234-1234-123456789abc",claim="82345678-1234-1234-1234-123456789abc";
+ const stored=[job,{...job,id:second,content:{...content,title:"Another developer"},createdAt:"2026-10-08T00:00:00Z"},{...job,id:third,content:{...content,title:"Unmatched developer"},createdAt:"2026-10-09T00:00:00Z"}];
+ let writes=0;
+ const match={id:claim,locale:"nb",createdAt:job.createdAt,provider:"Gemini",model:"gemini-3.5-flash-lite",automaticEvidence:true,stale:false,inputCharacters:100,omittedItems:0,claims:[{id:claim,revision:1,skill:"Kotlin",statement:"Built Kotlin APIs",context:"Example AS"}],assessments:[{requirementIndex:0,classification:"STRONG",reason:"Documented experience",evidence:[{claimId:claim,quote:"Built Kotlin APIs"}],question:""}]};
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
+ await page.route("**/api/profile/me/jobs**",r=>{if(r.request().method()!=="GET")writes++;const url=r.request().url();return r.fulfill({json:url.endsWith("/match")?url.includes(third)?null:{...match,stale:url.includes(second)}:stored});});
+ await page.goto("/jobs/saved");
+ await expect(page.locator(".saved-job-card")).toHaveCount(3);
+ const current=page.locator(".saved-job-card").filter({has:page.getByRole("heading",{name:content.title,exact:true})});
+ await expect(current).toContainText("100% kravmatch");await expect(current).toContainText("Gemini · gemini-3.5-flash-lite");
+ await expect(page.locator(".saved-job-card").filter({hasText:"Another developer"})).toContainText("Profilen er endret · vurder på nytt");
+ await expect(page.locator(".saved-job-card").filter({hasText:"Unmatched developer"})).toContainText("Ikke matchet ennå");
+ const apply=current.getByRole("link",{name:"Søk på stillingen"});
+ const colors=await apply.evaluate(el=>{const s=getComputedStyle(el);return {color:s.color,background:s.backgroundColor};});
+ expect(colors.color).toBe("rgb(255, 255, 255)");expect(colors.background).toBe("rgb(36, 88, 68)");
+ await page.getByRole("combobox",{name:"Sorter stillinger"}).selectOption("OLDEST");
+ await expect(page.locator(".saved-job-card").first()).toContainText(content.title);
+ await page.screenshot({path:"/tmp/career-saved-overview-desktop.png",fullPage:true});
+ await page.getByRole("textbox",{name:"Søk i lagrede stillinger"}).fill("Fictional");
+ await expect(page.locator(".saved-job-card")).toHaveCount(1);
+ await page.screenshot({path:"/tmp/career-saved-overview-single.png",fullPage:true});
+ await page.setViewportSize({width:390,height:850});
+ await expect(apply).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:"/tmp/career-saved-overview-mobile.png",fullPage:true});
+ await page.reload();await expect(page.locator(".saved-job-card").filter({hasText:content.title})).toContainText("100% kravmatch");expect(writes).toBe(0);
+});

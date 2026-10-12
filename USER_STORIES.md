@@ -1,5 +1,12 @@
 # User stories
 
+## Readable saved opportunities — 2026-10-12
+
+- As an owner, I can search and sort saved jobs and scan employer, location, deadline, source type and stored assessment in one responsive overview.
+- As an owner, I can read both primary/secondary actions and distinguish an unassessed opportunity from a saved, provisional or outdated match without relying only on color.
+- As an owner, I can inspect the score explanation and actual saved model while retaining the existing match, clarification and application-preparation workflows. Viewing cards makes no new provider calls.
+
+
 Status: Working stories. The merged local pilot includes bounded advertisement analysis plus optional owned profile/documents, saved jobs, approved matching, standard CV export and manual application tracking. This does not complete every original profile/matching requirement. P0 targets the first useful delivery, P1 the proposed complete MVP and P2 later improvements. Acceptance criteria are requirements; the development log records actual validation.
 
 ## Current pilot slice

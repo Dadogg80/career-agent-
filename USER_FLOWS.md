@@ -1,5 +1,12 @@
 # Brukerflyter
 
+## Saved-job overview refresh — 2026-10-12
+
+Search saved roles/employers/locations and sort by newest, oldest or title. Cards explicitly identify browser excerpts from either provider, missing employer/location/deadline data, saved date and criterion count. A single visible result uses the available desktop width; multiple results form a responsive grid.
+
+The saved assessment panel distinguishes no assessment, current saved coverage, provisional coverage, changed-profile assessment and retrieval failure. Display the existing weighted requirement score, recorded provider/model and explanatory tooltip; opening a card initiates no AI analysis. Open job continues existing match/clarification controls. Apply opens the existing preparation page and does not submit an application externally.
+
+
 Status: The complete future flows below remain a design. The merged local pilot supports public URL/text analysis and optional authenticated profile/documents, saved jobs, approved matching, reviewed CV export and manual application tracking. The maintenance slice retains valid cited items when other AI fields fail and preserves long quota waits. Story IDs refer to [USER_STORIES.md](USER_STORIES.md).
 
 Maintenance recovery: source retrieved → analyze once → retain valid cited items and report omissions. If the whole response is unusable or quota is reached, keep the source reader and any previous valid result. A quota response establishes a shared backend cooldown; proxies/UI preserve the duration and no automatic retry occurs. Existing saved analyses can be reopened without another provider call. A new manual attempt after the wait may still exceed the provider quota.

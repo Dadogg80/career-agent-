@@ -1,5 +1,10 @@
 # Beslutningsregister
 
+## Saved-job presentation — 2026-10-12
+
+Accepted: reuse existing owner-scoped saved-match queries and score calculation, improving presentation without triggering AI or changing scoring. Show stale/provisional states in text as well as color. Identify both Gemini/Groq browser excerpts as excerpts; retain unknown facts instead of inferring employer/deadline. Search/sort are local and deterministic; a single visible card receives full desktop width. Separate the primary apply class from the outline/open class that previously forced dark text onto a dark green background. Explicit header/content classes match the actual local Card API instead of nonexistent data-slot attributes.
+
+
 Confirmed records explicit user requirements; recommendations record design proposals. Implementation has started, and the user has delegated routine choices. Accepted implementation decisions identify their scope and do not imply that the full MVP is approved or completed.
 
 ## Bekreftede føringer

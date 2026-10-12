@@ -1,5 +1,10 @@
 # Career Agent roadmap
 
+## Saved-opportunity UI refresh — 2026-10-12
+
+Implemented for review: readable primary action contrast; source-aware responsive cards; search and deterministic sorting; clear saved/provisional/stale/unmatched assessment panels and saved model identity. Existing weighted score and matching refresh rules remain unchanged. No backend/schema/default-model change. CV artifact integration and independent final document review remain the next substantive roadmap stage.
+
+
 Status checked against remote main on 2026-10-09. Deliver tested slices of a joined user journey; a specification or branch is not a released capability. Do not assume authorization to merge subsequent PRs.
 
 ## Current status
