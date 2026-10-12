@@ -179,3 +179,13 @@ Competency/profile mutations now invalidate the full cached saved-match family a
 ### Competency review: edit within the queue
 
 Guided review now supports prefilled editing, a return without saving and a return to the same item after saving. Explicit confirmation remains separate and uses the edited revision. This improves review continuity without bulk factual confirmation, new AI calls or source rewriting. Broader document review/layout and joined-flow quality remain next priorities.
+
+## Pilot roadmap checkpoint — 2026-10-12
+
+The joined local pilot has implemented identity/private storage, document reading and sourced profile drafts, advertisement analysis/snapshots, automatic full-confirmed-evidence matching with explained coverage/clarification, and job-specific editable CV wording review. Individual workflows and recent recoveries have focused tests; this is not a claim of a completed real-identity/database whole-journey audit or exhaustive semantic extraction/matching quality. PRs #36–#39 are merged with successful Foundation checks.
+
+Current delivery concentrates on usability and integrated quality: compact completed-document results, preserving source/review identity, profile/match freshness, and safe transitions into CV proposals. Next: wider document/profile usability review, joined login/upload/profile/job/match/tailoring verification and independently expected source/criterion quality checks. Source routing supports FINN/NAV URLs plus pasted text; general URL adapters remain pending. Tailored CV files/durable wording review, letters, interview support and online hosting remain later deliveries. Independent standard CV export/manual application tracking already exist; they are distinct from job-tailored file generation.
+
+### Completed-document overview
+
+Added a compact completion strip and on-demand processing/source-check disclosure; active/paused runs retain expanded progress. Review actions, literal quotations, saved model attribution and completion limitations are preserved. This changes presentation only, with no provider call or automatic factual confirmation.

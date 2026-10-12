@@ -483,3 +483,9 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - I can correct an AI proposal inside guided review without abandoning the queue or registering the same competency again.
 - Saving the correction keeps it pending and returns me to the same item for explicit confirmation. The next item opens only after confirmation, rejection or skipping.
 - I can return without saving; the original contribution and source evidence remain visible.
+
+## Focus on document results
+
+- When an analysis is complete, I reach competency/profile/history review without scrolling through expanded technical processing details.
+- I can open source checks and processing details on demand, including missed-passage review, with no new AI request.
+- During processing or a quota pause, progress/recovery information stays expanded. Completion does not imply that every competency was found.
