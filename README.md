@@ -77,3 +77,8 @@ Gemini is available through explicit task routing; Groq remains the default unle
 ## Latest delivery and AI recovery
 
 The Gemini/whole-document continuation was merged in [PR #16](https://github.com/Dadogg80/career-agent-/pull/16) on 2026-10-08. The evidence-quality improvements merged in PR #17; PR #18 added documentary profile population and matching UX. The current follow-up consolidates profile skill cards and protects independent review decisions. With both backend keys configured, choose **Try with Gemini** after a Groq quota failure, review/approve the new recipient and continue the saved work. Actual provider/model badges retain older result attribution. For FINN, Gemini URL Context retrieval is an explicit separate choice, not an automatic recovery from Groq failure; budgets and account quotas still apply. See [ADR 0026](docs/adr/0026-approved-ai-provider-recovery.md) and [ADR 0037](docs/adr/0037-gemini-finn-url-context.md).
+
+
+### Durable CV wording preparation
+
+New wording runs persist private source/match/model snapshots and revision-checked review decisions. Application preparation reopens the latest session without AI calls. Edited wording needs an explicit draft save; approval/rejection saves the decision. This supersedes the earlier page-session-only limitation for new runs, not for already-lost browser-only work. Stable CV sections, tailored files and independent final review remain subsequent increments; see [the approved master specification](docs/CV_TAILORING_MASTER_SPEC.md).

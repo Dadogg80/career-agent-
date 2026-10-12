@@ -199,3 +199,8 @@ Further CV-tailoring development is explicitly paused by the owner: notify them 
 ### Source-quality continuation: long explicit lists — 2026-10-12
 
 An independent expected-fact regression exposed local recovery dropping whole explicit technology rows over 30 items. Aligned that item bound with the existing 300-suggestion workflow bound, retaining row-length/per-item/source checks. Verified empty-model-output recovery, employer context, punctuation and deduplication against a two-employer expected inventory. This is a narrow recall fix, not a live model benchmark or complete semantic/document audit. Continue document/profile/competency quality; the owner gate for CV tailoring remains in force.
+
+
+## Approved CV-tailoring roadmap — 2026-10-12
+
+Owner approval resumes CV tailoring after the supplied process/audit. First delivery: durable owned generated snapshots and revision-checked wording decisions, latest-session recovery and explicit draft saves. Next: stable CV sections, visibility/strategy, section-aware review, versioned standard export, supported Falck DOCX layout/conversion, independent actual-file review and application integration. Existing functions remain. No full-journey or live-model quality claim is made by this first delivery.

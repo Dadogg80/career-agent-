@@ -135,3 +135,8 @@ PR #31 merged at `ab15566a003c03c043f77a00c74e17016cb8825f`; PR #32 merged at `e
 ## Owner gate before further CV tailoring — 2026-10-12
 
 The owner explicitly paused further CV-tailoring development. Before starting that work, clearly notify the owner and wait for their user/process flow from the other assistant; discuss it together before implementation. Continue document, profile and competency improvements in the meantime. Existing CV proposal functionality remains unchanged by this gate; do not treat a generic “continue” as authorization to resume CV tailoring.
+
+
+## Approved CV-tailoring continuation — 2026-10-12
+
+The owner supplied the master process, discussed the repository audit and explicitly approved the incremental plan. The earlier pause gate is satisfied for that plan. Follow [the approved specification](docs/CV_TAILORING_MASTER_SPEC.md) and existing product standard. Begin with durable owned wording sessions/reviews and source/revision checks; section planning, generated tailored files, supported Falck layout and independent final document review remain subsequent increments. Standard export first is accepted. Preserve documentary versus personal confirmation basis, full confirmed matching evidence, recipient/model consent and original files. Wording approval is not factual confirmation or CV_READY. Use focused mocked/synthetic checks without live AI calls by default; prepare PRs without automatic merging.

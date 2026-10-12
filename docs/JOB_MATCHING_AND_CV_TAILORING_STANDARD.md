@@ -328,3 +328,12 @@ This matrix separates verified foundations from target behavior. Remote main `9d
 ### Minimum cross-profession quality fixtures
 
 Use at least technology, regulated healthcare, sales and project/operations examples. Verify a mandatory authorization is not replaced by transferable experience; tool familiarity is not responsibility; hidden experience creates a neutral question; confirmed but missing CV detail becomes a visibility gap; overlapping roles do not inflate duration; stale/edited evidence blocks current recommendations; provider failures preserve usable information without introducing unsupported facts. No fixture may contain the pilot's private information in Git.
+
+
+## Approved extension and durable wording checkpoint — 2026-10-12
+
+The owner approved [the supplied master specification](CV_TAILORING_MASTER_SPEC.md) after a repository audit. Earlier text-only/deferred-file milestones remain historical boundaries; the new incremental target includes structured sections, tailoring strategy, durable review, job-linked versions, supported templates, external Word revisions and independent actual-document quality review.
+
+This delivery persists an owned immutable generated wording/source/match snapshot plus revision-checked editable review decisions (V17). New generation creates a separate session; reads/reviews make no model calls. Latest-session recovery and explicit draft saves are implemented. Changed source text, deleted source, replaced match or changed confirmed revision set make review stale; snapshots remain readable. Wording approval never confirms profile facts. Private approved text copying requires saved current decisions. No tailored artifact, semantic edit verification, stable section mapping or CV_READY is delivered yet.
+
+Next acceptance: stable source sections and explicit per-section assessment/strategy, followed by validated wording and existing versioned standard export. Final review must inspect actual files, distinguish semantic/structural/visual checks and report unavailable controls honestly. No wholesale master-prompt transmission or thirteen-call requirement is introduced.

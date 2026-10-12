@@ -166,3 +166,8 @@ Stable task prompts/schema precede variable numbered evidence. `AiTask` selects 
 ## Explicit AI provider routing
 
 The local pilot now routes the existing AiModel port by task to Groq or Gemini. Recipient/model preview fingerprints protect private approvals and persisted workflow continuation. Retrieval stays a separate source adapter; no provider-switch retry loop or agent swarm is introduced. See [ADR 0025](docs/adr/0025-explicit-ai-providers-and-approval.md) and [Gemini setup](docs/GEMINI_SETUP.md).
+
+
+## Durable wording-session boundary (ADR 0039)
+
+The existing CV module stores immutable generation snapshots and mutable revision-checked wording reviews in V17. Generated result/source/match evidence remains separate from authoritative profile facts and approved file versions. JDBC owner locks recheck exact current source text, match identity and complete confirmed claim revisions before create/review. Source deletion leaves historical session text readable but stale; saved-job/account deletion cascades session removal. Fixed authenticated no-store Next proxies expose latest-session reads and CSRF-protected review writes. Neither performs model I/O. No new service, document engine or semantic-verification claim is introduced.
