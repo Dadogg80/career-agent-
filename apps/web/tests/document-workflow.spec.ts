@@ -386,6 +386,7 @@ test("document library distinguishes saved partial and completed analysis with a
  await page.mouse.move(0,0);await expect(popup).toHaveCount(0);
  await trigger.focus();await expect(popup).toBeVisible();await page.keyboard.press("Escape");await expect(popup).toHaveCount(0);
  await page.setViewportSize({width:390,height:800});await trigger.click();await expect(popup).toBeVisible();
+ await page.evaluate(()=>window.dispatchEvent(new Event("scroll")));await expect(popup).toBeVisible();
  const box=await popup.boundingBox();expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(390);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.screenshot({path:"/tmp/career-library-analysis-mobile.png"});expect(writes).toBe(0);

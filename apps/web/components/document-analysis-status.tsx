@@ -20,13 +20,14 @@ export function DocumentAnalysisStatus({document,locale}:{document:CareerDocumen
   useEffect(()=>{
     if(!position)return;
     const close=()=>setPosition(null);
-    window.addEventListener("scroll",close,true);window.addEventListener("resize",close);
-    return ()=>{window.removeEventListener("scroll",close,true);window.removeEventListener("resize",close);};
+    const reposition=()=>{const rect=trigger.current?.getBoundingClientRect();if(!rect || rect.bottom<0 || rect.top>window.innerHeight)close();else show();};
+    window.addEventListener("scroll",reposition,true);window.addEventListener("resize",close);
+    return ()=>{window.removeEventListener("scroll",reposition,true);window.removeEventListener("resize",close);};
   },[position]);
   if(!analysis)return <div className="document-analysis-status" data-analysis="none"><Sparkles size={14}/><span>{document.analysis===undefined?(nb?"Analysestatus ikke tilgjengelig":"Analysis status unavailable"):(nb?"Ikke AI-analysert":"Not AI analyzed")}</span></div>;
   const complete=analysis.status==="COMPLETED", label=complete?(nb?"AI-analysert":"AI analyzed"):(nb?"Delvis analysert":"Partially analyzed");
   return <div className="document-analysis-status" data-analysis={complete?"complete":"partial"}>
-    <Button ref={trigger} type="button" variant="ghost" size="sm" aria-label={nb?"Vis analysedetaljer":"Show analysis details"} aria-describedby={position?id:undefined} onMouseEnter={show} onMouseLeave={()=>setPosition(null)} onFocus={show} onBlur={()=>setPosition(null)} onClick={show} onKeyDown={e=>{if(e.key==="Escape"){e.stopPropagation();setPosition(null);}}}>
+    <Button ref={trigger} type="button" variant="ghost" size="sm" aria-label={nb?"Vis analysedetaljer":"Show analysis details"} aria-describedby={position?id:undefined} onMouseEnter={show} onMouseLeave={()=>{if(window.document.activeElement!==trigger.current)setPosition(null);}} onFocus={show} onBlur={()=>setPosition(null)} onClick={show} onKeyDown={e=>{if(e.key==="Escape"){e.stopPropagation();setPosition(null);}}}>
       {complete?<Sparkles size={14}/>:<Clock3 size={14}/>}<span>{label}</span><Info size={13}/>
     </Button><small>{analysis.competencies} {nb?"kompetansefunn":"competency findings"} · {analysis.careerEntries} {nb?"historikkpunkter":"career entries"}</small>
     {position && createPortal(<div id={id} role="tooltip" className="document-analysis-popover" style={position}>
