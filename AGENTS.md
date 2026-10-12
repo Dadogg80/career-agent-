@@ -131,3 +131,7 @@ PR #30 is verified merged at `9df2ae41fc61d7769346de3c5af4413665c54810`; both pr
 ## Reviewed CV text handoff continuation — 2026-10-09
 
 PR #31 merged at `ab15566a003c03c043f77a00c74e17016cb8825f`; PR #32 merged at `e7f18bf36f02568d062b58bfeddbeb26df9dd911`, both with successful Foundation checks. Continue on `feat/reviewed-cv-text-handoff` from that main under ADR 0035. Exact-source plain-text preview/copy is local and explicit, with approved changes only and stale/error guards; no original/file/version/profile writes or provider calls. Preserve the owner's focused-validation/no-live-AI-default preference. Prepare a tested PR without automatic merge.
+
+## Owner gate before further CV tailoring — 2026-10-12
+
+The owner explicitly paused further CV-tailoring development. Before starting that work, clearly notify the owner and wait for their user/process flow from the other assistant; discuss it together before implementation. Continue document, profile and competency improvements in the meantime. Existing CV proposal functionality remains unchanged by this gate; do not treat a generic “continue” as authorization to resume CV tailoring.

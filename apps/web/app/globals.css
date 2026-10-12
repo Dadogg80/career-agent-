@@ -1825,3 +1825,27 @@ button:disabled { cursor:not-allowed; }
 .document-processing-disclosure>summary[hidden] { display:none; }
 .document-processing-disclosure .document-run-completed progress,
 .document-processing-disclosure .document-run-completed > p { display:block; flex-basis:100%; }
+
+.document-library-controls { margin:18px 0 12px; }
+.document-library-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+.document-library-heading strong { font-size:.95rem; }
+.document-library-heading small { color:var(--muted-foreground); }
+.document-library-heading .mt-4 { margin-top:0; }
+.document-library-filters { display:flex; flex-wrap:wrap; gap:10px; margin:10px 0; }
+.document-library-search { display:flex; flex:1; align-items:center; gap:8px; min-width:180px; }
+.document-library-search>svg { flex:none; color:var(--muted-foreground); }
+.document-library-filters select { flex:0 1 200px; max-width:100%; }
+.document-library-empty { padding:12px; margin:10px 0; border:1px dashed var(--border); border-radius:10px; }
+.document-library-list { display:grid; grid-template-columns:1fr; gap:8px; }
+.document-library-list .document-tile { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:7px 16px; padding:12px 14px; }
+.document-library-list .claim-heading { grid-column:1; grid-row:1; align-items:flex-start; }
+.document-library-list h3 { font-size:.88rem; line-height:1.5; }
+.document-library-list .document-read-status { grid-column:2; grid-row:1; align-self:start; margin:0; }
+.document-library-list .document-tile>p { grid-column:1; grid-row:2; margin:0; }
+.document-library-list .claim-actions { grid-column:2; grid-row:2; margin:0; justify-content:flex-end; }
+@media(max-width:650px) {
+ .document-library-list .document-tile { grid-template-columns:minmax(0,1fr); }
+ .document-library-list .claim-heading,.document-library-list .document-read-status,.document-library-list .document-tile>p,.document-library-list .claim-actions { grid-column:1; grid-row:auto; }
+ .document-library-list .claim-actions { justify-content:flex-start; }
+ .document-library-filters select { flex:1; }
+}

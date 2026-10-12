@@ -248,3 +248,9 @@ An edit within a review queue saves an unconfirmed correction and returns to tha
 ### Results-first completed-document review — implemented 2026-10-12
 
 Collapse processing/source-check details by default after completion, while keeping result review and a clear completeness limitation visible. Active/paused processing stays expanded. Preserve the mounted source-check subtree and all existing source/promotion actions; expanding details is local UI behavior, not a new analysis. No change to evidence, confirmation, model routing or budgets.
+
+### Document display filters and CV-tailoring pause — implemented 2026-10-12
+
+Library search/filtering uses metadata locally and does not change the collection used by combined analysis. Reading status remains technical, separate from competence truth/analysis status; unknown metadata is not a success indicator.
+
+The owner requires advance notice and a joint discussion of their external assistant's flow before further CV-tailoring implementation. Document/profile/competency work continues; current CV functionality is retained. This explicit instruction overrides earlier continuation priorities.
