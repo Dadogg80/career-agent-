@@ -214,3 +214,7 @@ Implemented conservative explicit-heading sections and preliminary section outco
 ## CV review-coverage and numerical wording checkpoint — 2026-10-12
 
 New AI section plans declare all ordered source passages; incomplete declarations remain unassessed. Expanded profession-independent profile/skills/experience/education instructions and lexical numerical/source-year checks now apply to AI suggestions and new wording approvals. Unsupported wording remains a draft for clarification. This does not complete semantic fact verification, template fidelity or final document readiness. Next: connect current approved wording to immutable standard-document drafts, preserving readiness distinctions and actual-file review requirements.
+
+## Document UX correction — 2026-10-12
+
+Implemented for review: unclipped shared model menu; saved owner-scoped library analysis metadata with accessible interactive details; compact responsive career confirmation. No new AI calls, schema migration or provider default changes. Next approved CV slice remains accepted wording into an immutable standard CV draft/export, followed by independent actual DOCX/PDF review.

@@ -536,3 +536,9 @@ New wording analysis includes a preliminary CV plan. Select a source section to 
 ## Review declared coverage and unsupported quantities — 2026-10-12
 
 Section detail shows the model's declared source-passage review count and its limitations. Older results disclose unrecorded coverage. Unsupported numeric AI additions are withheld, retaining valid suggestions and the source. A new edited-wording approval with unsupported numbers or omitted historical year-shaped values is refused without changing decisions; the editor remains available and the text may be saved as a pending draft before clarification. These checks are not semantic verification or final document approval.
+
+## Saved document analysis and career confirmation — 2026-10-12
+
+Document-library rows distinguish local text reading from saved completed/partial AI processing. Hover, focus or tap the analysis badge for source-specific finding counts, processing characters, start time and recorded provider/models. Combined-analysis counts include findings referencing this document, including additional sources. Missing metadata from an older response remains unknown. Opening the reader retains the existing source/run workflow; it does not start a new AI request. Workflow progress invalidates the document list. Changed-text rereading removes outdated metadata through existing invalidation rules.
+
+Model choices expand within reader cards and scroll when necessary. Choosing another model clears recipient-bound consent. Career confirmation groups organization, period, client and actual role with contribution and expandable source note; users can cancel or edit before confirmation. Unknown dates remain unknown, and editing still resets factual confirmation.

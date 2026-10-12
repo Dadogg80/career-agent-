@@ -342,3 +342,51 @@ test("completed document results lead with review and retain expandable processi
  await expect(sheet.getByText("Review ready",{exact:true})).toBeVisible();
  await expect(details.locator(":scope > summary")).toContainText("Show source checks and analysis details");
 });
+
+test("model choices inside the document reader remain clickable without clipping on desktop and mobile",async({page})=>{
+ await profile(page);
+ const selections=[{provider:"Groq",model:"openai/gpt-oss-20b"},{provider:"Gemini",model:"gemini-3.5-flash"},{provider:"Gemini",model:"gemini-3.5-flash-lite"},{provider:"Groq",model:"openai/gpt-oss-120b"}];
+ const approvals=selections.map((selection,i)=>({token:String(i+1).repeat(64),selections:[selection]}));
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:selections[0],DOCUMENT_EXTRACTION:selections[0],PROFILE_SUMMARY:selections[0],PERSONAL_MATCH:selections[0]},documents:approvals[0],documentExcerpt:approvals[0],matching:approvals[0],options:{documents:approvals.map(approval=>({approval,available:true})),documentExcerpt:[],matching:[],job:[]}}}));
+ let writes=0;
+ await page.route("**/api/profile/me/documents**",r=>{
+  if(r.request().method()!=="GET")writes++;
+  const url=r.request().url();return r.fulfill({json:url.includes("/workflow")?null:url.endsWith(id)?{document:doc,text}:[doc]});
+ });
+ for(const width of [1280,390]) {
+  await page.setViewportSize({width,height:800});await open(page);
+  const reader=page.locator(".document-reader-sheet"),choice=reader.locator(".ai-choice");
+  const consent=reader.getByRole("checkbox",{name:/Jeg godkjenner at valgt tekst/});await consent.check();
+  await choice.getByLabel("Bytt AI-modell").click();
+  const menu=choice.locator(".ai-choice-options"),card=choice.locator('xpath=ancestor::*[@data-slot="card"][1]');
+  const menuBox=await menu.boundingBox(),cardBox=await card.boundingBox();expect(menuBox!.y+menuBox!.height).toBeLessThanOrEqual(cardBox!.y+cardBox!.height);
+  await menu.screenshot({path:`/tmp/career-model-menu-${width}.png`});
+  const target=choice.getByRole("button",{name:/Gemini · gemini-3.5-flash-lite/});
+  await target.click({timeout:3000});
+  await expect(choice.locator(".ai-identity-chip")).toContainText("Gemini · gemini-3.5-flash-lite");await expect(consent).not.toBeChecked();
+  await expect(consent).toHaveAccessibleName(/Gemini/);await expect(choice.locator("details")).not.toHaveAttribute("open","");
+  await choice.getByLabel("Bytt AI-modell").click();const last=choice.getByRole("button",{name:/Groq · openai\/gpt-oss-120b/});await last.click({timeout:3000});
+  await expect(choice.locator(".ai-identity-chip")).toContainText("openai/gpt-oss-120b");expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await reader.getByRole("button",{name:"Lukk",exact:true}).click();
+ }
+ expect(writes).toBe(0);
+});
+
+test("document library distinguishes saved partial and completed analysis with accessible metadata and no AI calls",async({page})=>{
+ await profile(page);let writes=0;
+ const metadata={status:"COMPLETED",createdAt:time,collection:true,competencies:12,careerEntries:2,profileSections:3,inputCharacters:75,sourceCharacters:75,selections:[{provider:"Gemini",model:"gemini-3.5-flash-lite"}]};
+ await page.route("**/api/profile/me/documents**",r=>{if(r.request().method()!=="GET")writes++;return r.fulfill({json:[{...doc,textCharacters:75,analysis:metadata},{...doc,id:second,originalName:"partial.md",textCharacters:75,analysis:{...metadata,status:"PARTIAL",inputCharacters:30}},{...doc,id:runId,originalName:"unanalysed.md",textCharacters:75,analysis:null}]});});
+ await page.goto("/career/profile");
+ const tile=page.getByRole("article",{name:"cv.md",exact:true}), trigger=tile.getByRole("button",{name:"Vis analysedetaljer"});
+ await expect(trigger).toContainText("AI-analysert");await expect(tile).toContainText("12 kompetansefunn");
+ await expect(page.getByRole("article",{name:"partial.md"})).toContainText("Delvis analysert");
+ await expect(page.getByRole("article",{name:"unanalysed.md"})).toContainText("Ikke AI-analysert");
+ await trigger.hover();const popup=page.getByRole("tooltip").filter({hasText:"Analyse startet"});
+ await expect(popup).toContainText("Gemini · gemini-3.5-flash-lite");await expect(popup).toContainText("Fra en samlet dokumentanalyse");
+ await page.mouse.move(0,0);await expect(popup).toHaveCount(0);
+ await trigger.focus();await expect(popup).toBeVisible();await page.keyboard.press("Escape");await expect(popup).toHaveCount(0);
+ await page.setViewportSize({width:390,height:800});await trigger.click();await expect(popup).toBeVisible();
+ const box=await popup.boundingBox();expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(390);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:"/tmp/career-library-analysis-mobile.png"});expect(writes).toBe(0);
+});

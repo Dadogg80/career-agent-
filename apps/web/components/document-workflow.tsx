@@ -63,7 +63,7 @@ export function DocumentWorkflow({ scope, documents, locale, csrfToken, onAuthRe
   const selected=previews.filter(p=>p.included && p.text.trim()).map(({documentId,text})=>({documentId,text}));
   const matchesSavedPreview=!current?.approvedDocuments || current.approvedDocuments.length===selected.length && current.approvedDocuments.every(d=>selected.some(p=>p.documentId===d.documentId && p.text===d.text));
   const size=selected.reduce((sum,p)=>sum+p.text.length,0);
-  function remember(value:unknown):DocumentRun { if(!isDocumentRun(value))throw new Error("DOCUMENT_UNAVAILABLE");setRun(value);cache.setQueryData(["private-document-workflow",scope],value);void cache.invalidateQueries({queryKey:["private-document-profile"]});if(value.populateProfile && value.completedBatches>0){void refreshProfileEvidence(cache);void cache.invalidateQueries({queryKey:["private-entries"]});void cache.invalidateQueries({queryKey:["private-claim-context"]});}return value; }
+  function remember(value:unknown):DocumentRun { if(!isDocumentRun(value))throw new Error("DOCUMENT_UNAVAILABLE");setRun(value);void cache.invalidateQueries({queryKey:["private-documents"]});cache.setQueryData(["private-document-workflow",scope],value);void cache.invalidateQueries({queryKey:["private-document-profile"]});if(value.populateProfile && value.completedBatches>0){void refreshProfileEvidence(cache);void cache.invalidateQueries({queryKey:["private-entries"]});void cache.invalidateQueries({queryKey:["private-claim-context"]});}return value; }
   const process=useMutation({retry:false,mutationFn:async(fresh:boolean)=>{
     if(control.current)throw new Error("AI_BUSY");
     if(!approval || !consent)throw new Error("AI_APPROVAL_CHANGED");

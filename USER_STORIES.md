@@ -516,3 +516,10 @@ As a candidate I can navigate explicit CV sections, see a reasoned keep/change/n
 ## Preserve factual scope while tailoring — 2026-10-12
 
 As a candidate I can distinguish declared full passage review from incomplete/legacy section assessment. New generated text and my edited wording cannot introduce unsupported numerical values into accepted wording. Historical year-shaped values in classified experience/education stay preserved. I can save unresolved wording as pending and continue editing after rejection of an approval attempt. No new profile fact or final-document state is produced.
+
+## Document-library feedback and career review — 2026-10-12
+
+- As an owner, I can distinguish text extraction from saved AI analysis and inspect useful analysis metadata by mouse, keyboard or touch without extra AI requests.
+- As an owner, I see partial processing separately from completed processing; neither label claims exhaustive discovery or factual approval. Findings in combined analyses remain attributable to the source document.
+- As an owner, I can choose available models inside scrollable document readers on desktop/mobile, renewing consent after a recipient/model change.
+- As an owner, I can review labeled career facts, inspect the source note, cancel or edit before confirming through a compact responsive dialog.
