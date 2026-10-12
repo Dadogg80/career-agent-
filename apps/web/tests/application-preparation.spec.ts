@@ -326,7 +326,7 @@ test("saved approved wording becomes a separate readable CV draft without AI or 
  await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/draft`,r=>{writes++;expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf");expect(r.request().postDataJSON()).toEqual({sessionId,revision:2});return r.fulfill({json:draft});});
  await page.route("**/api/profile/me/cvs**",r=>r.fulfill({json:r.request().url().endsWith("cleanup")?{remaining:0}:[draft]}));
  await page.route("**/api/profile/me/entries",r=>r.fulfill({json:[]}));
- await page.goto(`/jobs/${jobId}/apply`);await page.setViewportSize({width:390,height:844});
+ await page.goto(`/jobs/${jobId}/apply`);await expect(page.locator(".preparation-readiness")).toContainText(doc.originalName);await page.screenshot({path:"/tmp/career-preparation-reviewed-desktop.png",fullPage:true});await page.setViewportSize({width:390,height:844});
  await page.getByRole("button",{name:"Lagre tilpasset CV-utkast",exact:true}).click();
  await expect(page.getByText("CV-utkastet er lagret. Dokumentkontroll gjenstår.")).toBeVisible();
  await page.getByRole("link",{name:"Se i Mine CV-er"}).click();
