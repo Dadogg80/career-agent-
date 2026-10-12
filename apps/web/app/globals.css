@@ -1849,3 +1849,15 @@ button:disabled { cursor:not-allowed; }
  .document-library-list .claim-actions { justify-content:flex-start; }
  .document-library-filters select { flex:1; }
 }
+
+.cv-section-navigation { display:flex; flex-wrap:wrap; gap:.5rem; margin-bottom:1rem; }
+.cv-section-navigation button { height:auto; min-height:2.5rem; max-width:100%; white-space:normal; text-align:left; }
+.cv-section-navigation button span { overflow-wrap:anywhere; }
+.cv-section-review .hint svg { display:inline; vertical-align:middle; }
+.cv-section-detail { padding:1rem; background:var(--muted); border:1px solid var(--border); border-radius:.75rem; }
+.cv-section-detail pre { max-height:18rem; overflow:auto; white-space:pre-wrap; overflow-wrap:anywhere; }
+.cv-section-detail blockquote { margin:.75rem 0; padding-left:.75rem; border-left:2px solid var(--border); }
+@media (max-width:640px) { .cv-section-navigation { display:grid; grid-template-columns:1fr; } .cv-section-navigation button { justify-content:flex-start; } }
+
+.cv-section-review .workspace-heading h3 { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+.cv-section-navigation button[aria-pressed="true"] [data-slot="badge"] { color:inherit; border-color:currentColor; background:transparent; }

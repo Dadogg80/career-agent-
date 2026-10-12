@@ -56,3 +56,5 @@ Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert i
 - [0037 — Separate Gemini 3.8 FINN URL Context retrieval](0037-gemini-finn-url-context.md) — accepted local-pilot slice; distinct retrieval/analysis approvals, exact-URL evidence checks and explicit AI-excerpt labeling.
 
 - [0039 — Durable owned CV wording sessions](0039-durable-cv-wording-sessions.md) — accepted incremental continuation; saved source/match snapshots and revision-checked wording review, distinct from profile confirmation and final artifacts.
+
+- [0040 — Source-bound CV sections and preliminary review plans](0040-source-bound-cv-section-review.md) — accepted incremental continuation; conservative source structure, explicit section outcomes and current wording navigation.

@@ -82,3 +82,6 @@ The Gemini/whole-document continuation was merged in [PR #16](https://github.com
 ### Durable CV wording preparation
 
 New wording runs persist private source/match/model snapshots and revision-checked review decisions. Application preparation reopens the latest session without AI calls. Edited wording needs an explicit draft save; approval/rejection saves the decision. This supersedes the earlier page-session-only limitation for new runs, not for already-lost browser-only work. Stable CV sections, tailored files and independent final review remain subsequent increments; see [the approved master specification](docs/CV_TAILORING_MASTER_SPEC.md).
+
+
+New CV wording sessions include a source-bound section review plan and section navigation. AI can explicitly recommend keeping text, propose supported changes or mark a section for review. Unclear source structure/missing assessments remain visible; legacy sessions disclose missing plans. This remains text preparation, with standard/tailored artifact integration and actual-file quality review pending.
