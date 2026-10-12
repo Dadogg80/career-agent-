@@ -579,3 +579,8 @@ Project catalogs should produce distinct PROJECT history drafts as well as compe
 ## 2026-10-12 — Dedicated library and retained profile review
 
 Only upload and the full document library move to /documents. Min profil keeps its documents/AI-profile tab, compact source picker, single/combined analysis, OCR/source/manual review, summary editing/adoption, competencies and history. Navigation precedes analysis/presentation; existing #profile-documents links remain valid. Sidebar/mobile navigation includes Documents with a link back to profile review. Upload guidance and CV source repair links target the library. Completed analyses offer Analyze again with another model, opening source/model settings without calling AI and requiring renewed consent before Start new analysis.
+
+
+## 2026-10-12 — One profile presentation and direct main CI repair
+
+The profile now has one Your presentation card using the prior latest-suggestions design: gradient header, colored section icons, collapsible sections and saved sources/models. Only explicitly selected wording appears. Unselected/new draft summaries stay in document review, with existing editing and Use/Replace actions. The empty presentation directs users to review rather than silently adopting AI text.

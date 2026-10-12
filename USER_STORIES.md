@@ -557,3 +557,8 @@ As a candidate uploading project experience, I receive separate source-backed pr
 ## 2026-10-12 — Dedicated library and retained profile review
 
 Candidates can find Documents in desktop/mobile navigation, upload/manage original files there, and still access all existing AI/profile review in Min profil. A completed analysis can be rerun with another model and renewed consent; prior user decisions and selected presentation stay separate from regenerated drafts.
+
+
+## 2026-10-12 — One profile presentation and direct main CI repair
+
+Candidates see a single presentation of their chosen sections and can find new drafts in source review. New analyses must not create a duplicate presentation or replace selected text.

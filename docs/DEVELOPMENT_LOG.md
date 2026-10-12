@@ -685,3 +685,8 @@ Two additional focused browser cases passed for retained combined-source analysi
 GitHub Foundation stopped on one older workflow test (265 tests, one failure, five skipped): its follow-up-skipping fixture contained only a profile paragraph but expected full dated-history coverage. Updated the fixture to supply a literal employment history entry, kept zero-remaining and two-call skip assertions, and asserted that the actual entry exists. Strengthened the dated-project inventory test to show that both skills and profile prose remain insufficient without history. No production behavior or AI budget changed.
 
 Validation: all 26 targeted workflow/inventory cases passed locally, including the previously failing integration case. No live AI calls. Updated commit is pushed to the existing PR; full GitHub checks are rerunning.
+
+
+## 2026-10-12 — One profile presentation and direct main CI repair
+
+Verified PR #51 merged before its repair push. Cherry-picked the 26-test workflow fix onto merged main and pushed commit 50d162f directly with explicit owner authorization. The main failure on 47347ad was the same pre-fix integration case. Separately removed duplicate latest-draft presentation and reused its styles/icons for selected wording. Production build/typecheck and two affected production-browser cases passed; saved replacement/source review remains functional with no live AI calls. Full GitHub CI is being monitored.

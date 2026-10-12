@@ -312,3 +312,8 @@ Allow empty organization only for PROJECT, where own work may have no employer/o
 ## 2026-10-12 — Dedicated library and retained profile review
 
 Reuse DocumentPanel in library and compact-review modes. Both open the existing workflow; old profile hashes remain valid. Model switching requires renewed consent. Move only uploads/overview, preserving original storage/endpoints/statuses and all profile review capabilities.
+
+
+## 2026-10-12 — One profile presentation and direct main CI repair
+
+Use one profile presentation, preserving explicit selection as the source of its content. Remove the latest-synthesis profile fetch/display. Reuse established presentation styling and maintain document-summary editing/adoption; do not promote new AI wording into selection automatically.

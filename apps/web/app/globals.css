@@ -1162,7 +1162,7 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 .profile-settings-create { width:min(100%,500px); margin-top:8px; }
 .profile-settings-create>summary { padding:12px 14px; }
 .profile-settings-create .profile-form { padding:15px; }
-.profile-workspace > .candidate-presentation { margin:16px 0 20px; border-color:#d9e4e4; border-radius:20px; background:#fff; box-shadow:0 8px 28px #233c3210!important; }
+.profile-workspace .candidate-presentation { margin:16px 0 20px; border-color:#d9e4e4; border-radius:20px; background:#fff; box-shadow:0 8px 28px #233c3210!important; }
 .candidate-presentation-header { padding:22px 24px 16px; background:linear-gradient(118deg,#f1f6f5 0%,#f8f7fc 56%,#fff 100%); border-bottom:1px solid #e6ecea; }
 .candidate-presentation-title { display:flex; align-items:center; gap:13px; }
 .candidate-presentation-icon { display:grid; place-items:center; width:42px; height:42px; border:1px solid #ddd8fb; border-radius:13px; background:#f0edff; color:#6753c8; box-shadow:0 3px 10px #6753c81a; }
@@ -1235,7 +1235,7 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
   .profile-section-intro h2 { font-size:16px; }
   .profile-section-buttons { gap:5px; }
   .profile-section-buttons button { min-height:50px; flex-direction:column; gap:4px; padding:7px 4px; font-size:10px; line-height:1.3; }
-  .profile-workspace > .candidate-presentation { margin:12px 0 16px; }
+  .profile-workspace .candidate-presentation { margin:12px 0 16px; }
   .candidate-presentation-header { padding:17px 16px 14px; }
   .candidate-presentation-title h3 { font-size:17px; }
   .candidate-presentation-title [data-slot="badge"] { white-space:normal; }
@@ -2067,7 +2067,7 @@ button:disabled { cursor:not-allowed; }
 #preparation-match { scroll-margin-top:100px; }
 
 .selected-presentation { margin-bottom:24px; border-color:#b5d6c5; }
-.selected-presentation h3 { display:flex; gap:9px; align-items:center; }
+
 .presentation-adopt { margin:14px 0 8px; }
 .presentation-adopt button { white-space:normal; height:auto; min-height:36px; text-align:left; }
 
