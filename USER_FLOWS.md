@@ -531,3 +531,8 @@ Application preparation reopens the latest owned wording session without AI call
 ## Source-bound CV section review — 2026-10-12
 
 New wording analysis includes a preliminary CV plan. Select a source section to inspect its AI priority, explicit keep/change/review outcome, literal original passages and evidence, and filter its wording proposals. The pending/processed review queue remains persisted; saving review keeps the selected section. Unclassified text and absent assessments are clearly marked. Existing sessions without section plans remain reviewable; new analysis requires the same explicit private approval. Neither section outcome nor wording approval establishes facts or CV_READY.
+
+
+## Review declared coverage and unsupported quantities — 2026-10-12
+
+Section detail shows the model's declared source-passage review count and its limitations. Older results disclose unrecorded coverage. Unsupported numeric AI additions are withheld, retaining valid suggestions and the source. A new edited-wording approval with unsupported numbers or omitted historical year-shaped values is refused without changing decisions; the editor remains available and the text may be saved as a pending draft before clarification. These checks are not semantic verification or final document approval.

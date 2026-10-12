@@ -511,3 +511,8 @@ As a candidate I can reopen saved suggestions and approval/rejection decisions f
 ## Review CV suggestions by section — 2026-10-12
 
 As a candidate I can navigate explicit CV sections, see a reasoned keep/change/needs-review plan and inspect original text/evidence before reviewing its proposals. Every original passage remains available; unclear mixed layouts are not silently assigned or discarded. A missing or contradictory AI outcome is unassessed, not automatically kept. New plans reopen with their original session; older sessions remain usable without an automatic AI request.
+
+
+## Preserve factual scope while tailoring — 2026-10-12
+
+As a candidate I can distinguish declared full passage review from incomplete/legacy section assessment. New generated text and my edited wording cannot introduce unsupported numerical values into accepted wording. Historical year-shaped values in classified experience/education stay preserved. I can save unresolved wording as pending and continue editing after rejection of an approval attempt. No new profile fact or final-document state is produced.

@@ -268,3 +268,8 @@ Accepted: retain existing providers, modules and truthful evidence model; extend
 ## Preliminary source-bound CV section plans — 2026-10-12
 
 Accepted under the approved incremental roadmap: use conservative explicit headings to group all existing passages with IDs bound to the exact source revision. Retain uncertain/mixed text as UNCLASSIFIED. Review every section in the existing approved call; missing/invalid/conflicting outcomes remain unassessed NEEDS_REVIEW. Keep recommendation, wording acceptance, factual truth and final document approval separate. Persist optional sections/plans without modifying legacy snapshots. A separate strategy approval stage and reliable DOCX template slots remain future work.
+
+
+## Coverage declarations and conservative numerical wording — 2026-10-12
+
+Accepted incremental checks: require full ordered section passage declarations on new AI responses; retained sessions keep immutable historical metadata. Validate numeric additions against original wording and referenced evidence, and retain original year-shaped values for classified history/education. Apply the same lexical rule to new ACCEPTED wording reviews; PENDING/REJECTED drafts stay saveable. These checks cannot verify semantics, units or factual truth. Do not present declared coverage or a passing numeric check as independent verification. No extra model calls, migration or model-default changes.

@@ -12,7 +12,7 @@ import java.util.UUID
 enum class WordingDecision { PENDING, ACCEPTED, REJECTED }
 data class WordingReview(val paragraphIndex: Int, val text: String, val decision: WordingDecision)
 data class TailoringSnapshot(val result: CvTailoringResult, val text: String, val claims: List<MatchClaim>,
-    val quotes: List<String>, val locale: String, val promptVersion: String = "cv-section-wording-v2")
+    val quotes: List<String>, val locale: String, val promptVersion: String = "cv-section-wording-v3")
 data class CvTailoringSession(val id: UUID, val jobId: UUID, val revision: Long, val snapshot: TailoringSnapshot,
     val reviews: List<WordingReview>, val createdAt: OffsetDateTime, val stale: Boolean = false)
 data class TailoringReviewRequest(val sessionId: UUID, val revision: Long, val reviews: List<WordingReview>)
@@ -30,6 +30,9 @@ object TailoringReviewPolicy {
             reviews.any { review -> snapshot.result.proposals.none { it.paragraphIndex == review.paragraphIndex } ||
                 review.text.isBlank() || review.text.length > 4000 || review.text.any { it.isISOControl() && it !in "\n\r\t" } })
             throw CvFailure("CV_INVALID", 400)
+        if (reviews.any { review -> review.decision == WordingDecision.ACCEPTED &&
+            !CvWordingGuard.supported(snapshot.result.proposals.first { it.paragraphIndex == review.paragraphIndex }.copy(newText=review.text),snapshot.claims,snapshot.result.sections?.any {section->review.paragraphIndex in section.paragraphIndexes && section.kind in setOf(CvSectionKind.EXPERIENCE,CvSectionKind.EDUCATION)}==true) })
+            throw CvFailure("CV_WORDING_UNSUPPORTED",400)
     }
 }
 

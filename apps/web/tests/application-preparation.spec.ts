@@ -268,16 +268,16 @@ test("source sections expose explicit keep and unfinished plans with filtered pr
  const source="Profil\nSenior developer with API experience.\n\nKjernekompetanse\nKotlin APIs.\n\nUtdanning\nCourse documentation needs review.";
  const paragraphs=tailoringPassages(source);
  const sections=[{id:"cv-1234567890abcdef-0",kind:"PROFILE",heading:"Profil",paragraphIndexes:[0]},{id:"cv-1234567890abcdef-1",kind:"SKILLS",heading:"Kjernekompetanse",paragraphIndexes:[1]},{id:"cv-1234567890abcdef-2",kind:"EDUCATION",heading:"Utdanning",paragraphIndexes:[2]}];
- const plans=sections.map((s,i)=>({sectionId:s.id,action:i===0?"KEEP_UNCHANGED":i===1?"PROPOSE_CHANGES":"NEEDS_REVIEW",priority:i===1?"HIGH":"LOW",reason:i===0?"Profilen er tydelig; behold originalen.":i===1?"Synliggjør dokumentert API-erfaring.":"Ingen gyldig seksjonsvurdering ble mottatt.",claimIds:i===1?[claimId]:[],requirementIndexes:i===1?[0]:[],assessed:i!==2}));
+ const plans=sections.map((s,i)=>({sectionId:s.id,action:i===0?"KEEP_UNCHANGED":i===1?"PROPOSE_CHANGES":"NEEDS_REVIEW",priority:i===1?"HIGH":"LOW",reason:i===0?"Profilen er tydelig; behold originalen.":i===1?"Synliggjør dokumentert API-erfaring.":"Ingen gyldig seksjonsvurdering ble mottatt.",claimIds:i===1?[claimId]:[],requirementIndexes:i===1?[0]:[],assessed:i!==2,reviewedParagraphIndexes:i===2?null:s.paragraphIndexes}));
  const structured={...result,sessionId,proposals:[{...result.proposals[0],oldText:paragraphs[1],newText:"Kjernekompetanse\nUtvikling av Kotlin-API-er."}],sections,sectionPlans:plans};
- let stored={id:sessionId,jobId,revision:1,createdAt:time,stale:false,snapshot:{result:structured,text:source,claims:match.claims,quotes:job.content.requirements.map(r=>r.quote),locale:"nb",promptVersion:"cv-section-wording-v2"},reviews:[] as {paragraphIndex:number;text:string;decision:string}[]};
+ let stored={id:sessionId,jobId,revision:1,createdAt:time,stale:false,snapshot:{result:structured,text:source,claims:match.claims,quotes:job.content.requirements.map(r=>r.quote),locale:"nb",promptVersion:"cv-section-wording-v3"},reviews:[] as {paragraphIndex:number;text:string;decision:string}[]};
  await page.route(`**/api/profile/me/documents/${documentId}`,r=>r.fulfill({json:{document:doc,text:source}}));
  await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>{if(r.request().method()==="PUT")stored={...stored,revision:stored.revision+1,reviews:r.request().postDataJSON().reviews};return r.fulfill({json:stored});});
  await page.setViewportSize({width:390,height:844});await page.goto(`/jobs/${jobId}/apply`);
  const plan=page.locator(".cv-section-review");await expect(plan).toBeVisible();await plan.getByRole("button",{name:/Profil/}).click();
  await expect(plan.getByText("Behold teksten",{exact:true})).toBeVisible();await expect(page.locator(".tailoring-proposal")).toHaveCount(0);
  await plan.getByRole("button",{name:/Kjernekompetanse/}).click();await expect(page.locator(".tailoring-proposal")).toHaveCount(1);
- await expect(plan.getByText("AI-prioritet: Høy")).toBeVisible();await plan.getByText("Se originaltekst og grunnlag",{exact:true}).click();await expect(plan.locator("pre")).toContainText("Kotlin APIs.");
+ await expect(plan.getByText("AI-prioritet: Høy")).toBeVisible();await expect(plan.getByText(/AI oppgir gjennomgang av 1\/1/)).toBeVisible();await plan.getByText("Se originaltekst og grunnlag",{exact:true}).click();await expect(plan.locator("pre")).toContainText("Kotlin APIs.");
  await plan.screenshot({path:"/tmp/career-cv-sections-mobile.png"});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await plan.getByRole("button",{name:/Utdanning/}).click();await expect(plan.getByText("Må gjennomgås",{exact:true})).toBeVisible();await expect(plan.getByText(/AI-prioritet/)).toHaveCount(0);
  await plan.getByRole("button",{name:/Kjernekompetanse/}).click();await page.locator(".tailoring-proposal").getByRole("button",{name:"Godkjenn teksten"}).click();
@@ -291,7 +291,27 @@ test("section metadata rejects missing duplicate and foreign source memberships"
  expect(isTailoringResult({...result,proposals:[],sections,sectionPlans})).toBe(true);
  expect(isTailoringResult({...result,sections,sectionPlans})).toBe(false);
  expect(isTailoringResult({...result,sections,sectionPlans:[]})).toBe(false);
+ expect(isTailoringResult({...result,proposals:[],sections,sectionPlans:[{...sectionPlans[0],reviewedParagraphIndexes:[0]}]})).toBe(false);
  expect(isTailoringResult({...result,sections:[...sections,...sections],sectionPlans})).toBe(false);
  expect(isTailoringResult({...result,sections:[{...sections[0],paragraphIndexes:[1,0]}],sectionPlans})).toBe(false);
  expect(isTailoringResult({...result,sections,sectionPlans:[{...sectionPlans[0],sectionId:"cv-1234567890abcdef-3"}]})).toBe(false);
+});
+
+test("unsupported edited quantities retain the editor and can be saved as pending before a supported approval",async({page})=>{
+ await fixtures(page);const sessionId="55555555-5555-4555-8555-555555555555";
+ let stored={id:sessionId,jobId,revision:1,createdAt:time,stale:false,snapshot:{result:{...result,sessionId},text:cv,claims:match.claims,quotes:job.content.requirements.map(r=>r.quote),locale:"nb",promptVersion:"cv-section-wording-v3"},reviews:[] as {paragraphIndex:number;text:string;decision:string}[]};
+ let aiCalls=0;
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{aiCalls++;return r.fulfill({json:result});});
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>{
+  if(r.request().method()==="GET")return r.fulfill({json:stored});
+  const body=r.request().postDataJSON();
+  if(body.reviews.some((review:{text:string;decision:string})=>review.decision==="ACCEPTED"&&review.text.includes("100")))return r.fulfill({status:400,json:{code:"CV_WORDING_UNSUPPORTED"}});
+  stored={...stored,revision:stored.revision+1,reviews:body.reviews};return r.fulfill({json:stored});
+ });
+ await page.goto(`/jobs/${jobId}/apply`);const proposal=page.locator(".tailoring-proposal"),editor=proposal.getByRole("textbox");
+ await editor.fill("Led 100 staff.");await proposal.getByRole("button",{name:"Godkjenn teksten"}).click();
+ await expect(page.getByText("Kontroller tall og historiske årstall mot originalen og kompetansegrunnlaget. Teksten er beholdt; du kan lagre den som utkast før videre avklaring.")).toBeVisible();
+ await expect(editor).toHaveValue("Led 100 staff.");await expect(page.getByRole("button",{name:"Til gjennomgang · 1",exact:true})).toBeVisible();
+ await page.getByRole("button",{name:"Lagre tekstutkast"}).click();await expect(page.getByText("Arbeidet er lagret. Du kan lukke siden og fortsette senere.")).toBeVisible();expect(stored.reviews[0].decision).toBe("PENDING");
+ await editor.fill("Developed Kotlin APIs for the fictional employer.");await proposal.getByRole("button",{name:"Godkjenn teksten"}).click();await expect(page.getByRole("button",{name:"Til gjennomgang · 0",exact:true})).toBeVisible();expect(stored.reviews[0].decision).toBe("ACCEPTED");expect(aiCalls).toBe(0);
 });
