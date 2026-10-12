@@ -254,3 +254,8 @@ Delivered /documents upload/library navigation while preserving profile source/A
 ## 2026-10-12 — One profile presentation and direct main CI repair
 
 Delivered locally: one chosen presentation using the previous suggestion-card design, with drafts retained in source review. CI repair is pushed directly to main with owner authorization; independently validated presentation simplification is kept as a separate change while full main checks complete.
+
+
+## 2026-10-12 — Reviewed CV file drafts
+
+Delivered for review: standard DOCX/PDF draft generation from immutable reviewed wording, independent actual-file character readback, revision/source-guarded artifact persistence and draft downloads (ADR 0043). Next: independent semantic, structural and visual review of both actual files and explicit readiness approval. Supported Falck/template fidelity remains later work. Character preservation alone is not CV_READY.

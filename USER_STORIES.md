@@ -562,3 +562,8 @@ Candidates can find Documents in desktop/mobile navigation, upload/manage origin
 ## 2026-10-12 — One profile presentation and direct main CI repair
 
 Candidates see a single presentation of their chosen sections and can find new drafts in source review. New analyses must not create a duplicate presentation or replace selected text.
+
+
+## 2026-10-12 — Reviewed CV file drafts
+
+As a job seeker, I can generate and download immutable DOCX/PDF drafts from my reviewed wording, without having them marked approved or ready to submit. Both files must preserve the reviewed character content, keep original documents unchanged and remain owner-scoped. Generation errors preserve the text draft.

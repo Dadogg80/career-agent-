@@ -1,12 +1,12 @@
 import { claimId } from "./claims";
 import { isCv,isCvs,isCvIdentity } from "./cvs";
 import { localRequest,privateBase,sessionHeaders,privateResponse,smallJson,mappedPrivateError } from "./private-api";
-type Operation="list"|"create"|"detail"|"approve"|"delete"|"download"|"cleanup-status"|"cleanup";
+type Operation="list"|"create"|"detail"|"approve"|"files"|"delete"|"download"|"cleanup-status"|"cleanup";
 export async function cvProxy(request:Request,operation:Operation,id?:string,format?:string){
  if(!localRequest(request))return privateResponse({code:"ACCESS_DENIED"},undefined,403);
  if(id!==undefined&&!claimId.test(id)||operation==="download"&&!["pdf","docx"].includes(format??""))return privateResponse({code:"CV_INVALID"},undefined,400);
  const headers=sessionHeaders(request);let body:string|undefined;
- if(["create","approve","delete"].includes(operation)) {
+ if(["create","approve","files","delete"].includes(operation)) {
   try {const value=await smallJson(request,20000) as Record<string,unknown>;const keys=Object.keys(value).sort().join(",");
    if(operation==="create"){
     if(keys!=="claims,entries,identity,jobId,locale,title"||typeof value.title!=="string"||!value.title.trim()||value.title.length>200||!["nb","en"].includes(String(value.locale))||!isCvIdentity(value.identity)||Object.keys(value.identity).sort().join(",")!=="email,headline,location,name,phone,summary"||value.jobId!==null&&(typeof value.jobId!=="string"||!claimId.test(value.jobId)))throw new Error("Invalid draft");
@@ -15,9 +15,9 @@ export async function cvProxy(request:Request,operation:Operation,id?:string,for
    body=JSON.stringify(value);headers.set("Content-Type","application/json");
   }catch{return privateResponse({code:"CV_INVALID"},undefined,400);}
  }
- const suffix=operation.startsWith("cleanup")?"/cleanup":id?`/${id}${operation==="approve"?"/approve":operation==="download"?`/download/${format}`:""}`:"";
+ const suffix=operation.startsWith("cleanup")?"/cleanup":id?`/${id}${operation==="files"?"/files":operation==="approve"?"/approve":operation==="download"?`/download/${format}`:""}`:"";
  try {
-  const r=await fetch(`${privateBase()}/api/profile/me/cvs${suffix}`,{method:["create","approve","cleanup"].includes(operation)?"POST":operation==="delete"?"DELETE":"GET",headers,body,cache:"no-store",redirect:"manual",signal:AbortSignal.timeout(operation==="approve"?60000:15000)});
+  const r=await fetch(`${privateBase()}/api/profile/me/cvs${suffix}`,{method:["create","approve","files","cleanup"].includes(operation)?"POST":operation==="delete"?"DELETE":"GET",headers,body,cache:"no-store",redirect:"manual",signal:AbortSignal.timeout(["approve","files"].includes(operation)?60000:15000)});
   if(r.ok&&operation==="download") {
    const media=format==="pdf"?"application/pdf":"application/vnd.openxmlformats-officedocument.wordprocessingml.document";
    if(!r.headers.get("content-type")?.startsWith(media))throw new Error("Invalid file");

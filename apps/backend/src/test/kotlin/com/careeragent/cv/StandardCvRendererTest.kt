@@ -26,6 +26,18 @@ class StandardCvRendererTest {
         val xml=zipped.getValue("word/document.xml");assertTrue(xml.contains("Åse Ødegård"));assertTrue(xml.contains("&lt;tag&gt; &amp; API-er."));assertTrue(xml.contains("Kunde: Kunde AS"));assertTrue(xml.contains("Leveranserolle: API-utvikler"));assertTrue(xml.contains("Ikke oppgitt"));assertFalse(xml.contains("PRIVATE"));assertFalse(zipped.values.any {it.contains("TargetMode=\"External\"")})
         Loader.loadPDF(files.single {it.format==CvFormat.PDF}.bytes).use { pdf -> val text=PDFTextStripper().getText(pdf);assertTrue(pdf.numberOfPages>1);assertTrue(text.contains("Åse Ødegård"));assertTrue(text.contains("Kunde AS"));assertTrue(text.contains("<tag> & API-er."));assertFalse(text.contains("PRIVATE"));assertTrue(text.contains("Utviklet løsninger med Kotlin.")) }
     }
+    @Test fun `reviewed file drafts preserve literal source instead of adding profile metadata`() {
+        val text="Åse Ødegård\n\nPROSJEKTER\nKunde AS · Kotlin <API> & testing.\n"+"Relevant erfaring fra et prosjekt. ".repeat(180)
+        val source=CvReviewedSource(UUID.randomUUID(),2,UUID.randomUUID(),"a".repeat(64),text,emptyList())
+        val c=content().copy(reviewedSource=source)
+        val extractor=com.careeragent.documents.infrastructure.DocumentTextExtractor()
+        StandardCvRenderer().generate(c).forEach { file ->
+            val extracted=extractor.extract(file.bytes,file.format.name.lowercase())
+            assertEquals(text.filterNot { it.isWhitespace() },extracted.filterNot { it.isWhitespace() })
+            assertFalse(extracted.contains("Min egen profiltekst"))
+            assertFalse(extracted.contains("PRIVATE"))
+        }
+    }
     @Test fun `unsupported characters are reported rather than silently removed from candidate text`() {
         val error=assertThrows(CvFailure::class.java){StandardCvRenderer().generate(content().copy(identity=content().identity.copy(name="Fictional Pilot 🧬")))}
         assertEquals("CV_CHARACTER_UNSUPPORTED",error.code)
