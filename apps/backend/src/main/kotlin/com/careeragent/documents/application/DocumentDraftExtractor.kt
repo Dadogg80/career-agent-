@@ -94,8 +94,8 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
             ProfileSummaryDraft(kind,field(node,"text",1000),documentId,selected(node))
         } }
         val entries = root["history"].mapNotNull { node -> read {
-            val quote=selected(node); val kind=EntryKind.valueOf(field(node,"kind",30)); val title=field(node,"title",200); val org=field(node,"organization",200)
-            require(literal(title,quote) != null && literal(org,quote) != null)
+            val quote=selected(node); val kind=EntryKind.valueOf(field(node,"kind",30)); val title=field(node,"title",200); val org=field(node,"organization",200,kind==EntryKind.PROJECT)
+            require(literal(title,quote) != null && (org.isBlank() || literal(org,quote) != null))
             val client=field(node,"client",200,true); val role=field(node,"deliveryRole",200,true); val period=field(node,"periodText",120,true)
             require(client.isBlank() || literal(client,quote) != null); require(role.isBlank() || literal(role,quote) != null); require(period.isBlank() || quote.contains(period))
             // Do not manufacture January/December for year-only dates. Literal periods are retained for review.
@@ -142,7 +142,15 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
             Profile: up to 6 concise, readable text entries with kind PROFILE/CORE_SKILLS/KEY_INFORMATION/EXPERIENCE/
             EDUCATION/INTERESTS and evidenceIds. Only explicit interests; no guesses about motivation or personality.
             History: identify employment, projects, education and courses/certifications with kind EMPLOYMENT/PROJECT/
-            EDUCATION/CERTIFICATION. Include literal title, organization, client, deliveryRole and periodText plus a
+            EDUCATION/CERTIFICATION. For a project catalog, create one PROJECT history entry for EACH explicitly
+            named project with described candidate work, independently of its competency contributions. A skills
+            contribution or profile paragraph is not a project history entry. Skip contents/index-only mentions.
+            Use the literal project/product name as title; put the candidate's literal delivery role in deliveryRole.
+            An own project or prototype is still PROJECT, not an employment relationship. Leave organization empty
+            for PROJECT when no organization is explicitly supported in that project's cited evidence. Never use
+            the project name as an invented employer. Include dates/roles only when documented; prototype and
+            planned work must retain their stated status, never become completed delivery.
+            Include literal title, organization, client, deliveryRole and periodText plus a
             source-supported description. Select evidenceIds in source order covering the heading, role and dates.
             At most 1000 characters between first and last history evidence, 600 for competencies. Unknown optional
             fields must be empty strings. Never invent dates, a degree, completion, results or a formal employer.

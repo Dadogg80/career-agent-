@@ -376,7 +376,7 @@ test("document library distinguishes saved partial and completed analysis with a
  await profile(page);let writes=0;
  const metadata={status:"COMPLETED",createdAt:time,collection:true,competencies:12,careerEntries:2,profileSections:3,inputCharacters:75,sourceCharacters:75,selections:[{provider:"Gemini",model:"gemini-3.5-flash-lite"}]};
  await page.route("**/api/profile/me/documents**",r=>{if(r.request().method()!=="GET")writes++;return r.fulfill({json:[{...doc,textCharacters:75,analysis:metadata},{...doc,id:second,originalName:"partial.md",textCharacters:75,analysis:{...metadata,status:"PARTIAL",inputCharacters:30}},{...doc,id:runId,originalName:"unanalysed.md",textCharacters:75,analysis:null}]});});
- await page.goto("/career/profile");
+ await page.goto("/documents");
  const tile=page.getByRole("article",{name:"cv.md",exact:true}), trigger=tile.getByRole("button",{name:"Vis analysedetaljer"});
  await expect(trigger).toContainText("AI-analysert");await expect(tile).toContainText("12 kompetansefunn");
  await expect(page.getByRole("article",{name:"partial.md"})).toContainText("Delvis analysert");
@@ -421,4 +421,22 @@ test("presentation selection proxy rejects anonymous requests and client-injecte
  expect((await request.put(path,{data:input})).status()).toBe(403);
  expect((await request.put(path,{data:{...input,text:"Injected"}})).status()).toBe(400);
  expect((await request.put(path,{data:input,headers:{Origin:"https://foreign.example"}})).status()).toBe(403);
+});
+
+
+test("completed document analysis offers another model with renewed consent before a new run",async({page})=>{
+ await profile(page);let saved=run(),starts=0;
+ const first={token:"a".repeat(64),selections:[{provider:"Groq",model:"openai/gpt-oss-20b"}]},secondApproval={token:"b".repeat(64),selections:[{provider:"Gemini",model:"gemini-3.5-flash-lite"}]};
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:first.selections[0],DOCUMENT_EXTRACTION:first.selections[0],PROFILE_SUMMARY:first.selections[0],PERSONAL_MATCH:first.selections[0]},documents:first,documentExcerpt:first,matching:first,job:first,tailoring:first,options:{documents:[{approval:first,available:true},{approval:secondApproval,available:true}],documentExcerpt:[],matching:[],job:[]}}}));
+ await page.route("**/api/profile/me/documents**",r=>{
+  if(r.request().url().includes("/workflow")){
+   if(r.request().method()==="POST"){starts++;const input=r.request().postDataJSON();expect(input.aiApproval).toBe(secondApproval.token);expect(input.consent).toBe(true);saved={...run(),revision:4};}
+   return r.fulfill({json:saved});
+  }
+  return r.fulfill({json:r.request().url().endsWith(id)?{document:doc,text}:[doc]});
+ });
+ await open(page);const sheet=page.locator(".document-workspace-sheet");await expect(sheet.locator(".document-source-settings")).not.toHaveAttribute("open","");
+ await sheet.getByRole("button",{name:"Analyser på nytt med annen modell",exact:true}).click();await expect(sheet.locator(".document-source-settings")).toHaveAttribute("open","");expect(starts).toBe(0);
+ await sheet.locator(".ai-choice summary").click();await sheet.getByRole("button",{name:/Gemini · gemini-3.5-flash-lite/}).click();const consent=sheet.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Gemini for denne analysen",exact:true});await expect(consent).not.toBeChecked();
+ const start=sheet.getByRole("button",{name:"Start ny analyse",exact:true});await expect(start).toBeDisabled();await consent.check();await start.click();await expect.poll(()=>starts).toBe(1);await expect(sheet).toContainText("Gjennomgangen er klar");
 });

@@ -239,3 +239,13 @@ Delivered: actionable CV-tailoring readiness explanations and direct navigation 
 ## 2026-10-12 — Selected presentation sections and Documents navigation
 
 Delivered: durable explicit per-section presentation selection with saved source snapshots, language separation and owned revision checks. Next priority: dedicated Documents page using the existing components/endpoints; update navigation, onboarding and all repair/source links. Then continue standard tailored DOCX/PDF generation and independent final review.
+
+
+## 2026-10-12 — Project history extraction correction
+
+Delivered: project-specific extraction instructions, unknown-organization support across history parsing/storage/review, and dated experience coverage that requires actual history evidence. This is a targeted correction, not guaranteed project recall. Next: dedicated Documents page, preserving reviewed projects and sources, followed by tailored document generation/review.
+
+
+## 2026-10-12 — Dedicated library and retained profile review
+
+Delivered /documents upload/library navigation while preserving profile source/AI review and original storage, plus a visible completed-analysis rerun action. Owner clarification narrowed the move to upload/library only. Generated tailored DOCX/PDF and independent final file review remain next after validating this slice.

@@ -664,3 +664,17 @@ Added localized inline tailoring blockers, accessible checkbox description, focu
 Verified PR #49 merged at daa8f46 (checks still running at initial inspection). Added V18 selected presentation storage, owned private read/selection endpoints, strict proxy, per-summary selection/replacement and a separate selected-presentation display. Source lookup and exact run/presentation revisions precede writes. Draft edits use the existing workflow summary endpoint. No live providers used. Dedicated document-page separation is queued immediately after this delivery.
 
 Validation: PostgreSQL/Flyway integration case passed for owned persistence, source/run/presentation conflicts, language isolation, CSRF/anonymous rejection and injected wording rejection. Frontend production build/typecheck and three focused production-browser cases passed (existing automatic population, adoption/replacement across newer analyses and reloads with mobile bounds, strict private proxy). The two new browser cases passed again after retaining legacy provider identity. No live AI calls; GitHub CI follows publication.
+
+
+## 2026-10-12 — Project history extraction correction
+
+Inspected the owner-provided project PDF locally (kept outside Git). It has named project sections, periods, delivery roles and contributions. Confirmed mandatory organization in parsing/service/frontend could discard own projects, and general source coverage could hide missing history when skills quoted the same dated passage. Corrected those gates and strengthened project-specific task instructions. Without the owner's locally stored provider output, this does not prove the exact reason each original project was missed. Tests use synthetic projects only; no live provider request or real document content committed.
+
+
+## 2026-10-12 — Dedicated library and retained profile review
+
+Owner reported missing Documents/profile flows. Verified main b2eecaf: no Documents route existed, and presentation preceded profile navigation. Added the route/sidebar/mobile entry, shared library behavior and retained compact profile source/AI review. Added visible reanalysis discovery. Ten of eleven targeted browser cases initially passed; the rerun fixture had incomplete AI options configuration, now corrected without weakening the production validator.
+
+Validation: 13 backend extraction/coverage/history tests passed, backend bootJar and frontend production build/typecheck passed. Eleven unique focused browser cases passed across upload/master/manual-source/delete, Markdown, desktop/mobile library filtering, accessible metadata, normal history/own-project drafts, existing automatic population, durable presentation, profile/library navigation and another-model reanalysis. The reanalysis fixture was rerun after correcting its options shape. Inspected the synthetic mobile library screenshot. No owner PDF or text entered Git, no live provider requests, no migration/default/budget changes. Required GitHub CI remains to run on publication.
+
+Two additional focused browser cases passed for retained combined-source analysis and OCR error/success recovery with separate AI consent (13 unique browser cases total). Final production build/typecheck passed after the Documents heading/link polish. PR #50 is verified merged with both Foundation checks successful.

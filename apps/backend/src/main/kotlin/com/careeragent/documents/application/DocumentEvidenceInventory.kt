@@ -26,8 +26,11 @@ internal object DocumentEvidenceInventory {
         fun related(candidate: Candidate, source: CompetencySource, contextQuote: String? = null): Boolean =
             source.documentId==candidate.documentId && source.quote.contains(candidate.quote) &&
                 (!candidate.ambiguous || candidate.contextQuote!=null && (contextQuote==candidate.contextQuote || source.quote.contains(candidate.contextQuote)))
+        val historyEvidence=analysis.careerEntries.flatMap { listOf(CompetencySource(it.documentId,it.quote)) + it.additionalSources }
         val missing = bounded.filter { candidate ->
-            if (candidate.skills.isEmpty()) evidence[candidate.documentId].orEmpty().none { related(candidate,it) } &&
+            // A dated experience passage used only for competencies does not establish a history entry.
+            if(candidate.kind=="EXPERIENCE") historyEvidence.none { related(candidate,it) }
+            else if (candidate.skills.isEmpty()) evidence[candidate.documentId].orEmpty().none { related(candidate,it) } &&
                 analysis.suggestions.none { item -> item.documentId!=null && related(candidate,CompetencySource(item.documentId,item.quote),item.contextQuote) }
             else candidate.skills.any { skill -> analysis.suggestions.none { item -> normal(item.skill)==normal(skill) &&
                 (item.documentId?.let { related(candidate,CompetencySource(it,item.quote),item.contextQuote) }==true ||

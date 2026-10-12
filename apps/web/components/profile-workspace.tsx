@@ -386,7 +386,6 @@ export function ProfileWorkspace({ locale }: { locale: Locale }) {
       </Card>
 
       {loggedIn && !expired && profile.data && session.data && <>
-        <CandidatePresentation locale={locale} csrfToken={session.data.csrfToken} onAuthRequired={()=>setClaimExpired(true)} onReviewDocuments={()=>{setSection("documents");if(window.location.hash!=="#profile-documents")window.history.pushState(null,"","#profile-documents");}}/>
         <div className="profile-section-navigation">
           <div className="profile-section-intro">
             <span className="profile-overline">{t.contents}</span>
@@ -415,7 +414,8 @@ export function ProfileWorkspace({ locale }: { locale: Locale }) {
           </nav>
         </div>
         <div id="profile-section-documents" hidden={section !== "documents"}>
-          <DocumentPanel locale={locale} csrfToken={session.data.csrfToken} onAuthRequired={() => setClaimExpired(true)}/>
+          <DocumentPanel library={false} locale={locale} csrfToken={session.data.csrfToken} onAuthRequired={() => setClaimExpired(true)}/>
+        <CandidatePresentation locale={locale} csrfToken={session.data.csrfToken} onAuthRequired={()=>setClaimExpired(true)} onReviewDocuments={()=>{setSection("documents");if(window.location.hash!=="#profile-documents")window.history.pushState(null,"","#profile-documents");}}/>
         </div>
         <div id="profile-section-competencies" hidden={section !== "competencies"}>
           <ClaimPanel locale={locale} csrfToken={session.data.csrfToken} onAuthRequired={() => setClaimExpired(true)}/>
