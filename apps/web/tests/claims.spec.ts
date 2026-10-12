@@ -79,3 +79,20 @@ test("claim proxies reject spoofed status and ownership and require authenticati
   expect((await request.post(`/api/profile/me/claims/${id}/review`, { data: { revision: 1, decision: "CONFIRM" }, headers: { Origin: "https://other.example" } })).status()).toBe(403);
   expect((await request.get("/api/profile/me/claims/not-a-uuid/history")).status()).toBe(400);
 });
+
+test("bulk confirmation retains displayed revisions and partial success while excluding rejected and personally confirmed claims",async({page})=>{
+ await profile(page);const time="2026-10-07T00:00:00Z";
+ const first="12345678-1234-1234-1234-123456789abc",second="22345678-1234-1234-1234-123456789abc";
+ const base={statement:"Built backend services",context:"Example AS",sourceNote:"Own statement",createdAt:time,updatedAt:time};
+ let stored=[{...base,id:first,skill:"Kotlin",status:"UNVERIFIED",revision:1,confirmationBasis:"NONE"},{...base,id:second,skill:"PostgreSQL",status:"CONFIRMED",revision:2,confirmationBasis:"DOCUMENT"},{...base,id:"32345678-1234-1234-1234-123456789abc",skill:"Rejected",status:"REJECTED",revision:1,confirmationBasis:"NONE"},{...base,id:"42345678-1234-1234-1234-123456789abc",skill:"Personal",status:"CONFIRMED",revision:2,confirmationBasis:"USER"}];
+ const writes:string[]=[];await page.route("**/api/profile/me/claims**",r=>{if(r.request().method()==="GET")return r.fulfill({json:stored});const body=r.request().postDataJSON();const id=new URL(r.request().url()).pathname.split("/").at(-2)!;writes.push(id);expect(body).toEqual({decision:"CONFIRM",revision:id===first?1:2});expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf");if(id===second)return r.fulfill({status:409,json:{code:"CLAIM_CONFLICT"}});stored=stored.map(c=>c.id===id?{...c,status:"CONFIRMED",confirmationBasis:"USER",revision:c.revision+1}:c);return r.fulfill({json:stored.find(c=>c.id===id)});});
+ await page.goto("/career/profile");await page.getByRole("button",{name:"Din kompetanse",exact:true}).click();
+ await page.getByRole("button",{name:"Bekreft flere (2)",exact:true}).click();const dialog=page.getByRole("dialog");
+ await expect(dialog.getByRole("checkbox")).toHaveCount(2);expect(writes).toHaveLength(0);
+ await dialog.getByRole("button",{name:"Velg alle i utvalget"}).click();await dialog.getByRole("button",{name:"Bekreft valgte",exact:true}).click();
+ await expect(dialog).toContainText("1 bekreftet. Øvrige punkter er beholdt.");await expect(dialog).toContainText("Kunne ikke bekreftes");
+ expect(writes).toEqual([first,second]);
+ await page.setViewportSize({width:390,height:850});await expect.poll(async()=>{const b=await dialog.boundingBox();return !!b&&b.x>=15&&b.x+b.width<=375;}).toBe(true);
+ await page.screenshot({path:"/tmp/career-bulk-confirm-mobile.png",animations:"disabled"});
+ await dialog.getByRole("button",{name:"Ferdig",exact:true}).click();await page.getByRole("button",{name:"Bekreft flere (1)",exact:true}).click();await expect(page.getByRole("dialog").getByRole("checkbox")).toHaveCount(1);
+});

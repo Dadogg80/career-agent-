@@ -530,3 +530,10 @@ As a candidate I can distinguish declared full passage review from incomplete/le
 - As an owner, I see partial processing separately from completed processing; neither label claims exhaustive discovery or factual approval. Findings in combined analyses remain attributable to the source document.
 - As an owner, I can choose available models inside scrollable document readers on desktop/mobile, renewing consent after a recipient/model change.
 - As an owner, I can review labeled career facts, inspect the source note, cancel or edit before confirming through a compact responsive dialog.
+
+## Reviewed wording and lighter review — 2026-10-12
+
+- Save approved CV wording as a separate immutable library draft with server-checked source/session revisions, without inventing facts or changing original files.
+- Keep text approval separate from final DOCX/PDF approval; new wording drafts cannot use the legacy export path.
+- Explicitly select and confirm multiple eligible competencies or career entries, retaining displayed revisions and reporting partial failures.
+- Use readable consistent dialogs and a stable public model selector on desktop/mobile.

@@ -284,3 +284,11 @@ Accepted incremental checks: require full ordered section passage declarations o
 Accepted: project source-specific metadata from the existing owned analysis/run records into the document list, with no extra provider calls or per-document full-run fetches. Prefer the latest saved result, using the run status for tied workflow/snapshot records; only completed non-partial processing earns the completed label. Counts include primary/additional source references and do not represent confirmed skills or exhaustive recall. Older results without model identities disclose unavailable identities. Existing changed-text reread/deletion invalidation applies.
 
 Keep shared model menus in normal card flow with bounded scrolling rather than absolute overlays clipped by enclosing cards. Analysis details use a fixed portal tooltip to avoid the same clipping problem; mouse/focus/touch access, Escape/blur/resize dismissal, visible-anchor scroll repositioning, offscreen dismissal and viewport bounds are preserved. Career confirmation reuses existing mutations and revision rules with clearer fact grouping and edit/cancel actions.
+
+## Reviewed wording handoff and explicit batch review — 2026-10-12
+
+Accepted ADR 0041: reuse owned CV versions for immutable reviewed-text drafts, with exact substitution, complete source references and an explicit export gate. No factual promotion, original-file edit, generated artifact or final readiness claim.
+
+Use a shared frontend confirmation selection for competencies/history, reusing existing revision-checked mutations sequentially. Snapshot rows/revisions on dialog opening; no auto-selection or silent rejected-record revival. Preserve successful rows across retries and show partial failures/progress. This is not an all-or-nothing backend transaction. Shared modal styling retains Radix focus/escape behavior and contextual widths. Public model menus are positioned using trigger/viewport geometry, while document menus stay in card flow to avoid clipping.
+
+Queued owner request: choose individual generated profile sections for a durable presentation. Existing summary edits remain tied to the latest saved analysis; no adoption state is claimed in this delivery.

@@ -1949,3 +1949,59 @@ button:disabled { cursor:not-allowed; }
 
 .saved-job-card .saved-job-card-header { margin:0; }
 .saved-job-card .saved-job-card-header > * { margin-top:0; }
+
+.reviewed-draft-handoff { display:flex; flex-wrap:wrap; align-items:center; gap:16px; padding:20px; border:1px solid #d9e6df; border-radius:16px; background:linear-gradient(120deg,#edf6f0,#f9fbf7); }
+.reviewed-draft-handoff>div { flex:1; min-width:min(100%,250px); }
+.reviewed-draft-handoff h3 { font-size:16px; color:#294f3d; margin:0 0 6px; }
+.reviewed-draft-handoff p { font-size:12px; line-height:1.6; margin:5px 0; color:#536f5e; }
+.reviewed-draft-handoff small { font-size:11px; color:#6a7e70; }
+.reviewed-draft-icon { display:grid; place-items:center; flex-shrink:0; width:46px; height:46px; border-radius:13px; background:#deecdf; color:#427252; }
+@media(max-width:650px){.reviewed-draft-handoff>button,.reviewed-draft-handoff>a{width:100%;}}
+
+/* Shared dialog/sheet typography and interaction surfaces; context-specific sizing is retained. */
+.app-modal-overlay { background:rgba(20,43,32,.52); backdrop-filter:blur(2px); }
+.app-dialog { width:calc(100vw - 32px); max-height:calc(100dvh - 32px); overflow:auto; overscroll-behavior:contain; border:1px solid #dce5da; border-radius:18px; background:#fcfdfa; padding:24px; gap:18px; font-size:13px; line-height:1.65; box-shadow:0 24px 70px #102b302e; }
+.app-sheet { overflow-y:auto; overscroll-behavior:contain; font-size:13px; line-height:1.65; background:#fcfdfa; }
+.app-dialog [data-slot="dialog-header"],.app-sheet [data-slot="sheet-header"] { text-align:left; gap:7px; padding-right:36px; }
+.app-dialog [data-slot="dialog-title"],.app-sheet [data-slot="sheet-title"] { color:#244b37; font-size:20px; line-height:1.35; font-weight:650; letter-spacing:-.35px; overflow-wrap:anywhere; }
+.app-dialog [data-slot="dialog-description"],.app-sheet [data-slot="sheet-description"] { color:#667a6b; font-size:12px; line-height:1.7; margin:0; }
+.app-dialog h3 { font-size:16px; line-height:1.4; }
+.app-dialog label { font-size:12px; font-weight:600; }
+.app-dialog .hint,.app-sheet .hint { font-size:11px; line-height:1.65; }
+.app-dialog [data-slot="dialog-footer"],.app-sheet [data-slot="sheet-footer"] { padding-top:16px; border-top:1px solid #e2e9df; gap:8px; }
+.app-dialog .app-modal-close,.app-sheet .app-modal-close { width:32px; height:32px; display:grid; place-items:center; border-radius:10px; background:#edf2eb; color:#58715f; opacity:1; border:1px solid #dce5db; }
+.app-modal-close:hover { background:#e2eadf; }
+.app-modal-close:focus-visible { outline:2px solid #3a785b; outline-offset:3px; }
+.claim-review-title { display:flex; gap:11px; align-items:center; color:#326c4d; }
+.claim-review-title>svg { flex-shrink:0; width:42px; height:42px; padding:10px; background:#e6f0e4; border-radius:12px; }
+.claim-review-title h3 { margin:0; }
+.claim-review-statement,.claim-review-context { border:1px solid #e0e8dc; border-radius:12px; padding:13px 15px; margin-top:12px; background:#f5f9f2; }
+.claim-review-statement>span,.claim-review-context>span { font-size:10px; font-weight:600; color:#68816d; }
+.claim-review-statement p,.claim-review-context p { font-size:13px; line-height:1.65; margin:5px 0 0; }
+.app-dialog .claim-review>p { font-size:11px; line-height:1.65; }
+.app-dialog .claim-review .claim-source { font-size:12px; background:#f4f7ef; border-radius:0 10px 10px 0; padding:12px 14px; }
+.app-dialog .claim-dialog-actions { padding-top:14px; margin:0; border-top:1px solid #e2e8dc; }
+@media(max-width:640px) { .app-dialog { padding:20px; } .app-dialog [data-slot="dialog-title"],.app-sheet [data-slot="sheet-title"] { font-size:18px; } .app-dialog [data-slot="dialog-footer"] { flex-direction:column-reverse; } .app-dialog [data-slot="dialog-footer"]>button { width:100%; } }
+@media(prefers-reduced-motion:reduce) { .app-dialog,.app-sheet,.app-modal-overlay { animation:none!important; transition:none!important; } }
+
+.job-analysis-model-choices { align-items:start; }
+.job-analysis-model-choices .ai-choice { grid-template-columns:minmax(0,1fr); align-content:start; }
+.job-analysis-model-choices .ai-identity { grid-column:1; }
+.job-analysis-model-choices .ai-identity-chip span { white-space:normal; overflow:visible; font-size:10px; line-height:1.4; }
+.job-analysis-model-choices .ai-choice-menu[open] { grid-column:1; flex-basis:auto; justify-self:end; }
+.job-analysis-model-choices .ai-choice-options { position:absolute; top:100%; right:0; left:auto; width:340px; z-index:90; margin-top:0; }
+.job-analysis-model-choices .ai-choice-option-copy strong { font-size:11px; }
+.job-analysis-model-choices .ai-choice-option-copy small { font-size:10px; }
+.bulk-confirm-dialog { max-width:760px; }
+.bulk-confirm-toolbar { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.bulk-confirm-toolbar>span { margin-left:auto; font-size:12px; color:#567461; }
+.bulk-confirm-list { max-height:45dvh; overflow:auto; display:grid; gap:8px; padding:2px; }
+.bulk-confirm-item { display:flex; align-items:flex-start; gap:12px; padding:13px; border:1px solid #dfe8dc; border-radius:12px; background:#fff; cursor:pointer; }
+.bulk-confirm-item input { accent-color:#2d684d; width:17px; height:17px; margin-top:3px; flex-shrink:0; }
+.bulk-confirm-item>span { display:grid; gap:5px; min-width:0; }
+.bulk-confirm-item strong { font-size:13px; color:#2d503c; }
+.bulk-confirm-item span span { font-size:12px; line-height:1.6; color:#536a5a; white-space:pre-wrap; }
+.bulk-confirm-item small { font-size:10px; color:#698271; }
+.bulk-confirm-item[data-done="true"] { background:#edf6e9; }
+
+.bulk-confirm-item span span,.bulk-confirm-item small { font-weight:400; }

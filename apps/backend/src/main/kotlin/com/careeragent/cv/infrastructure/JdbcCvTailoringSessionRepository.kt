@@ -14,7 +14,7 @@ import java.util.UUID
 
 @Repository
 @Profile("persistence")
-class JdbcCvTailoringSessionRepository(private val jdbc: JdbcTemplate, private val json: ObjectMapper) : CvTailoringSessionRepository {
+class JdbcCvTailoringSessionRepository(private val jdbc: JdbcTemplate, private val json: ObjectMapper, private val versions: CvRepository) : CvTailoringSessionRepository {
     private fun owner(identity: VerifiedIdentity, lock: Boolean = false): UUID = jdbc.query(
         "SELECT u.id FROM app_user u JOIN career_profile p ON p.owner_id=u.id WHERE u.oidc_issuer=? AND u.oidc_subject=?" + if (lock) " FOR UPDATE OF u" else "",
         { row, _ -> row.getObject(1, UUID::class.java) }, identity.issuer, identity.subject).singleOrNull() ?: throw CvFailure("PROFILE_NOT_CREATED", 404)
@@ -36,6 +36,25 @@ class JdbcCvTailoringSessionRepository(private val jdbc: JdbcTemplate, private v
         if (match == null || match.id != snapshot.result.matchId || !match.automaticEvidence || match.claims != snapshot.claims) return false
         val claims = jdbc.query("SELECT id,revision FROM competency_claim WHERE owner_id=? AND status='CONFIRMED'", { row, _ -> row.getObject(1, UUID::class.java) to row.getLong(2) }, owner).toMap()
         return claims == snapshot.claims.associate { it.id to it.revision }
+    }
+    @Transactional
+    override fun draft(identity: VerifiedIdentity, jobId: UUID, sessionId: UUID, revision: Long): com.careeragent.cv.domain.CvVersion {
+        val owner=owner(identity,true);val session=read(owner,jobId,sessionId)
+        if(session.revision!=revision)throw CvFailure("CV_CONFLICT",409)
+        if(!current(owner,session.snapshot,jobId))throw CvFailure("CV_SOURCE_CONFLICT",409)
+        TailoringReviewPolicy.validate(session.snapshot,session.reviews)
+        if(session.snapshot.result.proposals.any { p -> session.reviews.none { it.paragraphIndex==p.paragraphIndex && it.decision!=WordingDecision.PENDING } } || session.reviews.none { it.decision==WordingDecision.ACCEPTED })
+            throw CvFailure("CV_WORDING_REVIEW_REQUIRED",409)
+        val existing=jdbc.query("SELECT id FROM cv_version WHERE owner_id=? AND content->'reviewedSource'->>'sessionId'=? AND content->'reviewedSource'->>'sessionRevision'=?",{r,_->r.getObject(1,UUID::class.java)},owner,sessionId.toString(),revision.toString()).firstOrNull()
+        if(existing!=null)return versions.get(identity,existing)
+        val snapshot=session.snapshot
+        val text=CvReviewedText.assemble(snapshot,session.reviews)
+        val name=jdbc.queryForObject("SELECT display_name FROM career_profile WHERE owner_id=?",String::class.java,owner)!!
+        val title=json.readTree(jdbc.queryForObject("SELECT snapshot::text FROM saved_job WHERE owner_id=? AND id=?",String::class.java,owner,jobId)!!)["title"].asText()
+        val source=com.careeragent.cv.domain.CvReviewedSource(session.id,session.revision,snapshot.result.documentId,
+            java.security.MessageDigest.getInstance("SHA-256").digest(snapshot.text.toByteArray(Charsets.UTF_8)).joinToString(""){"%02x".format(it)},text,snapshot.claims.map { com.careeragent.cv.domain.CvSelection(it.id,it.revision) })
+        return versions.create(identity,("CV · "+title).take(200),com.careeragent.cv.domain.CvContent(snapshot.locale,
+            com.careeragent.cv.domain.CvIdentity(name,"","","","",""),emptyList(),emptyList(),jobId,title,source))
     }
     @Transactional(readOnly = true)
     override fun checkCapacity(identity: VerifiedIdentity, jobId: UUID) { val owner = owner(identity); job(owner, jobId); capacity(owner) }

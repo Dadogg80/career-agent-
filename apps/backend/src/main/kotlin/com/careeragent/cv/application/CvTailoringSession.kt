@@ -17,6 +17,7 @@ data class CvTailoringSession(val id: UUID, val jobId: UUID, val revision: Long,
     val reviews: List<WordingReview>, val createdAt: OffsetDateTime, val stale: Boolean = false)
 data class TailoringReviewRequest(val sessionId: UUID, val revision: Long, val reviews: List<WordingReview>)
 interface CvTailoringSessionRepository {
+    fun draft(identity: VerifiedIdentity, jobId: UUID, sessionId: UUID, revision: Long): com.careeragent.cv.domain.CvVersion
     fun checkCapacity(identity: VerifiedIdentity, jobId: UUID)
     fun create(identity: VerifiedIdentity, jobId: UUID, snapshot: TailoringSnapshot): CvTailoringSession
     fun latest(identity: VerifiedIdentity, jobId: UUID): CvTailoringSession?
@@ -49,6 +50,7 @@ class CvTailoringSessions(private val repository: CvTailoringSessionRepository, 
             job.content.requirements.map { it.quote }, request.locale))
         return result.copy(sessionId = saved.id)
     }
+    fun draft(identity: VerifiedIdentity, jobId: UUID, sessionId: UUID, revision: Long) = repository.draft(identity,jobId,sessionId,revision)
     fun latest(identity: VerifiedIdentity, jobId: UUID) = repository.latest(identity, jobId)
     fun review(identity: VerifiedIdentity, jobId: UUID, request: TailoringReviewRequest) = repository.review(identity, jobId, request)
 }

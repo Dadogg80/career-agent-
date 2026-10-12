@@ -137,7 +137,18 @@ test("job analysis offers separate Groq and Gemini models for the analysis call"
  await page.route("**/api/jobs/requirements",r=>{sentApproval=r.request().postDataJSON().aiApproval;return r.fulfill({json:{...result,aiSelection:lite}});});
  await page.goto("/jobs/analyze");
  await page.getByRole("combobox",{name:"Språk"}).selectOption("en");
+ const heading=page.locator(".job-analysis-heading"),before=await heading.boundingBox();
  await page.locator('.ai-choice[data-choice-area="job"] summary').click();
+ await expect.poll(async()=>{const b=await heading.boundingBox();return Math.round(b!.height);}).toBe(Math.round(before!.height));
+ const optionsBox=await page.locator('.ai-choice[data-choice-area="job"] .ai-choice-options').boundingBox();
+ expect(optionsBox!.width).toBeGreaterThan(250);expect(optionsBox!.x).toBeGreaterThanOrEqual(0);
+ await page.screenshot({path:"/tmp/career-job-model-popup-desktop.png"});
+ await page.locator('.ai-choice[data-choice-area="job"] summary').press("Escape");
+ await page.setViewportSize({width:390,height:850});
+ await page.locator('.ai-choice[data-choice-area="job"] summary').click();
+ await expect.poll(async()=>{const b=await page.locator('.ai-choice[data-choice-area="job"] .ai-choice-options').boundingBox();return !!b&&b.x>=15&&b.x+b.width<=375;}).toBe(true);
+ await page.screenshot({path:"/tmp/career-job-model-popup-mobile.png"});
+
  await expect(page.locator(".ai-choice-options")).toBeVisible();
  await expect(page.locator(".ai-choice-option")).toHaveCount(3);
  await page.getByRole("button",{name:/Gemini · gemini-3.5-flash-lite/}).click();

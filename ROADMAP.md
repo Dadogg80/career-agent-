@@ -223,3 +223,9 @@ New AI section plans declare all ordered source passages; incomplete declaration
 ## Document UX correction — 2026-10-12
 
 Implemented for review: unclipped shared model menu; saved owner-scoped library analysis metadata with accessible interactive details; compact responsive career confirmation. No new AI calls, schema migration or provider default changes. Next approved CV slice remains accepted wording into an immutable standard CV draft/export, followed by independent actual DOCX/PDF review.
+
+## Current handoff — 2026-10-12
+
+Completed for review: immutable reviewed-text CV draft/library handoff (ADR 0041), grouped competency/career confirmation using existing review endpoints, shared dialog/sheet styling and non-expanding public model menus. No new AI calls or migrations.
+
+Next priority from owner feedback: explicit individual profile-summary adoption into a durable chosen presentation, preserved across new analyses; current presentation still reads the newest saved document synthesis and edits that analysis. Follow with generated standard DOCX/PDF draft artifacts and independent final-document review. This delivery does not implement those next stages or CV_READY.

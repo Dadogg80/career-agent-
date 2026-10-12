@@ -107,6 +107,28 @@ class CvTailoringSessionIntegrationTest {
         assertThrows(CvFailure::class.java) { save(f) }
         verifyNoInteractions(ai)
     }
+    @Test fun `reviewed wording creates one immutable owned draft without exports or factual changes`() {
+        val f=fixture();val session=save(f)
+        fun draft(user:String=f.user, revision:Long=2)=post("${f.path}/draft").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("sessionId" to session.id,"revision" to revision)))
+        mvc.perform(draft(revision=1)).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("CV_WORDING_REVIEW_REQUIRED"))
+        mvc.perform(review(f,session)).andExpect(status().isOk)
+        mvc.perform(draft(revision=1)).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("CV_CONFLICT"))
+        mvc.perform(draft(user=fixture().user)).andExpect(status().isNotFound)
+        val result=json.readTree(mvc.perform(draft()).andExpect(status().isOk).andExpect(header().string("Cache-Control","no-store")).andExpect(jsonPath("$.status").value("DRAFT")).andReturn().response.contentAsString)
+        val id=result["id"].asText()
+        assertEquals("Fictional developer\n\nDeveloped APIs using Kotlin",result["content"]["reviewedSource"]["text"].asText())
+        assertEquals(session.id.toString(),result["content"]["reviewedSource"]["sessionId"].asText())
+        mvc.perform(draft()).andExpect(jsonPath("$.id").value(id))
+        assertEquals(1L,jdbc.queryForObject("SELECT COUNT(*) FROM cv_version WHERE owner_id=?",Long::class.java,f.owner))
+        mvc.perform(post("/api/profile/me/cvs/$id/approve").with(caller(f.user)).with(csrf()).contentType("application/json").content("""{"approved":true,"revision":1}""")).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("CV_FINAL_REVIEW_REQUIRED"))
+        mvc.perform(get("/api/profile/me/cvs/$id").with(caller(f.user))).andExpect(status().isOk).andExpect(jsonPath("$.stale").value(false)).andExpect(jsonPath("$.artifacts.length()").value(0))
+        assertEquals(f.snapshot.text,jdbc.queryForObject("SELECT extracted_text FROM career_document WHERE id=?",String::class.java,f.doc))
+        assertEquals(2L,jdbc.queryForObject("SELECT revision FROM competency_claim WHERE id=?",Long::class.java,f.claim))
+        jdbc.update("UPDATE career_document SET extracted_text=? WHERE id=?",f.snapshot.text+" changed",f.doc)
+        mvc.perform(draft()).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("CV_SOURCE_CONFLICT"))
+        mvc.perform(get("/api/profile/me/cvs/$id").with(caller(f.user))).andExpect(status().isOk).andExpect(jsonPath("$.stale").value(true)).andExpect(jsonPath("$.content.reviewedSource.text").value("Fictional developer\n\nDeveloped APIs using Kotlin"))
+        verifyNoInteractions(ai)
+    }
     companion object {
         @Container @JvmStatic val postgres=PostgreSQLContainer<Nothing>("postgres@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826")
         @DynamicPropertySource @JvmStatic fun properties(registry:DynamicPropertyRegistry){registry.add("spring.datasource.url",postgres::getJdbcUrl);registry.add("spring.datasource.username",postgres::getUsername);registry.add("spring.datasource.password",postgres::getPassword)}

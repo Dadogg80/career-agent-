@@ -36,6 +36,14 @@ class CvTailoringController(private val services: ObjectProvider<CvTailoringSess
         val request = try { mapper.convertValue(input,TailoringReviewRequest::class.java) } catch (_: Exception) { throw CvFailure("CV_INVALID",400) }
         return ResponseEntity.ok().header("Cache-Control","no-store").body((services.ifAvailable ?: throw CvFailure("PROFILE_DISABLED",503)).review(identity,id(jobId),request))
     }
+    @PostMapping("/draft", consumes=["application/json"])
+    fun draft(@AuthenticationPrincipal principal: OidcUser?, @PathVariable jobId: String, @RequestBody input: Map<String,Any?>): ResponseEntity<*> {
+        val identity=identity(principal)
+        if(input.keys!=setOf("sessionId","revision") || input["sessionId"] !is String || input["revision"] !is Number)throw CvFailure("CV_INVALID",400)
+        val revision=input["revision"] as Number
+        if(revision.toLong()<1 || revision.toDouble()!=revision.toLong().toDouble())throw CvFailure("CV_INVALID",400)
+        return ResponseEntity.ok().header("Cache-Control","no-store").body((services.ifAvailable ?: throw CvFailure("PROFILE_DISABLED",503)).draft(identity,id(jobId),id(input["sessionId"] as String),revision.toLong()))
+    }
     @PostMapping(consumes=["application/json"])
     fun propose(@AuthenticationPrincipal principal: OidcUser?, @PathVariable jobId: String, @RequestBody input: Map<String,Any?>): ResponseEntity<*> {
         val token = principal?.idToken ?: throw CvFailure("AUTH_REQUIRED",401)

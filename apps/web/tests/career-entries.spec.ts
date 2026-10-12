@@ -64,3 +64,12 @@ test("entry proxies reject external origins spoofed status invalid dates and ano
  expect((await request.post(path,{data:{content:{...content,endMonth:"2019-01",ongoing:false}}})).status()).toBe(400);
  expect((await request.get(`${path}/${id}/history`)).status()).toBe(401);
 });
+
+test("bulk career review confirms selected owned revisions and leaves rejected entries alone",async({page})=>{
+ const second="82345678-1234-1234-1234-123456789abc";
+ const content={kind:"EMPLOYMENT",title:"Developer",organization:"Example AS",client:"",deliveryRole:"",startMonth:null,endMonth:null,ongoing:false,description:"Built APIs",sourceNote:"Own statement"};
+ let stored=[{id,content,status:"UNVERIFIED",revision:1,createdAt:time,updatedAt:time},{id:second,content:{...content,title:"Lead"},status:"UNVERIFIED",revision:1,createdAt:time,updatedAt:time},{id:"72345678-1234-1234-1234-123456789abc",content:{...content,title:"Rejected"},status:"REJECTED",revision:1,createdAt:time,updatedAt:time}];let writes=0;
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));await page.route("**/api/profile/me",r=>r.fulfill({json:{id,displayName:"Synthetic Pilot",preferredLanguage:"nb",revision:1}}));await page.route("**/api/profile/me/documents",r=>r.fulfill({json:[]}));await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[]}));
+ await page.route("**/api/profile/me/entries**",r=>{if(r.request().method()==="GET")return r.fulfill({json:stored});writes++;const key=new URL(r.request().url()).pathname.split("/").at(-2)!;expect(r.request().postDataJSON()).toEqual({decision:"CONFIRM",revision:1});stored=stored.map(e=>e.id===key?{...e,status:"CONFIRMED",revision:2}:e);return r.fulfill({json:stored.find(e=>e.id===key)});});
+ await page.goto("/career/profile");await page.getByRole("button",{name:"Arbeid og utdanning",exact:true}).click();await page.getByRole("button",{name:"Bekreft flere (2)",exact:true}).click();const dialog=page.getByRole("dialog");await expect(dialog.getByRole("checkbox")).toHaveCount(2);await dialog.getByRole("button",{name:"Velg alle i utvalget"}).click();await dialog.getByRole("button",{name:"Bekreft valgte",exact:true}).click();await expect(dialog).toContainText("2 bekreftet. Øvrige punkter er beholdt.");expect(writes).toBe(2);expect(stored.at(-1)?.status).toBe("REJECTED");
+});
