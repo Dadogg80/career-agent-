@@ -204,3 +204,8 @@ An independent expected-fact regression exposed local recovery dropping whole ex
 ## Approved CV-tailoring roadmap — 2026-10-12
 
 Owner approval resumes CV tailoring after the supplied process/audit. First delivery: durable owned generated snapshots and revision-checked wording decisions, latest-session recovery and explicit draft saves. Next: stable CV sections, visibility/strategy, section-aware review, versioned standard export, supported Falck DOCX layout/conversion, independent actual-file review and application integration. Existing functions remain. No full-journey or live-model quality claim is made by this first delivery.
+
+
+## CV section-review checkpoint — 2026-10-12
+
+Implemented conservative explicit-heading sections and preliminary section outcomes/priorities within the existing approved wording call. Every literal passage remains available; invalid/missing outcomes cannot imply completed review. Section navigation/filtering and immutable session persistence are implemented. This is not a separately approved strategy-before-generation workflow. Next: deepen section-specific wording coverage and supported template structure, then connect approved changes to immutable standard artifacts; independent actual-DOCX/PDF review remains required before CV_READY.

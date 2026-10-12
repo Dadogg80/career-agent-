@@ -262,3 +262,36 @@ test("new generated wording gets a durable session and session proxies reject sp
  expect((await request.put(path,{data:{sessionId,revision:1,reviews:[{paragraphIndex:1,text:" ",decision:"ACCEPTED"}]}})).status()).toBe(400);
  expect((await request.put(path,{data:{sessionId,revision:1,reviews:[]}})).status()).toBe(403);
 });
+
+test("source sections expose explicit keep and unfinished plans with filtered proposals on mobile and after reload",async({page})=>{
+ await fixtures(page);const sessionId="55555555-5555-4555-8555-555555555555";
+ const source="Profil\nSenior developer with API experience.\n\nKjernekompetanse\nKotlin APIs.\n\nUtdanning\nCourse documentation needs review.";
+ const paragraphs=tailoringPassages(source);
+ const sections=[{id:"cv-1234567890abcdef-0",kind:"PROFILE",heading:"Profil",paragraphIndexes:[0]},{id:"cv-1234567890abcdef-1",kind:"SKILLS",heading:"Kjernekompetanse",paragraphIndexes:[1]},{id:"cv-1234567890abcdef-2",kind:"EDUCATION",heading:"Utdanning",paragraphIndexes:[2]}];
+ const plans=sections.map((s,i)=>({sectionId:s.id,action:i===0?"KEEP_UNCHANGED":i===1?"PROPOSE_CHANGES":"NEEDS_REVIEW",priority:i===1?"HIGH":"LOW",reason:i===0?"Profilen er tydelig; behold originalen.":i===1?"Synliggjør dokumentert API-erfaring.":"Ingen gyldig seksjonsvurdering ble mottatt.",claimIds:i===1?[claimId]:[],requirementIndexes:i===1?[0]:[],assessed:i!==2}));
+ const structured={...result,sessionId,proposals:[{...result.proposals[0],oldText:paragraphs[1],newText:"Kjernekompetanse\nUtvikling av Kotlin-API-er."}],sections,sectionPlans:plans};
+ let stored={id:sessionId,jobId,revision:1,createdAt:time,stale:false,snapshot:{result:structured,text:source,claims:match.claims,quotes:job.content.requirements.map(r=>r.quote),locale:"nb",promptVersion:"cv-section-wording-v2"},reviews:[] as {paragraphIndex:number;text:string;decision:string}[]};
+ await page.route(`**/api/profile/me/documents/${documentId}`,r=>r.fulfill({json:{document:doc,text:source}}));
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>{if(r.request().method()==="PUT")stored={...stored,revision:stored.revision+1,reviews:r.request().postDataJSON().reviews};return r.fulfill({json:stored});});
+ await page.setViewportSize({width:390,height:844});await page.goto(`/jobs/${jobId}/apply`);
+ const plan=page.locator(".cv-section-review");await expect(plan).toBeVisible();await plan.getByRole("button",{name:/Profil/}).click();
+ await expect(plan.getByText("Behold teksten",{exact:true})).toBeVisible();await expect(page.locator(".tailoring-proposal")).toHaveCount(0);
+ await plan.getByRole("button",{name:/Kjernekompetanse/}).click();await expect(page.locator(".tailoring-proposal")).toHaveCount(1);
+ await expect(plan.getByText("AI-prioritet: Høy")).toBeVisible();await plan.getByText("Se originaltekst og grunnlag",{exact:true}).click();await expect(plan.locator("pre")).toContainText("Kotlin APIs.");
+ await plan.screenshot({path:"/tmp/career-cv-sections-mobile.png"});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await plan.getByRole("button",{name:/Utdanning/}).click();await expect(plan.getByText("Må gjennomgås",{exact:true})).toBeVisible();await expect(plan.getByText(/AI-prioritet/)).toHaveCount(0);
+ await plan.getByRole("button",{name:/Kjernekompetanse/}).click();await page.locator(".tailoring-proposal").getByRole("button",{name:"Godkjenn teksten"}).click();
+ await expect(page.getByRole("button",{name:"Til gjennomgang · 0",exact:true})).toBeVisible();await expect(plan.getByRole("button",{name:/Kjernekompetanse/})).toHaveAttribute("aria-pressed","true");
+ await page.reload();await expect(plan).toBeVisible();await page.getByRole("button",{name:"Behandlet · 1",exact:true}).click();await expect(page.locator(".tailoring-proposal")).toHaveCount(1);
+});
+
+test("section metadata rejects missing duplicate and foreign source memberships",async()=>{
+ const sections=[{id:"cv-1234567890abcdef-0",kind:"PROFILE",heading:"Profil",paragraphIndexes:[0,1]}];
+ const sectionPlans=[{sectionId:sections[0].id,action:"KEEP_UNCHANGED",priority:"LOW",reason:"Reviewed wording",claimIds:[],requirementIndexes:[],assessed:true}];
+ expect(isTailoringResult({...result,proposals:[],sections,sectionPlans})).toBe(true);
+ expect(isTailoringResult({...result,sections,sectionPlans})).toBe(false);
+ expect(isTailoringResult({...result,sections,sectionPlans:[]})).toBe(false);
+ expect(isTailoringResult({...result,sections:[...sections,...sections],sectionPlans})).toBe(false);
+ expect(isTailoringResult({...result,sections:[{...sections[0],paragraphIndexes:[1,0]}],sectionPlans})).toBe(false);
+ expect(isTailoringResult({...result,sections,sectionPlans:[{...sectionPlans[0],sectionId:"cv-1234567890abcdef-3"}]})).toBe(false);
+});

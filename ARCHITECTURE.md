@@ -171,3 +171,8 @@ The local pilot now routes the existing AiModel port by task to Groq or Gemini. 
 ## Durable wording-session boundary (ADR 0039)
 
 The existing CV module stores immutable generation snapshots and mutable revision-checked wording reviews in V17. Generated result/source/match evidence remains separate from authoritative profile facts and approved file versions. JDBC owner locks recheck exact current source text, match identity and complete confirmed claim revisions before create/review. Source deletion leaves historical session text readable but stale; saved-job/account deletion cascades session removal. Fixed authenticated no-store Next proxies expose latest-session reads and CSRF-protected review writes. Neither performs model I/O. No new service, document engine or semantic-verification claim is introduced.
+
+
+## Source-bound CV section plans (ADR 0040)
+
+Explicit source headings group the existing literal passages without changing text composition. Source-snapshot IDs, kinds, headings and ordered passage references accompany new CV_TAILORING inputs. The same approved call returns preliminary section outcomes/priorities alongside visibility and wording. Validate IDs, current evidence/criteria, proposal alignment and completion; invalid or missing plans stay unassessed. Optional result fields persist through the existing immutable V17 session snapshot, preserving legacy reads without migrations or inference.

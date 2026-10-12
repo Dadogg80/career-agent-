@@ -1,14 +1,21 @@
 import { MAX_JOB_REQUIREMENTS } from "./job-requirements";
 import { claimId } from "./claims";
 import { isAiSelection } from "./ai-configuration";
+import { isCvSectionData,type CvSection,type CvSectionPlan } from "./cv-sections";
 export type TextProposal = { paragraphIndex:number;oldText:string;newText:string;reason:string;claimIds:string[];requirementIndexes:number[] };
 export type VisibilityStatus = "VISIBLE"|"WEAKLY_VISIBLE"|"NOT_VISIBLE"|"NEEDS_CLARIFICATION"|"UNASSESSED";
 export type CvVisibility = {requirementIndex:number;status:VisibilityStatus;reason:string;claimIds:string[];passages:{paragraphIndex:number;quote:string}[]};
-export type TailoringResult = { documentId:string;matchId:string;provider:"Groq"|"Gemini";model:string;proposals:TextProposal[];omittedItems:number;visibility?:CvVisibility[]|null;sessionId?:string|null };
+export type TailoringResult = { documentId:string;matchId:string;provider:"Groq"|"Gemini";model:string;proposals:TextProposal[];omittedItems:number;visibility?:CvVisibility[]|null;sessionId?:string|null;sections?:CvSection[]|null;sectionPlans?:CvSectionPlan[]|null };
 export function isTailoringResult(value:unknown):value is TailoringResult {
  if(!value || typeof value!=="object")return false;
  const v=value as TailoringResult;
  const text=(s:unknown,max:number)=>typeof s==="string" && s.trim().length>0 && s.length<=max;
+ if(!isCvSectionData(v))return false;
+ if(v.sectionPlans && (!Array.isArray(v.proposals) || v.sectionPlans.some(plan=>{
+  const section=v.sections?.find(s=>s.id===plan.sectionId);
+  const changes=v.proposals.filter(p=>section?.paragraphIndexes.includes(p?.paragraphIndex));
+  return plan.action==="KEEP_UNCHANGED"&&changes.length>0 || plan.action==="PROPOSE_CHANGES"&&(!changes.length||!plan.claimIds.length||!plan.requirementIndexes.length);
+ })))return false;
  return (v.visibility==null || isVisibilityList(v.visibility)) && typeof v.documentId==="string" && typeof v.matchId==="string" && claimId.test(v.documentId) && claimId.test(v.matchId) && isAiSelection(v) && Number.isSafeInteger(v.omittedItems) && v.omittedItems>=0 && v.omittedItems<=100 && Array.isArray(v.proposals) && v.proposals.length<=12 && v.proposals.every(p=>p && Number.isInteger(p.paragraphIndex) && p.paragraphIndex>=0 && p.paragraphIndex<500 && text(p.oldText,4000) && text(p.newText,4000) && text(p.reason,600) && Array.isArray(p.claimIds) && p.claimIds.length>0 && p.claimIds.length<=10 && p.claimIds.every(id=>typeof id==="string" && claimId.test(id)) && Array.isArray(p.requirementIndexes) && p.requirementIndexes.length>0 && p.requirementIndexes.length<=MAX_JOB_REQUIREMENTS && p.requirementIndexes.every(i=>Number.isInteger(i) && i>=0 && i<MAX_JOB_REQUIREMENTS));
 }
 

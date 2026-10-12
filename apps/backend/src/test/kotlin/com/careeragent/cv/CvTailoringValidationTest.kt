@@ -142,4 +142,19 @@ class CvTailoringValidationTest {
   assertThat(validatedVisibility(mapper.readTree("{}"),service.paragraphs(text),match,128,"en")).hasSize(128).allMatch {it.status==CvVisibility.UNASSESSED}
  }
 
+
+ @Test fun `section review shares the approved call retains source IDs and missing plan remains unfinished`() {
+  setup()
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)).thenAnswer { call ->
+   val input=mapper.readTree(call.getArgument<String>(1));val sections=input.path("sections")
+   assertThat(sections.size()).isEqualTo(1)
+   assertThat(sections[0].path("paragraphIndexes").map {it.asInt()}).containsExactly(0,1)
+   assertThat(call.getArgument<String>(0)).contains("Review EVERY supplied section","Never introduce facts or change chronology")
+   mapper.writeValueAsString(mapOf("proposals" to listOf(proposal()),"sectionPlans" to listOf(mapOf("sectionId" to sections[0].path("id").asText(),"action" to "PROPOSE_CHANGES","priority" to "HIGH","reason" to "Makes documented API work clearer","claimIds" to listOf(claimId.toString()),"requirementIndexes" to listOf(0)))))
+  }
+  val result=service.propose(identity,jobId,request)
+  assertThat(result.sections).hasSize(1)
+  assertThat(result.sectionPlans!!.single().action).isEqualTo(CvSectionAction.PROPOSE_CHANGES)
+  verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)
+ }
 }

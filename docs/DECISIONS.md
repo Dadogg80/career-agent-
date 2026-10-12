@@ -263,3 +263,8 @@ Raise the local per-row item bound from 30 to 300, matching the existing retaine
 ## Durable CV wording and approved roadmap — 2026-10-12
 
 Accepted: retain existing providers, modules and truthful evidence model; extend CV workflow incrementally. The owner approved standard export first and automatic documentary profile information with explicit basis distinctions. Store generated source/match/model/prompt snapshots separately from user wording decisions under owner locks/expected revisions. New generation preserves earlier sessions. Review never promotes wording to knowledge facts or final document approval. Current bound: 30 private sessions per owner; latest session is exposed, older snapshots are retained. Session data follows saved-job/account deletion and may retain original source quotations after source-file deletion. Stable sections, historical-session selection/deletion, semantic edit validation and tailored artifacts remain follow-up scope.
+
+
+## Preliminary source-bound CV section plans — 2026-10-12
+
+Accepted under the approved incremental roadmap: use conservative explicit headings to group all existing passages with IDs bound to the exact source revision. Retain uncertain/mixed text as UNCLASSIFIED. Review every section in the existing approved call; missing/invalid/conflicting outcomes remain unassessed NEEDS_REVIEW. Keep recommendation, wording acceptance, factual truth and final document approval separate. Persist optional sections/plans without modifying legacy snapshots. A separate strategy approval stage and reliable DOCX template slots remain future work.

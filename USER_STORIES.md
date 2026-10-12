@@ -506,3 +506,8 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 ## Resume CV wording review — 2026-10-12
 
 As a candidate I can reopen saved suggestions and approval/rejection decisions for a job without another provider request. Saves require my owned session and expected revision. I can save edited wording as pending, and no profile fact is confirmed by wording approval. Failed/conflicting saves retain local text; stale source/evidence cannot approve or produce current copied wording. Stable CV sections and actual-document quality approval remain next milestones.
+
+
+## Review CV suggestions by section — 2026-10-12
+
+As a candidate I can navigate explicit CV sections, see a reasoned keep/change/needs-review plan and inspect original text/evidence before reviewing its proposals. Every original passage remains available; unclear mixed layouts are not silently assigned or discarded. A missing or contradictory AI outcome is unassessed, not automatically kept. New plans reopen with their original session; older sessions remain usable without an automatic AI request.

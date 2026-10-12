@@ -526,3 +526,8 @@ The document extractor no longer discards an otherwise valid explicit technology
 ## Durable CV wording review — 2026-10-12
 
 Application preparation reopens the latest owned wording session without AI calls. Approve/reject persists the selected wording; editing removes its approval locally, and Save wording draft persists PENDING. Unsaved drafts are labelled, block current copying/new generation and warn on browser unload. Failed saves preserve typed wording and pending state. Revision conflicts require explicit loading of saved work (which replaces local drafts). Changed/deleted CV or changed confirmed evidence retains historical reading but blocks review/copy. No new CV file or final approval is created.
+
+
+## Source-bound CV section review — 2026-10-12
+
+New wording analysis includes a preliminary CV plan. Select a source section to inspect its AI priority, explicit keep/change/review outcome, literal original passages and evidence, and filter its wording proposals. The pending/processed review queue remains persisted; saving review keeps the selected section. Unclassified text and absent assessments are clearly marked. Existing sessions without section plans remain reviewable; new analysis requires the same explicit private approval. Neither section outcome nor wording approval establishes facts or CV_READY.
