@@ -30,7 +30,7 @@ class CareerEntryService(private val entries: CareerEntryRepository) {
  private fun validate(c: CareerEntryContent): CareerEntryContent {
   fun text(value: String, max: Int, empty: Boolean = false) = value.length <= max && (empty || value.isNotBlank()) && value.none { it.isISOControl() && it !in "\n\r\t" }
   try {
-   require(text(c.title,200) && text(c.organization,200) && text(c.client,200,true) && text(c.deliveryRole,200,true) && text(c.description,2000,true) && text(c.sourceNote,500))
+   require(text(c.title,200) && text(c.organization,200,c.kind==EntryKind.PROJECT) && text(c.client,200,true) && text(c.deliveryRole,200,true) && text(c.description,2000,true) && text(c.sourceNote,500))
    fun month(v: String?): YearMonth? { if (v == null) return null; require(v.matches(Regex("[0-9]{4}-[0-9]{2}"))); return YearMonth.parse(v).also { require(it.year in 1900..2200) } }
    val start = month(c.startMonth); val end = month(c.endMonth)
    require(!c.ongoing || end == null); require(start == null || end == null || end >= start)

@@ -64,6 +64,12 @@ class CareerEntryIntegrationTest {
   for(c in listOf(content()+("endMonth" to "2019-01")+("ongoing" to false),content()+("startMonth" to "2020-99"),content()+("endMonth" to "2021-01"),content()+("title" to "Bad\u0000title"))) mvc.perform(post(path).with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("content" to c)))).andExpect(status().isBadRequest)
   mvc.perform(post(path).with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("content" to (content()+("startMonth" to null)+("ongoing" to false)))))).andExpect(status().isOk).andExpect(jsonPath("$.content.startMonth").isEmpty).andExpect(jsonPath("$.content.endMonth").isEmpty)
  }
+ @Test fun `own project without organization is a reviewable draft but employment still needs one`() {
+  val user=profile();val project=content()+mapOf("kind" to "PROJECT","title" to "Atlas Planner","organization" to "","startMonth" to null,"ongoing" to false)
+  mvc.perform(post(path).with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("content" to project)))).andExpect(status().isOk).andExpect(jsonPath("$.content.kind").value("PROJECT")).andExpect(jsonPath("$.content.organization").value("")).andExpect(jsonPath("$.status").value("UNVERIFIED"))
+  mvc.perform(post(path).with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("content" to (project+("kind" to "EMPLOYMENT")))))).andExpect(status().isBadRequest)
+  verifyNoInteractions(ai)
+ }
  companion object {
   @Container @JvmStatic val postgres=PostgreSQLContainer<Nothing>("postgres@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826")
   @DynamicPropertySource @JvmStatic fun database(r:DynamicPropertyRegistry){r.add("spring.datasource.url",postgres::getJdbcUrl);r.add("spring.datasource.username",postgres::getUsername);r.add("spring.datasource.password",postgres::getPassword)}

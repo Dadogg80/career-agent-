@@ -569,3 +569,13 @@ CV tailoring consent now explains each active prerequisite beside the checkbox. 
 ## 2026-10-12 — Selected presentation sections and Documents navigation
 
 Completed document summaries offer Use in my presentation (or Replace this presentation section). Saving an edited summary remains a draft update until the user explicitly selects it. The selected presentation stores one source-backed wording snapshot per kind and language, survives newer analyses/reloads, and shows saved source excerpts/model identity. Selection does not confirm competencies or history. Original deletion retains selected wording and excerpts as disclosed references. Next: move the existing upload/library/OCR/analysis workflow to a dedicated Documents page, preserving profile/matching/tailoring links and storage behavior.
+
+
+## 2026-10-12 — Project history extraction correction
+
+Project catalogs should produce distinct PROJECT history drafts as well as competencies. Project title remains the literal project name; delivery role and client remain separate. PROJECT may have unknown organization; other history kinds still require one. Missing months remain unknown, and users review AI history wording before factual confirmation. Source rereading/new analysis is needed to use the corrected extraction; existing imported history and user choices are preserved.
+
+
+## 2026-10-12 — Dedicated library and retained profile review
+
+Only upload and the full document library move to /documents. Min profil keeps its documents/AI-profile tab, compact source picker, single/combined analysis, OCR/source/manual review, summary editing/adoption, competencies and history. Navigation precedes analysis/presentation; existing #profile-documents links remain valid. Sidebar/mobile navigation includes Documents with a link back to profile review. Upload guidance and CV source repair links target the library. Completed analyses offer Analyze again with another model, opening source/model settings without calling AI and requiring renewed consent before Start new analysis.

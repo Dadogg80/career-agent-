@@ -73,3 +73,19 @@ test("bulk career review confirms selected owned revisions and leaves rejected e
  await page.route("**/api/profile/me/entries**",r=>{if(r.request().method()==="GET")return r.fulfill({json:stored});writes++;const key=new URL(r.request().url()).pathname.split("/").at(-2)!;expect(r.request().postDataJSON()).toEqual({decision:"CONFIRM",revision:1});stored=stored.map(e=>e.id===key?{...e,status:"CONFIRMED",revision:2}:e);return r.fulfill({json:stored.find(e=>e.id===key)});});
  await page.goto("/career/profile");await page.getByRole("button",{name:"Arbeid og utdanning",exact:true}).click();await page.getByRole("button",{name:"Bekreft flere (2)",exact:true}).click();const dialog=page.getByRole("dialog");await expect(dialog.getByRole("checkbox")).toHaveCount(2);await dialog.getByRole("button",{name:"Velg alle i utvalget"}).click();await dialog.getByRole("button",{name:"Bekreft valgte",exact:true}).click();await expect(dialog).toContainText("2 bekreftet. Øvrige punkter er beholdt.");expect(writes).toBe(2);expect(stored.at(-1)?.status).toBe("REJECTED");
 });
+
+
+test("own project can be saved as unverified without a fabricated organization",async({page})=>{
+ let saved:Record<string,unknown>|null=null,writes=0;
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
+ await page.route("**/api/profile/me",r=>r.fulfill({json:{id,displayName:"Synthetic Pilot",preferredLanguage:"nb",revision:1}}));
+ await page.route("**/api/profile/me/documents",r=>r.fulfill({json:[]}));await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[]}));
+ await page.route("**/api/profile/me/entries",r=>{
+  if(r.request().method()==="POST"){writes++;const input=r.request().postDataJSON();expect(input.content.organization).toBe("");expect(input.content.kind).toBe("PROJECT");saved={id,content:input.content,status:"UNVERIFIED",revision:1,createdAt:time,updatedAt:time};return r.fulfill({json:saved});}
+  return r.fulfill({json:saved?[saved]:[]});
+ });
+ await page.goto("/career/profile");await page.getByRole("button",{name:"Arbeid og utdanning",exact:true}).click();await page.getByRole("button",{name:"Legg til historikk",exact:true}).click();const dialog=page.getByRole("dialog");
+ await dialog.getByLabel("Type",{exact:true}).selectOption("PROJECT");await dialog.getByLabel("Formell tittel / navn",{exact:true}).fill("Atlas Planner");
+ await expect(dialog.getByLabel("Organisasjon (valgfri for prosjekter)")).not.toHaveAttribute("required","");
+ await dialog.getByRole("button",{name:"Lagre som ubekreftet",exact:true}).click();await expect(dialog).toHaveCount(0);await expect(page.locator("#profile-career-history")).toContainText("Atlas Planner");await expect(page.locator("#profile-career-history")).toContainText("Ubekreftet");expect(writes).toBe(1);
+});

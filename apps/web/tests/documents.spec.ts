@@ -21,7 +21,7 @@ test("upload retains the source, selecting a CV quote creates an unverified clai
     uploads++; expect(route.request().headers()["content-type"]).toContain("multipart/form-data"); document = { ...original }; return route.fulfill({ json:document });
   });
   await page.setViewportSize({ width:390, height:844 });
-  await page.goto("/career/profile");
+  await page.goto("/documents");
   await page.getByLabel("Dokumentfil", { exact:true }).setInputFiles({ name:"synthetic.docx", mimeType:original.mediaType, buffer:Buffer.from("synthetic fixture") });
   await page.getByRole("button", { name:"Last opp dokument", exact:true }).click();
   const card = page.getByRole("article", { name:"synthetic.docx", exact:true });
@@ -38,11 +38,11 @@ test("upload retains the source, selecting a CV quote creates an unverified clai
   await dialog.getByRole("textbox", { name:"Kompetanse", exact:true }).fill("Kotlin");
   await dialog.getByRole("textbox", { name:"Prosjekt eller arbeidsforhold", exact:true }).fill("Synthetic project");
   await dialog.getByRole("button", { name:"Lagre som ubekreftet kompetanse", exact:true }).click();
-  await page.getByRole("button", {name:"Din kompetanse",exact:true}).click(); await expect(page.getByRole("article", { name:"Kotlin", exact:true }).locator('[data-claim-status="UNVERIFIED"]')).toBeVisible();
+  await page.goto("/career/profile#profile-competencies");await page.getByRole("button", {name:"Din kompetanse",exact:true}).click(); await expect(page.getByRole("article", { name:"Kotlin", exact:true }).locator('[data-claim-status="UNVERIFIED"]')).toBeVisible();
   expect(await page.evaluate(() => window.document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.screenshot({ path:"/tmp/career-profile-documents-mobile.png", fullPage:true });
   await page.getByRole("combobox", { name:"Språk", exact:true }).selectOption("en");
-  await page.getByRole("button", {name:"Documents and AI profile",exact:true}).click(); await card.getByRole("button", { name:"Delete", exact:true }).click(); expect(deletes).toBe(0);
+  await page.goto("/documents"); await card.getByRole("button", { name:"Delete", exact:true }).click(); expect(deletes).toBe(0);
   await expect(dialog).toContainText("Competencies and history you created are retained");
   await dialog.getByRole("button", { name:"Permanently delete document", exact:true }).click();
   await expect(page.getByText("Build your document sources. Start with your CV, then add certificates and employment attestations.", { exact:true })).toBeVisible(); expect(deletes).toBe(1);
@@ -61,7 +61,7 @@ test("Markdown competency evidence is readable, does not offer master-CV selecti
  let uploaded=false;
  await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));await page.route("**/api/profile/me",r=>r.fulfill({json:{id,displayName:"Fictional Pilot",preferredLanguage:"nb",revision:1}}));await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[]}));
  await page.route("**/api/profile/me/documents**",r=>{if(r.request().method()==="POST"){uploaded=true;return r.fulfill({json:document});}if(r.request().url().endsWith("/analysis"))return r.fulfill({json:{analysis:null}});return r.fulfill({json:r.request().url().endsWith(id)?{document,text:source}:uploaded?[document]:[]});});
- await page.goto("/career/profile");await page.getByLabel("Dokumentfil",{exact:true}).setInputFiles({name:"project.md",mimeType:"text/markdown",buffer:Buffer.from(source)});await page.getByRole("button",{name:"Last opp dokument",exact:true}).click();
+ await page.goto("/documents");await page.getByLabel("Dokumentfil",{exact:true}).setInputFiles({name:"project.md",mimeType:"text/markdown",buffer:Buffer.from(source)});await page.getByRole("button",{name:"Last opp dokument",exact:true}).click();
  await expect(page.getByRole("article",{name:"project.md",exact:true})).toBeVisible();await expect(page.getByRole("button",{name:"Bruk som master-CV",exact:true})).toHaveCount(0);
  await page.getByRole("button",{name:"Analyser dokumentet",exact:true}).click();await page.locator(".source-review-tile > summary").click(); await expect(page.getByRole("textbox",{name:"Tekst som sendes fra project.md",exact:true})).toHaveValue(source);
 });
@@ -86,9 +86,9 @@ for(const width of [1280,390]){
    if(selected){reads.add(selected.id);return r.fulfill({json:{document:selected,text:selected.textCharacters===0?"":"Fictional source describing project responsibilities and work experience."}});}
    return r.fulfill({json:records});
   });
-  await page.goto("/career/profile");const library=page.locator(".document-panel"),rows=library.locator(".document-tile");
+  await page.goto("/documents");const library=page.locator(".document-panel"),rows=library.locator(".document-tile");
   await expect(rows).toHaveCount(4);
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  expect(await page.evaluate(()=>window.document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:`/tmp/career-document-library-${width}-all.png`,fullPage:true});
   await library.getByRole("combobox",{name:"Vis dokumenter",exact:true}).selectOption("NO_TEXT");await expect(rows).toHaveCount(1);await expect(rows.first()).toContainText("scanned-certificate.pdf");
   await library.getByRole("combobox",{name:"Vis dokumenter",exact:true}).selectOption("UNKNOWN");await expect(rows).toHaveCount(1);await expect(rows.first()).toContainText("Åpne for å kontrollere teksten");await expect(rows.first().locator('.document-read-status[data-readable="unknown"]')).toBeVisible();
@@ -98,9 +98,23 @@ for(const width of [1280,390]){
   if(width===390){await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await library.getByRole("textbox",{name:"Search filenames",exact:true}).fill("MASTER");}else await library.getByRole("textbox",{name:"Søk i filnavn",exact:true}).fill("MASTER");
   await expect(rows).toHaveCount(1);expect(reads.size).toBe(0);expect(writes).toBe(0);
   await page.screenshot({path:`/tmp/career-document-library-${width}.png`,fullPage:true});
-  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  expect(await page.evaluate(()=>window.document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await library.getByRole("button",{name:width===390?"Summarize all documents with AI":"Oppsummer alle dokumentene med AI",exact:true}).click();
   const dialog=page.locator(".document-workspace-sheet");await expect(dialog.locator(".source-review-tile")).toHaveCount(4);
   expect([...reads].sort()).toEqual(records.map(d=>d.id).sort());expect(writes).toBe(0);
  });
 }
+
+
+test("Documents navigation moves only the library while profile review and history remain accessible",async({page})=>{
+ const document={...original,textCharacters:text.length};
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
+ await page.route("**/api/profile/me",r=>r.fulfill({json:{id,displayName:"Synthetic Pilot",preferredLanguage:"nb",revision:1}}));
+ await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[]}));await page.route("**/api/profile/me/entries",r=>r.fulfill({json:[]}));
+ await page.route("**/api/profile/me/documents**",r=>r.fulfill({json:r.request().url().includes("/workflow")?null:r.request().url().endsWith(id)?{document,text}:[document]}));
+ await page.goto("/career/profile#profile-documents");await expect(page.getByLabel("Dokumentfil",{exact:true})).toHaveCount(0);await expect(page.locator(".document-library-list")).toHaveCount(0);
+ await expect(page.getByLabel("Dokument til gjennomgang")).toBeVisible();await page.getByRole("button",{name:"Analyser dokumentet",exact:true}).click();await expect(page.getByRole("dialog")).toContainText(original.originalName);await page.getByRole("dialog").getByRole("button",{name:"Lukk",exact:true}).click();
+ await page.getByRole("button",{name:"Din kompetanse",exact:true}).click();await expect(page.locator("#profile-competencies")).toBeVisible();await page.getByRole("button",{name:"Arbeid og utdanning",exact:true}).click();await expect(page.locator("#profile-career-history")).toBeVisible();
+ await page.locator(".sidebar").getByRole("link",{name:/^Dokumenter/}).click();await expect(page).toHaveURL(/\/documents$/);await expect(page.getByLabel("Dokumentfil",{exact:true})).toBeVisible();await expect(page.getByRole("article",{name:original.originalName,exact:true})).toBeVisible();
+ await page.setViewportSize({width:390,height:844});await page.getByRole("button",{name:"Åpne meny",exact:true}).click();const menu=page.getByRole("dialog");await menu.getByRole("link",{name:/^Min profil/}).click();await expect(page).toHaveURL(/\/career\/profile$/);await expect(page.getByLabel("Dokument til gjennomgang")).toBeVisible();expect(await page.evaluate(()=>window.document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});

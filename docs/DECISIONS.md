@@ -302,3 +302,13 @@ Keep tailoring consent unavailable until the existing evidence/source/current au
 ## 2026-10-12 — Selected presentation sections and Documents navigation
 
 ADR 0042 accepts an owner/language presentation row with six selected section kinds and revision-checked source snapshots. New document analyses never silently mutate it; wording selection is independent from competency/history confirmation. Dedicated Documents navigation is the next owner-authorized slice.
+
+
+## 2026-10-12 — Project history extraction correction
+
+Allow empty organization only for PROJECT, where own work may have no employer/organization. Never fabricate employer identity or month precision to satisfy validation. Request a separate PROJECT draft for each explicitly named project with candidate work; contents-only headings are not experience. Dated experience coverage must cite history entries rather than competency/profile quotes. Existing opt-in follow-up bounds remain unchanged.
+
+
+## 2026-10-12 — Dedicated library and retained profile review
+
+Reuse DocumentPanel in library and compact-review modes. Both open the existing workflow; old profile hashes remain valid. Model switching requires renewed consent. Move only uploads/overview, preserving original storage/endpoints/statuses and all profile review capabilities.

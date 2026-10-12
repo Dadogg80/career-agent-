@@ -547,3 +547,13 @@ As a candidate blocked from CV tailoring, I can see exactly which prerequisites 
 ## 2026-10-12 — Selected presentation sections and Documents navigation
 
 As a candidate, I can select individual saved document summaries for my presentation without a later analysis replacing my choices. I explicitly replace each section; exact analysis/presentation revisions reject stale writes. As a candidate, I want uploads and document analysis on a dedicated Documents page while my profile focuses on presentation, competencies and history (next slice).
+
+
+## 2026-10-12 — Project history extraction correction
+
+As a candidate uploading project experience, I receive separate source-backed project history drafts rather than only competencies. An own project with no supported organization is not discarded or turned into employment. Dated experience used only in a competency/profile quote remains a history coverage question.
+
+
+## 2026-10-12 — Dedicated library and retained profile review
+
+Candidates can find Documents in desktop/mobile navigation, upload/manage original files there, and still access all existing AI/profile review in Min profil. A completed analysis can be rerun with another model and renewed consent; prior user decisions and selected presentation stay separate from regenerated drafts.
