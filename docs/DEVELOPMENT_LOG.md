@@ -678,3 +678,10 @@ Owner reported missing Documents/profile flows. Verified main b2eecaf: no Docume
 Validation: 13 backend extraction/coverage/history tests passed, backend bootJar and frontend production build/typecheck passed. Eleven unique focused browser cases passed across upload/master/manual-source/delete, Markdown, desktop/mobile library filtering, accessible metadata, normal history/own-project drafts, existing automatic population, durable presentation, profile/library navigation and another-model reanalysis. The reanalysis fixture was rerun after correcting its options shape. Inspected the synthetic mobile library screenshot. No owner PDF or text entered Git, no live provider requests, no migration/default/budget changes. Required GitHub CI remains to run on publication.
 
 Two additional focused browser cases passed for retained combined-source analysis and OCR error/success recovery with separate AI consent (13 unique browser cases total). Final production build/typecheck passed after the Documents heading/link polish. PR #50 is verified merged with both Foundation checks successful.
+
+
+## 2026-10-12 — PR 51 CI history-coverage regression
+
+GitHub Foundation stopped on one older workflow test (265 tests, one failure, five skipped): its follow-up-skipping fixture contained only a profile paragraph but expected full dated-history coverage. Updated the fixture to supply a literal employment history entry, kept zero-remaining and two-call skip assertions, and asserted that the actual entry exists. Strengthened the dated-project inventory test to show that both skills and profile prose remain insufficient without history. No production behavior or AI budget changed.
+
+Validation: all 26 targeted workflow/inventory cases passed locally, including the previously failing integration case. No live AI calls. Updated commit is pushed to the existing PR; full GitHub checks are rerunning.

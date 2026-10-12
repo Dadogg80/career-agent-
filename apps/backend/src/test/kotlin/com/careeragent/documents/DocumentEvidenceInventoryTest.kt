@@ -38,7 +38,7 @@ email: private@example.test"""
     @Test fun `project period quoted in skills still needs a separate history entry`() {
         val quote="2023-2025 Own prototype"
         val text="## Atlas Planner\n$quote\nBuilt APIs."
-        val extracted=analysis(listOf(CompetencySuggestion("APIs","Own prototype","Atlas Planner",text,id)))
+        val extracted=analysis(listOf(CompetencySuggestion("APIs","Own prototype","Atlas Planner",text,id)),listOf(ProfileSummaryDraft("EXPERIENCE","Own prototype",id,text)))
         val missing=DocumentEvidenceInventory.assess(mapOf(id to text),extracted)
         assertThat(missing.missing.map{it.kind}).contains("EXPERIENCE")
         val content=com.careeragent.profile.domain.CareerEntryContent(com.careeragent.profile.domain.EntryKind.PROJECT,"Atlas Planner","","","",null,null,false,"Own prototype","Document evidence")
