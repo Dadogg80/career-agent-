@@ -505,3 +505,7 @@ Application preparation preselects a document only when it is explicitly marked 
 ## Profile evidence changes and saved-match freshness
 
 Confirming, editing, rejecting or deleting competency evidence refreshes the owned claims list and invalidates all cached saved-job match queries, not only the open job. The same refresh applies to documented profile population, manual source promotion and document deletion. Visible cards recheck saved assessments through read-only requests; while checking they label their percentage as being refreshed. The server decides whether a saved result is stale from the confirmed revision set. Historical percentages are retained and not silently recomputed. Updating an AI assessment still requires separate approval.
+
+## Correcting a proposal during guided competency review
+
+Choose **Rediger først / Edit first** in the guided review dialog to adjust the prefilled skill, contribution, company/project or source note. **Back without saving** returns to the same proposal without a write. Saving a correction returns to that same proposal and preserves the queue position; the correction remains unconfirmed until the separate confirmation action. Confirmation uses the updated revision and then advances to the next proposal. Filtering, skipping, rejection and original source evidence retain their existing behavior. No AI call is made.

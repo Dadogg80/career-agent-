@@ -240,3 +240,7 @@ Use the existing master-document designation for automatic CV preselection; othe
 ### Shared profile-evidence freshness — implemented 2026-10-12
 
 Use one frontend cache-refresh helper for competency mutations: invalidate owned claims and all saved-match query keys. Confirmed evidence is shared across jobs, so refreshing only the open job after an inline clarification is insufficient. Refetch active saved assessments through existing owned GET endpoints; keep inactive assessments invalidated for their next mount. Preserve server staleness/revision checks, historical results and explicit approval for AI reruns. This adds no provider call, score recomputation or persistence schema.
+
+### Edit without advancing guided review — implemented 2026-10-12
+
+An edit within a review queue saves an unconfirmed correction and returns to that item's confirmation view. Saving alone does not advance the queue or establish personal truth. The subsequent confirmation uses the saved revision. Existing individual edits outside the queue keep their behavior; source quotations and confirmation boundaries are unchanged.

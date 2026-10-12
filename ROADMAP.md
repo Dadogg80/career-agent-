@@ -175,3 +175,7 @@ Application preparation now defaults only to an explicitly marked master CV. Wit
 ### Joined journey: shared profile/match freshness
 
 Competency/profile mutations now invalidate the full cached saved-match family alongside owned claims. This closes the stale-card gap when an answer for one job changes the candidate evidence used by other jobs. Document population/source promotion/deletion share the same refresh; server revision checks remain authoritative. Visible status refreshes are read-only, with no AI rerun. Cross-tab synchronization and broader end-to-end identity/persistence review remain subsequent work.
+
+### Competency review: edit within the queue
+
+Guided review now supports prefilled editing, a return without saving and a return to the same item after saving. Explicit confirmation remains separate and uses the edited revision. This improves review continuity without bulk factual confirmation, new AI calls or source rewriting. Broader document review/layout and joined-flow quality remain next priorities.

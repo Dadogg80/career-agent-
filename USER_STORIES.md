@@ -477,3 +477,9 @@ As a candidate, I want matching to use all of my confirmed document-derived and 
 - After a competency change, every visible saved-job card rechecks whether its assessment is still current, including jobs other than the one I am clarifying.
 - During that check I see a freshness status rather than an old percentage presented as current. The prior result remains readable.
 - Refreshing evidence and saved status does not start AI or change my confirmed facts, percentages or recipient approval.
+
+## Correct before confirming
+
+- I can correct an AI proposal inside guided review without abandoning the queue or registering the same competency again.
+- Saving the correction keeps it pending and returns me to the same item for explicit confirmation. The next item opens only after confirmation, rejection or skipping.
+- I can return without saving; the original contribution and source evidence remain visible.
