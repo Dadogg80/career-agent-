@@ -509,3 +509,7 @@ Confirming, editing, rejecting or deleting competency evidence refreshes the own
 ## Correcting a proposal during guided competency review
 
 Choose **Rediger først / Edit first** in the guided review dialog to adjust the prefilled skill, contribution, company/project or source note. **Back without saving** returns to the same proposal without a write. Saving a correction returns to that same proposal and preserves the queue position; the correction remains unconfirmed until the separate confirmation action. Confirmation uses the updated revision and then advances to the next proposal. Filtering, skipping, rejection and original source evidence retain their existing behavior. No AI call is made.
+
+## Completed document analysis: results first
+
+After processing completes, the reader shows a compact **Review ready** strip and the result-review navigation. **Show source checks and analysis details** expands the retained processing counts, source-character coverage, actual saved model plan and source-usage review. It starts no request or AI analysis. While processing or paused, progress and source checks remain expanded for recovery. Completion is explicitly not a guarantee of complete extraction; originals, source quotations and all review/promotion actions retain their existing rules. The processing/source-check subtree stays mounted during the transition to preserve local review state.

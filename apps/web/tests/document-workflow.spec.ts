@@ -246,6 +246,7 @@ test("source coverage shows bounded follow-up and literal missing passages witho
  await sheet.getByRole("button",{name:"Lukk",exact:true}).click();await open(page);
  await expect(sheet.locator(".document-coverage")).toContainText("2 passasjer med kilde i resultatet");expect(calls).toBe(3);
  await page.setViewportSize({width:390,height:844});
+ await sheet.locator(".document-processing-disclosure > summary").click();
  await sheet.locator(".document-coverage").scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/career-coverage-mobile.png"});
  const bounds=await sheet.evaluate(el=>({width:el.clientWidth,scroll:el.scrollWidth}));expect(bounds.scroll).toBeLessThanOrEqual(bounds.width+1);
 });
@@ -286,6 +287,7 @@ test("missed passages can become sourced profile claims and career entries",asyn
  });
 
  await open(page);const sheet=page.locator(".document-workspace-sheet");const coverage=sheet.locator(".document-coverage");
+ await sheet.locator(".document-processing-disclosure > summary").click();
  await coverage.locator("summary").click();
  await coverage.getByRole("textbox",{name:"Søk i kildepassasjer"}).fill("Interested");
  await coverage.getByRole("button",{name:"Behandle som profilutkast",exact:true}).click();
@@ -312,4 +314,31 @@ test("coverage proxy routes reject malformed claim and entry payloads",async({re
   const response=await request.post(`${path}/${destination}`,{data:{}});
   expect(response.status()).toBe(400);expect(await response.json()).toEqual({code:"DOCUMENT_AI_INPUT_INVALID"});
  }
+});
+
+test("completed document results lead with review and retain expandable processing details without AI calls",async({page})=>{
+ await profile(page);await page.setViewportSize({width:390,height:844});let writes=0;
+ await page.route("**/api/profile/me/documents**",r=>{
+  if(r.request().method()!=="GET"){writes++;return r.fulfill({status:500,json:{code:"UNEXPECTED_WRITE"}});}
+  if(r.request().url().includes("/workflow"))return r.fulfill({json:run()});
+  return r.fulfill({json:r.request().url().endsWith(id)?{document:doc,text}:[doc]});
+ });
+ await open(page);const sheet=page.locator(".document-workspace-sheet"),details=sheet.locator(".document-processing-disclosure");
+ await expect(sheet.getByText("Gjennomgangen er klar",{exact:true})).toBeVisible();
+ await expect(sheet.getByText("Ferdig behandling garanterer ikke komplett uttrekk.",{exact:false})).toBeVisible();
+ await expect(details).not.toHaveAttribute("open","");
+ await expect(sheet.getByRole("progressbar",{name:"Dokumentanalyse",exact:true})).toBeHidden();
+ await expect(sheet.locator(".document-review-navigation")).toBeVisible();
+ await details.locator(":scope > summary").click();
+ await expect(sheet.getByRole("progressbar",{name:"Dokumentanalyse",exact:true})).toBeVisible();
+ await expect(details).toContainText("2 / 2 behandlingstrinn");
+ await details.locator(":scope > summary").click();
+ await expect(details).not.toHaveAttribute("open","");
+ expect(await sheet.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);expect(writes).toBe(0);
+ await page.screenshot({path:"/tmp/career-compact-document-mobile.png",fullPage:true});
+ await sheet.getByRole("button",{name:"Lukk",exact:true}).click();
+ await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");
+ await page.getByRole("button",{name:"Analyze document",exact:true}).click();
+ await expect(sheet.getByText("Review ready",{exact:true})).toBeVisible();
+ await expect(details.locator(":scope > summary")).toContainText("Show source checks and analysis details");
 });

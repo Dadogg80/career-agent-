@@ -244,3 +244,7 @@ Use one frontend cache-refresh helper for competency mutations: invalidate owned
 ### Edit without advancing guided review — implemented 2026-10-12
 
 An edit within a review queue saves an unconfirmed correction and returns to that item's confirmation view. Saving alone does not advance the queue or establish personal truth. The subsequent confirmation uses the saved revision. Existing individual edits outside the queue keep their behavior; source quotations and confirmation boundaries are unchanged.
+
+### Results-first completed-document review — implemented 2026-10-12
+
+Collapse processing/source-check details by default after completion, while keeping result review and a clear completeness limitation visible. Active/paused processing stays expanded. Preserve the mounted source-check subtree and all existing source/promotion actions; expanding details is local UI behavior, not a new analysis. No change to evidence, confirmation, model routing or budgets.
