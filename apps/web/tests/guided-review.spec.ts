@@ -49,5 +49,39 @@ test("review respects visible filtering and keeps a conflicting proposal open wi
  await dialog.getByRole("button", { name: "Accurate · Confirm my experience", exact: true }).click();
  await expect(dialog.getByRole("alert")).toContainText("another tab");
  await expect(dialog.getByRole("heading", { name: "Kotlin", exact: true })).toBeVisible(); expect(writes).toBe(1);
- await dialog.getByRole("button", { name: "Cancel", exact: true }).click(); await expect(page.getByRole("dialog")).toHaveCount(0);
+ await dialog.getByRole("button", { name: "End review", exact: true }).click(); await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("editing in guided review keeps the item pending until its corrected revision is explicitly confirmed",async({page})=>{
+ await identity(page);await page.setViewportSize({width:390,height:844});let claims=[proposal("1","Kotlin"),proposal("2","React")];const writes:string[]=[];
+ await page.route("**/api/profile/me/claims**",r=>{
+  if(r.request().method()==="GET")return r.fulfill({json:claims});
+  const input=r.request().postDataJSON(),selected=claims.find(c=>r.request().url().includes(c.id))!;
+  expect(input.revision).toBe(selected.revision);
+  if(r.request().method()==="PUT"){
+   writes.push("edit");claims=claims.map(c=>c.id===selected.id?{...c,...input,status:"UNVERIFIED",revision:c.revision+1}:c);
+  }else{
+   expect(input.decision).toBe("CONFIRM");writes.push("confirm");claims=claims.map(c=>c.id===selected.id?{...c,status:"CONFIRMED",revision:c.revision+1}:c);
+  }
+  return r.fulfill({json:claims.find(c=>c.id===selected.id)});
+ });
+ await page.goto("/career/profile");await page.getByRole("button",{name:"Din kompetanse",exact:true}).click();
+ await page.getByRole("button",{name:"Gjennomgå 2 forslag",exact:true}).click();
+ const dialog=page.getByRole("dialog");
+ await dialog.getByRole("button",{name:"Rediger først",exact:true}).click();
+ const statement=dialog.locator("#claim-statement");await statement.fill("This correction should not be saved.");
+ await dialog.getByRole("button",{name:"Tilbake uten å lagre",exact:true}).click();
+ await expect(dialog).toContainText("Implemented Kotlin in a fictional project.");expect(writes).toEqual([]);
+ await dialog.getByRole("button",{name:"Rediger først",exact:true}).click();
+ await expect(statement).toHaveValue("Implemented Kotlin in a fictional project.");
+ await statement.fill("Developed Kotlin APIs in a fictional project.");
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.screenshot({path:"/tmp/career-guided-edit-mobile.png",fullPage:true});
+ await dialog.locator("form").getByRole("button",{name:"Lagre opplysning",exact:true}).click();
+ await expect(dialog.getByRole("heading",{name:"Kotlin",exact:true})).toBeVisible();
+ await expect(dialog).toContainText("Developed Kotlin APIs in a fictional project.");
+ await expect(dialog).toContainText("Forslag 1 / 2");expect(claims[0].status).toBe("UNVERIFIED");expect(writes).toEqual(["edit"]);
+ await dialog.getByRole("button",{name:"Stemmer · Bekreft min erfaring",exact:true}).click();
+ await expect(dialog.getByRole("heading",{name:"React",exact:true})).toBeVisible();
+ await expect(dialog).toContainText("Forslag 2 / 2");expect(claims[0].status).toBe("CONFIRMED");expect(claims[0].revision).toBe(3);expect(writes).toEqual(["edit","confirm"]);
 });
