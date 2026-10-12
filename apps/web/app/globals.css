@@ -1861,3 +1861,40 @@ button:disabled { cursor:not-allowed; }
 
 .cv-section-review .workspace-heading h3 { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
 .cv-section-navigation button[aria-pressed="true"] [data-slot="badge"] { color:inherit; border-color:currentColor; background:transparent; }
+
+/* Keep model choices inside scrollable readers/cards instead of clipping an overlay. */
+.ai-choice .ai-choice-menu[open] { flex-basis:100%; grid-column:1 / -1; justify-self:stretch; }
+.ai-choice .ai-choice-options { position:static; z-index:auto; top:auto; right:auto; width:min(340px,100%); max-height:min(22rem,60dvh); overflow-y:auto; margin-top:9px; }
+
+.document-analysis-status { grid-column:2; display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; font-size:12px; color:#718077; }
+.document-analysis-status[data-analysis="complete"] { color:#2f684c; }
+.document-analysis-status[data-analysis="partial"] { color:#926421; }
+.document-analysis-status button { padding:4px 8px; height:auto; font-size:12px; color:inherit; background:#eff5ef; border:1px solid #dce8dc; border-radius:9px; }
+.document-analysis-popover { position:fixed; z-index:150; width:min(340px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); overflow:auto; padding:18px; border:1px solid #dbe7df; border-radius:16px; background:#fff; color:#254536; box-shadow:0 12px 40px #17392926; font-size:12px; line-height:1.5; pointer-events:none; }
+.document-analysis-popover strong { font-size:15px; }
+.document-analysis-popover p { margin:8px 0; }
+.document-analysis-popover dl { margin:12px 0; display:grid; gap:6px; }
+.document-analysis-popover dl div { display:flex; justify-content:space-between; gap:12px; }
+.document-analysis-popover dd { margin:0; font-weight:650; }
+.document-analysis-popover small { display:block; color:#64766c; }
+.document-analysis-popover .ai-identity-chip { max-width:100%; white-space:normal; overflow-wrap:anywhere; }
+.career-entry-dialog .career-review-body { display:grid; gap:18px; }
+.career-review-heading { display:flex; align-items:center; gap:14px; }
+.career-review-icon { display:grid; place-items:center; width:48px; height:48px; flex-shrink:0; border-radius:14px; background:#eaf2e9; color:#397153; }
+.career-review-heading h3 { font-size:18px; line-height:1.4; margin:8px 0 0; }
+.career-review-facts { display:grid; grid-template-columns:1fr 1fr; gap:16px; padding:18px; margin:0; border:1px solid #e0e8df; border-radius:14px; background:#f6f9f4; }
+.career-review-facts dt { display:flex; align-items:center; gap:6px; font-size:11px; color:#68796c; }
+.career-review-facts dd { margin:6px 0 0; font-size:14px; font-weight:600; overflow-wrap:anywhere; }
+.career-review-contribution h4 { font-size:12px; color:#66796d; margin:0 0 8px; }
+.career-review-contribution p { font-size:14px; line-height:1.65; margin:0; }
+.career-review-source { padding:12px 14px; border:1px solid #e2e8df; border-radius:12px; font-size:12px; }
+.career-review-source summary { display:flex; gap:8px; align-items:center; cursor:pointer; font-weight:600; }
+.career-review-source p { max-height:180px; overflow:auto; line-height:1.6; color:#69766a; margin:12px 0 0; white-space:pre-wrap; overflow-wrap:anywhere; }
+.career-review-actions { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; padding-top:14px; border-top:1px solid #e5eae3; }
+.career-review-actions button { font-size:12px; }
+@media(max-width:640px) { .document-analysis-status { grid-column:1; } .career-review-facts { grid-template-columns:1fr; } .career-review-actions button:last-child { width:100%; } }
+@media(min-width:651px) { .document-library-list .document-analysis-status { grid-row:2; } .document-library-list .claim-actions { grid-row:3; } }
+@media(max-width:650px) { .document-library-list .document-analysis-status { grid-column:1; grid-row:auto; } }
+.career-entry-dialog { width:min(650px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); border-radius:18px; }
+.career-entry-dialog > div:first-child { text-align:left; padding-right:16px; }
+@media(max-width:640px) { .career-entry-dialog { padding:20px; } }

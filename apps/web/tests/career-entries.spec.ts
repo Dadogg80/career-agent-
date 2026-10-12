@@ -31,6 +31,15 @@ test("career timeline confirms actual roles separately and editing resets confir
  await expect(panel.getByText("Start ikke oppgitt – Slutt ikke oppgitt",{exact:true})).toBeVisible();
  await panel.getByRole("button",{name:"Bekreft",exact:true}).click();
  dialog=page.getByRole("dialog");await expect(dialog.getByText("API developer",{exact:true})).toBeVisible();
+ await expect(dialog.getByText("Arbeidsgiver / organisasjon",{exact:true})).toBeVisible();
+ await expect(dialog.getByRole("button",{name:"Rediger først",exact:true})).toBeVisible();
+ await dialog.getByText("Se kildebeskrivelsen",{exact:true}).click();
+ await page.screenshot({path:"/tmp/career-confirmation-desktop.png"});
+ await page.setViewportSize({width:390,height:900});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await expect.poll(async()=>{const b=await dialog.boundingBox();return !!b && b.x>=15 && b.x+b.width<=375;}).toBe(true);
+ await page.screenshot({path:"/tmp/career-confirmation-mobile.png",animations:"disabled"});
+ await page.setViewportSize({width:1280,height:900});
  await dialog.getByRole("button",{name:"Ja, opplysningene er riktige",exact:true}).click();
  await expect(panel.getByText("Bekreftet",{exact:true})).toBeVisible();
  await panel.getByRole("button",{name:"Rediger",exact:true}).click();

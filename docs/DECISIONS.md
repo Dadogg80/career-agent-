@@ -273,3 +273,9 @@ Accepted under the approved incremental roadmap: use conservative explicit headi
 ## Coverage declarations and conservative numerical wording — 2026-10-12
 
 Accepted incremental checks: require full ordered section passage declarations on new AI responses; retained sessions keep immutable historical metadata. Validate numeric additions against original wording and referenced evidence, and retain original year-shaped values for classified history/education. Apply the same lexical rule to new ACCEPTED wording reviews; PENDING/REJECTED drafts stay saveable. These checks cannot verify semantics, units or factual truth. Do not present declared coverage or a passing numeric check as independent verification. No extra model calls, migration or model-default changes.
+
+## Saved library metadata and contained model choices — 2026-10-12
+
+Accepted: project source-specific metadata from the existing owned analysis/run records into the document list, with no extra provider calls or per-document full-run fetches. Prefer the latest saved result, using the run status for tied workflow/snapshot records; only completed non-partial processing earns the completed label. Counts include primary/additional source references and do not represent confirmed skills or exhaustive recall. Older results without model identities disclose unavailable identities. Existing changed-text reread/deletion invalidation applies.
+
+Keep shared model menus in normal card flow with bounded scrolling rather than absolute overlays clipped by enclosing cards. Analysis details use a fixed portal tooltip to avoid the same clipping problem; mouse/focus/touch access, Escape/blur/resize dismissal, visible-anchor scroll repositioning, offscreen dismissal and viewport bounds are preserved. Career confirmation reuses existing mutations and revision rules with clearer fact grouping and edit/cancel actions.

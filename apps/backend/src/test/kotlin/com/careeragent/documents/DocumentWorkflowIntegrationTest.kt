@@ -416,6 +416,34 @@ class DocumentWorkflowIntegrationTest {
         assertThat(state["analysis"]["suggestions"].map { it["skill"].asText() }).doesNotContain("C").contains("C++","C#")
         mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$.length()").value(2))
     }
+    @Test fun `document library exposes only owned saved source metadata and distinguishes partial processing`() {
+        val user=profile();val doc=upload(user);val untouched=upload(user,"Another unanalysed source document.")
+        val other=profile();val foreign=upload(other)
+        stub()
+        fun library(who:String)=json.readTree(mvc.perform(get("/api/profile/me/documents").with(caller(who))).andExpect(status().isOk).andExpect(header().string("Cache-Control","no-store")).andReturn().response.contentAsString)
+        assertThat(library(user).first { it["id"].asText()==doc }["analysis"].isNull).isTrue()
+        var run=next(user,post(user,path,body(listOf(doc))))
+        val partial=library(user).first { it["id"].asText()==doc }["analysis"]
+        assertThat(partial["status"].asText()).isEqualTo("PARTIAL")
+        assertThat(partial["collection"].asBoolean()).isTrue()
+        assertThat(partial["competencies"].asInt()).isEqualTo(run["analysis"]["suggestions"].size())
+        assertThat(partial["careerEntries"].asInt()).isEqualTo(1)
+        assertThat(partial.has("sources")).isFalse()
+        assertThat(partial.toString()).doesNotContain("Built APIs")
+        assertThat(library(user).map { it["id"].asText() }).doesNotContain(foreign)
+        assertThat(library(other).first()["analysis"].isNull).isTrue()
+        assertThat(library(user).first { it["id"].asText()==untouched }["analysis"].isNull).isTrue()
+        repeat(8) { if(run["status"].asText()!="COMPLETED") run=next(user,run) }
+        assertThat(run["status"].asText()).isEqualTo("COMPLETED")
+        val completed=library(user).first { it["id"].asText()==doc }["analysis"]
+        assertThat(completed["status"].asText()).isEqualTo("COMPLETED")
+        assertThat(completed["inputCharacters"].asInt()).isEqualTo(text.length)
+        // Existing rereading semantics invalidate analysis metadata with changed text.
+        val identity=com.careeragent.profile.application.VerifiedIdentity("https://example.test",user)
+        val repository= com.careeragent.documents.infrastructure.JdbcDocumentRepository(jdbc,json)
+        repository.replaceText(identity,UUID.fromString(doc),"Changed source content for rereading.","TEXT")
+        assertThat(library(user).first { it["id"].asText()==doc }["analysis"].isNull).isTrue()
+    }
     companion object {
         private val storage=Files.createTempDirectory("career-workflow-test-")
         @Container @JvmStatic val postgres=PostgreSQLContainer<Nothing>("postgres@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826")
