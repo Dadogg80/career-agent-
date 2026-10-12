@@ -391,3 +391,34 @@ test("document library distinguishes saved partial and completed analysis with a
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.screenshot({path:"/tmp/career-library-analysis-mobile.png"});expect(writes).toBe(0);
 });
+
+
+test("selected presentation sections persist across newer analysis without factual promotion or AI",async({page})=>{
+ await profile(page);let writes=0,aiCalls=0;let current=run();
+ let chosen:import("../lib/presentation").Presentation={locale:"nb",revision:0,sections:[]};
+ await page.route("**/api/profile/me/presentation**",r=>{
+  if(r.request().method()==="PUT"){
+   writes++;expect(r.request().postDataJSON()).toEqual({runId:current.id,runRevision:current.revision,index:0,revision:chosen.revision});expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf");
+   chosen={locale:"nb",revision:chosen.revision+1,sections:[{runId:current.id,runRevision:current.revision,index:0,item:current.analysis.profile[0],sources:{[id]:"cv.md"},provider:"Gemini",selections:[{provider:"Gemini",model:"gemini-3.5-flash-lite"}]}]};
+  }
+  return r.fulfill({json:chosen});
+ });
+ await page.route("**/api/profile/me/documents**",r=>{
+  if(r.request().method()!=="GET"){aiCalls++;return r.fulfill({status:503});}
+  if(r.request().url().includes("/workflow"))return r.fulfill({json:current});
+  return r.fulfill({json:r.request().url().endsWith(id)?{document:doc,text}:[doc]});
+ });
+ await open(page);const sheet=page.locator(".document-workspace-sheet");await sheet.getByRole("button",{name:"Profilsammendrag",exact:true}).click();
+ await sheet.getByRole("button",{name:"Bruk i min presentasjon",exact:true}).click();await expect(sheet.getByRole("button",{name:"Brukes i min presentasjon",exact:true})).toBeDisabled();expect(writes).toBe(1);
+ await sheet.getByRole("button",{name:"Lukk",exact:true}).click();await expect(page.locator(".selected-presentation")).toContainText(analysis.profile[0].text);
+ current={...run(),id:second,revision:4,analysis:{...analysis,profile:[{...analysis.profile[0],text:"New independently suggested wording."}]}};
+ await page.reload();await expect(page.locator(".selected-presentation")).toContainText(analysis.profile[0].text);await expect(page.locator(".candidate-presentation")).toContainText("New independently suggested wording.");
+ await page.getByRole("button",{name:"Analyser dokumentet",exact:true}).click();await sheet.getByRole("button",{name:"Profilsammendrag",exact:true}).click();await sheet.getByRole("button",{name:"Erstatt denne delen i presentasjonen",exact:true}).click();expect(writes).toBe(2);
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(aiCalls).toBe(0);
+});
+test("presentation selection proxy rejects anonymous requests and client-injected wording",async({request})=>{
+ const path="/api/profile/me/presentation",input={runId,runRevision:3,index:0,revision:0};
+ expect((await request.put(path,{data:input})).status()).toBe(403);
+ expect((await request.put(path,{data:{...input,text:"Injected"}})).status()).toBe(400);
+ expect((await request.put(path,{data:input,headers:{Origin:"https://foreign.example"}})).status()).toBe(403);
+});

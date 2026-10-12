@@ -234,3 +234,8 @@ Next priority from owner feedback: explicit individual profile-summary adoption 
 ## 2026-10-12 — CV tailoring readiness guidance
 
 Delivered: actionable CV-tailoring readiness explanations and direct navigation to update stale matching. Durable presentation-section adoption and generated tailored artifacts with independent final review remain subsequent slices.
+
+
+## 2026-10-12 — Selected presentation sections and Documents navigation
+
+Delivered: durable explicit per-section presentation selection with saved source snapshots, language separation and owned revision checks. Next priority: dedicated Documents page using the existing components/endpoints; update navigation, onboarding and all repair/source links. Then continue standard tailored DOCX/PDF generation and independent final review.

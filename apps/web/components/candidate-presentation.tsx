@@ -1,5 +1,6 @@
 "use client";
 
+import { SelectedPresentation } from "./presentation-selection";
 import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowUpRight, BookOpenCheck, BriefcaseBusiness, ChevronDown, FileText, GraduationCap, Heart, Lightbulb, Pencil, Save, ShieldAlert, Sparkles, UserRound, X } from "lucide-react";
@@ -24,20 +25,20 @@ export function CandidatePresentation({locale,csrfToken,onAuthRequired,onReviewD
   if(!response.ok)throw new Error(value&&typeof value==="object"&&"code" in value&&typeof value.code==="string"?value.code:"DOCUMENT_UNAVAILABLE");
   if(!isDocumentRun(value))throw new Error("DOCUMENT_UNAVAILABLE");return value;
  },onSuccess:async run=>{cache.setQueryData(["private-document-profile"],run);cache.setQueryData(["private-document-workflow",run.scope],run);await cache.invalidateQueries({queryKey:["private-document-profile"]});}});
- if(!saved.data)return null;
+ if(!saved.data)return <SelectedPresentation locale={locale}/>;
  const run=saved.data,analysis=run.analysis;
  const names=new Map(analysis.documents.map(d=>[d.documentId,d.originalName]));
  const icons={PROFILE:UserRound,CORE_SKILLS:Lightbulb,KEY_INFORMATION:FileText,EXPERIENCE:BriefcaseBusiness,EDUCATION:GraduationCap,INTERESTS:Heart};
- return <Card className="candidate-presentation"><CardHeader className="candidate-presentation-header">
-  <div className="candidate-presentation-title"><span className="candidate-presentation-icon"><Sparkles size={19}/></span><div><div className="candidate-presentation-kicker">{nb?"Utkast fra dokumentanalyse":"Draft from document analysis"}</div><div className="document-results-heading"><h3>{nb?"Din presentasjon":"Your presentation"}</h3><Badge variant="outline">{nb?"AI-skrevet · ikke bekreftet":"AI-written · not confirmed"}</Badge></div></div></div>
-  <p className="candidate-presentation-explainer">{nb?"Du har ikke skrevet inn denne teksten. AI laget den fra tekstutdrag i den siste godkjente dokumentanalysen. Sitater viser grunnlaget, men bekrefter ikke at AI-formuleringen er riktig.":"You did not enter this text. AI drafted it from excerpts in the latest approved document analysis. Citations show its sources, but do not confirm that the AI wording is accurate."}</p>
+ return <><SelectedPresentation locale={locale}/><Card className="candidate-presentation"><CardHeader className="candidate-presentation-header">
+  <div className="candidate-presentation-title"><span className="candidate-presentation-icon"><Sparkles size={19}/></span><div><div className="candidate-presentation-kicker">{nb?"Utkast fra dokumentanalyse":"Draft from document analysis"}</div><div className="document-results-heading"><h3>{nb?"Nyeste tekstforslag":"Latest wording suggestions"}</h3><Badge variant="outline">{nb?"AI-skrevet · ikke bekreftet":"AI-written · not confirmed"}</Badge></div></div></div>
+  <p className="candidate-presentation-explainer">{nb?"Dette er forslag fra den siste dokumentanalysen. Rediger og lagre utkast, og velg delene du vil bruke via dokumentene. Nye forslag erstatter ikke den valgte presentasjonen. Sitater viser grunnlaget, men bekrefter ikke AI-formuleringen.":"These are suggestions from the latest document analysis. Edit and save drafts, then select sections through Documents. New suggestions do not replace your selected presentation. Citations show sources, not confirmation of AI wording."}</p>
   <div className="candidate-presentation-actions"><AiIdentity selections={analysis.aiSelections} provider={analysis.aiSelections?.length?undefined:analysis.provider} locale={locale}/><Button variant="outline" size="sm" onClick={onReviewDocuments}><BookOpenCheck size={15}/>{nb?"Gå til dokumentene":"Go to documents"}<ArrowUpRight size={14}/></Button></div>
  </CardHeader><CardContent>
   {run.status!=="COMPLETED" && <p className="hint">{nb?"Analysen pågår eller er satt på pause. Dette er det som er lagret så langt.":"Analysis is in progress or paused. This is what is saved so far."}</p>}
   <div className="candidate-section-grid">{(analysis.profile??[]).map((item,index)=>{const Icon=icons[item.kind as keyof typeof icons]??FileText;return <CandidateSection key={`${run.id}-${index}-${item.kind}`} revision={run.revision} index={index} label={profileLabels[locale][item.kind as keyof typeof profileLabels.nb]} text={item.text} quote={item.quote} source={names.get(item.documentId)??""} additionalSources={(item.additionalSources??[]).map(source=>({quote:source.quote,source:names.get(source.documentId)??""}))} icon={<Icon size={17}/>} locale={locale} saving={write.isPending} onSave={text=>write.mutate({runId:run.id,revision:run.revision,index,text})}/>;})}</div>
   {!!write.error&&<p className="candidate-save-error" role="alert">{nb?"Kunne ikke lagre teksten. Analysen eller kilden kan ha blitt endret. Last inn siden og prøv igjen.":"Could not save the wording. The analysis or source may have changed. Reload the page and try again."}</p>}
   <p className="candidate-presentation-footnote"><ShieldAlert size={15}/>{analysis.documents.length} {nb?"dokumenter analysert. Dette er redigerbar AI-tekst, ikke bekreftede profilfakta. Kompetanse og historikk behandles separat med egen status og kilde.":"documents analyzed. This is editable AI wording, not confirmed profile facts. Competencies and career history are managed separately with their own status and evidence."}</p>
- </CardContent></Card>;
+ </CardContent></Card></>;
 }
 
 function CandidateSection({revision,index,label,text,quote,source,additionalSources,icon,locale,saving,onSave}:{revision:number;index:number;label:string;text:string;quote:string;source:string;additionalSources:{source:string;quote:string}[];icon:ReactNode;locale:Locale;saving:boolean;onSave:(text:string)=>void}) {

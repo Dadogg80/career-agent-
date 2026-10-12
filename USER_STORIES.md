@@ -542,3 +542,8 @@ As a candidate I can distinguish declared full passage review from incomplete/le
 ## 2026-10-12 — CV tailoring readiness guidance
 
 As a candidate blocked from CV tailoring, I can see exactly which prerequisites are unmet and navigate to the existing repair flow without an unsolicited AI call. Once current automatic matching, readable CV and confirmed evidence are available, the consent checkbox becomes available without being preselected.
+
+
+## 2026-10-12 — Selected presentation sections and Documents navigation
+
+As a candidate, I can select individual saved document summaries for my presentation without a later analysis replacing my choices. I explicitly replace each section; exact analysis/presentation revisions reject stale writes. As a candidate, I want uploads and document analysis on a dedicated Documents page while my profile focuses on presentation, competencies and history (next slice).

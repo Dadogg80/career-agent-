@@ -564,3 +564,8 @@ Owner feedback also refreshed application preparation: compact icon-led evidence
 ## 2026-10-12 — CV tailoring readiness guidance
 
 CV tailoring consent now explains each active prerequisite beside the checkbox. An outdated or manual-evidence match offers Update job match, opening/focusing the existing match review without starting AI. Missing CV, unreadable source, missing confirmed competencies, unsaved reviews and unavailable AI configuration have specific recovery guidance. Open clarification questions remain non-blocking; model-bound consent still requires an explicit user choice.
+
+
+## 2026-10-12 — Selected presentation sections and Documents navigation
+
+Completed document summaries offer Use in my presentation (or Replace this presentation section). Saving an edited summary remains a draft update until the user explicitly selects it. The selected presentation stores one source-backed wording snapshot per kind and language, survives newer analyses/reloads, and shows saved source excerpts/model identity. Selection does not confirm competencies or history. Original deletion retains selected wording and excerpts as disclosed references. Next: move the existing upload/library/OCR/analysis workflow to a dedicated Documents page, preserving profile/matching/tailoring links and storage behavior.
