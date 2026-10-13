@@ -351,3 +351,7 @@ New v3 section plans declare every ordered source passage. Partial/duplicate/reo
 ### Immutable reviewed-text CV drafts
 
 ADR 0041 adds an owned CV-library wording draft from persisted accepted changes, requiring resolved decisions, exact current source/match/evidence and session revision. Accepted substitutions preserve other source text and do not confirm its facts. Source hash and full evidence references remain immutable; repeated creation is idempotent. Template reviewed-text-v1 is deliberately not exportable through the legacy standard-v1 approval flow. Actual file generation, independent document review and CV_READY remain pending.
+
+## DOCX paragraph and broader wording coverage — 2026-10-13
+
+ADR 0044 preserves Word paragraph boundaries on new extraction/explicit rereading and supports up to 40 proposals/reviews consistently. Original saved sources/indexes remain unchanged. The approved call explicitly considers every profile paragraph, skills group and work-entry introduction/contribution; invalid proposals leave section review unfinished. This is structural/bounded-output coverage, not guaranteed semantic completeness. Contact-source recall, match repeatability, finer work-entry review and the component-wide design audit remain prioritized in JOURNEY_QUALITY_REVIEW.md.

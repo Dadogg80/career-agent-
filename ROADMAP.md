@@ -259,3 +259,8 @@ Delivered locally: one chosen presentation using the previous suggestion-card de
 ## 2026-10-12 — Reviewed CV file drafts
 
 Delivered for review: standard DOCX/PDF draft generation from immutable reviewed wording, independent actual-file character readback, revision/source-guarded artifact persistence and draft downloads (ADR 0043). Next: independent semantic, structural and visual review of both actual files and explicit readiness approval. Supported Falck/template fidelity remains later work. Character preservation alone is not CV_READY.
+
+
+## 2026-10-13 — Joined journey quality and CV coverage
+
+Prioritize joined journey quality before final-file readiness: DOCX paragraph boundaries and 40-proposal coverage (ADR 0044), followed by contact/source completeness, frozen-input match repeatability and a component-wide styling/accessibility audit. See docs/JOURNEY_QUALITY_REVIEW.md for acceptance criteria and pending work.

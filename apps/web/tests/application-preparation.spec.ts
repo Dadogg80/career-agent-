@@ -364,3 +364,19 @@ test("unreadable CV explains consent blocker and open questions do not block sup
  await fixtures(page);await page.route(`**/api/profile/me/jobs/${jobId}/match`,r=>r.fulfill({json:{...match,assessments:[{requirementIndex:0,classification:"CLARIFY",reason:"More context is needed.",evidence:[],question:"Which APIs?"}]}}));
  await page.reload();await expect(page.getByRole("checkbox",{name:"I approve sending this evidence to Gemini for CV suggestions",exact:true})).toBeEnabled();expect(calls).toBe(0);
 });
+
+test("whole CV proposals exceed twelve and old merged DOCX source gets actionable guidance",async({page})=>{
+ const {hasMergedCvSections}=await import("../lib/cv-tailoring");
+ expect(hasMergedCvSections("Fictional person\nNØKKELKVALIFIKASJONER\nFirst paragraph\nKJERNEKOMPETANSE\nSkills")).toBe(true);
+ expect(hasMergedCvSections("Fictional person\n\nNØKKELKVALIFIKASJONER\n\nFirst paragraph\n\nKJERNEKOMPETANSE\n\nSkills")).toBe(false);
+ const proposals=Array.from({length:40},(_,paragraphIndex)=>({paragraphIndex,oldText:`Original ${paragraphIndex}`,newText:`Supported wording ${paragraphIndex}`,reason:"Relevant confirmed contribution",claimIds:[claimId],requirementIndexes:[0]}));
+ expect(isTailoringResult({documentId,matchId,...gemini,proposals,omittedItems:0})).toBe(true);
+ expect(isTailoringResult({documentId,matchId,...gemini,proposals:[...proposals,{...proposals[0],paragraphIndex:40}],omittedItems:0})).toBe(false);
+ const reviews=proposals.slice(0,13).map(p=>({paragraphIndex:p.paragraphIndex,text:p.newText,decision:"ACCEPTED"}));
+ expect((await page.request.put(`/api/profile/me/jobs/${jobId}/tailoring/session`,{data:{sessionId:documentId,revision:1,reviews}})).status()).toBe(403);
+ expect((await page.request.put(`/api/profile/me/jobs/${jobId}/tailoring/session`,{data:{sessionId:documentId,revision:1,reviews:Array.from({length:41},(_,paragraphIndex)=>({...reviews[0],paragraphIndex}))}})).status()).toBe(400);
+ await fixtures(page);await page.route(`**/api/profile/me/documents/${documentId}`,r=>r.fulfill({json:{document:doc,text:"Fictional person\nNØKKELKVALIFIKASJONER\nFirst profile paragraph\nKJERNEKOMPETANSE\nKotlin APIs"}}));
+ await page.goto(`/jobs/${jobId}/apply`);
+ await expect(page.getByText("CV-avsnittene kan være slått sammen",{exact:true})).toBeVisible();
+ await expect(page.getByRole("link",{name:"Åpne dokumentene",exact:true})).toHaveAttribute("href","/documents");
+});

@@ -322,3 +322,8 @@ Use one profile presentation, preserving explicit selection as the source of its
 ## 2026-10-12 — Reviewed CV file drafts
 
 ADR 0043 extends reviewed-text drafts with immutable standard DOCX/PDF previews. Mechanical character readback must pass before artifacts are stored; source/revision guards are rechecked under the owner lock. DRAFT remains distinct from final document approval. No migration or provider call is needed.
+
+
+## 2026-10-13 — Joined journey quality and CV coverage
+
+Accept ADR 0044: preserve DOCX paragraph boundaries for new extraction/explicit rereading and consistently support 40 bounded wording proposals. Never migrate stored source indexes silently. Invalid proposals cannot establish complete section review. Contacts/match-repeatability/component design audit continue under docs/JOURNEY_QUALITY_REVIEW.md.

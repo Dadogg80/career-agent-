@@ -589,3 +589,8 @@ The profile now has one Your presentation card using the prior latest-suggestion
 ## 2026-10-12 — Reviewed CV file drafts
 
 From the reviewed CV draft in /cv, explicitly generate DOCX and PDF file drafts. Download each for inspection; both retain DRAFT status. The system reads both files back to check ordered character preservation. Standard layout is used; final factual, structural and visual checks remain required. Stale source evidence blocks generation; historical stored drafts remain downloadable.
+
+
+## 2026-10-13 — Joined journey quality and CV coverage
+
+New DOCX uploads and explicit Read original again preserve separate Word paragraphs for CV tailoring. Older merged CV text gets guidance to reread the original in Documents; exact-source changes can require an updated match/new wording analysis. Prior saved drafts and decisions remain readable. Tailoring accepts up to 40 evidence-linked proposals, with unresolved section review when output cannot be validated.

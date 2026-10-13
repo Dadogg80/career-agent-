@@ -32,7 +32,7 @@ class CvTailoringController(private val services: ObjectProvider<CvTailoringSess
         val revision = input["revision"] as Number
         if (revision.toLong() < 1 || revision.toDouble() != revision.toLong().toDouble()) throw CvFailure("CV_INVALID",400)
         val reviews = input["reviews"] as List<*>
-        if (reviews.size > 12 || reviews.any { it !is Map<*,*> || it.keys != setOf("paragraphIndex","text","decision") || it["paragraphIndex"] !is Int || it["text"] !is String || it["decision"] !in WordingDecision.entries.map { d -> d.name } }) throw CvFailure("CV_INVALID",400)
+        if (reviews.size > CvTailoringLimits.PROPOSALS || reviews.any { it !is Map<*,*> || it.keys != setOf("paragraphIndex","text","decision") || it["paragraphIndex"] !is Int || it["text"] !is String || it["decision"] !in WordingDecision.entries.map { d -> d.name } }) throw CvFailure("CV_INVALID",400)
         val request = try { mapper.convertValue(input,TailoringReviewRequest::class.java) } catch (_: Exception) { throw CvFailure("CV_INVALID",400) }
         return ResponseEntity.ok().header("Cache-Control","no-store").body((services.ifAvailable ?: throw CvFailure("PROFILE_DISABLED",503)).review(identity,id(jobId),request))
     }

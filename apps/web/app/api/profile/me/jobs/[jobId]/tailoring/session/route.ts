@@ -1,6 +1,7 @@
 import { localRequest,privateResponse,privateBase,sessionHeaders,smallJson,mappedPrivateError } from "../../../../../../../../lib/private-api";
 import { claimId } from "../../../../../../../../lib/claims";
 import { isTailoringSession } from "../../../../../../../../lib/cv-tailoring-session";
+import { MAX_CV_PROPOSALS } from "../../../../../../../../lib/cv-tailoring";
 type Context={params:Promise<{jobId:string}>};
 async function forward(request:Request,context:Context,method:"GET"|"PUT") {
  if(!localRequest(request))return privateResponse({code:"ACCESS_DENIED"},undefined,403);
@@ -9,7 +10,7 @@ async function forward(request:Request,context:Context,method:"GET"|"PUT") {
  let body:string|undefined;
  if(method==="PUT")try {
   const v=await smallJson(request,60000) as Record<string,unknown>;
-  if(!v||Object.keys(v).sort().join(",")!=="reviews,revision,sessionId"||typeof v.sessionId!=="string"||!claimId.test(v.sessionId)||!Number.isSafeInteger(v.revision)||Number(v.revision)<1||!Array.isArray(v.reviews)||v.reviews.length>12||v.reviews.some(r=>!r||Object.keys(r).sort().join(",")!=="decision,paragraphIndex,text"||!Number.isInteger(r.paragraphIndex)||r.paragraphIndex<0||r.paragraphIndex>=500||typeof r.text!=="string"||!r.text.trim()||r.text.length>4000||!["PENDING","ACCEPTED","REJECTED"].includes(r.decision)))throw new Error("Invalid input");
+  if(!v||Object.keys(v).sort().join(",")!=="reviews,revision,sessionId"||typeof v.sessionId!=="string"||!claimId.test(v.sessionId)||!Number.isSafeInteger(v.revision)||Number(v.revision)<1||!Array.isArray(v.reviews)||v.reviews.length>MAX_CV_PROPOSALS||v.reviews.some(r=>!r||Object.keys(r).sort().join(",")!=="decision,paragraphIndex,text"||!Number.isInteger(r.paragraphIndex)||r.paragraphIndex<0||r.paragraphIndex>=500||typeof r.text!=="string"||!r.text.trim()||r.text.length>4000||!["PENDING","ACCEPTED","REJECTED"].includes(r.decision)))throw new Error("Invalid input");
   body=JSON.stringify(v);
  }catch{return privateResponse({code:"CV_INVALID"},undefined,400);}
  try {
