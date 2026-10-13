@@ -243,7 +243,7 @@ Delivered: durable explicit per-section presentation selection with saved source
 
 ## 2026-10-12 — Project history extraction correction
 
-Delivered: project-specific extraction instructions, unknown-organization support across history parsing/storage/review, and dated experience coverage that requires actual history evidence. This is a targeted correction, not guaranteed project recall. Next: dedicated Documents page, preserving reviewed projects and sources, followed by tailored document generation/review.
+Delivered: project-specific extraction instructions, unknown-organization support across history parsing/storage/review, and dated experience coverage that requires actual history evidence. The dedicated Documents page and reviewed standard file drafts are now implemented. The 2026-10-13 quality continuation aligns per-item evidence limits with the provider schema and aggregates reworded dated history without changing personal reviews. This is a targeted correction, not guaranteed project recall. Next: measure project capture on a newly approved analysis; preserve advertisement contact metadata and improve criterion quality; recover nontechnical candidate facts such as languages; split PDF CV text into meaningful editable sections/passages before further tailoring quality work.
 
 
 ## 2026-10-12 — Dedicated library and retained profile review
