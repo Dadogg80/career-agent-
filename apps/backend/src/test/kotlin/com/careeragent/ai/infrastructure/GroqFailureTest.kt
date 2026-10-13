@@ -1,5 +1,7 @@
 package com.careeragent.ai.infrastructure
 
+import com.careeragent.ai.application.AiTask
+
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -13,6 +15,8 @@ class GroqFailureTest {
         val profile=model.requestBody("static","dynamic",emptyMap(),com.careeragent.ai.application.AiTask.PROFILE_SUMMARY)
         assertThat(profile["model"]).isEqualTo("qwen/qwen3.8-27b")
         assertThat(profile["max_completion_tokens"]).isEqualTo(1800)
+        assertThat(model.requestBody("rules","data",emptyMap(),AiTask.CV_TAILORING)["max_completion_tokens"]).isEqualTo(16384)
+        assertThat(model.requestBody("rules","data",emptyMap(),AiTask.JOB_ANALYSIS)["max_completion_tokens"]).isEqualTo(3500)
         assertThat(profile["reasoning_format"]).isEqualTo("hidden")
         assertThat(model.requestBody("static","dynamic",emptyMap(),com.careeragent.ai.application.AiTask.JOB_ANALYSIS)["model"]).isEqualTo("openai/gpt-oss-20b")
     }

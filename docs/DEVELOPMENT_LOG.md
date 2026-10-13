@@ -707,3 +707,8 @@ Corrected DOCX paragraph boundaries, broadened bounded wording/review coverage a
 ## 2026-10-13 — CV passage review transparency
 
 Added responsive expandable source-passage review to CV sections. Exact source/proposal identity remains unchanged; heading-only units are excluded from body-passage counts. Focused browser checks cover three profile paragraphs with only one proposal, honest unresolved labels and zero provider calls; production web build/TypeScript and two focused browser checks passed. Mobile screenshot inspected and badge/text wrapping corrected. No backend change or live provider calls; full Foundation remains the publication gate.
+
+
+## 2026-10-13 — Individual CV passage assessments
+
+Implemented individual AI passage reasoning, strict proposal/evidence consistency, incomplete section recovery, durable JSON snapshots and responsive display. Extended CV-only output space for the fuller response, preserving all other task limits. Validation: full backend suite passed (267 passed, 5 skipped), executable JAR and production web/TypeScript build passed. All 31 focused CV/preparation browser cases passed; three passage/legacy cases passed again after final display refinements. Tests cover missing/duplicate/foreign/contradictory plans, exact proposal proof, immutable persistence and unchanged task limits. No live provider calls. Full Foundation remains the publication gate.

@@ -577,3 +577,8 @@ As a user, my separate profile paragraphs, competency table cells and work-descr
 ## 2026-10-13 — CV passage review transparency
 
 As a user, I can see all profile/skills/work-section passages, including those with no own proposal, so I can spot missing individual treatment before approving wording. I can compare original text and original AI suggestions on mobile without extra calls or factual promotion.
+
+
+## 2026-10-13 — Individual CV passage assessments
+
+As a user, I can understand why each CV passage is proposed changed, retained or left for review, instead of assuming proposal absence means review is complete. Unsupported/duplicate/contradictory AI declarations cannot conceal incomplete work or become confirmed profile facts.

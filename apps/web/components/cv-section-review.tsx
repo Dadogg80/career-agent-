@@ -26,7 +26,7 @@ export function CvSectionReview({result,text,claims,quotes,locale,selected,onSel
  {plan.reviewedParagraphIndexes!=null&&<p className="hint">{nb?"AI oppgir gjennomgang av":"AI declares review of"} {plan.reviewedParagraphIndexes.length}/{section.paragraphIndexes.length} {nb?"tekstpassasjer. Dette er ikke en garanti for kvalitet eller fullstendighet.":"text passages. This does not guarantee quality or completeness."}</p>}
  {plan.assessed&&plan.reviewedParagraphIndexes==null&&<p className="hint">{nb?"Avsnittsdekning ble ikke registrert i denne eldre vurderingen.":"Paragraph coverage was not recorded in this older assessment."}</p>}
  <p>{plan.reason}</p>{section.kind==="UNCLASSIFIED"&&<p className="hint">{nb?"Teksten har ingen entydig seksjonsstruktur. Originalen er bevart.":"The text has no unambiguous section structure. Original wording is retained."}</p>}
- <CvPassageReview section={section} plan={plan} paragraphs={paragraphs} proposals={result.proposals} locale={locale}/>
+ <CvPassageReview section={section} plan={plan} paragraphs={paragraphs} proposals={result.proposals} passagePlans={result.passagePlans} locale={locale}/>
  <details className="source-evidence"><summary>{nb?"Se originaltekst og grunnlag":"Inspect original text and evidence"}</summary><pre tabIndex={0}>{section.paragraphIndexes.map(i=>paragraphs[i]).join("\n\n")}</pre>{plan.requirementIndexes.map(i=><blockquote key={i}>{quotes[i]}</blockquote>)}{plan.claimIds.map(id=>{const claim=claims.find(c=>c.id===id);return <p key={id}><strong>{claim?.skill}</strong> · {claim?.statement} · {claim?.context}</p>;})}</details>
  </div>}
  </CardContent></Card>;

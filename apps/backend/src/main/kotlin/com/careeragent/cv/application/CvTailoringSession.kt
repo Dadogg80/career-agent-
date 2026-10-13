@@ -12,7 +12,7 @@ import java.util.UUID
 enum class WordingDecision { PENDING, ACCEPTED, REJECTED }
 data class WordingReview(val paragraphIndex: Int, val text: String, val decision: WordingDecision)
 data class TailoringSnapshot(val result: CvTailoringResult, val text: String, val claims: List<MatchClaim>,
-    val quotes: List<String>, val locale: String, val promptVersion: String = "cv-section-wording-v4")
+    val quotes: List<String>, val locale: String, val promptVersion: String = "cv-section-wording-v5")
 data class CvTailoringSession(val id: UUID, val jobId: UUID, val revision: Long, val snapshot: TailoringSnapshot,
     val reviews: List<WordingReview>, val createdAt: OffsetDateTime, val stale: Boolean = false)
 data class TailoringReviewRequest(val sessionId: UUID, val revision: Long, val reviews: List<WordingReview>)

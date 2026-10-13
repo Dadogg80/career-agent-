@@ -24,7 +24,7 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
         "contents" to listOf(mapOf("role" to "user", "parts" to listOf(mapOf("text" to user)))),
         "generationConfig" to mapOf("responseMimeType" to "application/json", "responseJsonSchema" to schema,
             "thinkingConfig" to mapOf("thinkingLevel" to "LOW"),
-            "maxOutputTokens" to if (task == AiTask.PROFILE_SUMMARY) 4096 else 8192))
+            "maxOutputTokens" to when(task) { AiTask.PROFILE_SUMMARY -> 4096; AiTask.CV_TAILORING -> 16384; else -> 8192 }))
 
     internal fun interactionsRequestBody(system: String, user: String, schema: Map<String, Any>, task: AiTask): Map<String, Any> = mapOf(
         "model" to "gemini-3.8-flash",
@@ -33,7 +33,7 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
         "response_format" to mapOf("type" to "text", "mime_type" to "application/json", "schema" to schema),
         "generation_config" to mapOf(
             "thinking_level" to "low",
-            "max_output_tokens" to if (task == AiTask.PROFILE_SUMMARY) 4096 else 8192,
+            "max_output_tokens" to when(task) { AiTask.PROFILE_SUMMARY -> 4096; AiTask.CV_TAILORING -> 16384; else -> 8192 },
         ),
     )
 

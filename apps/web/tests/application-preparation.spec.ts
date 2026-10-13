@@ -402,3 +402,23 @@ test("paragraph ledger shows all profile paragraphs without claiming individual 
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await ledger.screenshot({path:"/tmp/cv-passage-review-mobile.png"});
 });
+
+test("individual passage assessments distinguish keep from unfinished and validate their exact evidence",async({page})=>{
+ await fixtures(page);const sessionId="55555555-5555-4555-8555-555555555555";
+ const source="Nøkkelkvalifikasjoner\n\nFirst profile paragraph.\n\nSecond domain paragraph.\n\nThird mentoring paragraph.";
+ const section={id:"cv-1234567890abcdef-0",kind:"PROFILE",heading:"Nøkkelkvalifikasjoner",paragraphIndexes:[0,1,2,3]};
+ const proposal={...result.proposals[0],oldText:"First profile paragraph."};
+ const passagePlans=[{paragraphIndex:0,action:"KEEP_UNCHANGED",reason:"Behold overskriften.",claimIds:[],requirementIndexes:[],assessed:true},{paragraphIndex:1,action:"PROPOSE_CHANGES",reason:"Synliggjør dokumentert API-arbeid.",claimIds:[claimId],requirementIndexes:[0],assessed:true},{paragraphIndex:2,action:"KEEP_UNCHANGED",reason:"Domenebeskrivelsen er relevant og tydelig allerede.",claimIds:[],requirementIndexes:[],assessed:true},{paragraphIndex:3,action:"NEEDS_REVIEW",reason:"Ingen gyldig egen vurdering ble levert.",claimIds:[],requirementIndexes:[],assessed:false}];
+ const structured={...result,sessionId,proposals:[proposal],sections:[section],sectionPlans:[{sectionId:section.id,action:"NEEDS_REVIEW",priority:"LOW",reason:"Ett avsnitt trenger gjennomgang.",claimIds:[],requirementIndexes:[],assessed:false}],passagePlans};
+ expect(isTailoringResult(structured)).toBe(true);
+ expect(isTailoringResult({...structured,passagePlans:passagePlans.slice(0,3)})).toBe(false);
+ expect(isTailoringResult({...structured,passagePlans:passagePlans.map((p,i)=>i===1?{...p,claimIds:[]}:p)})).toBe(false);
+ expect(isTailoringResult({...structured,passagePlans:passagePlans.map((p,i)=>i===1?{...p,action:"KEEP_UNCHANGED"}:p)})).toBe(false);
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>r.fulfill({json:{id:sessionId,jobId,revision:1,createdAt:time,stale:false,snapshot:{result:structured,text:source,claims:match.claims,quotes:job.content.requirements.map(r=>r.quote),locale:"nb",promptVersion:"cv-section-wording-v5"},reviews:[]}}));
+ await page.route(`**/api/profile/me/documents/${documentId}`,r=>r.fulfill({json:{document:doc,text:source}}));
+ await page.goto(`/jobs/${jobId}/apply`);await page.locator(".cv-section-review").getByRole("button",{name:/Nøkkelkvalifikasjoner/}).click();
+ const ledger=page.getByRole("region",{name:"Gjennomgang av avsnitt"});
+ await expect(ledger.getByText("AI anbefaler å beholde",{exact:true})).toBeVisible();await ledger.locator("summary").nth(1).click();await expect(ledger.getByText(passagePlans[2].reason,{exact:true})).toBeVisible();
+ await expect(ledger.getByText("Må gjennomgås",{exact:true})).toBeVisible();
+ await page.reload();await page.locator(".cv-section-review").getByRole("button",{name:/Nøkkelkvalifikasjoner/}).click();await expect(ledger.getByText("AI anbefaler å beholde",{exact:true})).toBeVisible();
+});

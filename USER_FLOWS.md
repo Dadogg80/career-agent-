@@ -599,3 +599,8 @@ New DOCX uploads and explicit Read original again preserve separate Word paragra
 ## 2026-10-13 — CV passage review transparency
 
 Selecting a CV section now exposes every non-heading source passage in a compact expandable ledger. Compare original source with the original AI proposal and reason. Approval, edits and durable decisions remain in the existing proposal cards. A section keep recommendation is labelled as a section recommendation; passages without a proposal do not acquire an invented individual assessment.
+
+
+## 2026-10-13 — Individual CV passage assessments
+
+New CV tailoring runs supply individual AI reasons for each source paragraph, skills group and work contribution. The passage overview distinguishes AI keep recommendations from missing/unfinished assessment and shows the number of own reasons received. Valid wording proposals remain reviewable even if other passages are unfinished. Existing saved analyses keep their original section-only behavior; run new tailoring to obtain new assessment data. User acceptance and profile confirmation remain separate.

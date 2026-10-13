@@ -332,3 +332,8 @@ Accept ADR 0044: preserve DOCX paragraph boundaries for new extraction/explicit 
 ## 2026-10-13 — CV passage review transparency
 
 Reuse existing source-bound section plans/proposals for a read-only passage ledger. Never infer individual keep/completed review from a whole-section plan or proposal absence. Show original AI wording separately from the existing user-edited/approved proposal cards. No new API, AI call or persistence fields.
+
+
+## 2026-10-13 — Individual CV passage assessments
+
+Accept ADR 0045: validate and persist optional source-bound individual passage plans in the existing approved call; invalidate complete section declarations if any unit is incomplete. Preserve legacy snapshots and separate AI reasoning from user acceptance. CV-only output ceilings become 16,384 tokens for Groq/Gemini; no additional calls or global model/default changes.

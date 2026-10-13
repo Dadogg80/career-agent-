@@ -161,6 +161,17 @@ class CvTailoringSessionIntegrationTest {
         mvc.perform(get("/api/profile/me/cvs/$id").with(caller(f.user))).andExpect(status().isOk).andExpect(jsonPath("$.stale").value(true)).andExpect(jsonPath("$.content.reviewedSource.text").value("Fictional developer\n\nDeveloped APIs using Kotlin"))
         verifyNoInteractions(ai)
     }
+    @Test fun `individual passage reasons persist with source indexes and do not confirm facts`() {
+        val f=fixture();val sections=CvSections.identify(f.snapshot.text,CvReviewedText.paragraphs(f.snapshot.text))
+        val plans=listOf(CvPassagePlan(0,CvSectionAction.KEEP_UNCHANGED,"Identity retained",emptyList(),emptyList()),CvPassagePlan(1,CvSectionAction.PROPOSE_CHANGES,"Clarifies APIs",listOf(f.claim),listOf(0)))
+        val snapshot=f.snapshot.copy(result=f.snapshot.result.copy(sections=sections,sectionPlans=listOf(CvSectionPlan(sections[0].id,CvSectionAction.PROPOSE_CHANGES,CvSectionPriority.HIGH,"Relevant APIs",listOf(f.claim),listOf(0),true,listOf(0,1))),passagePlans=plans))
+        val session=repository.create(VerifiedIdentity(issuer,f.user),f.job,snapshot)
+        mvc.perform(get("${f.path}/session").with(caller(f.user))).andExpect(status().isOk).andExpect(jsonPath("$.snapshot.result.passagePlans.length()").value(2)).andExpect(jsonPath("$.snapshot.result.passagePlans[1].reason").value("Clarifies APIs"))
+        assertEquals(plans,repository.latest(VerifiedIdentity(issuer,f.user),f.job)!!.snapshot.result.passagePlans)
+        mvc.perform(review(f,session)).andExpect(status().isOk)
+        assertEquals(2L,jdbc.queryForObject("SELECT revision FROM competency_claim WHERE id=?",Long::class.java,f.claim))
+        verifyNoInteractions(ai)
+    }
     companion object {
         @Container @JvmStatic val postgres=PostgreSQLContainer<Nothing>("postgres@sha256:3645570cccdfa447589da9f57dd740faa29b30938e861289a5574b6ca6b03826")
         @DynamicPropertySource @JvmStatic fun properties(registry:DynamicPropertyRegistry){registry.add("spring.datasource.url",postgres::getJdbcUrl);registry.add("spring.datasource.username",postgres::getUsername);registry.add("spring.datasource.password",postgres::getPassword)}

@@ -355,3 +355,7 @@ ADR 0041 adds an owned CV-library wording draft from persisted accepted changes,
 ## DOCX paragraph and broader wording coverage — 2026-10-13
 
 ADR 0044 preserves Word paragraph boundaries on new extraction/explicit rereading and supports up to 40 proposals/reviews consistently. Original saved sources/indexes remain unchanged. The approved call explicitly considers every profile paragraph, skills group and work-entry introduction/contribution; invalid proposals leave section review unfinished. This is structural/bounded-output coverage, not guaranteed semantic completeness. Contact-source recall, match repeatability, finer work-entry review and the component-wide design audit remain prioritized in JOURNEY_QUALITY_REVIEW.md.
+
+## Individual passage reasoning — 2026-10-13
+
+ADR 0045 introduces bounded per-source-unit keep/change/review reasons in the approved call. Exact source and evidence validation prevent missing/contradictory plans from implying completion; this does not establish semantic truth or CV_READY. Saved legacy wording sessions remain unchanged.

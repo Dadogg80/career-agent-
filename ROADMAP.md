@@ -269,3 +269,8 @@ Prioritize joined journey quality before final-file readiness: DOCX paragraph bo
 ## 2026-10-13 — CV passage review transparency
 
 Delivered for review: source-passage ledger within selected CV sections, with exact original wording, original proposal/reason and explicit missing individual-suggestion status. This improves review transparency; finer AI per-entry/per-passage judgments, advertisement contact recall, matching repeatability and the component-wide audit remain pending.
+
+
+## 2026-10-13 — Individual CV passage assessments
+
+Delivered for review: source-unit AI reasons and explicit keep/change/review outcomes in the same approved tailoring call (ADR 0045), with missing/invalid assessments visible and preventing complete section declarations. Next: advertisement/contact recall, frozen-input matching repeatability and the wider component audit before independent final-file readiness. Canonical per-employment/project grouping and live semantic quality evaluation remain pending.
