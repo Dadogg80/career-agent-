@@ -567,3 +567,8 @@ Candidates see a single presentation of their chosen sections and can find new d
 ## 2026-10-12 — Reviewed CV file drafts
 
 As a job seeker, I can generate and download immutable DOCX/PDF drafts from my reviewed wording, without having them marked approved or ready to submit. Both files must preserve the reviewed character content, keep original documents unchanged and remain owner-scoped. Generation errors preserve the text draft.
+
+
+## 2026-10-13 — Joined journey quality and CV coverage
+
+As a user, my separate profile paragraphs, competency table cells and work-description/bullet paragraphs remain individually available for tailoring. I can review more than twelve supported proposals, and receive an explicit recovery action for older merged DOCX text. This does not require every passage to be rewritten.

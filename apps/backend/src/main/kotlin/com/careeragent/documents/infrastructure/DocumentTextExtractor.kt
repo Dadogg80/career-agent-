@@ -60,7 +60,7 @@ class DocumentTextExtractor {
                     when (reader.localName) { "t" -> inText = true; "tab" -> result.append('\t'); "br", "cr" -> result.append('\n') }
                 }
                 if (event == XMLStreamConstants.CHARACTERS && inText) result.append(reader.text)
-                if (event == XMLStreamConstants.END_ELEMENT) { if (reader.localName == "t") inText = false; if (reader.localName == "p") result.append('\n') }
+                if (event == XMLStreamConstants.END_ELEMENT) { if (reader.localName == "t") inText = false; if (reader.localName == "p") result.append("\n\n") }
                 if (result.length > 60000) throw DocumentFailure("DOCUMENT_TOO_LARGE", 413)
             }
         } finally { reader.close() }

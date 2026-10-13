@@ -114,11 +114,27 @@ class DocumentTextExtractorTest {
         assertThatThrownBy { extractor.extract(byteArrayOf(0xc3.toByte(),0x28),"txt") }.isInstanceOf(DocumentFailure::class.java)
         assertThatThrownBy { extractor.extract("x".repeat(60001).toByteArray(),"md") }.isInstanceOf(DocumentFailure::class.java)
     }
+    @Test fun `DOCX profile paragraphs skills cells and employment bullets remain separately tailorable`() {
+        val paragraphs=listOf("Fictional candidate", "NØKKELKVALIFIKASJONER", "Candidate profile paragraph", "Supported domain examples", "Other relevant strengths", "KJERNEKOMPETANSE") +
+            (1..6).flatMap { listOf("Skill group $it","Supported competencies for group $it") } +
+            listOf("ARBEIDSERFARING","2021 – 2024 Example AS – Developer","Introductory experience description","Built backend services","Improved testing","2020 – 2021 Second AS – Developer","Other own contributions","UTDANNING","Example course")
+        val ns="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+        fun para(text:String)="<w:p><w:r><w:t>$text</w:t></w:r></w:p>"
+        val xml="<w:document xmlns:w=\"$ns\"><w:body>"+paragraphs.take(6).joinToString(""){para(it)}+"<w:tbl><w:tr>"+paragraphs.slice(6..17).joinToString(""){"<w:tc>"+para(it)+"</w:tc>"}+"</w:tr></w:tbl>"+paragraphs.drop(18).joinToString(""){para(it)}+"</w:body></w:document>"
+        val extracted=extractor.extract(DocumentFixture.docx("",xml),"docx")
+        val units=com.careeragent.cv.application.CvReviewedText.paragraphs(extracted)
+        assertThat(units).containsExactlyElementsOf(paragraphs)
+        val sections=com.careeragent.cv.application.CvSections.identify(extracted,units)
+        assertThat(sections.map {it.kind}).containsExactly(com.careeragent.cv.application.CvSectionKind.UNCLASSIFIED,com.careeragent.cv.application.CvSectionKind.PROFILE,com.careeragent.cv.application.CvSectionKind.SKILLS,com.careeragent.cv.application.CvSectionKind.EXPERIENCE,com.careeragent.cv.application.CvSectionKind.EDUCATION)
+        assertThat(sections[1].paragraphIndexes).containsExactly(1,2,3,4)
+        assertThat(sections[2].paragraphIndexes).hasSize(13)
+        assertThat(sections[3].paragraphIndexes).hasSize(7)
+    }
     @Test fun `Word tables text boxes headers footers and line breaks retain source text`() {
         val main = """<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Built APIs</w:t><w:tab/><w:t>with Kotlin</w:t><w:br/><w:t>and PostgreSQL</w:t></w:r></w:p><w:tbl><w:tr><w:tc><w:p><w:r><w:t>Team collaboration</w:t></w:r></w:p></w:tc></w:tr></w:tbl><w:txbxContent><w:p><w:r><w:t>Azure course</w:t></w:r></w:p></w:txbxContent></w:body></w:document>"""
         fun part(text: String) = """<w:hdr xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:p><w:r><w:t>$text</w:t></w:r></w:p></w:hdr>"""
         val bytes = DocumentFixture.docx("", main, mapOf("word/header1.xml" to part("Technical skills: Docker"), "word/header2.xml" to part("Technical skills: Docker"), "word/footer1.xml" to part("Scrum certification")))
-        assertThat(extractor.extract(bytes, "docx")).isEqualTo("Built APIs\twith Kotlin\nand PostgreSQL\nTeam collaboration\nAzure course\n\nTechnical skills: Docker\n\nScrum certification")
+        assertThat(extractor.extract(bytes, "docx")).isEqualTo("Built APIs\twith Kotlin\nand PostgreSQL\n\nTeam collaboration\n\nAzure course\n\nTechnical skills: Docker\n\nScrum certification")
         assertCode("DOCUMENT_INVALID") { extractor.extract(DocumentFixture.docx("safe", parts = mapOf("word/header1.xml" to "<!DOCTYPE doc [<!ENTITY x SYSTEM 'file:///etc/passwd'>]><p>&x;</p>")), "docx") }
     }
     @Test fun `PDF text follows visual position instead of drawing order`() {

@@ -37,6 +37,14 @@ class CvTailoringValidationTest {
   return match
  }
  private fun proposal(id:UUID=claimId,index:Int=1,criterion:Int=0)=mapOf("paragraphIndex" to index,"newText" to "Developed Kotlin APIs for a fictional employer.","reason" to "Makes the documented API contribution visible.","claimIds" to listOf(id.toString()),"requirementIndexes" to listOf(criterion))
+ @Test fun `supported profile skill and experience improvements are not truncated after twelve`() {
+  val paragraphs=(0..40).map { "Original paragraph $it" }
+  val items=paragraphs.indices.map { i -> mapOf("paragraphIndex" to i,"newText" to "Supported revised wording $i","reason" to "Relevant example","claimIds" to listOf(claimId.toString()),"requirementIndexes" to listOf(0)) }
+  val parsed=service.parse(mapper.writeValueAsString(mapOf("proposals" to items)),paragraphs,setOf(claimId),1)
+  assertThat(parsed.first).hasSize(40)
+  assertThat(parsed.first.map {it.paragraphIndex}).contains(12,13,39)
+  assertThat(parsed.second).isEqualTo(1)
+ }
  @Test fun `invalid references and duplicate edits are omitted without losing valid supported suggestions`() {
   val result=service.parse(mapper.writeValueAsString(mapOf("proposals" to listOf(proposal(),proposal(UUID.randomUUID()),proposal(index=500),proposal(criterion=12),proposal()))),service.paragraphs(text),setOf(claimId),1)
   assertThat(result.first).hasSize(1);assertThat(result.first.single().oldText).isEqualTo(text.substringAfter("\n\n"));assertThat(result.second).isEqualTo(4)
@@ -156,6 +164,19 @@ class CvTailoringValidationTest {
   assertThat(result.sections).hasSize(1)
   assertThat(result.sectionPlans!!.single().action).isEqualTo(CvSectionAction.PROPOSE_CHANGES)
   verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)
+ }
+
+ @Test fun `invalid extra proposals cannot leave a section falsely marked complete`() {
+  setup()
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)).thenAnswer { call ->
+   val section=mapper.readTree(call.getArgument<String>(1)).path("sections")[0]
+   mapper.writeValueAsString(mapOf("proposals" to listOf(proposal(),proposal(index=500)),"sectionPlans" to listOf(mapOf("reviewedParagraphIndexes" to listOf(0,1),"sectionId" to section.path("id").asText(),"action" to "PROPOSE_CHANGES","priority" to "HIGH","reason" to "Visible API experience","claimIds" to listOf(claimId.toString()),"requirementIndexes" to listOf(0)))))
+  }
+  val result=service.propose(identity,jobId,request)
+  assertThat(result.proposals).hasSize(1)
+  assertThat(result.omittedItems).isEqualTo(1)
+  assertThat(result.sectionPlans!!.single().assessed).isFalse()
+  assertThat(result.sectionPlans!!.single().action).isEqualTo(CvSectionAction.NEEDS_REVIEW)
  }
 
  @Test fun `unsupported AI numbers are withheld while supported proposals and original source remain available`() {

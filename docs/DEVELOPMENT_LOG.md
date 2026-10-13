@@ -697,3 +697,8 @@ PR 51 repair CI passed backend/build but exposed one obsolete empty-profile brow
 ## 2026-10-12 — Reviewed CV file drafts
 
 Implemented explicit reviewed-CV file generation and downloads using the existing renderer/storage. Actual DOCX/PDF character readback precedes persistence; original source and full confirmed evidence are rechecked. Final approval remains blocked. Validation: full backend suite passed (261 passed, 5 skipped); executable JAR and web production/type build passed; 28 focused CV/preparation browser tests passed, with the final CV/proxy checks rerun after refinements. Synthetic fixtures only; no live AI calls. Mechanical readback failure retains the source draft. Independent final-file review remains pending.
+
+
+## 2026-10-13 — Joined journey quality and CV coverage
+
+Corrected DOCX paragraph boundaries, broadened bounded wording/review coverage and added old-source recovery guidance. Documented concrete findings and remaining contact/matching/design priorities. Validation: full backend suite passed (264 passed, 5 skipped), executable JAR and production web/TypeScript build passed. All 28 existing focused CV/preparation browser cases passed; the new merged-source/40-proposal/proxy recovery case passed after fixture correction. Synthetic DOCX profile/skills-table/work-entry regression and incomplete-output validation passed. No live provider calls or private-document fixtures. GitHub Foundation remains the full browser/development gate.
