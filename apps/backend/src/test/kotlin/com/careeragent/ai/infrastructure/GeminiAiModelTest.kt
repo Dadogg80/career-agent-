@@ -27,6 +27,11 @@ class GeminiAiModelTest {
         assertThat(json.at("/generationConfig/responseJsonSchema/additionalProperties").asBoolean()).isFalse()
         assertThat(json.at("/generationConfig/thinkingConfig/thinkingLevel").asText()).isEqualTo("LOW")
         assertThat(body).doesNotContainKeys("tools", "cachedContent")
+        val tailoring=mapper.valueToTree<com.fasterxml.jackson.databind.JsonNode>(adapter().requestBody("rules","data",schema,AiTask.CV_TAILORING))
+        assertThat(tailoring.at("/generationConfig/maxOutputTokens").asInt()).isEqualTo(16384)
+        val interactions=mapper.valueToTree<com.fasterxml.jackson.databind.JsonNode>(adapter().interactionsRequestBody("rules","data",schema,AiTask.CV_TAILORING))
+        assertThat(interactions.at("/generation_config/max_output_tokens").asInt()).isEqualTo(16384)
+        assertThat(json.at("/generationConfig/maxOutputTokens").asInt()).isEqualTo(8192)
     }
 
     @Test fun `Gemini 3 point 8 uses the Interactions API structured-output contract`() {

@@ -3,15 +3,25 @@ import { claimId } from "./claims";
 import { isAiSelection } from "./ai-configuration";
 import { isCvSectionData,type CvSection,type CvSectionPlan } from "./cv-sections";
 export const MAX_CV_PROPOSALS=40;
+export type CvPassagePlan={paragraphIndex:number;action:"KEEP_UNCHANGED"|"PROPOSE_CHANGES"|"NEEDS_REVIEW";reason:string;claimIds:string[];requirementIndexes:number[];assessed:boolean};
 export type TextProposal = { paragraphIndex:number;oldText:string;newText:string;reason:string;claimIds:string[];requirementIndexes:number[] };
 export type VisibilityStatus = "VISIBLE"|"WEAKLY_VISIBLE"|"NOT_VISIBLE"|"NEEDS_CLARIFICATION"|"UNASSESSED";
 export type CvVisibility = {requirementIndex:number;status:VisibilityStatus;reason:string;claimIds:string[];passages:{paragraphIndex:number;quote:string}[]};
-export type TailoringResult = { documentId:string;matchId:string;provider:"Groq"|"Gemini";model:string;proposals:TextProposal[];omittedItems:number;visibility?:CvVisibility[]|null;sessionId?:string|null;sections?:CvSection[]|null;sectionPlans?:CvSectionPlan[]|null };
+export type TailoringResult = { documentId:string;matchId:string;provider:"Groq"|"Gemini";model:string;proposals:TextProposal[];omittedItems:number;visibility?:CvVisibility[]|null;sessionId?:string|null;sections?:CvSection[]|null;sectionPlans?:CvSectionPlan[]|null;passagePlans?:CvPassagePlan[]|null };
 export function isTailoringResult(value:unknown):value is TailoringResult {
  if(!value || typeof value!=="object")return false;
  const v=value as TailoringResult;
  const text=(s:unknown,max:number)=>typeof s==="string" && s.trim().length>0 && s.length<=max;
  if(!isCvSectionData(v))return false;
+ if(v.passagePlans!=null){
+  const indexes=v.sections?.flatMap(s=>s.paragraphIndexes);
+  if(!indexes||!Array.isArray(v.proposals)||!Array.isArray(v.passagePlans)||v.passagePlans.length!==indexes.length||v.passagePlans.some((p,i)=>{
+   if(!p||p.paragraphIndex!==indexes[i]||!["KEEP_UNCHANGED","PROPOSE_CHANGES","NEEDS_REVIEW"].includes(p.action)||!text(p.reason,300)||typeof p.assessed!=="boolean"||!p.assessed&&p.action!=="NEEDS_REVIEW"||!Array.isArray(p.claimIds)||p.claimIds.length>10||!p.claimIds.every(id=>typeof id==="string"&&claimId.test(id))||!Array.isArray(p.requirementIndexes)||p.requirementIndexes.length>MAX_JOB_REQUIREMENTS||!p.requirementIndexes.every(i=>Number.isInteger(i)&&i>=0&&i<MAX_JOB_REQUIREMENTS))return true;
+   const proposal=v.proposals.find(q=>q?.paragraphIndex===p.paragraphIndex);
+   return p.action==="KEEP_UNCHANGED"&&!!proposal||p.action==="PROPOSE_CHANGES"&&(!proposal||!p.assessed||!Array.isArray(proposal.claimIds)||!Array.isArray(proposal.requirementIndexes)||!proposal.claimIds.every(id=>p.claimIds.includes(id))||!proposal.requirementIndexes.every(i=>p.requirementIndexes.includes(i)));
+  }))return false;
+ }
+
  if(v.sectionPlans && (!Array.isArray(v.proposals) || v.sectionPlans.some(plan=>{
   const section=v.sections?.find(s=>s.id===plan.sectionId);
   const changes=v.proposals.filter(p=>section?.paragraphIndexes.includes(p?.paragraphIndex));

@@ -62,7 +62,7 @@ class GroqAiModel(
         // Only models verified by Groq's strict-JSON documentation can be configured here.
         if(selected !in setOf("openai/gpt-oss-20b","openai/gpt-oss-120b","qwen/qwen3.8-27b"))throw AiFailure("AI_NOT_CONFIGURED",503)
         val result=linkedMapOf<String,Any>("model" to selected,"reasoning_effort" to "low",
-            "max_completion_tokens" to if(task==AiTask.PROFILE_SUMMARY) 1800 else 3500,
+            "max_completion_tokens" to when(task) { AiTask.PROFILE_SUMMARY -> 1800; AiTask.CV_TAILORING -> 16384; else -> 3500 },
             "messages" to listOf(mapOf("role" to "system","content" to system),mapOf("role" to "user","content" to user)),
             "response_format" to mapOf("type" to "json_schema","json_schema" to mapOf("name" to "career_analysis","strict" to true,"schema" to schema)))
         if(selected.startsWith("openai/"))result["include_reasoning"]=false else result["reasoning_format"]="hidden"

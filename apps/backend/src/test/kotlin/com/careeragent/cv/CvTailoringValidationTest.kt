@@ -158,7 +158,7 @@ class CvTailoringValidationTest {
    assertThat(sections.size()).isEqualTo(1)
    assertThat(sections[0].path("paragraphIndexes").map {it.asInt()}).containsExactly(0,1)
    assertThat(call.getArgument<String>(0)).contains("Review EVERY supplied section","Never introduce facts or change chronology")
-   mapper.writeValueAsString(mapOf("proposals" to listOf(proposal()),"sectionPlans" to listOf(mapOf("reviewedParagraphIndexes" to listOf(0,1),"sectionId" to sections[0].path("id").asText(),"action" to "PROPOSE_CHANGES","priority" to "HIGH","reason" to "Makes documented API work clearer","claimIds" to listOf(claimId.toString()),"requirementIndexes" to listOf(0)))))
+   mapper.writeValueAsString(mapOf("passagePlans" to listOf(mapOf("paragraphIndex" to 0,"action" to "KEEP_UNCHANGED","reason" to "Identity retained","claimIds" to emptyList<String>(),"requirementIndexes" to emptyList<Int>()),mapOf("paragraphIndex" to 1,"action" to "PROPOSE_CHANGES","reason" to "Make API work visible","claimIds" to listOf(claimId.toString()),"requirementIndexes" to listOf(0))),"proposals" to listOf(proposal()),"sectionPlans" to listOf(mapOf("reviewedParagraphIndexes" to listOf(0,1),"sectionId" to sections[0].path("id").asText(),"action" to "PROPOSE_CHANGES","priority" to "HIGH","reason" to "Makes documented API work clearer","claimIds" to listOf(claimId.toString()),"requirementIndexes" to listOf(0)))))
   }
   val result=service.propose(identity,jobId,request)
   assertThat(result.sections).hasSize(1)

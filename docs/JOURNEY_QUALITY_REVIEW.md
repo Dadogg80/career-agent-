@@ -20,3 +20,7 @@ Owner priority: improve input/analysis quality and usability before further fina
 ## Validation boundaries
 
 Use synthetic fixtures and focused regression checks; full required CI remains. No owner documents in Git or live provider calls by default. Contact/matching/design audit and independent final-file review are pending beyond the structural correction.
+
+## Individual reasoning checkpoint
+
+ADR 0045 adds per-source-unit reasons within the existing call, with exact memberships and explicit incomplete recovery. Employment introductions and contributions now have individual declarations; grouping into canonical career entries and independent semantic evaluation remain separate work. Contact/source completeness and frozen-input match repeatability are next.
