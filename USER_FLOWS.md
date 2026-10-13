@@ -475,6 +475,10 @@ An existing answer can be rejected through a separate confirmation dialog. Rejec
 
 From the owned preparation page, select the base CV and approve the displayed recipient/model. One request returns both criterion visibility and supported wording proposals. Filter/search the compact CV review; expand a criterion to inspect exact base-CV excerpts and the confirmed candidate contribution. Clear presentation, weak visibility, established but absent detail, uncertain evidence and unassessed output remain distinct. No profile confirmation, match-score change or additional provider request follows viewing this panel. Changed CV/match/selections mark the result historical; proposals retain existing review and staleness controls. Original files are retained and review remains page-session-only.
 
+## Project history from document analysis
+
+Start a newly approved document analysis → inspect Career history as well as Competencies → named projects with valid literal proof can populate unverified PROJECT entries → review the project, role, period and retained source evidence before confirmation. Reworded accounts of the same dated relationship share one analysis draft with all bounded supporting sources. Existing personal edits/rejections/deletions remain protected by the import ledger. Existing saved results are not silently reanalyzed or rewritten; quotation validation is not exhaustive project recall.
+
 ## Approved CV wording handoff
 
 After approving individual text changes in preparation, open the full plain-text preview and choose Copy CV text. Only approved replacements are applied to the exact selected source snapshot; pending/rejected items preserve original wording and separators. A later edit returns its proposal to pending. Changed/unavailable required evidence disables copying as current; earlier text remains readable. Clipboard denial retains the selectable preview for manual copying. Nothing is sent, saved to the profile or written to the original file. Decisions/preview remain page-session-only (ADR 0035).

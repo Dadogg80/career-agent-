@@ -112,7 +112,7 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
             checked(identity,state)
             val completed=state.completed+1
             val suggestions=mergeSuggestions(state.analysis.suggestions+result.suggestions)
-            val career=(state.analysis.careerEntries+result.entries).groupBy { listOf(it.content.kind.name,normal(it.content.title),normal(it.content.organization),normal(it.content.client),it.periodText,normal(it.content.description),if(it.periodText.isBlank())it.documentId.toString() else "") }.values.map { group -> val first=group.first();first.copy(additionalSources=(first.additionalSources+group.drop(1).flatMap { listOf(CompetencySource(it.documentId,it.quote))+it.additionalSources }).distinct().take(100)) }
+            val career=DocumentHistoryDrafts.merge(state.analysis.careerEntries+result.entries)
             val profile=(state.analysis.profile+result.profile).distinctBy { listOf(it.kind,normal(it.text),it.documentId.toString()) }
             val covered=state.batches.take(completed).groupBy { it.documentId }.mapValues { it.value.sumOf { batch -> batch.characters } }
             val partial=state.batches.take(completed).filterNot { it.repair }.sumOf { it.characters } < state.approved.values.sumOf { it.length } || state.approved.any { (source,text) -> text != state.sources[source] }

@@ -717,3 +717,9 @@ Implemented individual AI passage reasoning, strict proposal/evidence consistenc
 ## 2026-10-13 — Regular Gemini Flash 3.6 routing
 
 Updated the regular Flash alternative and unset Gemini job/match fallback to 3.6. Flash-Lite task defaults, source retrieval, Groq defaults, explicit configuration and historical model attribution are preserved. Updated setup guidance and focused request/cooldown/approval expectations. Validation: all 15 Gemini adapter/routing tests passed; live quality checks are separate and are not claimed by these synthetic checks. Private audit documents and outputs remain outside Git.
+
+## 2026-10-13 — Project-history evidence contract
+
+Verified PR #56 merged at 282c2c0. Aligned document extraction schema/prompt with the existing 1–6 evidence-ID bound, rejected repeated IDs, and requested minimal literal project identity/work proof without expanding unsupported organizations. Dated history snapshot aggregation now excludes generated description from identity, includes delivery role and preserves the first wording/review key plus distinct sources. Undated or unsupported relationships retain conservative source boundaries. Existing import fingerprints, saved results, personal reviews, task budgets, consent and model defaults are unchanged.
+
+Validation: 31 focused backend tests passed (20 workflow integration, 3 project contract/aggregation, 4 context, 4 period), no failures or skips. The new integration case verifies one unverified PROJECT entry and exact evidence, followed by reanalysis without overwriting a personal edit. PostgreSQL/Testcontainers and Java compilation worked in the cloud environment. Synthetic fixtures only; no live provider requests or private documents in Git. Live project recall, structured omission reasons, contact/criterion quality, language extraction and PDF CV structure remain next priorities. Full GitHub Foundation checks remain the publication gate.

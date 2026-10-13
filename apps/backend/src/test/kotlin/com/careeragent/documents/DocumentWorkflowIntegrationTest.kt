@@ -334,6 +334,37 @@ class DocumentWorkflowIntegrationTest {
         mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$.length()").value(2))
         mvc.perform(get("/api/profile/me/entries").with(caller(user))).andExpect(jsonPath("$.length()").value(1))
     }
+    @Test fun `project history is populated once despite rewording and preserves a later personal edit`() {
+        val user=profile()
+        val source="Atlas via ABC 2022 – 2023\nPrototype: built scheduling forms.\nAdded validation."
+        val doc=upload(user,source)
+        fun project(description:String)=mapOf("kind" to "PROJECT","title" to "Atlas","organization" to "ABC",
+            "client" to "","deliveryRole" to "","periodText" to "2022 – 2023","description" to description,"evidenceIds" to listOf(0,1,2))
+        val output=json.writeValueAsString(mapOf("competencies" to emptyList<Any>(),"profile" to emptyList<Any>(),
+            "history" to listOf(project("Created a prototype."),project("Built prototype scheduling forms."))))
+        doReturn(output).`when`(model).generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
+        val request=mapOf("scope" to "collection","locale" to "nb","consent" to true,"populateProfile" to true,
+            "documents" to listOf(mapOf("documentId" to doc,"text" to source)))
+        val first=next(user,post(user,path,request))
+        assertThat(first["analysis"]["careerEntries"].size()).isEqualTo(1)
+        val history=json.readTree(mvc.perform(get("/api/profile/me/entries").with(caller(user))).andReturn().response.contentAsString)
+        assertThat(history.size()).isEqualTo(1)
+        assertThat(history[0]["content"]["kind"].asText()).isEqualTo("PROJECT")
+        assertThat(history[0]["status"].asText()).isEqualTo("UNVERIFIED")
+        assertThat(history[0]["content"]["startMonth"].isNull).isTrue()
+        val id=history[0]["id"].asText()
+        mvc.perform(get("/api/profile/me/entries/$id/evidence").with(caller(user)))
+            .andExpect(status().isOk).andExpect(jsonPath("$[0].quote").value(source))
+        val edited=json.convertValue(history[0]["content"],Map::class.java)+mapOf("description" to "My reviewed prototype contribution")
+        mvc.perform(put("/api/profile/me/entries/$id").with(caller(user)).with(csrf()).contentType("application/json")
+            .content(json.writeValueAsString(mapOf("revision" to 1,"content" to edited)))).andExpect(status().isOk)
+        doReturn(output.replace("Created a prototype.","Reworded prototype draft.")).`when`(model)
+            .generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
+        next(user,post(user,path,request))
+        mvc.perform(get("/api/profile/me/entries").with(caller(user))).andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].content.description").value("My reviewed prototype contribution"))
+            .andExpect(jsonPath("$[0].revision").value(2))
+    }
     @Test fun `another automatic analysis does not restore deleted rejected or edited profile information`() {
         val user=profile();val doc=upload(user);stub()
         val first=next(user,post(user,path,body(listOf(doc))+mapOf("populateProfile" to true)))

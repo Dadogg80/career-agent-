@@ -326,6 +326,7 @@ As a jobseeker, I want employment, projects, education and certificates with the
 
 - Separate organization, client, formal title and delivery role; optional dates stay unknown.
 - Save as UNVERIFIED, separately confirm/reject, reset confirmation on edit and retain revision history.
+- Document analysis should propose named projects independently of their competencies, with literal project identity and bounded source proof. Different generated descriptions of the same dated relationship should not duplicate the analysis card; keep sources and existing review identity. Unknown dates and unsupported organizations remain unknown, and prototypes/planned work must not become completed employment.
 - Require ownership, saved profile, CSRF and expected revisions. Deletion is explicit.
 - This first typed subset does not claim a complete relational career graph or CV export.
 

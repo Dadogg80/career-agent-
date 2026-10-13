@@ -63,6 +63,7 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
         }
         fun selected(node: JsonNode): String {
             val ids = node.path("evidenceIds"); require(ids.isArray && ids.size() in 1..6)
+            require(ids.distinct().size == ids.size())
             val texts = ids.map { require(it.isIntegralNumber && it.canConvertToInt()); passages.getOrNull(it.intValue())?.text ?: throw IllegalArgumentException() }
             val quote = if (texts.size == 1) texts.first() else {
                 val first = source.indexOf(texts.first()); require(first >= 0)
@@ -116,7 +117,7 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
             val string=mapOf("type" to "string"); val integer=mapOf("type" to "integer")
             fun array(item: Map<String,Any>)=mapOf("type" to "array","items" to item)
             fun obj(fields: Map<String,Any>)=mapOf("type" to "object","additionalProperties" to false,"required" to fields.keys.toList(),"properties" to fields)
-            val ids=array(integer)
+            val ids=mapOf("type" to "array","items" to integer,"minItems" to 1,"maxItems" to 6)
             return obj(mapOf("competencies" to array(obj(mapOf("skills" to array(string),"description" to string,"category" to mapOf("type" to "string","enum" to categories),"evidenceIds" to ids,"contextId" to integer,"context" to string))),
                 "profile" to array(obj(mapOf("kind" to mapOf("type" to "string","enum" to profileKinds),"text" to string,"evidenceIds" to ids))),
                 "history" to array(obj(mapOf("kind" to mapOf("type" to "string","enum" to EntryKind.entries.map { it.name }),"title" to string,"organization" to string,"client" to string,"deliveryRole" to string,"periodText" to string,"description" to string,"evidenceIds" to ids)))))
@@ -139,6 +140,8 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
             Use source-spelled skill labels that occur in selected evidence. Context is a literal employer/project/client
             from the closest preceding associated heading; do not assign global lists or cross project/skills sections.
             Use contextId -1 and context empty when unknown. Evidence IDs are passage numbers, never free text.
+            Every evidenceIds array must contain 1 to 6 distinct IDs in source order. Select the smallest useful
+            evidence span, not every passage about the subject. The server rejects more than 6 IDs or oversized spans.
             Profile: up to 6 concise, readable text entries with kind PROFILE/CORE_SKILLS/KEY_INFORMATION/EXPERIENCE/
             EDUCATION/INTERESTS and evidenceIds. Only explicit interests; no guesses about motivation or personality.
             History: identify employment, projects, education and courses/certifications with kind EMPLOYMENT/PROJECT/
@@ -150,8 +153,13 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
             for PROJECT when no organization is explicitly supported in that project's cited evidence. Never use
             the project name as an invented employer. Include dates/roles only when documented; prototype and
             planned work must retain their stated status, never become completed delivery.
-            Include literal title, organization, client, deliveryRole and periodText plus a
-            source-supported description. Select evidenceIds in source order covering the heading, role and dates.
+            Include literal title, organization, client, deliveryRole and periodText plus a source-supported description.
+            For history, select a short span proving the project/role identity and candidate work; include dates only
+            when they fit that span. Extract additional work as competency contributions, not by citing the whole project.
+            Each nonempty structured field must occur literally in THIS entry's selected evidence, not elsewhere
+            in the document or another project's heading. Preserve a source abbreviation such as "ABC"; never expand
+            it to "Example Company AS" without that literal name in the selected span. Leave unsupported optional
+            organization (PROJECT only), client, deliveryRole and periodText empty rather than losing a supported project.
             At most 1000 characters between first and last history evidence, 600 for competencies. Unknown optional
             fields must be empty strings. Never invent dates, a degree, completion, results or a formal employer.
             Do not confuse a project/customer with an employer or delivery role with formal job title.
