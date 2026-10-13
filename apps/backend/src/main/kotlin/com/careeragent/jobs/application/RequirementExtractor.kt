@@ -22,6 +22,9 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
         if (text.trim().length < 40 || text.length > 15000 || locale !in setOf("nb", "en")) {
             throw AiFailure("INVALID_INPUT", 400)
         }
+        val analysisText = AdvertisementAnalysisSource.prepare(text)
+        if (analysisText.trim().length < 40) throw AiFailure("INVALID_INPUT",400)
+        if (analysisText.length < text.trimEnd().length) logger.info("Advertisement recommendation tail excluded: characters={}",text.length-analysisText.length)
         val language = if (locale == "nb") "Norwegian Bokmål" else "English"
         val result = (if(plan!=null && routing!=null)ApprovedAiModel(model,routing,plan) else model).generateJson(
             """
@@ -63,7 +66,7 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
             For each requirement give a short verbatim quote copied from the advertisement, in its original language.
             Do not assess a candidate, generate a score, or invent experience. Return an empty list if no requirements exist.
             """.trimIndent(),
-            text,
+            analysisText,
             schema,
         )
         try {
@@ -71,7 +74,7 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
             val items = root.path("requirements")
             val factItems = root.path("facts")
             if (!root.isObject || !items.isArray || !factItems.isArray) throw IllegalArgumentException()
-            val source = normalize(text)
+            val source = normalize(analysisText)
             val omissions = linkedMapOf<String, Int>()
             fun omit(reason: String, count: Int = 1) {
                 if (count > 0) omissions[reason] = (omissions[reason] ?: 0) + count
@@ -83,11 +86,13 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
                 val label = item.boundedText("label", 200)
                 val quote = item.boundedText("quote", 600)
                 val modelKind = RequirementKind.entries.find { it.name == item.path("kind").textValue() }
-                val kind = if (quote != null && modelKind != null) RequirementImportance.classify(text, quote) else null
+                val kind = if (quote != null && modelKind != null) RequirementImportance.classify(analysisText, quote) else null
+                val sourceIssue = if (label != null && quote != null && source.contains(normalize(quote))) RequirementSourceGuard.omissionReason(analysisText,label,quote) else null
                 when {
                     label == null || quote == null || kind == null -> omit("INVALID_REQUIREMENT_FIELDS")
                     !source.contains(normalize(quote)) -> omit("UNSUPPORTED_REQUIREMENT_QUOTE")
-                    requirements.any { normalRequirement(it) == listOf(normalize(label).lowercase(), kind.name, normalize(quote)) } -> omit("DUPLICATE_REQUIREMENT")
+                    sourceIssue != null -> omit(sourceIssue)
+                    requirements.any { RequirementSourceGuard.equivalent(it,ExtractedRequirement(label,kind,quote)) } -> omit("DUPLICATE_REQUIREMENT")
                     else -> requirements.add(ExtractedRequirement(label, kind, quote))
                 }
             }
@@ -104,7 +109,7 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
                 }
             }
             omit("INSPECTION_LIMIT", (factItems.size() - 128).coerceAtLeast(0))
-            val sourcedFacts = SourceContactRecovery.merge(text,locale,facts)
+            val sourcedFacts = SourceContactRecovery.merge(analysisText,locale,facts)
             // Validate first; late contact metadata must not lose capacity to earlier narrative sections.
             val retainedFacts = if (sourcedFacts.size <= 10) sourcedFacts else sourcedFacts.sortedBy { when (it.kind) {
                 JobFactKind.CONTACT -> 0
@@ -134,8 +139,6 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
         if (!value.isTextual) return null
         return value.textValue().takeIf { it.isNotBlank() && it.length <= maxLength }
     }
-
-    private fun normalRequirement(item: ExtractedRequirement) = listOf(normalize(item.label).lowercase(), item.kind.name, normalize(item.quote))
 
     private fun normalize(text: String) = Normalizer.normalize(text, Normalizer.Form.NFC).replace(Regex("(?U)\\s+"), " ").trim()
 

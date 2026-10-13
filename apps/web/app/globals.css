@@ -893,6 +893,7 @@ main { max-width:1420px; margin:auto; padding:42px; }.page-intro { margin-bottom
 .coverage-category-education { background:#eaf2fc; color:#3c79b7; }
 .coverage-category-experience { background:#fff1e5; color:#bd7132; }
 .coverage-category-technology { background:#e9f1ff; color:#4b72bf; }
+.coverage-category-language { background:#edf4fb; color:#3f6f98; }
 .coverage-passage-topline [data-slot="badge"] { border-color:#e3e9e6; background:#f6f8f6; color:#536a5d; font-size:10px; }
 .coverage-passage-source { display:inline-flex; align-items:center; gap:5px; margin-left:auto; color:#75847a; font-size:10px; overflow-wrap:anywhere; }
 .coverage-passage-source svg { flex:none; color:#81958a; }

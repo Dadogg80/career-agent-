@@ -42,6 +42,25 @@ test("saved job opens contextual preparation with whole source consent and edita
  expect(calls).toBe(1);expect(errors).toEqual([]);
  await page.reload();await expect(page.locator(".tailoring-proposal")).toHaveCount(0);expect(calls).toBe(1);
 });
+test("related advertisement criteria explain job review in both languages without automatic AI reruns",async({page})=>{
+ await fixtures(page);let calls=0,matchCalls=0;
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{calls++;return r.fulfill({status:409,json:{code:"CV_JOB_REVIEW_REQUIRED"}});});
+ await page.route(`**/api/profile/me/jobs/${jobId}/match`,r=>{if(r.request().method()==="POST")matchCalls++;return r.fulfill({json:match});});
+ await page.goto(`/jobs/${jobId}/apply`);
+ await page.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for CV-forslag",exact:true}).check();
+ const submit=page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true});await submit.click();
+ const alert=page.getByRole("alert").filter({hasText:"De lagrede kravene"});
+ await expect(alert).toContainText("relaterte stillinger");await expect(alert).toContainText("lagre den korrigerte analysen og oppdater stillingsmatchen");
+ await expect(alert.getByRole("link",{name:"Analyser annonsen på nytt",exact:true})).toHaveAttribute("href","/jobs/analyze");
+ await expect(submit).toBeDisabled();await alert.getByRole("button",{name:"Se stillingsmatchen",exact:true}).click();
+ await expect(page.locator("#preparation-match")).toHaveAttribute("open","");
+ await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");
+ const english=page.getByRole("alert").filter({hasText:"The saved requirements"});
+ await expect(english).toContainText("related jobs");await expect(english).toContainText("save the corrected analysis and update the job match");
+ await expect(english.getByRole("link",{name:"Reanalyze advertisement",exact:true})).toHaveAttribute("href","/jobs/analyze");
+ await expect(page.getByRole("button",{name:"Suggest targeted CV wording",exact:true})).toBeDisabled();
+ expect(calls).toBe(1);expect(matchCalls).toBe(0);
+});
 test("missing evidence and stale matching guide the user without calling tailoring",async({page})=>{
  await fixtures(page,{missing:true});let calls=0;await page.route("**/tailoring",r=>{calls++;return r.fulfill({status:503});});
  await page.goto(`/jobs/${jobId}/apply`);await expect(page.getByRole("heading",{name:"Start med dokumentene dine",exact:true})).toBeVisible();await expect(page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true})).toBeDisabled();expect(calls).toBe(0);

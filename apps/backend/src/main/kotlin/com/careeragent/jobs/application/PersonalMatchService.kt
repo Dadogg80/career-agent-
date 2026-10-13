@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
+import java.text.Normalizer
 import java.time.OffsetDateTime
 import java.util.UUID
 import java.util.concurrent.Semaphore
@@ -48,14 +49,15 @@ class PersonalMatchService(private val jobs: SavedJobRepository, private val cla
         }
         // The preview approves the complete confirmed revision set, never a ranked subset.
         if (selected.map { it.id }.toSet() != available.values.filter { it.status == ClaimStatus.CONFIRMED }.map { it.id }.toSet()) throw SavedJobFailure("MATCH_CONFLICT", 409)
-        val characters = request.text.length + selected.sumOf { it.skill.length + it.statement.length + it.context.length }
-        val requirements = job.content.requirements.mapIndexedNotNull { index, r -> if (normal(request.text).contains(normal(r.quote))) mapOf("index" to index, "label" to r.label, "kind" to r.kind, "quote" to r.quote) else null }
+        val advertisement = AdvertisementAnalysisSource.preparePreview(job.content.text, request.text)
+        val characters = advertisement.length + selected.sumOf { it.skill.length + it.statement.length + it.context.length }
+        val requirements = job.content.requirements.mapIndexedNotNull { index, r -> if (normal(advertisement).contains(normal(r.quote))) mapOf("index" to index, "label" to r.label, "kind" to r.kind, "quote" to r.quote) else null }
         if (requirements.isEmpty()) throw SavedJobFailure("MATCH_NO_REQUIREMENTS", 400)
         if (!permit.tryAcquire()) throw AiFailure("AI_BUSY", 429)
         try {
             if (used.get() >= maxRequests) throw AiFailure("AI_BUDGET_REACHED", 429)
             used.incrementAndGet()
-            val output = ApprovedAiModel(model,routing,plan).generateJson(prompt(request.locale), compactInput(request.text, requirements, selected, requirements.mapNotNull { criterion ->
+            val output = ApprovedAiModel(model,routing,plan).generateJson(prompt(request.locale), compactInput(advertisement, requirements, selected, requirements.mapNotNull { criterion ->
                 val index = criterion["index"] as Int
                 val ids = selected.filter { claim ->
                     val note = available.getValue(claim.id).sourceNote
@@ -72,7 +74,7 @@ class PersonalMatchService(private val jobs: SavedJobRepository, private val cla
     internal fun compactInput(text: String, requirements: List<Map<String, Any>>, selected: List<MatchClaim>, userClarifications: List<Map<String, Any>> = emptyList()): String {
         val passages = selected.map { it.statement to it.context }.distinct()
         val indexes = passages.withIndex().associate { it.value to it.index }
-        return mapper.writeValueAsString(mapOf("advertisement" to text, "requirements" to requirements,
+        return mapper.writeValueAsString(mapOf("advertisement" to AdvertisementAnalysisSource.prepare(text), "requirements" to requirements,
             "userClarifications" to userClarifications,
             "candidatePassages" to passages.map { mapOf("statement" to it.first, "context" to it.second) },
             "confirmedClaims" to selected.map { mapOf("id" to it.id, "revision" to it.revision, "skill" to it.skill,
@@ -121,7 +123,7 @@ class PersonalMatchService(private val jobs: SavedJobRepository, private val cla
         }
         return (0 until count).map { index -> found[index] ?: RequirementMatch(index, MatchKind.CLARIFY, unassessedReason(locale, index in included), emptyList(), "", evaluated = false) } to omitted
     }
-    private fun normal(value: String) = value.replace(Regex("(?U)\\s+"), " ").trim()
+    private fun normal(value: String) = Normalizer.normalize(value,Normalizer.Form.NFC).replace(Regex("(?U)\\s+"), " ").trim()
     private fun unknownReason(locale: String) = if (locale == "nb") "Valgt kandidatgrunnlag dokumenterer ikke dette kravet. Det betyr ikke at kompetansen mangler." else "Selected candidate evidence does not document this requirement. This does not establish a skill gap."
     private fun unassessedReason(locale: String, included: Boolean) = if (locale == "nb") {
         if (included) "AI returnerte ingen gyldig vurdering av dette kravet. Det betyr ikke at kompetansen mangler."

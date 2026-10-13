@@ -285,3 +285,11 @@ Delivered for review: source-unit AI reasons and explicit keep/change/review out
 ## 2026-10-13 — Regular Flash model update
 
 Implemented the owner-requested 3.6 regular Flash selection while retaining Flash-Lite defaults and model-bound approval. Focused adapter/routing checks passed. This is a configuration update, not evidence that 3.6 outperforms Lite or that private-document extraction is complete.
+
+## 2026-10-13 — Advertisement and candidate evidence-quality bundle
+
+Implemented for review: exclude exact related-job headings and recognizable repeated platform-footer cards from new advertisement analysis/matching input while preserving saved original excerpts; conservatively reject negated stack expectations, offered benefits and unsupported language labels, and consolidate formatting-equivalent repeated criteria. Legacy criteria outside the retained advertisement remain unassessed in matching; new CV proposals require advertisement reanalysis before a provider call.
+
+Local language recovery now retains literal natural-language labels and stated proficiency from explicit rows/sections, including bounded PDF row pairs and wrapped oral/written qualifiers. Documentary facts use existing population/review rules and enter the full confirmed matching set; coverage distinguishes LANGUAGE passages. No provider/default changes, evidence subsetting or new AI calls. Lexical guards and bounded language-row grammar do not establish semantic completeness or a best model.
+
+Next: verify controlled project capture when providers permit; split PDF CV profile paragraphs, competency groups and employment contributions into source-bound editable units; then repeat a low-call frozen-input model comparison. Independent final-document readiness and broader design review remain pending.

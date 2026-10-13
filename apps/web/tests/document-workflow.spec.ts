@@ -89,6 +89,28 @@ test("workflow proxies reject anonymous reads, missing consent, spoofed ownershi
  expect((await request.post(`${path}/${runId}/next`,{data:{revision:1,ownerId:second}})).status()).toBe(400);expect((await request.post(`${path}/${runId}/claims`,{data:{revision:1,index:0,skill:"Kotlin",statement:"Built APIs",context:"Example AS",confirm:true,status:"CONFIRMED"}})).status()).toBe(400);
 });
 
+test("language source coverage has readable bilingual labels and no automatic AI calls",async({page})=>{
+ await profile(page);let calls=0;
+ const source="Dokumentet inneholder uttrykkelig språkkompetanse.\nSpråk\nNorsk – morsmål";
+ const saved={...run(),analysis:{...analysis,suggestions:[],profile:[],careerEntries:[],inputCharacters:source.length,sourceCharacters:source.length,documents:[{documentId:id,originalName:"cv.md",inputCharacters:source.length,sourceCharacters:source.length}]},
+  coverage:{detected:1,represented:0,remaining:1,limited:false,repairCalls:0,passages:[{documentId:id,kind:"LANGUAGE",sourceStart:source.indexOf("Norsk"),quote:"Norsk – morsmål"}]}};
+ expect(isDocumentRun(saved)).toBe(true);
+ await page.route("**/api/profile/me/documents**",r=>{
+  if(r.request().url().includes("/workflow")){if(r.request().method()==="POST")calls++;return r.fulfill({json:saved});}
+  return r.fulfill({json:r.request().url().endsWith(id)?{document:{...doc,textCharacters:source.length},text:source}:[{...doc,textCharacters:source.length}]});
+ });
+ await page.setViewportSize({width:390,height:844});await open(page);
+ const outer=page.locator(".document-workspace-sheet");
+ await outer.locator(".document-processing-disclosure > summary").click();
+ await outer.locator(".document-coverage summary").click();
+ await expect(outer.locator(".coverage-passage-card")).toContainText("Språk");
+ await expect(outer.locator(".coverage-passage-card")).toContainText("Norsk – morsmål");
+ expect(await outer.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
+ await outer.getByRole("button",{name:"Lukk",exact:true}).click();await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await page.getByRole("button",{name:"Analyze document",exact:true}).click();
+ await outer.locator(".document-processing-disclosure > summary").click();
+ await outer.locator(".document-coverage summary").click();await expect(outer.locator(".coverage-passage-card")).toContainText("Languages");expect(calls).toBe(0);
+});
+
 test("Gemini whole-document review names the recipient and binds sending to the displayed configuration",async({page})=>{
  await profile(page);const token="a".repeat(64);const selection={provider:"Gemini",model:"gemini-3.5-flash"};const approval={token,selections:[selection]};
  await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:selection,DOCUMENT_EXTRACTION:selection,PROFILE_SUMMARY:selection,PERSONAL_MATCH:selection},documents:approval,documentExcerpt:approval,matching:approval}}));

@@ -119,6 +119,31 @@ class SavedJobIntegrationTest {
   mvc.perform(get("$path/$job/match").with(caller(user))).andExpect(jsonPath("$.analysis.assessments[19].classification").value("STRONG")).andExpect(jsonPath("$.analysis.assessments[19].evidenceRelation").value("DIRECT")).andExpect(jsonPath("$.analysis.assessments[19].requirementNature").value("PRACTICAL")).andExpect(jsonPath("$.analysis.assessments[0].evaluated").value(false))
  }
 
+ @Test fun `matching excludes legacy related advertisement criteria without dropping candidate evidence or editing the saved source`() {
+  val user=profile(); val kotlin=claim(user); val other=claim(user,skill="API design",suffix=" and designed endpoints")
+  val original=content()["text"] as String
+  val foreign="COBOL experience is required for an unrelated role."
+  val source=original+"\n\nRelated jobs\nFictional unrelated vacancy\n"+foreign
+  val job=save(user,content()+mapOf("text" to source,"requirements" to listOf(
+   mapOf("label" to "Kotlin","kind" to "REQUIRED","quote" to "Kotlin experience is required"),
+   mapOf("label" to "COBOL","kind" to "REQUIRED","quote" to foreign))))
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),(any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))).thenAnswer { invocation ->
+   val input=json.readTree(invocation.getArgument<String>(1))
+   assertThat(input["advertisement"].asText()).isEqualTo(original)
+   assertThat(input["requirements"].size()).isEqualTo(1)
+   assertThat(input["requirements"][0]["index"].asInt()).isZero()
+   assertThat(input["confirmedClaims"].map {it["id"].asText()}).containsExactlyInAnyOrder(kotlin,other)
+   output(kotlin)
+  }
+  val request=matchInput(kotlin)+mapOf("text" to source,"claims" to listOf(kotlin,other).map {mapOf("id" to it,"revision" to 2)})
+  mvc.perform(post("$path/$job/match").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(request)))
+   .andExpect(status().isOk).andExpect(jsonPath("$.assessments[0].classification").value("STRONG"))
+   .andExpect(jsonPath("$.assessments[1].evaluated").value(false)).andExpect(jsonPath("$.assessments[1].question").value(""))
+  mvc.perform(get("$path/$job").with(caller(user))).andExpect(jsonPath("$.content.text").value(source))
+   .andExpect(jsonPath("$.content.requirements[1].quote").value(foreign))
+  verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),(any(com.careeragent.ai.application.AiTask::class.java) ?: com.careeragent.ai.application.AiTask.PERSONAL_MATCH))
+ }
+
  private fun claim(user: String, confirmed: Boolean = true, suffix: String = "", skill: String = "Kotlin"): String {
   val statement=(if(confirmed) "Built APIs using Kotlin" else "Proposed APIs using Kotlin") + suffix
   val r = mvc.perform(post("/api/profile/me/claims").with(caller(user)).with(csrf()).contentType("application/json").content("""{"skill":"$skill","statement":"$statement","context":"Fictional project","sourceNote":"User statement"}""")).andExpect(status().isOk).andReturn()
