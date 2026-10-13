@@ -57,6 +57,31 @@ test("a long quota pause keeps proposals visible, survives reopening and never a
  await outer.getByRole("button",{name:"Lukk",exact:true}).click();await page.getByRole("button",{name:"Analyser dokumentet",exact:true}).click();await outer.getByRole("button",{name:"Profilsammendrag",exact:true}).click();await expect(outer).toContainText("Erfaring med API-er, Kotlin og PostgreSQL.");expect(calls).toBe(0);
  await outer.getByRole("button",{name:"Lukk",exact:true}).click();await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await page.getByRole("button",{name:"Analyze document",exact:true}).click();await expect(outer).toContainText("AI quota is temporarily exhausted");await expect(outer.getByRole("button",{name:"Continue saved analysis",exact:true})).toBeDisabled();
 });
+test("omission reasons explain source checks on mobile without AI calls and legacy results remain readable",async({page})=>{
+ await profile(page);let calls=0;
+ let saved={...run(),analysis:{...analysis,omittedItems:3,omissionReasons:[{section:"HISTORY",reason:"UNSUPPORTED_ORGANIZATION",count:1},{section:"HISTORY",reason:"EVIDENCE_LIMIT",count:2}]}};
+ expect(isDocumentRun(saved)).toBe(true);
+ expect(isDocumentRun({...saved,analysis:{...saved.analysis,omissionReasons:[{section:"HISTORY",reason:"PRIVATE_REJECTED_TEXT",count:1}]}})).toBe(false);
+ expect(isDocumentRun({...saved,analysis:{...saved.analysis,omissionReasons:[{section:"HISTORY",reason:"EVIDENCE_LIMIT",count:201}]}})).toBe(false);
+ expect(isDocumentRun({...saved,analysis:{...saved.analysis,omissionReasons:[saved.analysis.omissionReasons[0],saved.analysis.omissionReasons[0]]}})).toBe(false);
+ await page.route("**/api/profile/me/documents**",r=>{
+  if(r.request().url().includes("/workflow")){if(r.request().method()==="POST")calls++;return r.fulfill({json:saved});}
+  return r.fulfill({json:r.request().url().endsWith(id)?{document:doc,text}:[doc]});
+ });
+ await page.setViewportSize({width:390,height:844});await open(page);
+ const outer=page.locator(".document-workspace-sheet"),panel=outer.locator(".document-omission-card");
+ await panel.locator("summary").click();await expect(panel.getByRole("table")).toBeVisible();
+ await expect(panel).toContainText("Virksomhetsnavnet fantes ikke i det valgte kildeutdraget.");
+ await expect(panel).toContainText("Manglende kildegrunnlag betyr ikke at du mangler kompetansen.");
+ expect(await panel.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
+ await panel.evaluate(e=>e.scrollIntoView({block:"center"}));await page.screenshot({path:"/tmp/career-document-omissions-mobile.png",fullPage:false});
+ await outer.getByRole("button",{name:"Lukk",exact:true}).click();
+ await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await page.getByRole("button",{name:"Analyze document",exact:true}).click();
+ await panel.locator("summary").click();await expect(panel).toContainText("The organization name did not appear in its selected source excerpt.");
+ await outer.getByRole("button",{name:"Close",exact:true}).click();
+ saved={...saved,analysis:{...saved.analysis,omissionReasons:[]}};await page.reload();await page.getByRole("button",{name:"Analyze document",exact:true}).click();
+ await panel.locator("summary").click();await expect(panel).toContainText("This analysis has no saved omission reasons.");expect(calls).toBe(0);
+});
 test("workflow proxies reject anonymous reads, missing consent, spoofed ownership and cross-origin calls",async({request})=>{
  const path="/api/profile/me/documents/workflow";const body={scope:id,documents:[{documentId:id,text}],locale:"nb",consent:true};
  expect((await request.get(`${path}?scope=${id}`)).status()).toBe(401);expect((await request.post(path,{data:{...body,consent:false}})).status()).toBe(400);

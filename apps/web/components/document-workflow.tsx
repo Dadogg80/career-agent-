@@ -3,6 +3,7 @@ import { UsePresentation } from "./presentation-selection";
 import { refreshProfileEvidence } from "../lib/profile-evidence-cache";
 import { HelpTip } from "./ui/help-tip";
 import { DocumentCoverage } from "./document-coverage";
+import { DocumentOmissions } from "./document-omissions";
 
 import { useAiChoice } from "../lib/use-ai-configuration";
 import { aiRecipients } from "../lib/ai-configuration";
@@ -190,7 +191,7 @@ export function DocumentWorkflow({ scope, documents, locale, csrfToken, onAuthRe
       {queueView==="PENDING" && countFor("PENDING")===0 && countFor("READY")>0 && <div className="document-review-complete" role="status"><Check size={18}/><span>{nb?"Ingen kompetanse venter på godkjenning. Se dokumenterte og godkjente opplysninger, eller åpne profilen for å redigere.":"No competencies are waiting for approval. Inspect documented and approved statements, or edit them in your profile."}</span><Button size="sm" variant="outline" onClick={()=>setQueueView("READY")}>{nb?"Se kompetansen din":"View your competencies"}</Button></div>}
       <CompetencyProposalGroups proposals={proposals} names={names} locale={locale} language={analysis.locale} pending={queueView==="PENDING"} onOpenProfile={onOpenProfile} onDecision={decide} disabled={active || save.isPending} onReview={(index,draft)=>{setReview({index,draft:{...draft}});setConfirmed(false);save.reset();}}/>
       </div>
-      {!!analysis.omittedItems && <p className="hint">{analysis.omittedItems} {nb?"forslag manglet kontrollerbart grunnlag eller overskred grensene. Kildeteksten er bevart.":"proposals lacked verifiable evidence or exceeded limits. Source text is retained."}</p>}
+      <DocumentOmissions analysis={analysis} locale={locale}/>
     </>}
     <Sheet open={!!review || !!history} onOpenChange={open=>{if(!open && !save.isPending){setReview(null);setHistory(null);save.reset();}}}><SheetContent className="document-draft-sheet" closeLabel={nb?"Lukk":"Close"}><SheetHeader><SheetTitle>{nb?"Kontroller opplysningen":"Review this information"}</SheetTitle><SheetDescription>{nb?"AI har fylt ut et utkast. Rett teksten slik at den beskriver din egen erfaring. Kilden beholdes.":"AI has filled a draft. Edit it to describe your own experience accurately. Evidence is retained."}</SheetDescription></SheetHeader>
       {review && <><label htmlFor="draft-skill">{nb?"Kompetanse":"Competency"}</label><Input id="draft-skill" value={review.draft.skill} maxLength={120} onChange={e=>setReview({...review,draft:{...review.draft,skill:e.target.value}})}/><label htmlFor="draft-statement">{nb?"Hva gjorde du selv?":"What did you personally do?"}</label><Textarea id="draft-statement" value={review.draft.statement} maxLength={1000} rows={5} onChange={e=>setReview({...review,draft:{...review.draft,statement:e.target.value}})}/><label htmlFor="draft-context">{nb?"Firma / prosjekt":"Company / project"}</label><Input id="draft-context" value={review.draft.context} maxLength={500} onChange={e=>setReview({...review,draft:{...review.draft,context:e.target.value}})}/></>}

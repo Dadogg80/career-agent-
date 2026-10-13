@@ -10,8 +10,16 @@ data class ProfileSummaryDraft(val kind: String, val text: String, val documentI
 data class CareerHistoryDraft(val key: UUID, val content: com.careeragent.profile.domain.CareerEntryContent, val periodText: String, val documentId: UUID, val quote: String, val additionalSources: List<CompetencySource> = emptyList(), val profileEntryId: UUID? = null, val reviewState: String? = null)
 data class AnalysisDocument(val documentId: UUID, val originalName: String, val inputCharacters: Int, val sourceCharacters: Int)
 data class DocumentExcerpt(val documentId: UUID, val text: String)
+enum class DocumentResultSection { COMPETENCY, PROFILE, HISTORY, RESULT }
+enum class DocumentOmissionReason {
+    INVALID_STRUCTURE, INVALID_FIELDS, EVIDENCE_LIMIT, INVALID_EVIDENCE_IDS, UNSUPPORTED_QUOTE, QUOTE_LIMIT,
+    UNSUPPORTED_SKILL, UNSUPPORTED_TITLE, UNSUPPORTED_ORGANIZATION, UNSUPPORTED_CLIENT, UNSUPPORTED_ROLE,
+    UNSUPPORTED_PERIOD, INVALID_PERIOD, SOURCE_MISMATCH, RESULT_LIMIT
+}
+data class DocumentOmission(val section: DocumentResultSection, val reason: DocumentOmissionReason, val count: Int)
 data class DocumentAnalysis(val id: UUID, val locale: String, val provider: String,
     val summary: List<CompetencySummary>, val suggestions: List<CompetencySuggestion>,
     val inputCharacters: Int, val sourceCharacters: Int, val partial: Boolean, val omittedItems: Int,
     val createdAt: OffsetDateTime, val documents: List<AnalysisDocument> = emptyList(),
-    val profile: List<ProfileSummaryDraft> = emptyList(), val careerEntries: List<CareerHistoryDraft> = emptyList(), val aiSelections: List<com.careeragent.ai.application.AiSelection> = emptyList())
+    val profile: List<ProfileSummaryDraft> = emptyList(), val careerEntries: List<CareerHistoryDraft> = emptyList(), val aiSelections: List<com.careeragent.ai.application.AiSelection> = emptyList(),
+    val omissionReasons: List<DocumentOmission> = emptyList())

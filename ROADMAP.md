@@ -245,6 +245,8 @@ Delivered: durable explicit per-section presentation selection with saved source
 
 Delivered: project-specific extraction instructions, unknown-organization support across history parsing/storage/review, and dated experience coverage that requires actual history evidence. The dedicated Documents page and reviewed standard file drafts are now implemented. The 2026-10-13 quality continuation aligns per-item evidence limits with the provider schema and aggregates reworded dated history without changing personal reviews. This is a targeted correction, not guaranteed project recall. Next: measure project capture on a newly approved analysis; preserve advertisement contact metadata and improve criterion quality; recover nontechnical candidate facts such as languages; split PDF CV text into meaningful editable sections/passages before further tailoring quality work.
 
+The source-check continuation adds persisted, bounded omission categories with an expandable bilingual explanation and legacy fallback. It does not weaken validation or assess semantic completeness. Next quality gate: controlled project-capture validation with the corrected contract before declaring this extraction milestone complete.
+
 
 ## 2026-10-12 — Dedicated library and retained profile review
 
