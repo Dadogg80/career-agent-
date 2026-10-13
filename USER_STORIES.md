@@ -333,6 +333,8 @@ As a jobseeker, I want employment, projects, education and certificates with the
 
 ## Local pilot additions
 
+- Source-backed advertisement contacts: recover explicit bounded contact blocks that AI omitted, retain exact source spelling and quotations, reject date-like phone candidates and preserve unrelated people. No inferred person/role/contact association or extra AI call. Name-only, ambiguous and absent-source details remain outside this conservative recovery.
+
 - **US42 — Reviewed CV export:** choose current confirmed claim/history revisions, preview all selected content, approve a standard DOCX/PDF version and download the same immutable files later. Originals remain unchanged; stale drafts cannot approve.
 - **US43 — Exact application archive:** create/reopen a case for a saved job, choose its approved CV, explicitly record submitted date/text, track status/history and follow-up without sending anything externally. Foreign ownership, stale revisions and deletion of referenced materials are rejected.
 - **US44 — Useful source recovery:** read complete received sections and remaining text when Groq fails; local heading/field organization is labelled and does not invent missing information.
