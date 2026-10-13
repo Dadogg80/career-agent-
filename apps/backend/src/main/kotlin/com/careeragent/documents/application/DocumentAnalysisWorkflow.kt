@@ -114,10 +114,15 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
             val suggestions=mergeSuggestions(state.analysis.suggestions+result.suggestions)
             val career=DocumentHistoryDrafts.merge(state.analysis.careerEntries+result.entries)
             val profile=(state.analysis.profile+result.profile).distinctBy { listOf(it.kind,normal(it.text),it.documentId.toString()) }
+            val omissions=DocumentOmissions.merge(state.analysis.omissionReasons,result.omissionReasons,listOf(
+                DocumentOmission(DocumentResultSection.COMPETENCY,DocumentOmissionReason.SOURCE_MISMATCH,raw.suggestions.size-result.suggestions.size),
+                DocumentOmission(DocumentResultSection.PROFILE,DocumentOmissionReason.SOURCE_MISMATCH,raw.profile.size-result.profile.size),
+                DocumentOmission(DocumentResultSection.HISTORY,DocumentOmissionReason.SOURCE_MISMATCH,raw.entries.size-result.entries.size),
+                DocumentOmission(DocumentResultSection.RESULT,DocumentOmissionReason.RESULT_LIMIT,maxOf(0,suggestions.size-300)+maxOf(0,career.size-50)+maxOf(0,profile.size-80))))
             val covered=state.batches.take(completed).groupBy { it.documentId }.mapValues { it.value.sumOf { batch -> batch.characters } }
             val partial=state.batches.take(completed).filterNot { it.repair }.sumOf { it.characters } < state.approved.values.sumOf { it.length } || state.approved.any { (source,text) -> text != state.sources[source] }
             val analysis=state.analysis.copy(aiSelections=actual,provider=actual.map { it.provider }.distinct().joinToString(" + "),summary=profile.take(20).map { CompetencySummary(it.text.take(500),it.quote.take(600),it.documentId) },
-                suggestions=suggestions.take(300),profile=profile.take(80),careerEntries=career.take(50),inputCharacters=maxOf(40,covered.values.sum()),partial=partial,
+                suggestions=suggestions.take(300),profile=profile.take(80),careerEntries=career.take(50),inputCharacters=maxOf(40,covered.values.sum()),partial=partial,omissionReasons=omissions,
                 omittedItems=minOf(200,state.analysis.omittedItems+result.omitted+(raw.suggestions.size-result.suggestions.size)+(raw.profile.size-result.profile.size)+(raw.entries.size-result.entries.size)+maxOf(0,suggestions.size-300)+maxOf(0,career.size-50)+maxOf(0,profile.size-80)),
                 documents=state.analysis.documents.map { it.copy(inputCharacters=covered[it.documentId] ?: 0) })
             val assessment=if(state.coverageReview && completed>=state.batches.count { !it.repair }) DocumentEvidenceInventory.assess(state.approved,analysis) else null

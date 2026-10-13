@@ -479,6 +479,8 @@ From the owned preparation page, select the base CV and approve the displayed re
 
 Start a newly approved document analysis → inspect Career history as well as Competencies → named projects with valid literal proof can populate unverified PROJECT entries → review the project, role, period and retained source evidence before confirmation. Reworded accounts of the same dated relationship share one analysis draft with all bounded supporting sources. Existing personal edits/rejections/deletions remain protected by the import ledger. Existing saved results are not silently reanalyzed or rewritten; quotation validation is not exhaustive project recall.
 
+When proposals are omitted, expand the source-check explanation to inspect the affected area, recorded reason and bounded count. Reopening saved progress retains these reasons; old analyses explain when no details were recorded. No AI call, automatic reanalysis or factual status change follows opening this panel. Counts describe rejected proposals, not unique projects or proven competency gaps.
+
 ## Approved CV wording handoff
 
 After approving individual text changes in preparation, open the full plain-text preview and choose Copy CV text. Only approved replacements are applied to the exact selected source snapshot; pending/rejected items preserve original wording and separators. A later edit returns its proposal to pending. Changed/unavailable required evidence disables copying as current; earlier text remains readable. Clipboard denial retains the selectable preview for manual copying. Nothing is sent, saved to the profile or written to the original file. Decisions/preview remain page-session-only (ADR 0035).

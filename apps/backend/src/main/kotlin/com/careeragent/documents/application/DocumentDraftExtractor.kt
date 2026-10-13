@@ -11,7 +11,10 @@ import java.util.UUID
 
 /** AI may draft wording; source labels, quotations and history fields are checked independently. */
 internal class DocumentDraftExtractor(private val model: AiModel, private val mapper: ObjectMapper) {
-    data class Result(val suggestions: List<CompetencySuggestion>, val profile: List<ProfileSummaryDraft>, val entries: List<CareerHistoryDraft>, val omitted: Int)
+    data class Result(val suggestions: List<CompetencySuggestion>, val profile: List<ProfileSummaryDraft>, val entries: List<CareerHistoryDraft>, val omitted: Int,
+        val omissionReasons: List<DocumentOmission> = emptyList())
+    private class OmittedItem(val reason: DocumentOmissionReason) : IllegalArgumentException()
+    private fun checkItem(valid: Boolean, reason: DocumentOmissionReason) { if (!valid) throw OmittedItem(reason) }
     internal data class Passage(val text: String)
     fun summarize(profile: List<ProfileSummaryDraft>, suggestions: List<CompetencySuggestion>, locale: String, history: List<CareerHistoryDraft> = emptyList()): List<ProfileSummaryDraft> {
         val evidence=(profile.map { CompetencySource(it.documentId,it.quote) }+history.map { CompetencySource(it.documentId,it.quote) }+suggestions.mapNotNull { it.documentId?.let { id -> CompetencySource(id,it.quote) } }).distinct().groupBy { it.documentId }.values.let { groups -> (0 until (groups.maxOfOrNull { it.size } ?: 0)).flatMap { index -> groups.mapNotNull { it.getOrNull(index) } } }.take(30)
@@ -47,7 +50,7 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
         val parsed=try { parse(output,passages,batch.documentId,approved,locale) } catch(error: AiFailure) {
             val recovered=DocumentCompetencyInventory.recover(batch,approved,locale,emptyList())
             if(error.code!="AI_INVALID_RESULT" || recovered.isEmpty())throw error
-            return Result(recovered,emptyList(),emptyList(),1)
+            return Result(recovered,emptyList(),emptyList(),1,listOf(DocumentOmission(DocumentResultSection.RESULT,DocumentOmissionReason.INVALID_STRUCTURE,1)))
         }
         val recovered=DocumentCompetencyInventory.recover(batch,approved,locale,parsed.suggestions)
         return parsed.copy(suggestions=parsed.suggestions+recovered)
@@ -57,26 +60,36 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
         if (!root.isObject || root.fieldNames().asSequence().toSet() != setOf("competencies","profile","history") ||
             listOf("competencies","profile","history").any { !root.path(it).isArray || root.path(it).size() > 60 }) throw AiFailure("AI_INVALID_RESULT",502)
         var omitted = 0
+        val reasons = mutableListOf<DocumentOmission>()
+        fun omit(section: DocumentResultSection, reason: DocumentOmissionReason) {
+            omitted++; reasons.add(DocumentOmission(section,reason,1))
+        }
         fun field(node: JsonNode, name: String, max: Int, blank: Boolean = false): String {
             val value = node.path(name); require(value.isTextual)
             val text = value.asText().trim(); require(text.length <= max && (blank || text.isNotBlank()) && text.none { it.isISOControl() && it !in "\r\n\t" }); return text
         }
         fun selected(node: JsonNode): String {
-            val ids = node.path("evidenceIds"); require(ids.isArray && ids.size() in 1..6)
-            require(ids.distinct().size == ids.size())
-            val texts = ids.map { require(it.isIntegralNumber && it.canConvertToInt()); passages.getOrNull(it.intValue())?.text ?: throw IllegalArgumentException() }
+            val ids = node.path("evidenceIds"); checkItem(ids.isArray && ids.size() in 1..6,DocumentOmissionReason.EVIDENCE_LIMIT)
+            checkItem(ids.distinct().size == ids.size(),DocumentOmissionReason.INVALID_EVIDENCE_IDS)
+            val texts = ids.map {
+                checkItem(it.isIntegralNumber && it.canConvertToInt(),DocumentOmissionReason.INVALID_EVIDENCE_IDS)
+                passages.getOrNull(it.intValue())?.text ?: throw OmittedItem(DocumentOmissionReason.INVALID_EVIDENCE_IDS)
+            }
             val quote = if (texts.size == 1) texts.first() else {
-                val first = source.indexOf(texts.first()); require(first >= 0)
+                val first = source.indexOf(texts.first()); checkItem(first >= 0,DocumentOmissionReason.UNSUPPORTED_QUOTE)
                 var end = first
-                texts.forEach { text -> val position = source.indexOf(text, end); require(position >= 0); end = position + text.length }
+                texts.forEach { text -> val position = source.indexOf(text, end); checkItem(position >= 0,DocumentOmissionReason.UNSUPPORTED_QUOTE); end = position + text.length }
                 source.substring(first,end)
             }
-            require(quote.length <= 1000 && source.contains(quote)); return quote
+            checkItem(quote.length <= 1000,DocumentOmissionReason.QUOTE_LIMIT)
+            checkItem(source.contains(quote),DocumentOmissionReason.UNSUPPORTED_QUOTE); return quote
         }
         fun literal(label: String, quote: String) = Regex("(?<![\\p{L}\\p{N}_+#])" + Regex.escape(label) + "(?![\\p{L}\\p{N}_+#])",RegexOption.IGNORE_CASE).find(quote)?.value
-        fun <T> read(block: () -> T): T? = try { block() } catch (_: IllegalArgumentException) { omitted++; null }
-        val competencies = root["competencies"].flatMap { node -> read {
-            val quote = selected(node); require(quote.length <= 600)
+        fun <T> read(section: DocumentResultSection, block: () -> T): T? = try { block() } catch (error: IllegalArgumentException) {
+            omit(section,(error as? OmittedItem)?.reason ?: DocumentOmissionReason.INVALID_FIELDS); null
+        }
+        val competencies = root["competencies"].flatMap { node -> read(DocumentResultSection.COMPETENCY) {
+            val quote = selected(node); checkItem(quote.length <= 600,DocumentOmissionReason.QUOTE_LIMIT)
             val skills = node.path("skills"); require(skills.isArray && skills.size() in 1..12)
             val category = field(node,"category",30); require(category in categories)
             val description = field(node,"description",1000)
@@ -86,29 +99,32 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
             skills.mapNotNull { skill ->
                 val label = skill.takeIf { it.isTextual && it.asText().trim().length in 1..120 }?.asText()?.trim()
                 val actual = label?.let { literal(it,quote) }
-                if (actual == null) { omitted++; null } else CompetencySuggestion(actual,description,
+                if (actual == null) { omit(DocumentResultSection.COMPETENCY,DocumentOmissionReason.UNSUPPORTED_SKILL); null } else CompetencySuggestion(actual,description,
                     if (proof != null) context else if (locale == "nb") "Kontekst ikke oppgitt" else "Context not stated",quote,documentId,contextQuote=proof,category=category,drafted=true)
             }
         }.orEmpty() }
-        val profile = root["profile"].mapNotNull { node -> read {
+        val profile = root["profile"].mapNotNull { node -> read(DocumentResultSection.PROFILE) {
             val kind=field(node,"kind",30); require(kind in profileKinds)
             ProfileSummaryDraft(kind,field(node,"text",1000),documentId,selected(node))
         } }
-        val entries = root["history"].mapNotNull { node -> read {
+        val entries = root["history"].mapNotNull { node -> read(DocumentResultSection.HISTORY) {
             val quote=selected(node); val kind=EntryKind.valueOf(field(node,"kind",30)); val title=field(node,"title",200); val org=field(node,"organization",200,kind==EntryKind.PROJECT)
-            require(literal(title,quote) != null && (org.isBlank() || literal(org,quote) != null))
+            checkItem(literal(title,quote) != null,DocumentOmissionReason.UNSUPPORTED_TITLE)
+            checkItem(org.isBlank() || literal(org,quote) != null,DocumentOmissionReason.UNSUPPORTED_ORGANIZATION)
             val client=field(node,"client",200,true); val role=field(node,"deliveryRole",200,true); val period=field(node,"periodText",120,true)
-            require(client.isBlank() || literal(client,quote) != null); require(role.isBlank() || literal(role,quote) != null); require(period.isBlank() || quote.contains(period))
+            checkItem(client.isBlank() || literal(client,quote) != null,DocumentOmissionReason.UNSUPPORTED_CLIENT)
+            checkItem(role.isBlank() || literal(role,quote) != null,DocumentOmissionReason.UNSUPPORTED_ROLE)
+            checkItem(period.isBlank() || quote.contains(period),DocumentOmissionReason.UNSUPPORTED_PERIOD)
             // Do not manufacture January/December for year-only dates. Literal periods are retained for review.
             val months=DocumentCareerPeriod.parse(period)
             val ongoing=Regex("(?i)\\b(?:present|now|nå|dags dato|ongoing)\\b").containsMatchIn(period)
             val description=field(node,"description",1600)
             val content=CareerEntryContent(kind,title,org,client,role,months.start,if(ongoing) null else months.end,ongoing,
                 (if(period.isNotBlank()) "$period\n" else "")+description,"Document evidence: ${quote.take(460)}")
-            require(content.startMonth == null || content.endMonth == null || content.endMonth >= content.startMonth)
+            checkItem(content.startMonth == null || content.endMonth == null || content.endMonth >= content.startMonth,DocumentOmissionReason.INVALID_PERIOD)
             CareerHistoryDraft(UUID.randomUUID(),content,period,documentId,quote)
         } }
-        return Result(competencies,profile,entries,omitted)
+        return Result(competencies,profile,entries,omitted,DocumentOmissions.merge(reasons))
     }
     companion object {
         val categories = listOf("TECHNOLOGY","DELIVERY","LEADERSHIP","DOMAIN","LEARNING","OTHER")
