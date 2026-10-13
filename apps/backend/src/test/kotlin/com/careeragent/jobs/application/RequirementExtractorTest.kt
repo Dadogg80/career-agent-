@@ -202,10 +202,10 @@ class RequirementExtractorTest {
         } }
         val result=RequirementExtractor(model,jacksonObjectMapper()).extract(advertisement,"nb")
         assertThat(result.facts).hasSize(10)
-        assertThat(result.facts.take(5).map { it.kind }).containsExactly(JobFactKind.CONTACT,JobFactKind.CONTACT,JobFactKind.CONTACT,JobFactKind.DEADLINE,JobFactKind.LOCATION)
-        assertThat(result.facts.take(3).map { it.value }).containsExactly("Example Recruiter","jobs@example.test","12 34 56 78")
-        assertThat(result.facts.drop(5).map { it.label }).containsExactly("Role 0","Role 1","Role 2","Role 3","Role 4")
-        assertThat(result.omittedItems).isEqualTo(6)
+        assertThat(result.facts.take(3).map { it.kind }).containsExactly(JobFactKind.CONTACT,JobFactKind.DEADLINE,JobFactKind.LOCATION)
+        assertThat(result.facts[0].value).contains("Example Recruiter","jobs@example.test","12 34 56 78").doesNotContain("Frist:","Sted:")
+        assertThat(result.facts.drop(3).map { it.label }).containsExactly("Role 0","Role 1","Role 2","Role 3","Role 4","Role 5","Role 6")
+        assertThat(result.omittedItems).isEqualTo(4)
         assertThat(calls).isEqualTo(1)
     }
 

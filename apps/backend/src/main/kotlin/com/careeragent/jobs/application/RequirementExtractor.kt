@@ -104,19 +104,20 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
                 }
             }
             omit("INSPECTION_LIMIT", (factItems.size() - 128).coerceAtLeast(0))
+            val sourcedFacts = SourceContactRecovery.merge(text,locale,facts)
             // Validate first; late contact metadata must not lose capacity to earlier narrative sections.
-            val retainedFacts = if (facts.size <= 10) facts.toList() else facts.sortedBy { when (it.kind) {
+            val retainedFacts = if (sourcedFacts.size <= 10) sourcedFacts else sourcedFacts.sortedBy { when (it.kind) {
                 JobFactKind.CONTACT -> 0
                 JobFactKind.DEADLINE -> 1
                 JobFactKind.LOCATION -> 2
                 else -> 3
             } }.take(10)
-            omit("FACT_LIMIT", facts.size-retainedFacts.size)
+            omit("FACT_LIMIT", sourcedFacts.size-retainedFacts.size)
             val omittedItems = omissions.values.sum()
             if (omittedItems > 0) {
                 // Categories/counts only: no advertisement, contact details or provider payload.
                 logger.warn("Job analysis items omitted: count={} categories={}", omittedItems, omissions)
-                if (requirements.isEmpty() && facts.isEmpty()) throw AiFailure("AI_INVALID_RESULT", 502, reason = "NO_SUPPORTED_ITEMS")
+                if (requirements.isEmpty() && retainedFacts.isEmpty()) throw AiFailure("AI_INVALID_RESULT", 502, reason = "NO_SUPPORTED_ITEMS")
             }
             return RequirementExtraction(requirements, retainedFacts, omittedItems,plan?.tasks?.get(AiTask.JOB_ANALYSIS))
         } catch (failure: AiFailure) {

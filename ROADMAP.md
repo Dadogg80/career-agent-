@@ -249,6 +249,8 @@ The source-check continuation adds persisted, bounded omission categories with a
 
 The bounded live project probe was blocked by provider 503/JSON validation failures; project recall remains unverified. Advertisement retention now prioritizes returned source-supported contacts/deadline/location before narrative metadata at the existing ten-fact bound. Recovering omitted source contacts, removing related advertisements, semantic criterion validation, candidate language extraction and PDF passage structure remain pending.
 
+The contact continuation now recovers exact bounded contact sections containing email/labeled phone details after a valid analysis response, consolidating overlapping literal partial facts without another AI call. Explicit related-job sections stop this contact scan; they are not yet removed from the AI requirement input. Name-only/ambiguous contacts, missing source metadata, semantic criterion validation, candidate languages and PDF passage structure remain pending.
+
 
 ## 2026-10-12 — Dedicated library and retained profile review
 
