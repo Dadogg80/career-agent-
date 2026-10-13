@@ -264,3 +264,8 @@ Delivered for review: standard DOCX/PDF draft generation from immutable reviewed
 ## 2026-10-13 — Joined journey quality and CV coverage
 
 Prioritize joined journey quality before final-file readiness: DOCX paragraph boundaries and 40-proposal coverage (ADR 0044), followed by contact/source completeness, frozen-input match repeatability and a component-wide styling/accessibility audit. See docs/JOURNEY_QUALITY_REVIEW.md for acceptance criteria and pending work.
+
+
+## 2026-10-13 — CV passage review transparency
+
+Delivered for review: source-passage ledger within selected CV sections, with exact original wording, original proposal/reason and explicit missing individual-suggestion status. This improves review transparency; finer AI per-entry/per-passage judgments, advertisement contact recall, matching repeatability and the component-wide audit remain pending.

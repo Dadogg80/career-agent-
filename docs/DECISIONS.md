@@ -327,3 +327,8 @@ ADR 0043 extends reviewed-text drafts with immutable standard DOCX/PDF previews.
 ## 2026-10-13 — Joined journey quality and CV coverage
 
 Accept ADR 0044: preserve DOCX paragraph boundaries for new extraction/explicit rereading and consistently support 40 bounded wording proposals. Never migrate stored source indexes silently. Invalid proposals cannot establish complete section review. Contacts/match-repeatability/component design audit continue under docs/JOURNEY_QUALITY_REVIEW.md.
+
+
+## 2026-10-13 — CV passage review transparency
+
+Reuse existing source-bound section plans/proposals for a read-only passage ledger. Never infer individual keep/completed review from a whole-section plan or proposal absence. Show original AI wording separately from the existing user-edited/approved proposal cards. No new API, AI call or persistence fields.

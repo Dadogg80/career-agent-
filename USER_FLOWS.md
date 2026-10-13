@@ -594,3 +594,8 @@ From the reviewed CV draft in /cv, explicitly generate DOCX and PDF file drafts.
 ## 2026-10-13 — Joined journey quality and CV coverage
 
 New DOCX uploads and explicit Read original again preserve separate Word paragraphs for CV tailoring. Older merged CV text gets guidance to reread the original in Documents; exact-source changes can require an updated match/new wording analysis. Prior saved drafts and decisions remain readable. Tailoring accepts up to 40 evidence-linked proposals, with unresolved section review when output cannot be validated.
+
+
+## 2026-10-13 — CV passage review transparency
+
+Selecting a CV section now exposes every non-heading source passage in a compact expandable ledger. Compare original source with the original AI proposal and reason. Approval, edits and durable decisions remain in the existing proposal cards. A section keep recommendation is labelled as a section recommendation; passages without a proposal do not acquire an invented individual assessment.

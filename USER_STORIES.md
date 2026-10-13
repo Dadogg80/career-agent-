@@ -572,3 +572,8 @@ As a job seeker, I can generate and download immutable DOCX/PDF drafts from my r
 ## 2026-10-13 — Joined journey quality and CV coverage
 
 As a user, my separate profile paragraphs, competency table cells and work-description/bullet paragraphs remain individually available for tailoring. I can review more than twelve supported proposals, and receive an explicit recovery action for older merged DOCX text. This does not require every passage to be rewritten.
+
+
+## 2026-10-13 — CV passage review transparency
+
+As a user, I can see all profile/skills/work-section passages, including those with no own proposal, so I can spot missing individual treatment before approving wording. I can compare original text and original AI suggestions on mobile without extra calls or factual promotion.
