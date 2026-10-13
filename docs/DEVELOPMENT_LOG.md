@@ -702,3 +702,8 @@ Implemented explicit reviewed-CV file generation and downloads using the existin
 ## 2026-10-13 — Joined journey quality and CV coverage
 
 Corrected DOCX paragraph boundaries, broadened bounded wording/review coverage and added old-source recovery guidance. Documented concrete findings and remaining contact/matching/design priorities. Validation: full backend suite passed (264 passed, 5 skipped), executable JAR and production web/TypeScript build passed. All 28 existing focused CV/preparation browser cases passed; the new merged-source/40-proposal/proxy recovery case passed after fixture correction. Synthetic DOCX profile/skills-table/work-entry regression and incomplete-output validation passed. No live provider calls or private-document fixtures. GitHub Foundation remains the full browser/development gate.
+
+
+## 2026-10-13 — CV passage review transparency
+
+Added responsive expandable source-passage review to CV sections. Exact source/proposal identity remains unchanged; heading-only units are excluded from body-passage counts. Focused browser checks cover three profile paragraphs with only one proposal, honest unresolved labels and zero provider calls; production web build/TypeScript and two focused browser checks passed. Mobile screenshot inspected and badge/text wrapping corrected. No backend change or live provider calls; full Foundation remains the publication gate.

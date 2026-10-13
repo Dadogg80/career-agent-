@@ -380,3 +380,25 @@ test("whole CV proposals exceed twelve and old merged DOCX source gets actionabl
  await expect(page.getByText("CV-avsnittene kan være slått sammen",{exact:true})).toBeVisible();
  await expect(page.getByRole("link",{name:"Åpne dokumentene",exact:true})).toHaveAttribute("href","/documents");
 });
+
+
+test("paragraph ledger shows all profile paragraphs without claiming individual review or new AI work",async({page})=>{
+ await fixtures(page);const sessionId="55555555-5555-4555-8555-555555555555";
+ const source="Nøkkelkvalifikasjoner\n\nFirst profile paragraph.\n\nSecond supported domain paragraph.\n\nThird mentoring paragraph.";
+ const section={id:"cv-1234567890abcdef-0",kind:"PROFILE",heading:"Nøkkelkvalifikasjoner",paragraphIndexes:[0,1,2,3]};
+ const proposal={...result.proposals[0],oldText:"First profile paragraph.",newText:"Supported API experience is visible."};
+ const structured={...result,sessionId,proposals:[proposal],sections:[section],sectionPlans:[{sectionId:section.id,action:"PROPOSE_CHANGES",priority:"HIGH",reason:"Clarifies confirmed experience.",claimIds:[claimId],requirementIndexes:[0],assessed:true,reviewedParagraphIndexes:[0,1,2,3]}]};
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>r.fulfill({json:{id:sessionId,jobId,revision:1,createdAt:time,stale:false,snapshot:{result:structured,text:source,claims:match.claims,quotes:job.content.requirements.map(r=>r.quote),locale:"nb",promptVersion:"cv-section-wording-v4"},reviews:[]}}));
+ await page.route(`**/api/profile/me/documents/${documentId}`,r=>r.fulfill({json:{document:doc,text:source}}));
+ let calls=0;await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{calls++;return r.fulfill({json:result});});
+ await page.setViewportSize({width:390,height:900});await page.goto(`/jobs/${jobId}/apply`);
+ await page.locator(".cv-section-review").getByRole("button",{name:/Nøkkelkvalifikasjoner/}).click();
+ const ledger=page.getByRole("region",{name:"Gjennomgang av avsnitt"});
+ await expect(ledger.getByText("3 avsnitt · 1 tekstforslag",{exact:true})).toBeVisible();
+ await expect(ledger.getByText("Ingen eget tekstforslag",{exact:true})).toHaveCount(2);
+ await ledger.locator("summary").nth(1).click();await expect(ledger.locator("details").nth(1).getByText(/Ingen egen begrunnelse eller endring/)).toBeVisible();
+ await ledger.locator("summary").first().click();await expect(ledger.getByText("Opprinnelig AI-forslag",{exact:true})).toBeVisible();
+ await expect(ledger.getByText(proposal.newText,{exact:true})).toBeVisible();expect(calls).toBe(0);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await ledger.screenshot({path:"/tmp/cv-passage-review-mobile.png"});
+});
