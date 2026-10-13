@@ -77,7 +77,7 @@ class GeminiAiModelTest {
     @Test fun `quota retry info preserves the longest duration without exposing account details or retrying`() {
         val model = adapter()
         val body = """{"error":{"message":"PRIVATE ACCOUNT","details":[{"@type":"type.googleapis.com/google.rpc.RetryInfo","retryDelay":"967.68s"}]}}"""
-        val failure = model.providerFailure(429, body, "300", "gemini-3.5-flash")!!
+        val failure = model.providerFailure(429, body, "300", "gemini-3.6-flash")!!
         assertThat(failure.retryAfterSeconds).isBetween(967, 968)
         assertThat(failure.message).isEqualTo("AI_RATE_LIMITED")
         assertThatThrownBy { model.generateJson("rules","data", emptyMap()) }.isInstanceOfSatisfying(AiFailure::class.java) { assertThat(it.retryAfterSeconds).isBetween(967,968) }
@@ -125,7 +125,7 @@ class GeminiAiModelTest {
         assertThat(model.generateJson("rules","data",emptyMap())).isEqualTo("""{"skills":["Kotlin"]}""")
         val capture = ArgumentCaptor.forClass(HttpRequest::class.java)
         verify(client,times(1)).send(capture.capture(),any<HttpResponse.BodyHandler<String>>())
-        assertThat(capture.value.uri().toString()).isEqualTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent")
+        assertThat(capture.value.uri().toString()).isEqualTo("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent")
         assertThat(capture.value.uri().rawQuery).isNull()
         assertThat(capture.value.headers().firstValue("x-goog-api-key")).isEqualTo(Optional.of("fictional-key"))
     }
@@ -159,10 +159,10 @@ class GeminiAiModelTest {
         val plan=routing.resolveApproval(gemini.approval.token,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)
         assertThat(plan.tasks.values.map { it.provider }).containsOnly("Gemini")
         assertThat(plan.tasks.values.map { it.model }).containsOnly("gemini-3.5-flash-lite")
-        val flash=options.first { it.approval.selections.singleOrNull() == AiSelection("Gemini","gemini-3.5-flash") }
+        val flash=options.first { it.approval.selections.singleOrNull() == AiSelection("Gemini","gemini-3.6-flash") }
         assertThat(flash.available).isTrue()
         assertThat(routing.resolveApproval(flash.approval.token,AiTask.DOCUMENT_EXTRACTION,AiTask.PROFILE_SUMMARY)
-            .tasks.values.map { it.model }).containsOnly("gemini-3.5-flash")
+            .tasks.values.map { it.model }).containsOnly("gemini-3.6-flash")
         assertThat(routing.selection(AiTask.DOCUMENT_EXTRACTION).provider).isEqualTo("Groq")
         assertThatThrownBy { routing.resolveApproval(gemini.approval.token,AiTask.PERSONAL_MATCH) }.isInstanceOf(AiFailure::class.java)
         env.setProperty("GEMINI_API_KEY","")

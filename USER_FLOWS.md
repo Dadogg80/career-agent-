@@ -604,3 +604,8 @@ Selecting a CV section now exposes every non-heading source passage in a compact
 ## 2026-10-13 — Individual CV passage assessments
 
 New CV tailoring runs supply individual AI reasons for each source paragraph, skills group and work contribution. The passage overview distinguishes AI keep recommendations from missing/unfinished assessment and shows the number of own reasons received. Valid wording proposals remain reviewable even if other passages are unfinished. Existing saved analyses keep their original section-only behavior; run new tailoring to obtain new assessment data. User acceptance and profile confirmation remain separate.
+
+
+## 2026-10-13 — Regular Flash choice
+
+Change model offers regular Gemini 3.6 Flash alongside the existing Flash-Lite alternative. Source retrieval remains separate. Existing saved results show their original model. Changing the private model plan clears consent; local explicit overrides are not rewritten.

@@ -274,3 +274,8 @@ Delivered for review: source-passage ledger within selected CV sections, with ex
 ## 2026-10-13 — Individual CV passage assessments
 
 Delivered for review: source-unit AI reasons and explicit keep/change/review outcomes in the same approved tailoring call (ADR 0045), with missing/invalid assessments visible and preventing complete section declarations. Next: advertisement/contact recall, frozen-input matching repeatability and the wider component audit before independent final-file readiness. Canonical per-employment/project grouping and live semantic quality evaluation remain pending.
+
+
+## 2026-10-13 — Regular Flash model update
+
+Implemented the owner-requested 3.6 regular Flash selection while retaining Flash-Lite defaults and model-bound approval. Focused adapter/routing checks passed. This is a configuration update, not evidence that 3.6 outperforms Lite or that private-document extraction is complete.

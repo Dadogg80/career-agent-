@@ -582,3 +582,8 @@ As a user, I can see all profile/skills/work-section passages, including those w
 ## 2026-10-13 — Individual CV passage assessments
 
 As a user, I can understand why each CV passage is proposed changed, retained or left for review, instead of assuming proposal absence means review is complete. Unsupported/duplicate/contradictory AI declarations cannot conceal incomplete work or become confirmed profile facts.
+
+
+## 2026-10-13 — Regular Flash configuration
+
+As a user, I can choose regular Gemini 3.6 Flash while retaining Flash-Lite for other tasks. Acceptance: the regular alternative and unset Gemini job/match fallback use 3.6; explicit overrides and historical attribution remain intact; private consent remains bound to the displayed model.
