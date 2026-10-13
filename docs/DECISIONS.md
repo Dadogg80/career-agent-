@@ -337,3 +337,8 @@ Reuse existing source-bound section plans/proposals for a read-only passage ledg
 ## 2026-10-13 — Individual CV passage assessments
 
 Accept ADR 0045: validate and persist optional source-bound individual passage plans in the existing approved call; invalidate complete section declarations if any unit is incomplete. Preserve legacy snapshots and separate AI reasoning from user acceptance. CV-only output ceilings become 16,384 tokens for Groq/Gemini; no additional calls or global model/default changes.
+
+
+## 2026-10-13 — Regular Gemini Flash selection
+
+The owner approved regular Flash 3.6 as the default Gemini job/match fallback and selectable Flash alternative, retaining Flash-Lite defaults, Groq defaults, source retrieval and explicit environment overrides. Provider availability and quality require separate validation; no additional model family, automatic fallback or billing change is authorized.

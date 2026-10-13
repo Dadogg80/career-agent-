@@ -9,7 +9,7 @@ Add to the existing ignored `apps/backend/.env`; preserve existing database and 
 ```dotenv
 GEMINI_API_KEY="your-key"
 AI_PROVIDER=gemini
-GEMINI_MODEL=gemini-3.5-flash
+GEMINI_MODEL=gemini-3.6-flash
 ```
 
 From the repository root, load the file into the terminal that starts the backend:
@@ -27,7 +27,7 @@ Spring does not automatically load this arbitrary `.env`. Never put keys into fr
 
 ## Explicit task selection
 
-`AI_PROVIDER` selects the default (`groq` or `gemini`). `AI_JOB_PROVIDER`, `AI_DOCUMENT_PROVIDER`, `AI_PROFILE_PROVIDER` and `AI_MATCH_PROVIDER` override it. Empty overrides use the default. Explicit `*_JOB_MODEL`, `*_DOCUMENT_MODEL`, `*_PROFILE_MODEL` and `*_MATCH_MODEL` overrides always win. Groq retains `GROQ_MODEL` as its fallback for all tasks. Gemini document extraction and profile synthesis default independently to `gemini-3.5-flash-lite`; the general `GEMINI_MODEL` applies to job analysis and personal matching, defaulting to `gemini-3.5-flash`. An existing general Flash setting therefore does not prevent the document/profile Lite defaults.
+`AI_PROVIDER` selects the default (`groq` or `gemini`). `AI_JOB_PROVIDER`, `AI_DOCUMENT_PROVIDER`, `AI_PROFILE_PROVIDER` and `AI_MATCH_PROVIDER` override it. Empty overrides use the default. Explicit `*_JOB_MODEL`, `*_DOCUMENT_MODEL`, `*_PROFILE_MODEL` and `*_MATCH_MODEL` overrides always win. Groq retains `GROQ_MODEL` as its fallback for all tasks. Gemini document extraction and profile synthesis default independently to `gemini-3.5-flash-lite`; the general `GEMINI_MODEL` applies to job analysis and personal matching, defaulting to `gemini-3.6-flash`. An existing general Flash setting therefore does not prevent the document/profile Lite defaults.
 
 Example: keep Groq structured job analysis while testing Gemini document extraction and profile synthesis:
 
@@ -35,10 +35,10 @@ Example: keep Groq structured job analysis while testing Gemini document extract
 AI_PROVIDER=groq
 AI_DOCUMENT_PROVIDER=gemini
 AI_PROFILE_PROVIDER=gemini
-GEMINI_MODEL=gemini-3.5-flash
+GEMINI_MODEL=gemini-3.6-flash
 ```
 
-Supported Gemini text models in this first adapter are stable Flash 3.5/3.6/3.7/3.8 and Flash-Lite 3.5/3.1. Availability in model listing is not generation readiness or quality certification. Both 3.5 Flash and 3.5 Flash-Lite have passed the actual synthetic document extraction/profile pipeline in this instance. The Flash-Lite check made two synthetic calls (1,952 total tokens), returned 11 competency proposals, two history drafts and six sourced profile sections, and excluded explicitly unsupported technologies. This is a small fixture check, not exhaustive real-CV validation or a rate-limit guarantee. An earlier 3.8 Flash generation attempt returned 503; this delivery does not make a live provider call, so current generation readiness remains unverified. Gemini document/profile defaults use 3.5 Flash-Lite; job/match defaults remain 3.5 Flash; Groq defaults remain unchanged. Gemini 3.8 Flash URL Context is now an explicit, optional FINN public-ad retrieval route through the Interactions API. Its response must include successful retrieval and a citation to the exact canonical ad URL, and is labeled as an AI-prepared excerpt rather than an original or complete page. No `latest` alias, Pro preview, paid Search grounding, explicit remote cache, uploaded remote files or private-document URL retrieval is enabled.
+The adapter currently permits Flash 3.5/3.6/3.7/3.8 and Flash-Lite 3.5/3.1. Availability in model listing is not generation readiness or quality certification. Both 3.5 Flash and 3.5 Flash-Lite have passed the actual synthetic document extraction/profile pipeline in this instance. The Flash-Lite check made two synthetic calls (1,952 total tokens), returned 11 competency proposals, two history drafts and six sourced profile sections, and excluded explicitly unsupported technologies. This is a small fixture check, not exhaustive real-CV validation or a rate-limit guarantee. An earlier 3.8 Flash generation attempt returned 503; this delivery does not make a live provider call, so current generation readiness remains unverified. Gemini document/profile defaults use 3.5 Flash-Lite; job/match defaults now use 3.6 Flash; Groq defaults remain unchanged. Gemini 3.8 Flash URL Context is now an explicit, optional FINN public-ad retrieval route through the Interactions API. Its response must include successful retrieval and a citation to the exact canonical ad URL, and is labeled as an AI-prepared excerpt rather than an original or complete page. No `latest` alias, Pro preview, paid Search grounding, explicit remote cache, uploaded remote files or private-document URL retrieval is enabled.
 
 FINN retrieval and job analysis are separate tasks with separate model-choice fingerprints and requests. Groq Browser Search/Exa remains available; Gemini URL Context is an explicit alternative using `gemini-3.8-flash`. The source default follows `AI_JOB_SOURCE_PROVIDER`, then `AI_PROVIDER`; when the existing default is Groq, retrieval remains Groq. `GEMINI_API_KEY` must be present in the backend for Gemini availability. The backend defaults Gemini source retrieval to `gemini-3.8-flash` and accepts `GEMINI_JOB_SOURCE_MODEL` as an explicit override. Selecting Gemini analysis does not select Gemini retrieval, or vice versa; changing either choice requires the corresponding plan approval. Pasted text bypasses source retrieval. When analysis uses Gemini, the frontend skips the Groq-to-Groq ten-second pacing pause. Document workflows use `DOCUMENT_GEMINI_BATCH_DELAY_SECONDS` (default 5, bounded 0..300) for the next Gemini step; Groq keeps `DOCUMENT_AI_BATCH_DELAY_SECONDS` (default 65). Neither delay guarantees capacity.
 
@@ -85,10 +85,10 @@ The owner approved Lite as the default where suitable after bounded synthetic va
 | --- | --- | --- |
 | Document extraction | `gemini-3.5-flash-lite` | `GEMINI_DOCUMENT_MODEL` |
 | Candidate profile summary | `gemini-3.5-flash-lite` | `GEMINI_PROFILE_MODEL` |
-| Job analysis | `gemini-3.5-flash` | `GEMINI_JOB_MODEL` |
-| Personal matching | `gemini-3.5-flash` | `GEMINI_MATCH_MODEL` |
+| Job analysis | `gemini-3.6-flash` | `GEMINI_JOB_MODEL` |
+| Personal matching | `gemini-3.6-flash` | `GEMINI_MATCH_MODEL` |
 
-Job/match fall back to `GEMINI_MODEL` when configured; documents/profile deliberately have independent defaults. To retain Flash for either document task, explicitly set that task override to `gemini-3.5-flash`. To route only document/profile tasks to Gemini while keeping other providers unchanged, use:
+Job/match fall back to `GEMINI_MODEL` when configured; documents/profile deliberately have independent defaults. To retain Flash for either document task, explicitly set that task override to `gemini-3.6-flash`. To route only document/profile tasks to Gemini while keeping other providers unchanged, use:
 
 ```dotenv
 AI_DOCUMENT_PROVIDER=gemini
@@ -97,8 +97,15 @@ AI_PROFILE_PROVIDER=gemini
 
 Provider selection is unchanged; an unset provider still uses Groq. No ignored `.env` is modified by this change. Restart after updating the application or configuration. An existing approved run does not silently change model: inspect and approve the displayed new selection before further private processing. Saved results retain actual original model attribution.
 
-Active project/tier/model quotas must be checked in AI Studio; model splitting cannot guarantee capacity. Antigravity is not a generateContent model ID and cannot be substituted into these variables. See [Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite) and [rate limits](https://ai.google.dev/gemini-api/docs/rate-limits).
+Active project/tier/model quotas must be checked in AI Studio; model splitting cannot guarantee capacity. Antigravity is shown as an agent in AI Studio. The model catalog may expose preview IDs, but this application has not validated its structured-output behavior and does not offer it as an interchangeable text model. See [Flash-Lite](https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite) and [rate limits](https://ai.google.dev/gemini-api/docs/rate-limits).
 
 ## CV wording suggestions
 
 `CV_TAILORING` has independent `AI_TAILORING_PROVIDER`, `GEMINI_TAILORING_MODEL` and `GROQ_TAILORING_MODEL` overrides. Unset provider still uses the general provider (Groq if unset); Gemini defaults independently to `gemini-3.5-flash-lite`. The same explicit Flash/Lite options and recipient/model fingerprints apply. Configure `TAILORING_AI_MAX_REQUESTS` (default 5 attempts per backend process) separately from matching. One request sends complete supported base text, advertisement and all confirmed match claims; source checks and quotas still apply. No automatic fallback, remote file upload or new CV artifact is introduced.
+
+
+## Regular Flash selection update — 2026-10-13
+
+The owner requested replacing the regular Flash menu option and unset Gemini job/match fallback with `gemini-3.6-flash`. Flash-Lite remains `gemini-3.5-flash-lite`, and URL retrieval remains the separately approved `gemini-3.8-flash` Interactions route. The API model catalog still lists both regular 3.5 and 3.6 Flash; catalog presence does not establish retirement, successful generation or superior quality. Historical results keep their actual model metadata. Explicit local `GEMINI_MODEL` and task overrides are preserved: update an existing 3.5 override yourself if you want 3.6, then restart the backend. Private approval fingerprints change with the selected model; saved runs need renewed approval when changing recipients.
+
+Rate limits have independent request-per-minute, token-per-minute and request-per-day bounds. AI Studio's seven-day comparison displays peak usage, not necessarily current remaining capacity. Provider 429 quota failures and 503 overload failures are different; neither justifies silent provider switching or a billing upgrade.

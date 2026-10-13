@@ -29,7 +29,7 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
             "gemini" -> when (task) {
                 AiTask.JOB_SOURCE_RETRIEVAL -> "gemini-3.8-flash"
                 AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY, AiTask.CV_TAILORING -> "gemini-3.5-flash-lite"
-                else -> value("GEMINI_MODEL", "gemini-3.5-flash")
+                else -> value("GEMINI_MODEL", "gemini-3.6-flash")
             }
             else -> throw AiFailure("AI_NOT_CONFIGURED", 503)
         }
@@ -56,7 +56,7 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
             plan(tasks), plan(tasks, "Groq"), plan(tasks, "Gemini", "gemini-3.8-flash"),
         ) else mutableListOf(
             plan(tasks), plan(tasks, "Groq"), plan(tasks, "Gemini"),
-            plan(tasks, "Gemini", "gemini-3.5-flash"),
+            plan(tasks, "Gemini", "gemini-3.6-flash"),
             plan(tasks, "Gemini", "gemini-3.5-flash-lite"),
         )
         if (taskSet == setOf(AiTask.JOB_ANALYSIS)) plans += plan(tasks, "Gemini", "gemini-3.8-flash")
