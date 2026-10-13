@@ -186,6 +186,30 @@ class RequirementExtractorTest {
     }
 
     @Test
+    fun `late contacts deadline and location survive the fact limit after source validation`() {
+        val advertisement=source+" Kontakt: Example Recruiter, jobs@example.test, 12 34 56 78. Frist: 01.11.2026. Sted: Oslo."
+        fun fact(kind:String,value:String,quote:String,label:String=kind)=mapOf("kind" to kind,"label" to label,"value" to value,"quote" to quote)
+        val items=List(10) { fact("ROLE","Utvikler","Vi søker en utvikler.","Role $it") } + listOf(
+            fact("CONTACT","Invented","Unrelated invented contact"),
+            fact("CONTACT","Example Recruiter","Kontakt: Example Recruiter, jobs@example.test, 12 34 56 78."),
+            fact("CONTACT","jobs@example.test","Kontakt: Example Recruiter, jobs@example.test, 12 34 56 78."),
+            fact("CONTACT","12 34 56 78","Kontakt: Example Recruiter, jobs@example.test, 12 34 56 78."),
+            fact("DEADLINE","01.11.2026","Frist: 01.11.2026."),fact("LOCATION","Oslo","Sted: Oslo."))
+        var calls=0
+        val model=object:AiModel { override fun generateJson(system:String,user:String,schema:Map<String,Any>):String {
+            calls++; assertThat(user).isEqualTo(advertisement)
+            return jacksonObjectMapper().writeValueAsString(mapOf("requirements" to emptyList<Any>(),"facts" to items))
+        } }
+        val result=RequirementExtractor(model,jacksonObjectMapper()).extract(advertisement,"nb")
+        assertThat(result.facts).hasSize(10)
+        assertThat(result.facts.take(5).map { it.kind }).containsExactly(JobFactKind.CONTACT,JobFactKind.CONTACT,JobFactKind.CONTACT,JobFactKind.DEADLINE,JobFactKind.LOCATION)
+        assertThat(result.facts.take(3).map { it.value }).containsExactly("Example Recruiter","jobs@example.test","12 34 56 78")
+        assertThat(result.facts.drop(5).map { it.label }).containsExactly("Role 0","Role 1","Role 2","Role 3","Role 4")
+        assertThat(result.omittedItems).isEqualTo(6)
+        assertThat(calls).isEqualTo(1)
+    }
+
+    @Test
     fun `inspection is bounded even when the model returns hundreds of items`() {
         val result = extractor(jacksonObjectMapper().writeValueAsString(mapOf(
             "requirements" to List(200) { mapOf("label" to "Criterion $it", "kind" to "REQUIRED", "quote" to "Kotlin") },

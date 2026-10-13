@@ -247,6 +247,8 @@ Delivered: project-specific extraction instructions, unknown-organization suppor
 
 The source-check continuation adds persisted, bounded omission categories with an expandable bilingual explanation and legacy fallback. It does not weaken validation or assess semantic completeness. Next quality gate: controlled project-capture validation with the corrected contract before declaring this extraction milestone complete.
 
+The bounded live project probe was blocked by provider 503/JSON validation failures; project recall remains unverified. Advertisement retention now prioritizes returned source-supported contacts/deadline/location before narrative metadata at the existing ten-fact bound. Recovering omitted source contacts, removing related advertisements, semantic criterion validation, candidate language extraction and PDF passage structure remain pending.
+
 
 ## 2026-10-12 — Dedicated library and retained profile review
 

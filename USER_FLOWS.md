@@ -477,6 +477,8 @@ From the owned preparation page, select the base CV and approve the displayed re
 
 ## Project history from document analysis
 
+Advertisement analysis retains supported contact, deadline and location metadata ahead of narrative facts when its ten-fact limit is reached. The source quote remains inspectable and unsupported quotations are rejected before prioritization. Missing contacts still remain unknown; prioritization does not perform a new source lookup or another AI call.
+
 Start a newly approved document analysis → inspect Career history as well as Competencies → named projects with valid literal proof can populate unverified PROJECT entries → review the project, role, period and retained source evidence before confirmation. Reworded accounts of the same dated relationship share one analysis draft with all bounded supporting sources. Existing personal edits/rejections/deletions remain protected by the import ledger. Existing saved results are not silently reanalyzed or rewritten; quotation validation is not exhaustive project recall.
 
 When proposals are omitted, expand the source-check explanation to inspect the affected area, recorded reason and bounded count. Reopening saved progress retains these reasons; old analyses explain when no details were recorded. No AI call, automatic reanalysis or factual status change follows opening this panel. Counts describe rejected proposals, not unique projects or proven competency gaps.
