@@ -2,6 +2,7 @@ package com.careeragent.cv.application
 
 import com.careeragent.ai.application.*
 import com.careeragent.documents.application.DocumentRepository
+import com.careeragent.jobs.application.AdvertisementAnalysisSource
 import com.careeragent.jobs.application.JobAnalysisLimits
 import com.careeragent.jobs.application.PersonalMatchService
 import com.careeragent.jobs.application.SavedJobRepository
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
+import java.text.Normalizer
 import java.util.UUID
 import java.util.concurrent.Semaphore
 import java.util.concurrent.atomic.AtomicInteger
@@ -37,6 +39,9 @@ class CvTailoringService(private val jobs: SavedJobRepository, private val docum
         if (request.locale !in setOf("nb","en") || request.text.length !in 40..60000) throw CvFailure("CV_INVALID",400)
         val plan = routing.resolveApproval(request.aiApproval,AiTask.CV_TAILORING)
         val job = jobs.get(identity,jobId)
+        val advertisement = normalizedEvidence(AdvertisementAnalysisSource.prepare(job.content.text))
+        if (job.content.requirements.any { !advertisement.contains(normalizedEvidence(it.quote)) })
+            throw CvFailure("CV_JOB_REVIEW_REQUIRED",409)
         val base = documents.detail(identity,request.documentId)
         if (base.text != request.text) throw CvFailure("CV_SOURCE_CONFLICT",409)
         val match = matching.load(identity,jobId) ?: throw CvFailure("CV_SOURCE_CONFLICT",409)
@@ -76,6 +81,8 @@ class CvTailoringService(private val jobs: SavedJobRepository, private val docum
                 sections = sections, sectionPlans = sectionPlans, passagePlans = passagePlans)
         } finally { permit.release() }
     }
+    private fun normalizedEvidence(text: String) = Normalizer.normalize(text,Normalizer.Form.NFC)
+        .replace(Regex("(?U)\\s+")," ").trim()
     internal fun paragraphs(text: String) = CvReviewedText.paragraphs(text)
     internal fun parse(output: String, paragraphs: List<String>, claims: Set<UUID>, requirements: Int): Pair<List<CvTextProposal>,Int> {
         val root = try { mapper.readTree(output) } catch (_: Exception) { throw AiFailure("AI_INVALID_RESULT",502) }

@@ -54,6 +54,45 @@ class DocumentWorkflowIntegrationTest {
     private fun next(user:String,run:JsonNode)=post(user,"$path/${run["id"].asText()}/next",mapOf("revision" to run["revision"].asLong()))
     private fun output()=json.writeValueAsString(mapOf("competencies" to listOf(mapOf("skills" to listOf("Kotlin","PostgreSQL","InventedSkill"),"description" to "Utviklet API-er med Kotlin og PostgreSQL.","category" to "TECHNOLOGY","evidenceIds" to listOf(2),"contextId" to 0,"context" to "Example AS")),"profile" to listOf(mapOf("kind" to "EXPERIENCE","text" to "Utvikling av API-er.","evidenceIds" to listOf(2))),"history" to listOf(mapOf("kind" to "EMPLOYMENT","title" to "Senior Developer","organization" to "Example AS","client" to "","deliveryRole" to "","periodText" to "2021 – 2024","description" to "Utviklet API-er.","evidenceIds" to listOf(0,1,2)))))
     private fun stub(){`when`(model.generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))).thenAnswer { call -> if(call.getArgument<AiTask>(3)==AiTask.PROFILE_SUMMARY)"""{"profile":[{"kind":"PROFILE","text":"Erfaring med API-er, Kotlin og PostgreSQL.","evidenceIds":[0]}]}""" else output() }}
+    @Test fun `documentary language rows populate the full automatic match without personal reconfirmation`() {
+        val user=profile()
+        val source="Språk\nNorsk – morsmål\nItaliensk – morsmål\nEngelsk – flytende, muntlig og skriftlig"
+        val doc=upload(user,source)
+        doReturn("""{"competencies":[],"profile":[],"history":[]}""").`when`(model)
+            .generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
+        next(user,post(user,path,mapOf("scope" to "collection","locale" to "nb","consent" to true,"populateProfile" to true,
+            "documents" to listOf(mapOf("documentId" to doc,"text" to source)))))
+        val available=json.readTree(mvc.perform(get("/api/profile/me/claims").with(caller(user))).andReturn().response.contentAsString)
+        assertThat(available.map { it["skill"].asText() }).containsExactlyInAnyOrder("Norsk","Italiensk","Engelsk")
+        assertThat(available.map { it["confirmationBasis"].asText() }).containsOnly("DOCUMENT")
+        assertThat(available.map { it["status"].asText() }).containsOnly("CONFIRMED")
+        assertThat(available.map { it["context"].asText() }).containsOnly("Kontekst ikke oppgitt")
+        val norwegian=available.first { it["skill"].asText()=="Norsk" }
+        assertThat(norwegian["statement"].asText()).isEqualTo("Norsk – morsmål")
+        val advertisement="Vi søker en saksbehandler. Du må ha gode norskkunnskaper."
+        val job=post(user,"/api/profile/me/jobs",mapOf("title" to "Saksbehandler","sourceType" to "PASTED_TEXT","sourceUrl" to null,
+            "text" to advertisement,"locale" to "nb","requirements" to listOf(mapOf("label" to "Norskkunnskaper","kind" to "REQUIRED","quote" to "Du må ha gode norskkunnskaper.")),
+            "facts" to emptyList<Any>(),"omittedItems" to 0,"retrievedAt" to null))
+        doAnswer { call ->
+            val input=json.readTree(call.getArgument<String>(1))
+            assertThat(input["confirmedClaims"].map { it["skill"].asText() }).containsExactlyInAnyOrder("Norsk","Italiensk","Engelsk")
+            assertThat(input["candidatePassages"].map { it["statement"].asText() }).contains("Norsk – morsmål")
+            json.writeValueAsString(mapOf("assessments" to listOf(mapOf("requirementIndex" to 0,"classification" to "STRONG",
+                "reason" to "Dokumentet oppgir norsk som morsmål.","question" to "","evidenceRelation" to "DIRECT","requirementNature" to "PRACTICAL",
+                "evidence" to listOf(mapOf("claimId" to norwegian["id"].asText(),"quote" to "Norsk – morsmål"))))))
+        }.`when`(model).generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.PERSONAL_MATCH))
+        val result=post(user,"/api/profile/me/jobs/${job["id"].asText()}/match",mapOf("text" to advertisement,"locale" to "nb","consent" to true,
+            "claims" to available.map { mapOf("id" to it["id"].asText(),"revision" to it["revision"].asLong()) }))
+        assertThat(result["automaticEvidence"].asBoolean()).isTrue()
+        assertThat(result["assessments"][0]["classification"].asText()).isEqualTo("STRONG")
+        assertThat(result["assessments"][0]["question"].asText()).isEmpty()
+        // Reanalysis uses the import ledger rather than creating another language claim.
+        doReturn("""{"competencies":[],"profile":[],"history":[]}""").`when`(model)
+            .generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
+        next(user,post(user,path,mapOf("scope" to "collection","locale" to "nb","consent" to true,"populateProfile" to true,
+            "documents" to listOf(mapOf("documentId" to doc,"text" to source)))))
+        mvc.perform(get("/api/profile/me/claims").with(caller(user))).andExpect(jsonPath("$.length()").value(3))
+    }
     @Test fun `a complete approved list is populated across source portions without duplicate imports or extra AI calls`() {
         val user=profile()
         val source="Project: Atlas\nFrontend:\n"+(1..70).joinToString("\n") { "FrameworkTechnologyVersion$it, PlatformRuntimeIntegrationTool$it" }

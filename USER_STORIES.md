@@ -591,3 +591,10 @@ As a user, I can understand why each CV passage is proposed changed, retained or
 ## 2026-10-13 — Regular Flash configuration
 
 As a user, I can choose regular Gemini 3.6 Flash while retaining Flash-Lite for other tasks. Acceptance: the regular alternative and unset Gemini job/match fallback use 3.6; explicit overrides and historical attribution remain intact; private consent remains bound to the displayed model.
+
+## 2026-10-13 — Advertisement and candidate evidence quality
+
+- As a candidate, I want recognizable related-job recommendations excluded from AI analysis without losing the saved original advertisement. Acceptance: exact recommendation headings and repeated footer-card patterns delimit input; legacy unrelated criteria remain unassessed rather than matched as real requirements.
+- As a candidate, I want explicit negated stack expectations, offered benefits and unsupported language labels withheld as requirements. Acceptance: conservative lexical rejection and formatting-equivalent deduplication preserve actual duties, optional qualifications, prohibitions and distinct evidence.
+- As a candidate, I want my explicitly documented natural-language competence available to full-profile matching without entering it again. Acceptance: literal name/proficiency quotations, supported PDF row boundaries, documentary confirmation basis, no invented CEFR/employer context, no programming-language confusion, and preserved user decisions on reanalysis.
+- As a candidate, I want outdated recommendation-derived requirements repaired before new CV suggestions. Acceptance: CV_JOB_REVIEW_REQUIRED blocks the provider call, asks for advertisement reanalysis, and preserves historical saved work. These controls do not promise exhaustive extraction or deterministic semantic judgments.

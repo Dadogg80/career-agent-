@@ -47,7 +47,7 @@ internal object DocumentEvidenceInventory {
         listFacts.forEach { (quote,items) ->
             // Keep every repeated occurrence, so evidence from one employer cannot cover another.
             Regex(Regex.escape(quote)).findAll(text).forEach { occurrence ->
-                candidates.add(Candidate(id,"TECHNOLOGY",occurrence.range.first,quote,items.map { it.skill }.distinct()))
+                candidates.add(Candidate(id,if(items.all { it.category=="OTHER" })"LANGUAGE" else "TECHNOLOGY",occurrence.range.first,quote,items.map { it.skill }.distinct()))
             }
         }
         val lines = Regex("[^\\r\\n]+").findAll(text).toList()

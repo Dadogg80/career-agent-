@@ -3,7 +3,7 @@ import { refreshProfileEvidence } from "../lib/profile-evidence-cache";
 
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BriefcaseBusiness, Check, CheckCircle2, FileText, GraduationCap, Heart, Lightbulb, Plus, ScanText, Search, Sparkles } from "lucide-react";
+import { BriefcaseBusiness, Check, CheckCircle2, FileText, GraduationCap, Heart, Languages, Lightbulb, Plus, ScanText, Search, Sparkles } from "lucide-react";
 import { HelpTip } from "./ui/help-tip";
 import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
@@ -19,11 +19,12 @@ type Passage = NonNullable<DocumentRun["coverage"]>["passages"][number];
 type Destination = "claim" | "entry";
 
 const categoryLabels = {
-  nb: { TECHNOLOGY: "Kompetanse", DELIVERY: "Ansvar og leveranser", EDUCATION: "Utdanning", EXPERIENCE: "Erfaring", INTERESTS: "Interesser" },
-  en: { TECHNOLOGY: "Competency", DELIVERY: "Responsibilities and delivery", EDUCATION: "Education", EXPERIENCE: "Experience", INTERESTS: "Interests" },
+  nb: { TECHNOLOGY: "Kompetanse", LANGUAGE: "Språk", DELIVERY: "Ansvar og leveranser", EDUCATION: "Utdanning", EXPERIENCE: "Erfaring", INTERESTS: "Interesser" },
+  en: { TECHNOLOGY: "Competency", LANGUAGE: "Languages", DELIVERY: "Responsibilities and delivery", EDUCATION: "Education", EXPERIENCE: "Experience", INTERESTS: "Interests" },
 };
 
 function passageIcon(kind: string) {
+  if (kind === "LANGUAGE") return Languages;
   if (kind === "INTERESTS") return Heart;
   if (kind === "EDUCATION") return GraduationCap;
   if (kind === "EXPERIENCE") return BriefcaseBusiness;

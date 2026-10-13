@@ -6,7 +6,7 @@ import java.util.UUID
 /** Exact contiguous source coverage. Repeated nearby context is overhead, not counted twice. */
 internal object DocumentAnalysisPlanner {
     const val BATCH_CHARACTERS = 3500
-    private val globalBoundary = Regex("(?iu)^(?:profil|profile|kjernekompetanse|core (?:skills|competencies)|skills|kompetanse|technical skills|utdanning|education|interesser|interests|nøkkelkvalifikasjoner|key qualifications|sertifiseringer|certifications|arbeidserfaring|work experience|experience|projects|prosjekter|courses|kurs)$")
+    private val globalBoundary = Regex("(?iu)^(?:profil|profile|kjernekompetanse|core (?:skills|competencies)|skills|kompetanse|technical skills|utdanning|education|interesser|interests|nøkkelkvalifikasjoner|key qualifications|sertifiseringer|certifications|arbeidserfaring|work experience|experience|projects|prosjekter|courses|kurs|språk|språkkunnskaper|språkferdigheter|language skills|language proficiency|spoken languages)$")
     private val detailHeading = Regex("(?iu)^(?:teknologi(?:er)?|technology|technologies|tech stack|stack|frontend|backend(?:\\s*&\\s*api)?|sky\\s*&\\s*devops|cloud(?:\\s*&\\s*devops)?|data|integrasjoner|integrations|arkitektur|architecture|languages|programmeringsspråk|responsibilities|ansvar|key contributions|contributions|leveranser)$")
     private fun headingLabel(value: String) = value.trim().trimStart('#',' ').trimEnd(':').trim()
     /** Generic subsection labels keep the current literal context; global sections reset it. */

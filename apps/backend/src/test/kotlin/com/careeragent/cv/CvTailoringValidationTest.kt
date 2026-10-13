@@ -76,6 +76,37 @@ class CvTailoringValidationTest {
   assertThatThrownBy {service.propose(identity,jobId,request)}.isInstanceOf(CvFailure::class.java)
   verifyNoInteractions(ai)
  }
+ @Test fun `saved related advertisement criteria require job review before any CV provider call`() {
+  setup()
+  val original=jobs.get(identity,jobId)
+  val related="You must have COBOL experience."
+  val source=original.content.text+"\n\nRelated jobs\nFictional unrelated role\n"+related
+  val saved=original.copy(content=original.content.copy(text=source,requirements=original.content.requirements+
+   ExtractedRequirement("COBOL",RequirementKind.REQUIRED,related)))
+  `when`(jobs.get(identity,jobId)).thenReturn(saved)
+  assertThatThrownBy {service.propose(identity,jobId,request)}.isInstanceOfSatisfying(CvFailure::class.java) {
+   assertThat(it.code).isEqualTo("CV_JOB_REVIEW_REQUIRED");assertThat(it.status).isEqualTo(409)
+  }
+  verifyNoInteractions(ai)
+  assertThat(saved.content.text).isEqualTo(source)
+  assertThat(saved.content.requirements.last().quote).isEqualTo(related)
+  assertThat(mockingDetails(jobs).invocations.map {it.method.name}).containsOnly("get")
+ }
+ @Test fun `retained criteria allow tailoring with NFC and whitespace evidence differences without source edits`() {
+  setup()
+  val original=jobs.get(identity,jobId)
+  val source="Café Kotlin service development is required in this fictional advertisement.\n\n"+
+   "Related jobs\nFictional unrelated role\nYou must have COBOL experience."
+  val saved=original.copy(content=original.content.copy(text=source,requirements=listOf(
+   ExtractedRequirement("Kotlin",RequirementKind.REQUIRED,"Cafe\u0301 Kotlin\u00a0service development"))))
+  `when`(jobs.get(identity,jobId)).thenReturn(saved)
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING))
+   .thenReturn(mapper.writeValueAsString(mapOf("proposals" to listOf(proposal()))))
+  assertThat(service.propose(identity,jobId,request).proposals).hasSize(1)
+  verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)
+  assertThat(saved.content.text).isEqualTo(source)
+  assertThat(mockingDetails(jobs).invocations.map {it.method.name}).containsOnly("get")
+ }
  @Test fun `revision changes during generation invalidate suggestions and never modify sources`() {
   val match=setup()
   `when`(matching.load(identity,jobId)).thenReturn(match,match.copy(stale=true))

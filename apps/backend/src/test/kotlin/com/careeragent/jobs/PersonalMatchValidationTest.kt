@@ -16,6 +16,14 @@ class PersonalMatchValidationTest {
  private val mapper = ObjectMapper()
  private val service = PersonalMatchService(mock(SavedJobRepository::class.java),mock(ClaimRepository::class.java),mock(PersonalMatchRepository::class.java),mock(AiModel::class.java),mapper,10)
  private val claim = MatchClaim(UUID.randomUUID(),2,"Kotlin","Built APIs using Kotlin","Fictional project")
+ @Test fun `matching and shared tailoring input exclude recommendation text without dropping candidate evidence`() {
+  val primary="A fictional employer seeks a developer experienced with Kotlin."
+  val source="$primary\nRelated jobs\nA different employer requires Salesforce experience."
+  val input=mapper.readTree(service.compactInput(source,emptyList(),listOf(claim)))
+  assertThat(input["advertisement"].asText()).isEqualTo(primary)
+  assertThat(input["confirmedClaims"][0]["id"].asText()).isEqualTo(claim.id.toString())
+  assertThat(input["candidatePassages"][0]["statement"].asText()).isEqualTo(claim.statement)
+ }
  @Test fun `unsupported strong matches and unshared requirements become unknown without inventing gaps`() {
   val items = listOf(
    mapOf("requirementIndex" to 0,"classification" to "STRONG","reason" to "Invented expertise","question" to "","evidence" to listOf(mapOf("claimId" to claim.id,"quote" to "Built APIs using Kafka"))),

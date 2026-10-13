@@ -619,3 +619,9 @@ New CV tailoring runs supply individual AI reasons for each source paragraph, sk
 ## 2026-10-13 — Regular Flash choice
 
 Change model offers regular Gemini 3.6 Flash alongside the existing Flash-Lite alternative. Source retrieval remains separate. Existing saved results show their original model. Changing the private model plan clears consent; local explicit overrides are not rewritten.
+
+## 2026-10-13 — Clean advertisement input and documentary languages
+
+New analysis excludes recognized related-job tails from the AI input; saved original excerpts remain unchanged. Narrow source checks withhold negated stack expectations, benefits presented as applicant requirements and unsupported language labels, and consolidate formatting-equivalent duplicates. Ambiguous requirements remain available rather than being silently generalized. Historical criteria sourced only from excluded tails become unassessed on new matching; new CV proposals return CV_JOB_REVIEW_REQUIRED before any provider call until the advertisement is reanalyzed. Existing saved results remain readable.
+
+During a newly approved document analysis, local recovery retains explicit natural-language names and verbatim stated proficiency, including supported PDF row pairs and short oral/written continuations. It does not infer proficiency levels or an employer. Eligible literal facts follow existing documentary population settings; generated prose and history retain their separate review states. User edits, rejections and removals remain protected on reanalysis. The coverage view labels language passages as Languages/Språk, while competencies use the existing OTHER category. Confirmed documentary languages enter automatic full-profile matching without individual manual selection. Existing saved analyses require explicit reanalysis to gain new recovery data; no background AI work is introduced.

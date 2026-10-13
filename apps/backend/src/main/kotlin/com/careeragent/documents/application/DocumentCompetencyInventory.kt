@@ -31,6 +31,9 @@ internal object DocumentCompetencyInventory {
                 if(text.isNotEmpty()){inList=false}
                 return@forEach
             }
+            // Proficiency, negation and intentions belong to the natural-language contract;
+            // never split them into documentary technology names under a Languages heading.
+            if(DocumentLanguageInventory.isLanguageRow(contents))return@forEach
             val at=if(sourceEnd!=null)line.range.first else source.indexOf(line.value,position)
             if(sourceEnd!=null && (line.range.last < batch.sourceStart || sourceEnd<source.length &&
                 line.range.last==sourceEnd-1 && source[sourceEnd] !in "\r\n"))return@forEach
@@ -44,13 +47,17 @@ internal object DocumentCompetencyInventory {
             // Keep valid long lists within the existing 300-suggestion workflow bound.
             // Source-row length and per-item validation still reject unbounded/free-form text.
             if(words.size !in 1..300 || words.any { it.length>120 || it.split(Regex("\\s+")).size>5 || it.contains('@') || it.contains("https://") })return@forEach
-            words.distinctBy(::normal).forEach { skill ->
+            words.filterNot(DocumentLanguageInventory::isLanguageName).distinctBy(::normal).forEach { skill ->
                 if((existing+result).none { normal(it.skill)==normal(skill) && normal(it.context)==normal(context) && it.quote.contains(text) }) {
                     val statement=if(locale=="nb")"Dokumentet oppgir $skill i denne kompetanselisten." else "The document lists $skill in this skills section."
                     result.add(CompetencySuggestion(skill,statement,context,text,batch.documentId,contextQuote=proof?.takeIf { it.length<=300 },category="TECHNOLOGY",recovered=true))
                 }
             }
         }
-        return result
+        val languages = DocumentLanguageInventory.recover(batch, source, locale, emptyList())
+        // A generic Languages heading can also describe programming skills. Retain those, but
+        // classify explicitly identified natural languages separately without duplicate proposals.
+        return result +
+            languages.filterNot { item -> existing.any { normal(it.skill) == normal(item.skill) && it.quote.contains(item.quote) } }
     }
 }
