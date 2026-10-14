@@ -12,9 +12,11 @@ data class DocumentRunState(val id: UUID, val scope: String, val revision: Long,
     val status: String, val sources: Map<UUID, String>, val approved: Map<UUID, String>,
     val batches: List<AnalysisBatch>, val completed: Int, val nextAt: OffsetDateTime?, val issue: String?,
     val analysis: DocumentAnalysis, val aiApproval: String? = null, val plannedSelections: List<com.careeragent.ai.application.AiSelection> = emptyList(), val populateProfile: Boolean = false, val populationLimited: Boolean = false,
-    val coverageReview: Boolean = false, val coverage: DocumentCoverageReport? = null, val repairScheduled: Boolean = false)
+    val coverageReview: Boolean = false, val coverage: DocumentCoverageReport? = null, val repairScheduled: Boolean = false,
+    val issueReason: String? = null)
 data class DocumentRunView(val id: UUID, val scope: String, val revision: Long, val status: String,
     val completedBatches: Int, val totalBatches: Int, val nextAt: OffsetDateTime?, val issue: String?, val analysis: DocumentAnalysis, val aiApproval: String? = null, val plannedSelections: List<com.careeragent.ai.application.AiSelection> = emptyList(), val approvedDocuments: List<DocumentExcerpt> = emptyList(), val populateProfile: Boolean = false, val populationLimited: Boolean = false,
-    val coverageReview: Boolean = false, val coverage: DocumentCoverageReport? = null, val phase: String = "SOURCE")
+    val coverageReview: Boolean = false, val coverage: DocumentCoverageReport? = null, val phase: String = "SOURCE",
+    val issueReason: String? = null)
 fun DocumentRunState.view() = DocumentRunView(id, scope, revision, status, completed, batches.size + 1, nextAt, issue, analysis, aiApproval, plannedSelections, approved.map { DocumentExcerpt(it.key,it.value) }, populateProfile, populationLimited,
-    coverageReview,coverage,if(status=="COMPLETED")"COMPLETED" else if(completed==batches.size)"SUMMARY" else if(batches.getOrNull(completed)?.repair==true)"REPAIR" else "SOURCE")
+    coverageReview,coverage,if(status=="COMPLETED")"COMPLETED" else if(completed==batches.size)"SUMMARY" else if(batches.getOrNull(completed)?.repair==true)"REPAIR" else "SOURCE", issueReason)

@@ -89,7 +89,7 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
     override fun generateJson(system: String, user: String, schema: Map<String, Any>, task: AiTask, selection: AiSelection): String {
         if (apiKey.isBlank()) throw AiFailure("AI_NOT_CONFIGURED", 503)
         val selected = selection
-        if (selected.provider != "Gemini" || selected.model !in setOf("gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"))
+        if (selected.provider != "Gemini" || selected.model !in AiModelCapabilities.geminiStructuredModels)
             throw AiFailure("AI_NOT_CONFIGURED", 503)
         val remaining = cooldowns.forModel("Gemini", selected.model).remainingSeconds()
         if (remaining > 0) throw AiFailure("AI_RATE_LIMITED", 429, remaining)

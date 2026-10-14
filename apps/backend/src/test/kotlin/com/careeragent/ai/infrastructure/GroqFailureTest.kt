@@ -7,17 +7,36 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class GroqFailureTest {
+    @Test fun `every structured generation task accepts each shared Groq capability`() {
+        val model=GroqAiModel(jacksonObjectMapper(),"","openai/gpt-oss-20b",AiCooldowns())
+        for(task in AiTask.entries.filter { it!=AiTask.JOB_SOURCE_RETRIEVAL }) {
+            for(modelName in com.careeragent.ai.application.AiModelCapabilities.groqStructuredModels) {
+                assertThat(model.requestBody("rules","data",emptyMap(),task,modelName)["model"]).isEqualTo(modelName)
+            }
+        }
+        org.assertj.core.api.Assertions.assertThatThrownBy {
+            model.requestBody("rules","data",emptyMap(),AiTask.JOB_ANALYSIS,"qwen/qwen3.8-27b")
+        }.isInstanceOfSatisfying(com.careeragent.ai.application.AiFailure::class.java) {
+            assertThat(it.code).isEqualTo("AI_NOT_CONFIGURED")
+        }
+        org.assertj.core.api.Assertions.assertThatThrownBy {
+            model.requestBody("rules","data",emptyMap(),AiTask.JOB_ANALYSIS,"browser-only-model")
+        }.isInstanceOfSatisfying(com.careeragent.ai.application.AiFailure::class.java) {
+            assertThat(it.code).isEqualTo("AI_NOT_CONFIGURED")
+        }
+    }
     @Test fun `task-specific model configuration is explicit and summary output stays bounded without exposing reasoning`() {
-        val model=GroqAiModel(jacksonObjectMapper(),"","openai/gpt-oss-20b",AiCooldowns(),documentModel="openai/gpt-oss-120b",profileModel="qwen/qwen3.8-27b")
+        val model=GroqAiModel(jacksonObjectMapper(),"","openai/gpt-oss-20b",AiCooldowns(),documentModel="openai/gpt-oss-120b",profileModel="openai/gpt-oss-120b")
         val document=model.requestBody("static","dynamic",emptyMap(),com.careeragent.ai.application.AiTask.DOCUMENT_EXTRACTION)
         assertThat(document["model"]).isEqualTo("openai/gpt-oss-120b")
         assertThat(document["include_reasoning"]).isEqualTo(false)
         val profile=model.requestBody("static","dynamic",emptyMap(),com.careeragent.ai.application.AiTask.PROFILE_SUMMARY)
-        assertThat(profile["model"]).isEqualTo("qwen/qwen3.8-27b")
+        assertThat(profile["model"]).isEqualTo("openai/gpt-oss-120b")
         assertThat(profile["max_completion_tokens"]).isEqualTo(1800)
         assertThat(model.requestBody("rules","data",emptyMap(),AiTask.CV_TAILORING)["max_completion_tokens"]).isEqualTo(16384)
         assertThat(model.requestBody("rules","data",emptyMap(),AiTask.JOB_ANALYSIS)["max_completion_tokens"]).isEqualTo(3500)
-        assertThat(profile["reasoning_format"]).isEqualTo("hidden")
+        assertThat(profile["include_reasoning"]).isEqualTo(false)
+        assertThat(profile).doesNotContainKey("reasoning_format")
         assertThat(model.requestBody("static","dynamic",emptyMap(),com.careeragent.ai.application.AiTask.JOB_ANALYSIS)["model"]).isEqualTo("openai/gpt-oss-20b")
     }
     @Test fun `schema failure is distinguished without exposing provider payload`() {

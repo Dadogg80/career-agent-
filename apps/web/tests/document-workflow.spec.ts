@@ -5,6 +5,28 @@ import { isDocumentRun } from "../lib/document-workflow";
 const id="12345678-1234-1234-1234-123456789abc",second="22345678-1234-1234-1234-123456789abc",runId="32345678-1234-1234-1234-123456789abc",key="42345678-1234-1234-1234-123456789abc";
 const time="2026-10-08T00:00:00Z";
 const text="## Example AS\nSenior Developer 2021 – 2024\nBuilt APIs using Kotlin and PostgreSQL.";
+const structuredModels=[
+ {provider:"Groq",model:"openai/gpt-oss-20b"},{provider:"Groq",model:"openai/gpt-oss-120b"},
+ {provider:"Gemini",model:"gemini-3.8-flash"},{provider:"Gemini",model:"gemini-3.7-flash"},
+ {provider:"Gemini",model:"gemini-3.6-flash"},{provider:"Gemini",model:"gemini-3.5-flash"},
+ {provider:"Gemini",model:"gemini-3.5-flash-lite"},{provider:"Gemini",model:"gemini-3.1-flash-lite"},
+];
+const sourceModels=[
+ {provider:"Groq",model:"openai/gpt-oss-20b"},{provider:"Groq",model:"openai/gpt-oss-120b"},
+ {provider:"Gemini",model:"gemini-3.5-flash-lite"},{provider:"Gemini",model:"gemini-3.5-flash"},
+ {provider:"Gemini",model:"gemini-3.6-flash"},{provider:"Gemini",model:"gemini-3.7-flash"},
+ {provider:"Gemini",model:"gemini-3.8-flash"},{provider:"Gemini",model:"gemini-3.1-flash-lite"},
+];
+function optionsFor(selection:{provider:string;model:string},selectedToken:string){
+ const selectedIndex=structuredModels.findIndex(model=>model.provider===selection.provider&&model.model===selection.model);
+ return structuredModels.map((model,index)=>({approval:{token:index===selectedIndex?selectedToken:(index+1).toString(16).padStart(64,"0"),selections:[model]},available:true}));
+}
+function aiConfig(selection:{provider:string;model:string},token:string){
+ const documents=optionsFor(selection,token),excerpt=optionsFor(selection,token),matching=optionsFor(selection,token),job=optionsFor(selection,token),tailoring=optionsFor(selection,token);
+ const selected=(options:ReturnType<typeof optionsFor>)=>options.find(option=>option.approval.token===token)!.approval;
+ const retrieval=sourceModels.map((model,index)=>({approval:{token:(index+1).toString(16).padStart(64,"0"),selections:[model]},available:true}));
+ return {tasks:{JOB_ANALYSIS:selection,DOCUMENT_EXTRACTION:selection,PROFILE_SUMMARY:selection,PERSONAL_MATCH:selection,CV_TAILORING:selection},documents:selected(documents),documentExcerpt:selected(excerpt),matching:selected(matching),job:selected(job),tailoring:selected(tailoring),sourceRetrieval:retrieval[0].approval,options:{documents,documentExcerpt:excerpt,matching,job,tailoring,sourceRetrieval:retrieval}};
+}
 const doc={id,originalName:"cv.md",mediaType:"text/markdown",byteSize:200,sha256:"a".repeat(64),language:"nb",isMaster:false,createdAt:time,textCharacters:text.length};
 const content={kind:"EMPLOYMENT",title:"Senior Developer",organization:"Example AS",client:"",deliveryRole:"",startMonth:null,endMonth:null,ongoing:false,description:"2021 – 2024\nUtviklet API-er.",sourceNote:"Document source"};
 const analysis={id:runId,locale:"nb",provider:"Groq",summary:[],suggestions:["Kotlin","PostgreSQL"].map(skill=>({skill,statement:"Utviklet API-er med Kotlin og PostgreSQL.",context:"Example AS",quote:"Built APIs using Kotlin and PostgreSQL.",documentId:id,category:"TECHNOLOGY",drafted:true})),inputCharacters:text.length,sourceCharacters:text.length,partial:false,omittedItems:0,createdAt:time,documents:[{documentId:id,originalName:"cv.md",inputCharacters:text.length,sourceCharacters:text.length}],profile:[{kind:"PROFILE",text:"Erfaring med API-er, Kotlin og PostgreSQL.",quote:"Built APIs using Kotlin and PostgreSQL.",documentId:id}],careerEntries:[{key,content,periodText:"2021 – 2024",documentId:id,quote:text}]};
@@ -112,8 +134,8 @@ test("language source coverage has readable bilingual labels and no automatic AI
 });
 
 test("Gemini whole-document review names the recipient and binds sending to the displayed configuration",async({page})=>{
- await profile(page);const token="a".repeat(64);const selection={provider:"Gemini",model:"gemini-3.5-flash"};const approval={token,selections:[selection]};
- await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:selection,DOCUMENT_EXTRACTION:selection,PROFILE_SUMMARY:selection,PERSONAL_MATCH:selection},documents:approval,documentExcerpt:approval,matching:approval}}));
+ await profile(page);const token="a".repeat(64);const selection={provider:"Gemini",model:"gemini-3.5-flash"};
+ await page.route("**/api/ai/config",r=>r.fulfill({json:aiConfig(selection,token)}));
  let stored:ReturnType<typeof run>|null=null;let starts=0;let nexts=0;
  await page.route("**/api/profile/me/documents**",r=>{
   if(r.request().url().includes("/workflow")) {
@@ -138,8 +160,9 @@ test("quota recovery changes the displayed recipient and resumes the same run on
  await profile(page);
  const groq={provider:"Groq",model:"openai/gpt-oss-20b"},gemini={provider:"Gemini",model:"gemini-3.5-flash"};
  const original={token:"b".repeat(64),selections:[groq]},alternative={token:"c".repeat(64),selections:[gemini]};
- const options=[{approval:original,available:true},{approval:alternative,available:true}];
- await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:groq,DOCUMENT_EXTRACTION:groq,PROFILE_SUMMARY:groq,PERSONAL_MATCH:groq},documents:original,documentExcerpt:original,matching:original,job:original,options:{documents:options,documentExcerpt:options,matching:options,job:options}}}));
+ const options=optionsFor(groq,original.token);options.find(option=>option.approval.selections[0].model===gemini.model)!.approval=alternative;
+ const configuration=aiConfig(groq,original.token);
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{...configuration,options:{...configuration.options,documents:options}}}));
  let stored={...run("PAUSED",2),aiApproval:original.token,plannedSelections:[groq],nextAt:new Date(Date.now()+968000).toISOString(),issue:"AI_RATE_LIMITED" as string|null,analysis:{...analysis,aiSelections:[groq]}};
  let switches=0,nexts=0,starts=0;
  await page.route("**/api/profile/me/documents**",r=>{
@@ -154,7 +177,7 @@ test("quota recovery changes the displayed recipient and resumes the same run on
  });
  await page.setViewportSize({width:390,height:844});await open(page);const outer=page.locator(".document-workspace-sheet");
  await expect(outer).toContainText("Groq · openai/gpt-oss-20b");
- await outer.getByRole("button",{name:/Prøv med Gemini/}).click();
+ await outer.getByRole("button",{name:"Prøv med Gemini · gemini-3.5-flash",exact:true}).click();
  await expect(outer.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Gemini for denne analysen"})).not.toBeChecked();
  const resume=outer.getByRole("button",{name:"Fortsett lagret analyse",exact:true});await expect(resume).toBeDisabled();expect(switches+nexts).toBe(0);
  await outer.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Gemini for denne analysen"}).check();await resume.click();
@@ -247,8 +270,8 @@ test("competency review is a persistent queue with direct approval, drafts and r
 
 test("source coverage shows bounded follow-up and literal missing passages without claiming completeness",async({page})=>{
  await profile(page);
- const selection={provider:"Gemini",model:"gemini-3.5-flash-lite"};const token="b".repeat(64);const approval={token,selections:[selection]};
- await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:selection,DOCUMENT_EXTRACTION:selection,PROFILE_SUMMARY:selection,PERSONAL_MATCH:selection},documents:approval,documentExcerpt:approval,matching:approval}}));
+ const selection={provider:"Gemini",model:"gemini-3.5-flash-lite"};const token="b".repeat(64);
+ await page.route("**/api/ai/config",r=>r.fulfill({json:aiConfig(selection,token)}));
  const source=text+"\nMentored two developers and coordinated releases.";
  let saved:Record<string,unknown>|null=null,calls=0;
  let finishRepair:()=>void=()=>{};
@@ -393,9 +416,9 @@ test("completed document results lead with review and retain expandable processi
 
 test("model choices inside the document reader remain clickable without clipping on desktop and mobile",async({page})=>{
  await profile(page);
- const selections=[{provider:"Groq",model:"openai/gpt-oss-20b"},{provider:"Gemini",model:"gemini-3.5-flash"},{provider:"Gemini",model:"gemini-3.5-flash-lite"},{provider:"Groq",model:"openai/gpt-oss-120b"}];
- const approvals=selections.map((selection,i)=>({token:String(i+1).repeat(64),selections:[selection]}));
- await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:selections[0],DOCUMENT_EXTRACTION:selections[0],PROFILE_SUMMARY:selections[0],PERSONAL_MATCH:selections[0]},documents:approvals[0],documentExcerpt:approvals[0],matching:approvals[0],options:{documents:approvals.map(approval=>({approval,available:true})),documentExcerpt:[],matching:[],job:[]}}}));
+ const selections=structuredModels;
+ const token="1".repeat(64);
+ await page.route("**/api/ai/config",r=>r.fulfill({json:aiConfig(selections[0],token)}));
  let writes=0;
  await page.route("**/api/profile/me/documents**",r=>{
   if(r.request().method()!=="GET")writes++;
@@ -403,10 +426,11 @@ test("model choices inside the document reader remain clickable without clipping
  });
  for(const width of [1280,390]) {
   await page.setViewportSize({width,height:800});await open(page);
-  const reader=page.locator(".document-reader-sheet"),choice=reader.locator(".ai-choice");
+  const reader=page.locator(".document-reader-sheet"),choice=reader.locator('[data-choice-area="documents"]');
   const consent=reader.getByRole("checkbox",{name:/Jeg godkjenner at valgt tekst/});await consent.check();
   await choice.getByLabel("Bytt AI-modell").click();
   const menu=choice.locator(".ai-choice-options"),card=choice.locator('xpath=ancestor::*[@data-slot="card"][1]');
+  await expect(choice.locator('[role="group"] button')).toHaveCount(8);
   const menuBox=await menu.boundingBox(),cardBox=await card.boundingBox();expect(menuBox!.y+menuBox!.height).toBeLessThanOrEqual(cardBox!.y+cardBox!.height);
   await menu.screenshot({path:`/tmp/career-model-menu-${width}.png`});
   const target=choice.getByRole("button",{name:/Gemini · gemini-3.5-flash-lite/});
@@ -474,11 +498,13 @@ test("presentation selection proxy rejects anonymous requests and client-injecte
 
 test("completed document analysis offers another model with renewed consent before a new run",async({page})=>{
  await profile(page);let saved=run(),starts=0;
- const first={token:"a".repeat(64),selections:[{provider:"Groq",model:"openai/gpt-oss-20b"}]},secondApproval={token:"b".repeat(64),selections:[{provider:"Gemini",model:"gemini-3.5-flash-lite"}]};
- await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:first.selections[0],DOCUMENT_EXTRACTION:first.selections[0],PROFILE_SUMMARY:first.selections[0],PERSONAL_MATCH:first.selections[0]},documents:first,documentExcerpt:first,matching:first,job:first,tailoring:first,options:{documents:[{approval:first,available:true},{approval:secondApproval,available:true}],documentExcerpt:[],matching:[],job:[]}}}));
+ const first={token:"a".repeat(64),selections:[{provider:"Groq",model:"openai/gpt-oss-20b"}]};
+ const documentOptions=optionsFor(first.selections[0],first.token);
+ const actualSecond=documentOptions.find(option=>option.approval.selections[0].provider==="Gemini"&&option.approval.selections[0].model==="gemini-3.5-flash-lite")!.approval;
+ await page.route("**/api/ai/config",r=>r.fulfill({json:aiConfig(first.selections[0],first.token)}));
  await page.route("**/api/profile/me/documents**",r=>{
   if(r.request().url().includes("/workflow")){
-   if(r.request().method()==="POST"){starts++;const input=r.request().postDataJSON();expect(input.aiApproval).toBe(secondApproval.token);expect(input.consent).toBe(true);saved={...run(),revision:4};}
+   if(r.request().method()==="POST"){starts++;const input=r.request().postDataJSON();expect(input.aiApproval).toBe(actualSecond.token);expect(input.consent).toBe(true);saved={...run(),revision:4};}
    return r.fulfill({json:saved});
   }
   return r.fulfill({json:r.request().url().endsWith(id)?{document:doc,text}:[doc]});
@@ -487,4 +513,51 @@ test("completed document analysis offers another model with renewed consent befo
  await sheet.getByRole("button",{name:"Analyser på nytt med annen modell",exact:true}).click();await expect(sheet.locator(".document-source-settings")).toHaveAttribute("open","");expect(starts).toBe(0);
  await sheet.locator(".ai-choice summary").click();await sheet.getByRole("button",{name:/Gemini · gemini-3.5-flash-lite/}).click();const consent=sheet.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Gemini for denne analysen",exact:true});await expect(consent).not.toBeChecked();
  const start=sheet.getByRole("button",{name:"Start ny analyse",exact:true});await expect(start).toBeDisabled();await consent.check();await start.click();await expect.poll(()=>starts).toBe(1);await expect(sheet).toContainText("Gjennomgangen er klar");
+});
+
+test("combined document selector offers supported models and failed validation keeps a safe resumable reason",async({page})=>{
+ await profile(page);
+ const models=[
+  {provider:"Groq",model:"openai/gpt-oss-20b"},
+  {provider:"Groq",model:"openai/gpt-oss-120b"},
+  {provider:"Gemini",model:"gemini-3.8-flash"},
+  {provider:"Gemini",model:"gemini-3.7-flash"},
+  {provider:"Gemini",model:"gemini-3.6-flash"},
+  {provider:"Gemini",model:"gemini-3.5-flash"},
+  {provider:"Gemini",model:"gemini-3.5-flash-lite"},
+  {provider:"Gemini",model:"gemini-3.1-flash-lite"},
+ ];
+ const options=models.map((selection,index)=>({approval:{token:"b".repeat(63)+index.toString(16),selections:[selection]},available:true}));
+ const selected=options[1],source=text+" ".repeat(50);
+ let saved:(ReturnType<typeof run>&{issueReason?:string|null;aiApproval?:string|null;plannedSelections?:{provider:string;model:string}[];approvedDocuments?:{documentId:string;text:string}[]})|null=null,providerCalls=0,rawResponse="SYNTHETIC_PROVIDER_PRIVATE_RESPONSE";
+ const retrievalOptions=sourceModels.map((selection,index)=>({approval:{token:(index+1).toString(16).padStart(64,"0"),selections:[selection]},available:true}));
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:models[0],DOCUMENT_EXTRACTION:models[0],PROFILE_SUMMARY:models[0],PERSONAL_MATCH:models[0],CV_TAILORING:models[0]},documents:options[0].approval,documentExcerpt:options[0].approval,matching:options[0].approval,job:options[0].approval,tailoring:options[0].approval,sourceRetrieval:retrievalOptions[0].approval,options:{documents:options,documentExcerpt:options,matching:options,job:options,tailoring:options,sourceRetrieval:retrievalOptions}}}));
+ await page.route("**/api/profile/me/documents**",r=>{
+  const url=r.request().url(),method=r.request().method();
+  if(url.includes("/workflow")){
+   if(method==="GET")return r.fulfill({json:saved});
+   if(url.endsWith("/next")){providerCalls++;saved={...run("PAUSED",2),completedBatches:0,totalBatches:2,status:"PAUSED",issue:"AI_INVALID_RESULT",issueReason:"DOCUMENT_RESULT_INVALID",aiApproval:selected.approval.token,plannedSelections:selected.approval.selections,approvedDocuments:[{documentId:id,text:source}],analysis:{...analysis,summary:[],suggestions:[],profile:[],careerEntries:[],inputCharacters:0,partial:true}};return r.fulfill({json:saved});}
+   const input=r.request().postDataJSON();expect(input.aiApproval).toBe(selected.approval.token);expect(input.consent).toBe(true);
+   saved={...run("RUNNING",1),completedBatches:0,totalBatches:2,status:"RUNNING",issue:null,issueReason:null,aiApproval:selected.approval.token,plannedSelections:selected.approval.selections,approvedDocuments:[{documentId:id,text:source}],analysis:{...analysis,summary:[],suggestions:[],profile:[],careerEntries:[],inputCharacters:0,partial:true}};
+   return r.fulfill({json:saved});
+  }
+  return r.fulfill({json:url.endsWith(id)?{document:doc,text:source}:[doc]});
+ });
+ await open(page);const sheet=page.locator(".document-workspace-sheet");
+ const choice=sheet.locator('[data-choice-area="documents"]');
+ await expect(choice).toContainText("Dokumentuttrekk + profilsammendrag");
+ await choice.locator("summary").click();
+ await expect(choice.locator('[role="group"] button')).toHaveCount(8);
+ await choice.getByRole("button",{name:/openai\/gpt-oss-120b/}).click();
+ await expect(choice).toContainText("Groq · openai/gpt-oss-120b");
+ const consent=sheet.getByRole("checkbox",{name:/Jeg godkjenner at valgt tekst sendes til Groq/});
+ await consent.check();
+ await sheet.getByRole("button",{name:"Bygg profil fra dokumentene",exact:true}).click();
+ await expect(sheet).toContainText("AI-utvekslingen lyktes");
+ await expect(sheet).toContainText("AI-utvekslingen lyktes, men dokumentresultatet bestod ikke den lokale kilde- og strukturkontrollen.");
+ await expect(sheet).toContainText("openai/gpt-oss-120b");
+ await expect(sheet).toContainText("Fremdrift og tidligere forslag er bevart");
+ expect(providerCalls).toBe(1);
+ expect(await sheet.innerText()).not.toContain(rawResponse);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

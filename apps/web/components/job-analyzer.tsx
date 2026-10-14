@@ -175,7 +175,7 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
     await continueAnalysis({ text: job.text, locale: resultLocale, imported: job });
   } });
   const pending = phase === "source" || phase === "wait" || phase === "analysis";
-  const blocked = !ready || pending || retryIn > 0;
+  const blocked = !ready || pending || retryIn > 0 || !choice.approval || mode==="url" && !sourceChoice.approval;
   const error = importing.error?.message ?? extraction.error?.message;
   function analyze(e: FormEvent) {
     e.preventDefault(); if (blocked || running.current) return;
@@ -251,8 +251,8 @@ export function JobAnalyzer({ locale }: { locale: Locale }) {
           <div><p className="job-analysis-overline">{locale === "nb" ? "ANNONSE → INNSIKT" : "ADVERTISEMENT → INSIGHT"}</p><h2 id="analyzer-title">{t.workspaceTitle}</h2><p>{t.workspaceDescription}</p></div>
         </div>
         <div className="job-analysis-model-choices" aria-label={locale==="nb"?"Modellvalg per oppgave":"Model selection by task"}>
-          <AiChoice configuration={sourceChoice.configuration} area="sourceRetrieval" label={locale==="nb"?"Hent annonse":"Retrieve ad"} approval={sourceChoice.approval} options={sourceChoice.options} choose={sourceChoice.choose} disabled={pending || mode!=="url"} locale={locale}/>
-          <AiChoice configuration={choice.configuration} area="job" label={locale==="nb"?"Analyser krav":"Analyze requirements"} approval={choice.approval} options={choice.options} choose={token=>{choice.choose(token);setCooldownUntil(0);setRetryIn(0);extraction.reset();}} disabled={pending} locale={locale}/>
+          <AiChoice configuration={sourceChoice.configuration} area="sourceRetrieval" label={locale==="nb"?"Hent annonse":"Retrieve ad"} approval={sourceChoice.approval} configuredDefault={sourceChoice.configuredDefault} options={sourceChoice.options} choose={sourceChoice.choose} disabled={pending || mode!=="url"} locale={locale}/>
+          <AiChoice configuration={choice.configuration} area="job" label={locale==="nb"?"Analyser krav":"Analyze requirements"} approval={choice.approval} configuredDefault={choice.configuredDefault} options={choice.options} choose={token=>{choice.choose(token);setCooldownUntil(0);setRetryIn(0);extraction.reset();}} disabled={pending} locale={locale}/>
         </div>
       </div>
       <div className={`analysis-grid ${result ? "has-result" : ""} ${!result && !pending && mode === "text" ? "is-paste-entry" : ""}`}>

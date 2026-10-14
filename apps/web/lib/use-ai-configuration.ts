@@ -18,7 +18,10 @@ export function useAiChoice(area: AiArea) {
   const [token,setToken]=useState<string>();
   const options=configuration.data?.options?.[area] ?? [];
   const defaultApproval=area==="job"?(configuration.data?.job ?? (configuration.data?{token:"",selections:[configuration.data.tasks.JOB_ANALYSIS]}:undefined)):configuration.data?.[area];
-  const approval=options.find(o=>o.available && o.approval.token===token)?.approval ?? defaultApproval;
+  const defaultOption=options.find(o=>o.approval.token===defaultApproval?.token);
+  const unsupportedDefault=!!defaultApproval && options.length>0 && !defaultOption;
+  const selectedToken=token ?? (defaultOption?.available?defaultApproval?.token:undefined);
+  const approval=options.find(o=>o.available && o.approval.token===selectedToken)?.approval;
   const alternatives=options.filter(o=>o.available && o.approval.token!==approval?.token);
-  return { configuration, approval, options, alternatives, choose:setToken };
+  return { configuration, approval, configuredDefault:unsupportedDefault&&!token?defaultApproval:undefined, options, alternatives, choose:setToken };
 }

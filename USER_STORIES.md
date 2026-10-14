@@ -250,6 +250,18 @@ As the pilot user, I can see whether retrieval actually succeeded and how the re
 - Emit sanitized console events with a per-run ID. Never include advertisement bodies/titles/full URLs, contacts, raw provider payloads or secrets. Production diagnostics require explicit opt-in; no persistent debug storage.
 - Keep bounded reactive Retry-After handling and manual retry. A fixed pause must not be described as guaranteeing quota availability or as an automatic failure retry.
 
+### US-58 — Inspect AI exchanges during local development (P0)
+
+As the local pilot developer, I can explicitly inspect actual AI instructions, inputs, schemas/tools and responses across job, document, profile, matching and CV workflows so that multi-call document runs and provider behavior are debuggable.
+
+- Capture remains off until the user explicitly starts it; the UI warns that source documents and candidate information may appear.
+- Keep content only in loopback-protected, bounded backend memory; never write it to application/console logs, files, database or public-advertisement diagnostics.
+- Group resumable document workflow calls and number calls in observed order. Show provider/model, task, endpoint, status, duration and truncation.
+- Expose the DEV control only beside the AI workflow it inspects; keep the saved-job list free of it and filter an opened job's match panel to that exact job's captured call group.
+- Keep saved-job and document overviews, profile/dashboard pages and CV/application overviews free of the panel; show document diagnostics only in active document analysis and scope them to that workflow.
+- Provide stop and immediate-clear controls, expire entries after ten minutes and stop capture automatically after thirty minutes.
+- Do not show API keys, authorization headers, raw exception messages or provider credentials. Tests use synthetic content and make no live model calls.
+
 ## US-28 — Sign in and reopen my basic profile
 
 Basic identity/profile merged in PR #12; this is a subset of the planned full candidate profile.
@@ -261,12 +273,12 @@ Acceptance criteria:
 - Require a verified session for profile reads/writes and CSRF for save/logout. Isolate different subjects and the same subject under different issuers.
 - Save/reopen name and nb/en language with explicit revision checks; retain the draft on conflict until the user loads the saved version.
 - Show honest unavailable/login-failure/session-expiry states. Support Norwegian-first and English UI.
-- Keep private profile data and auth material out of AI calls, diagnostics and browser persistent storage.
+- Keep basic name/language profile data and auth material out of AI requests and browser persistent storage; any private document/CV AI payload shown for debugging requires the separate, short-lived opt-in trace in US-58.
 - Explicitly mark experience, competencies, CV and matching as future increments.
 
 ## Diagnostics presentation update
 
-The diagnostic surface is a hidden, nonmodal right-side shadcn Sheet with a visible DEV edge tab. Preserve the existing event/source boundaries; support keyboard opening, translated close, Escape/focus restoration, narrow viewports and reduced motion. Opening the panel makes no new provider call.
+The diagnostic surface is a hidden, nonmodal right-side shadcn Sheet with a visible DEV edge tab. Preserve the existing sanitized event/source boundary; support keyboard opening, translated close, Escape/focus restoration, narrow viewports and reduced motion. Opening the panel makes no provider call. Separate private request/response inspection remains disabled until an explicit in-app start and is never logged or persisted.
 
 
 ## US-29 — Review my own competency statements
@@ -356,6 +368,7 @@ As a jobseeker, I want employment, projects, education and certificates with the
 ## AI provider integration
 
 - As a pilot user, I see which AI recipient/model will receive my reviewed data and explicitly approve each new analysis. Backend and UI reject stale configuration approvals without sending to a new recipient or model. Gemini document/profile tasks use Flash-Lite defaults with task overrides; moving a stored Flash plan to Lite requires renewed approval.
+- As a pilot user, I can choose every model in the existing full selector (Groq GPT-OSS 20B/120B and Gemini Flash/Lite 3.1, 3.5, 3.6, 3.7 and 3.8) for each AI call, including job analysis, document extraction/profile synthesis, matching, CV preparation and supported retrieval. The interface distinguishes configured options from live availability, keeps defaults unchanged, identifies the actual recipient/model, and explains safe document failure/validation reasons without exposing raw provider payloads.
 - As a returning user, I can inspect stored document progress after configuration changes; it never silently resumes with another provider.
 - As a job seeker, I receive explicit responsibilities/mentoring/release skills alongside technologies, retain original evidence and can edit drafts before confirming. Source-backed education/interests survive a shorter final summary.
 

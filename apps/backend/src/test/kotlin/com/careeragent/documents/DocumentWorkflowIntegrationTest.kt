@@ -241,7 +241,7 @@ class DocumentWorkflowIntegrationTest {
         environment.propertySources.addFirst(org.springframework.core.env.MapPropertySource(name,mapOf("GEMINI_API_KEY" to "fictional-test-key")))
         try {
             val config=json.readTree(mvc.perform(get("/api/ai/config")).andExpect(status().isOk).andReturn().response.contentAsString)
-            val alternative=config["options"]["documents"].first { it["approval"]["selections"].all { selection -> selection["provider"].asText()=="Gemini" } }
+            val alternative=config["options"]["documents"].first { it["approval"]["selections"].all { selection -> selection["provider"].asText()=="Gemini" && selection["model"].asText()=="gemini-3.5-flash-lite" } }
             assertThat(alternative["available"].asBoolean()).isTrue()
             assertThat(config.toString()).doesNotContain("fictional-test-key")
             val endpoint="$path/${paused["id"].asText()}/provider"
@@ -320,6 +320,25 @@ class DocumentWorkflowIntegrationTest {
         val paused=next(user,first);assertThat(paused["status"].asText()).isEqualTo("PAUSED");assertThat(paused["analysis"]["suggestions"].size()).isEqualTo(2)
         assertThat(next(user,paused)).isEqualTo(paused)
         verify(model,times(2)).generateJson(anyString(),anyString(),anyMap(),(eq(AiTask.DOCUMENT_EXTRACTION) ?: AiTask.DOCUMENT_EXTRACTION))
+    }
+
+    @Test fun `failed document validation persists only an allowlisted reason and hides provider output`() {
+        val user=profile()
+        val source="A synthetic document that contains no recognized competency evidence."
+        val doc=upload(user,source)
+        val initial=post(user,path,mapOf("scope" to doc,"documents" to listOf(mapOf("documentId" to doc,"text" to source)),"locale" to "nb","consent" to true))
+        doReturn("""{"private_provider_field":"SYNTHETIC_RAW_PROVIDER_RESPONSE"}""").`when`(model)
+            .generateJson(anyString(),anyString(),anyMap(),(any(AiTask::class.java) ?: AiTask.DOCUMENT_EXTRACTION))
+
+        val paused=next(user,initial)
+        assertThat(paused["status"].asText()).isEqualTo("PAUSED")
+        assertThat(paused["issue"].asText()).isEqualTo("AI_INVALID_RESULT")
+        assertThat(paused["issueReason"].asText()).isEqualTo(AiFailureReasons.DOCUMENT_RESULT_INVALID)
+        assertThat(paused.toString()).doesNotContain("SYNTHETIC_RAW_PROVIDER_RESPONSE")
+        val recovered=json.readTree(mvc.perform(get("$path/${paused["id"].asText()}").with(caller(user)))
+            .andExpect(status().isOk).andReturn().response.contentAsString)
+        assertThat(recovered["issueReason"].asText()).isEqualTo(AiFailureReasons.DOCUMENT_RESULT_INVALID)
+        assertThat(AiFailureReasons.safe("SYNTHETIC_RAW_PROVIDER_RESPONSE")).isNull()
     }
     @Test fun `workflow source ownership consent CSRF invalidation and payload spoofing are enforced before AI`() {
         val user=profile();val other=profile();val id=upload(user)

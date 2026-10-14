@@ -7,17 +7,43 @@ const claimId = "62345678-1234-1234-1234-123456789abc";
 const pendingId = "72345678-1234-1234-1234-123456789abc";
 const time = "2026-10-07T00:00:00Z";
 const text = "Kotlin experience is required for this fictional backend role. We also prefer Kafka.";
+const structuredModels=[
+ {provider:"Groq",model:"openai/gpt-oss-20b"},{provider:"Groq",model:"openai/gpt-oss-120b"},
+ {provider:"Gemini",model:"gemini-3.8-flash"},{provider:"Gemini",model:"gemini-3.7-flash"},
+ {provider:"Gemini",model:"gemini-3.6-flash"},{provider:"Gemini",model:"gemini-3.5-flash"},
+ {provider:"Gemini",model:"gemini-3.5-flash-lite"},{provider:"Gemini",model:"gemini-3.1-flash-lite"},
+];
+const sourceModels=[
+ {provider:"Groq",model:"openai/gpt-oss-20b"},{provider:"Groq",model:"openai/gpt-oss-120b"},
+ {provider:"Gemini",model:"gemini-3.5-flash-lite"},{provider:"Gemini",model:"gemini-3.5-flash"},
+ {provider:"Gemini",model:"gemini-3.6-flash"},{provider:"Gemini",model:"gemini-3.7-flash"},
+ {provider:"Gemini",model:"gemini-3.8-flash"},{provider:"Gemini",model:"gemini-3.1-flash-lite"},
+];
+function optionsFor(selection:{provider:string;model:string},token:string){
+ const selectedIndex=structuredModels.findIndex(model=>model.provider===selection.provider&&model.model===selection.model);
+ return structuredModels.map((model,index)=>({approval:{token:index===selectedIndex?token:(index+1).toString(16).padStart(64,"0"),selections:[model]},available:true}));
+}
+function aiConfig(selection:{provider:string;model:string},token:string){
+ const documents=optionsFor(selection,token),excerpt=optionsFor(selection,token),matching=optionsFor(selection,token),job=optionsFor(selection,token),tailoring=optionsFor(selection,token);
+ const selected=(options:ReturnType<typeof optionsFor>)=>options.find(option=>option.approval.token===token)!.approval;
+ const sourceRetrieval=sourceModels.map((model,index)=>({approval:{token:(index+1).toString(16).padStart(64,"0"),selections:[model]},available:true}));
+ return {tasks:{JOB_ANALYSIS:selection,DOCUMENT_EXTRACTION:selection,PROFILE_SUMMARY:selection,PERSONAL_MATCH:selection,CV_TAILORING:selection},documents:selected(documents),documentExcerpt:selected(excerpt),matching:selected(matching),job:selected(job),tailoring:selected(tailoring),sourceRetrieval:sourceRetrieval[0].approval,options:{documents,documentExcerpt:excerpt,matching,job,tailoring,sourceRetrieval}};
+}
 const job = { id:jobId,content:{ title:"Fictional backend developer",sourceUrl:null,sourceType:"PASTED_TEXT",text,locale:"nb",requirements:[{label:"Kotlin",kind:"REQUIRED",quote:"Kotlin experience is required"},{label:"Kafka",kind:"PREFERRED",quote:"We also prefer Kafka."}],facts:[],omittedItems:0,retrievedAt:null },createdAt:time };
 const confirmed = { id:claimId,skill:"Kotlin",statement:"Built APIs using Kotlin",context:"Fictional project",sourceNote:"Private note not sent",status:"CONFIRMED",revision:2,createdAt:time,updatedAt:time };
 const result = { id:"82345678-1234-1234-1234-123456789abc",locale:"nb",createdAt:time,assessments:[{requirementIndex:0,classification:"STRONG",reason:"Bekreftet Kotlin-bidrag er relevant.",evidence:[{claimId,quote:confirmed.statement}],question:""},{requirementIndex:1,classification:"CLARIFY",reason:"Kafka er ikke dokumentert, men dette er ikke en bekreftet mangel.",evidence:[],question:"Har du brukt en meldingskø?"}],claims:[{id:claimId,revision:2,skill:confirmed.skill,statement:confirmed.statement,context:confirmed.context}],omittedItems:0,inputCharacters:180,stale:false };
 
 test("matching shares only selected confirmed revisions after separate approval and reopens without another call", async ({ page }) => {
  let stored: typeof result | null = null; let calls = 0; let current = { ...confirmed };
- const groq={provider:"Groq",model:"openai/gpt-oss-20b"},flash={provider:"Gemini",model:"gemini-3.5-flash"},lite={provider:"Gemini",model:"gemini-3.5-flash-lite"};
- const original={token:"a".repeat(64),selections:[groq]},flashApproval={token:"b".repeat(64),selections:[flash]},liteApproval={token:"c".repeat(64),selections:[lite]};
- const options=[{approval:original,available:true},{approval:flashApproval,available:true},{approval:liteApproval,available:true}];
+ const groq={provider:"Groq",model:"openai/gpt-oss-20b"},lite={provider:"Gemini",model:"gemini-3.5-flash-lite"};
+ const structured=[groq,{provider:"Groq",model:"openai/gpt-oss-120b"},
+  {provider:"Gemini",model:"gemini-3.8-flash"},{provider:"Gemini",model:"gemini-3.7-flash"},{provider:"Gemini",model:"gemini-3.6-flash"},
+  {provider:"Gemini",model:"gemini-3.5-flash"},lite,{provider:"Gemini",model:"gemini-3.1-flash-lite"}];
+ const options=structured.map((model,index)=>({approval:{token:"a".repeat(63)+index.toString(16),selections:[model]},available:true}));
+ const original=options[0].approval;
+ const liteApproval=options.find(option=>option.approval.selections[0].model===lite.model)!.approval;
  const logs: string[] = []; page.on("console",message => logs.push(message.text()));
- await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:groq,DOCUMENT_EXTRACTION:groq,PROFILE_SUMMARY:groq,PERSONAL_MATCH:groq},documents:original,documentExcerpt:original,matching:original,job:original,options:{documents:options,documentExcerpt:options,matching:options,job:options}}}));
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{...aiConfig(groq,original.token),options:{...aiConfig(groq,original.token).options,documents:options,documentExcerpt:options,matching:options,job:options}}}));
  await page.route("**/api/auth/session",r => r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
  await page.route("**/api/profile/me/claims",r => r.fulfill({json:[current,{...confirmed,id:pendingId,skill:"React",status:"UNVERIFIED",revision:1}]}));
  await page.route("**/api/profile/me/jobs**",r => {
@@ -31,8 +57,11 @@ test("matching shares only selected confirmed revisions after separate approval 
  await page.goto("/jobs/saved"); await page.getByRole("button",{name:"Åpne stilling",exact:true}).click();
  const sheet = page.getByRole("dialog");
  await sheet.getByRole("button",{name:"Vurder personlig match",exact:true}).click();
+ const choice=sheet.locator('[data-choice-area="matching"]');
+ await expect(choice).toContainText("Personlig stillingsmatch");
  await sheet.locator(".ai-choice summary").click();
- await sheet.getByRole("button",{name:/Gemini · gemini-3.5-flash-lite/}).click();
+ await expect(choice.locator('[role="group"] button')).toHaveCount(8);
+ await choice.getByRole("button",{name:/Gemini · gemini-3.5-flash-lite/}).click();
  const submit = sheet.getByRole("button",{name:"Analyser personlig match",exact:true});
  await expect(submit).toBeDisabled(); expect(calls).toBe(0);
  await sheet.getByText("Se kompetansegrunnlaget",{exact:true}).click();await expect(sheet.locator(".match-claim")).toHaveCount(1);
@@ -100,7 +129,7 @@ test("daily quota keeps matching blocked beyond five minutes and preserves the e
 
 test("Gemini matching rejects stale approval without retrying and allows explicit reapproval after refresh",async({page})=>{
  const first="a".repeat(64),second="b".repeat(64);let token=first;let attempts=0;
- await page.route("**/api/ai/config",r=>{const selection={provider:"Gemini",model:token===first?"gemini-3.5-flash":"gemini-3.7-flash"};const approval={token,selections:[selection]};return r.fulfill({json:{tasks:{JOB_ANALYSIS:selection,DOCUMENT_EXTRACTION:selection,PROFILE_SUMMARY:selection,PERSONAL_MATCH:selection},documents:approval,documentExcerpt:approval,matching:approval}});});
+ await page.route("**/api/ai/config",r=>{const selection={provider:"Gemini",model:token===first?"gemini-3.5-flash":"gemini-3.7-flash"};return r.fulfill({json:aiConfig(selection,token)});});
  await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"test-csrf"}}));
  await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[confirmed]}));
  await page.route("**/api/profile/me/jobs**",r=>{
@@ -122,8 +151,10 @@ test("Gemini matching rejects stale approval without retrying and allows explici
 
 test("Groq quota recovery keeps selected evidence and requires Gemini approval before a second matching call",async({page})=>{
  const groq={provider:"Groq",model:"openai/gpt-oss-20b"},gemini={provider:"Gemini",model:"gemini-3.5-flash"};
- const original={token:"b".repeat(64),selections:[groq]},alternative={token:"c".repeat(64),selections:[gemini]};const options=[{approval:original,available:true},{approval:alternative,available:true}];
- await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:groq,DOCUMENT_EXTRACTION:groq,PROFILE_SUMMARY:groq,PERSONAL_MATCH:groq},documents:original,documentExcerpt:original,matching:original,job:original,options:{documents:options,documentExcerpt:options,matching:options,job:options}}}));
+ const original={token:"b".repeat(64),selections:[groq]},alternative={token:"c".repeat(64),selections:[gemini]};
+ const options=optionsFor(groq,original.token);options.find(option=>option.approval.selections[0].model===gemini.model)!.approval=alternative;
+ const configuration=aiConfig(groq,original.token);
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{...configuration,options:{...configuration.options,documents:options,documentExcerpt:options,matching:options,job:options}}}));
  await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
  await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[confirmed]}));
  let calls=0;let release!:()=>void;const pending=new Promise<void>(resolve=>{release=resolve;});
@@ -138,7 +169,7 @@ test("Groq quota recovery keeps selected evidence and requires Gemini approval b
  await sheet.getByRole("button",{name:"Vurder personlig match",exact:true}).click();
  await expect(sheet.locator(".match-claim input")).toHaveCount(0);await sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Groq for denne matchingen"}).check();
  const submit=sheet.getByRole("button",{name:"Analyser personlig match",exact:true});await submit.click();await expect(sheet).toContainText("16 min");
- await sheet.getByRole("button",{name:/Prøv med Gemini/}).click();await expect(submit).toBeDisabled();expect(calls).toBe(1);
+ await sheet.getByRole("button",{name:"Prøv med Gemini · gemini-3.5-flash",exact:true}).click();await expect(submit).toBeDisabled();expect(calls).toBe(1);
  await expect(sheet.locator(".match-claim input")).toHaveCount(0);await expect(sheet.locator(".match-result")).toContainText("Groq · openai/gpt-oss-20b");
  const consent=sheet.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for denne matchingen"});await expect(consent).not.toBeChecked();await consent.check();await submit.click();
  const activity=sheet.locator(".ai-activity");await expect(activity).toContainText("Venter på svar fra Gemini");

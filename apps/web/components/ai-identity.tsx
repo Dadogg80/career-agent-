@@ -20,17 +20,19 @@ export function AiIdentity({selections,provider,locale,label,pending=false}: {se
 }
 type ConfigurationStatus = {isFetching:boolean;isError:boolean;refetch:()=>unknown};
 
-export function AiChoice({approval,options,choose,disabled,locale,label,area,configuration}: {approval?:AiApproval;options:AiOption[];choose:(token:string)=>void;disabled?:boolean;locale:Locale;label?:string;area?:string;configuration?:ConfigurationStatus}) {
+export function AiChoice({approval,configuredDefault,options,choose,disabled,locale,label,area,configuration}: {approval?:AiApproval;configuredDefault?:AiApproval;options:AiOption[];choose:(token:string)=>void;disabled?:boolean;locale:Locale;label?:string;area?:string;configuration?:ConfigurationStatus}) {
   const selected = approval?.token;
   const loading=!!configuration?.isFetching && !approval;
-  const unavailable=!!configuration && !loading && (configuration.isError || !approval);
+  const unsupportedDefault=!!configuredDefault;
+  const unavailable=!!configuration && !loading && (configuration.isError || unsupportedDefault || !options.some(option=>option.available));
   const nb=locale==="nb";
+  const displayedApproval=approval ?? configuredDefault;
   return <div className="ai-choice" data-choice-area={area}>
     {label && <span className="ai-choice-label">{label}</span>}
-    {(approval || loading) && <AiIdentity selections={approval?.selections} locale={locale} pending={loading}/>}
+    {(displayedApproval || loading) && <AiIdentity selections={displayedApproval?.selections} locale={locale} pending={loading}/>}
     {unavailable && <div className="ai-configuration-status" role="status" aria-live="polite">
       <Info size={16} aria-hidden="true"/>
-      <span><strong>{configuration.isError?(nb?"AI-oppsettet kunne ikke hentes":"AI configuration could not be retrieved"):(nb?"Ingen AI-modell tilgjengelig for denne oppgaven":"No AI model available for this task")}</strong><small>{nb?"Hent oppsettet på nytt. Dette sender ingen dokumenter og starter ingen analyse.":"Retry configuration retrieval. This sends no documents and starts no analysis."}</small></span>
+      <span><strong>{configuration.isError?(nb?"AI-oppsettet kunne ikke hentes":"AI configuration could not be retrieved"):unsupportedDefault?(nb?"Konfigurert standardmodell støttes ikke for denne oppgaven":"Configured default model is not supported for this task"):(nb?"Ingen AI-modell tilgjengelig for denne oppgaven":"No AI model available for this task")}</strong><small>{unsupportedDefault?(nb?"Standardvalget beholdes, men kan ikke kjøres. Velg en støttet modell; det endres ikke automatisk.":"The configured default is preserved but cannot run. Choose a supported model; it will not be changed automatically."):(nb?"Hent oppsettet på nytt. Dette sender ingen dokumenter og starter ingen analyse.":"Retry configuration retrieval. This sends no documents and starts no analysis.")}</small></span>
       <Button type="button" variant="outline" size="sm" disabled={disabled || configuration.isFetching} onClick={()=>void configuration.refetch()}><RefreshCw size={14} aria-hidden="true"/>{configuration.isFetching?(nb?"Henter …":"Loading …"):(nb?"Prøv igjen":"Try again")}</Button>
     </div>}
     {options.some(option=>option.approval.token!==selected) && <details onToggle={event=>{const menu=event.currentTarget;if(!menu.open || !menu.closest(".job-analysis-model-choices"))return;const rect=menu.querySelector("summary")!.getBoundingClientRect(),panel=menu.querySelector<HTMLElement>(".ai-choice-options");if(!panel)return;const width=Math.min(340,window.innerWidth-32),below=window.innerHeight-rect.bottom-24,above=below<180 && rect.top>180;Object.assign(panel.style,{position:"fixed",left:`${Math.max(16,Math.min(rect.right-width,window.innerWidth-width-16))}px`,right:"auto",width:`${width}px`,top:above?"auto":`${rect.bottom+8}px`,bottom:above?`${window.innerHeight-rect.top+8}px`:"auto",maxHeight:`${Math.max(80,Math.min(352,above?rect.top-24:below))}px`});}} onKeyDown={event=>{if(event.key==="Escape"){event.stopPropagation();event.currentTarget.open=false;event.currentTarget.querySelector<HTMLElement>("summary")?.focus();}}} className="ai-choice-menu">
@@ -41,6 +43,7 @@ export function AiChoice({approval,options,choose,disabled,locale,label,area,con
       </summary>
       <div className="ai-choice-options" role="group" aria-label={locale==="nb"?"Tilgjengelige AI-modeller":"Available AI models"}>
         <p>{locale==="nb"?"Velg modell for oppgaven":"Choose a model for this task"}</p>
+        <small className="ai-choice-disclosure">{nb?"Valgene er begrenset til modeller med støttet adapterprotokoll. Nøkkeltilstedeværelse betyr konfigurert; live tilgang, kvote og kvalitet er ikke kontrollert.":"Choices are limited to adapter-protocol-supported models. A configured key marks setup only; live access, quota and quality are not verified."}</small>
         {options.map(option=>{
           const current=option.approval.token===selected;
           const names=option.approval.selections.map(selection=>`${selection.provider} · ${selection.model}`);

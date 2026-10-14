@@ -4,6 +4,7 @@ import { retryAfterSeconds } from "./retry-after";
 import { isClaim, claimId } from "./claims";
 import { isDocumentRun } from "./document-workflow";
 import { isEntry,validEntryContent } from "./career-entries";
+import { isAiFailureReason } from "./ai-configuration";
 export async function documentWorkflowProxy(request:Request,operation:"latest"|"start"|"load"|"next"|"entry"|"claim"|"coverageEntry"|"coverageClaim"|"summary"|"provider",id?:string) {
  if(!localRequest(request))return privateResponse({code:"ACCESS_DENIED"},undefined,403);
  if(id!==undefined && !claimId.test(id))return privateResponse({code:"DOCUMENT_INVALID"},undefined,400);
@@ -33,7 +34,7 @@ export async function documentWorkflowProxy(request:Request,operation:"latest"|"
  try {
   const suffix=operation==="latest"?`?scope=${encodeURIComponent(scope)}`:id?`/${id}${operation==="provider"?"/provider":operation==="next"?"/next":operation==="entry"?"/entries":operation==="summary"?"/summary":operation==="claim"?"/claims":operation==="coverageClaim"?"/coverage/claim":operation==="coverageEntry"?"/coverage/entry":""}`:"";
   const upstream=await fetch(`${privateBase()}/api/profile/me/documents/workflow${suffix}`,{method:request.method,headers,body,cache:"no-store",redirect:"manual",signal:AbortSignal.timeout(30000)});let value:unknown=await upstream.json();
-  if(!upstream.ok){const response=privateResponse(mappedPrivateError(value),upstream,[400,401,403,404,409,413,429,502,503].includes(upstream.status)?upstream.status:503);const retry=retryAfterSeconds(upstream.headers.get("retry-after"));if(retry)response.headers.set("Retry-After",String(retry));return response;}
+  if(!upstream.ok){const mapped=mappedPrivateError(value);const reason=value && typeof value==="object" && "reason" in value && isAiFailureReason(value.reason)?value.reason:undefined;const response=privateResponse(reason && mapped.code.startsWith("AI_")?{...mapped,reason}:mapped,upstream,[400,401,403,404,409,413,429,502,503].includes(upstream.status)?upstream.status:503);const retry=retryAfterSeconds(upstream.headers.get("retry-after"));if(retry)response.headers.set("Retry-After",String(retry));return response;}
   if(operation==="latest" && value && typeof value==="object" && "run" in value)value=value.run;
   const isCoverageValue=(kind:"claim"|"entry")=>!!value && typeof value==="object" && "run" in value && isDocumentRun(value.run) && (kind==="claim"?isClaim((value as {claim?:unknown}).claim):isEntry((value as {entry?:unknown}).entry));
   if(!(value===null && operation==="latest") && !(operation==="entry"?isEntry(value):operation==="claim"?isClaim(value):operation==="coverageClaim"?isCoverageValue("claim"):operation==="coverageEntry"?isCoverageValue("entry"):isDocumentRun(value)))throw new Error();return privateResponse(value,upstream);
