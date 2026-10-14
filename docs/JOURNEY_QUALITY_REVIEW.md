@@ -24,3 +24,9 @@ Use synthetic fixtures and focused regression checks; full required CI remains. 
 ## Individual reasoning checkpoint
 
 ADR 0045 adds per-source-unit reasons within the existing call, with exact memberships and explicit incomplete recovery. Employment introductions and contributions now have individual declarations; grouping into canonical career entries and independent semantic evaluation remain separate work. Contact/source completeness and frozen-input match repeatability are next.
+
+## Logical CV source-unit checkpoint — 2026-10-14
+
+ADR 0046 adds exact application-owned UTF-16 unit ranges for new tailoring, preserving all non-whitespace source content and existing legacy indexes. Identity/headings/recognized entry headers remain protected; stored invalid metadata blocks review and assembly. The same ranges identify AI passages, individual plans, source/context display and accepted substitutions. PDF paragraph-gap preservation keeps wrapped lines together on new extraction/explicit rereading only. This is bounded structural recovery, not canonical career association, exhaustive recall or template reconstruction.
+
+Focused backend source/range/protection/persistence/legacy checks, production builds and four browser cases passed; full Foundation CI remains the publication gate. A private local reread probe increased blank-line blocks from 17 to 49, retained three intact profile paragraphs, six competency groups and ten entry-scoped employment bullets, and preserved every non-whitespace character in its original order; the earlier observed concatenated date marker was absent. No private source text, originals or probe output enter Git. That single-file observation does not establish general extraction quality. Next: required CI and owner review, then a controlled low-call frozen-input Gemini/Groq comparison and project-recall validation. Independent actual-file semantic/structural/visual review remains pending; do not merge automatically.

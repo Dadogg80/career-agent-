@@ -37,6 +37,53 @@ class CvTailoringValidationTest {
   return match
  }
  private fun proposal(id:UUID=claimId,index:Int=1,criterion:Int=0)=mapOf("paragraphIndex" to index,"newText" to "Developed Kotlin APIs for a fictional employer.","reason" to "Makes the documented API contribution visible.","claimIds" to listOf(id.toString()),"requirementIndexes" to listOf(criterion))
+ @Test fun `new generation supplies exact source units and rejects identity headings and historical header edits`() {
+  setup()
+  val source="Fictional engineer\nfictional@example.test\n\nPROFILE\nBuilt Kotlin APIs for a fictional employer.\n\n"+
+   "Improved service reliability.\n\nWORK EXPERIENCE\n2021 – 2023 Fictional employer – Developer\n"+
+   "Built Kotlin APIs for customers.\n- Improved automated tests.\n- Documented API changes."
+  val base=documents.detail(identity,documentId)
+  `when`(documents.detail(identity,documentId)).thenReturn(base.copy(text=source))
+  var supplied=com.fasterxml.jackson.databind.node.JsonNodeFactory.instance.arrayNode()
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)).thenAnswer {call ->
+   assertThat(call.getArgument<String>(0)).contains("Units with editable=false are protected", "Never borrow another entry's employer")
+   supplied=mapper.readTree(call.getArgument<String>(1)).path("baseParagraphs") as com.fasterxml.jackson.databind.node.ArrayNode
+   assertThat(supplied.map {it.path("kind").asText()}).contains("SECTION_HEADING","IDENTITY","ENTRY_HEADER","BULLET")
+   for(unit in supplied.filter {it.path("kind").asText()=="BULLET"}) {
+    val context=supplied[unit.path("contextIndex").asInt()]
+    assertThat(context.path("kind").asText()).isEqualTo("ENTRY_HEADER")
+    assertThat(context.path("text").asText()).contains("Fictional employer", "2021")
+   }
+   mapper.writeValueAsString(mapOf("proposals" to supplied.map {proposal(index=it.path("index").asInt())}))
+  }
+  val result=service.propose(identity,jobId,request.copy(text=source))
+  assertThat(result.sourceUnits).isNotNull()
+  val units=result.sourceUnits!!
+  assertThat(result.proposals).isNotEmpty()
+  assertThat(result.proposals).allMatch {units[it.paragraphIndex].editable}
+  assertThat(result.omittedItems).isEqualTo(units.count {!it.editable})
+  for(unit in units) assertThat(supplied[unit.paragraphIndex].path("text").asText()).isEqualTo(source.substring(unit.start,unit.end))
+  assertThat(documents.detail(identity,documentId).text).isEqualTo(source)
+ }
+ @Test fun `new source unit sessions record v6 without changing legacy snapshot defaults`() {
+  val match=setup()
+  val unit=CvSourceUnit(0,0,text.length,CvSourceUnitKind.TEXT,true)
+  val generated=CvTailoringResult(documentId,matchId,"Groq","fixture-model",emptyList(),0,sourceUnits=listOf(unit))
+  val tailoring=mock(CvTailoringService::class.java)
+  `when`(tailoring.propose(identity,jobId,request)).thenReturn(generated)
+  val repository=mock(CvTailoringSessionRepository::class.java)
+  val sessionId=UUID.randomUUID()
+  `when`(repository.create(eq(identity) ?: identity,eq(jobId) ?: jobId,any(TailoringSnapshot::class.java) ?: TailoringSnapshot(generated,text,match.claims,emptyList(),"en")))
+   .thenAnswer {call ->
+    val snapshot=call.getArgument<TailoringSnapshot>(2)
+    assertThat(snapshot.promptVersion).isEqualTo("cv-section-wording-v6")
+    assertThat(snapshot.result.sourceUnits).containsExactly(unit)
+    CvTailoringSession(sessionId,jobId,1,snapshot,emptyList(),OffsetDateTime.now())
+   }
+  assertThat(CvTailoringSessions(repository,tailoring,matching,jobs).propose(identity,jobId,request).sessionId).isEqualTo(sessionId)
+  assertThat(TailoringSnapshot(generated.copy(sourceUnits=null),text,match.claims,emptyList(),"en").promptVersion)
+   .isEqualTo("cv-section-wording-v5")
+ }
  @Test fun `supported profile skill and experience improvements are not truncated after twelve`() {
   val paragraphs=(0..40).map { "Original paragraph $it" }
   val items=paragraphs.indices.map { i -> mapOf("paragraphIndex" to i,"newText" to "Supported revised wording $i","reason" to "Relevant example","claimIds" to listOf(claimId.toString()),"requirementIndexes" to listOf(0)) }

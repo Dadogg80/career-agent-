@@ -359,3 +359,7 @@ ADR 0044 preserves Word paragraph boundaries on new extraction/explicit rereadin
 ## Individual passage reasoning — 2026-10-13
 
 ADR 0045 introduces bounded per-source-unit keep/change/review reasons in the approved call. Exact source and evidence validation prevent missing/contradictory plans from implying completion; this does not establish semantic truth or CV_READY. Saved legacy wording sessions remain unchanged.
+
+## Logical source-unit and PDF paragraph checkpoint — 2026-10-14
+
+[ADR 0046](adr/0046-logical-cv-source-units-and-pdf-paragraphs.md) supplies application-owned exact UTF-16 ranges for new tailoring generations, reused by AI input, section/passage assessment, wording review and accepted-text assembly. Recognized identity, headings and dated entry headers remain protected; ambiguous structures are not canonical career evidence. At most 500 units of 4,000 UTF-16 code units retain all non-whitespace source text. Optional stored JSON metadata never changes historical indexes: null uses the legacy splitter and invalid ranges fail closed. New PDF extraction/explicit rereading preserves geometric paragraph gaps with original bytes intact. Full confirmed evidence and the existing approved call remain unchanged. Focused source/range/protection/legacy checks, production builds and browser validation passed; required Foundation CI remains the publication gate, and frozen-input comparison, controlled project recall, template fidelity and independent actual-file review remain separate acceptance work.

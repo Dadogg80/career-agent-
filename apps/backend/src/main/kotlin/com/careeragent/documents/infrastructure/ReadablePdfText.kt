@@ -49,6 +49,10 @@ internal object ReadablePdfText {
                 val tracking = gaps.getOrNull(gaps.size/2) ?: 0f
                 val size = glyphs.map { it.fontSizeInPt }.sorted().let { it.getOrNull(it.size/2) ?: 12f }
                 if (glyphs.any { it.font is PDType3Font } || tracking>size*.075f) { stripper.averageCharTolerance=1.2f; stripper.spacingTolerance=1.5f }
+                // Preserve geometric paragraphs instead of flattening them into line breaks.
+                // A slightly wider gap threshold keeps ordinary wrapped lines together when
+                // embedded fonts have short glyph bounding boxes. This is layout, not meaning.
+                stripper.paragraphStart = "\n"; stripper.dropThreshold = 3f
                 stripper.sortByPosition = true; stripper.startPage = pageIndex + 1; stripper.endPage = pageIndex + 1
                 stripper.writeText(document, writer)
             }

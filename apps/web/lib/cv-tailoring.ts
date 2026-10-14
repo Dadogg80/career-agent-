@@ -3,16 +3,27 @@ import { claimId } from "./claims";
 import { isAiSelection } from "./ai-configuration";
 import { isCvSectionData,type CvSection,type CvSectionPlan } from "./cv-sections";
 export const MAX_CV_PROPOSALS=40;
+export type CvSourceUnit={paragraphIndex:number;start:number;end:number;kind:"TEXT"|"SECTION_HEADING"|"IDENTITY"|"ENTRY_HEADER"|"SKILL_GROUP"|"BULLET";editable:boolean;contextIndex:number|null};
 export type CvPassagePlan={paragraphIndex:number;action:"KEEP_UNCHANGED"|"PROPOSE_CHANGES"|"NEEDS_REVIEW";reason:string;claimIds:string[];requirementIndexes:number[];assessed:boolean};
 export type TextProposal = { paragraphIndex:number;oldText:string;newText:string;reason:string;claimIds:string[];requirementIndexes:number[] };
 export type VisibilityStatus = "VISIBLE"|"WEAKLY_VISIBLE"|"NOT_VISIBLE"|"NEEDS_CLARIFICATION"|"UNASSESSED";
 export type CvVisibility = {requirementIndex:number;status:VisibilityStatus;reason:string;claimIds:string[];passages:{paragraphIndex:number;quote:string}[]};
-export type TailoringResult = { documentId:string;matchId:string;provider:"Groq"|"Gemini";model:string;proposals:TextProposal[];omittedItems:number;visibility?:CvVisibility[]|null;sessionId?:string|null;sections?:CvSection[]|null;sectionPlans?:CvSectionPlan[]|null;passagePlans?:CvPassagePlan[]|null };
+export type TailoringResult = { documentId:string;matchId:string;provider:"Groq"|"Gemini";model:string;proposals:TextProposal[];omittedItems:number;visibility?:CvVisibility[]|null;sessionId?:string|null;sections?:CvSection[]|null;sectionPlans?:CvSectionPlan[]|null;passagePlans?:CvPassagePlan[]|null;sourceUnits?:CvSourceUnit[]|null };
+/** Ordered UTF-16 source ranges supplied by the application; source text is checked separately. */
+export function isCvSourceUnits(value:unknown):value is CvSourceUnit[] {
+ if(!Array.isArray(value)||!value.length||value.length>500)return false;
+ return Array.from(value).every((unit,index)=>unit&&unit.paragraphIndex===index&&Number.isSafeInteger(unit.start)&&unit.start>=0&&Number.isSafeInteger(unit.end)&&unit.end>unit.start&&unit.end<=60000&&unit.end-unit.start<=4000&&(index===0||unit.start>=value[index-1].end)&&["TEXT","SECTION_HEADING","IDENTITY","ENTRY_HEADER","SKILL_GROUP","BULLET"].includes(unit.kind)&&typeof unit.editable==="boolean"&&(!["SECTION_HEADING","IDENTITY","ENTRY_HEADER"].includes(unit.kind)||!unit.editable)&&(unit.contextIndex===null||Number.isInteger(unit.contextIndex)&&unit.contextIndex>=0&&unit.contextIndex<index&&value[unit.contextIndex]?.kind==="ENTRY_HEADER"));
+}
+export function cvSourceUnitLabel(unit:CvSourceUnit|undefined,nb:boolean):string {
+ if(!unit)return nb?"Tekstavsnitt":"Text passage";
+ return {TEXT:nb?"Tekstavsnitt":"Text passage",SECTION_HEADING:nb?"Overskrift":"Heading",IDENTITY:nb?"Person- og kontaktinfo":"Identity and contact",ENTRY_HEADER:nb?"Rolle og periode":"Role and period",SKILL_GROUP:nb?"Kompetansegruppe":"Skills group",BULLET:nb?"Erfaringspunkt":"Contribution"}[unit.kind];
+}
 export function isTailoringResult(value:unknown):value is TailoringResult {
  if(!value || typeof value!=="object")return false;
  const v=value as TailoringResult;
  const text=(s:unknown,max:number)=>typeof s==="string" && s.trim().length>0 && s.length<=max;
  if(!isCvSectionData(v))return false;
+ if(v.sourceUnits!=null&&(!isCvSourceUnits(v.sourceUnits)||v.sections&&v.sections.flatMap(s=>s.paragraphIndexes).length!==v.sourceUnits.length))return false;
  if(v.passagePlans!=null){
   const indexes=v.sections?.flatMap(s=>s.paragraphIndexes);
   if(!indexes||!Array.isArray(v.proposals)||!Array.isArray(v.passagePlans)||v.passagePlans.length!==indexes.length||v.passagePlans.some((p,i)=>{
@@ -27,11 +38,22 @@ export function isTailoringResult(value:unknown):value is TailoringResult {
   const changes=v.proposals.filter(p=>section?.paragraphIndexes.includes(p?.paragraphIndex));
   return plan.action==="KEEP_UNCHANGED"&&changes.length>0 || plan.action==="PROPOSE_CHANGES"&&(!changes.length||!plan.claimIds.length||!plan.requirementIndexes.length);
  })))return false;
- return (v.visibility==null || isVisibilityList(v.visibility)) && typeof v.documentId==="string" && typeof v.matchId==="string" && claimId.test(v.documentId) && claimId.test(v.matchId) && isAiSelection(v) && Number.isSafeInteger(v.omittedItems) && v.omittedItems>=0 && v.omittedItems<=100 && Array.isArray(v.proposals) && v.proposals.length<=MAX_CV_PROPOSALS && v.proposals.every(p=>p && Number.isInteger(p.paragraphIndex) && p.paragraphIndex>=0 && p.paragraphIndex<500 && text(p.oldText,4000) && text(p.newText,4000) && text(p.reason,600) && Array.isArray(p.claimIds) && p.claimIds.length>0 && p.claimIds.length<=10 && p.claimIds.every(id=>typeof id==="string" && claimId.test(id)) && Array.isArray(p.requirementIndexes) && p.requirementIndexes.length>0 && p.requirementIndexes.length<=MAX_JOB_REQUIREMENTS && p.requirementIndexes.every(i=>Number.isInteger(i) && i>=0 && i<MAX_JOB_REQUIREMENTS));
+ return (v.visibility==null || isVisibilityList(v.visibility)) && typeof v.documentId==="string" && typeof v.matchId==="string" && claimId.test(v.documentId) && claimId.test(v.matchId) && isAiSelection(v) && Number.isSafeInteger(v.omittedItems) && v.omittedItems>=0 && v.omittedItems<=100 && Array.isArray(v.proposals) && v.proposals.length<=MAX_CV_PROPOSALS && v.proposals.every(p=>p && Number.isInteger(p.paragraphIndex) && p.paragraphIndex>=0 && p.paragraphIndex<500 && (v.sourceUnits==null||v.sourceUnits[p.paragraphIndex]?.editable===true) && text(p.oldText,4000) && text(p.newText,4000) && text(p.reason,600) && Array.isArray(p.claimIds) && p.claimIds.length>0 && p.claimIds.length<=10 && p.claimIds.every(id=>typeof id==="string" && claimId.test(id)) && Array.isArray(p.requirementIndexes) && p.requirementIndexes.length>0 && p.requirementIndexes.length<=MAX_JOB_REQUIREMENTS && p.requirementIndexes.every(i=>Number.isInteger(i) && i>=0 && i<MAX_JOB_REQUIREMENTS));
 }
 
 /** Literal source segments; long paragraphs are split automatically, never sampled. */
-export function tailoringPassages(text:string):string[] {
+export function tailoringPassages(text:string,sourceUnits?:CvSourceUnit[]|null):string[] {
+ if(sourceUnits!=null){
+  if(!isCvSourceUnits(sourceUnits))throw new Error("CV_SOURCE_INVALID");
+  const splitsSurrogate=(offset:number)=>offset>0&&offset<text.length&&text.charCodeAt(offset-1)>=0xD800&&text.charCodeAt(offset-1)<=0xDBFF&&text.charCodeAt(offset)>=0xDC00&&text.charCodeAt(offset)<=0xDFFF;
+  let previous=0;
+  const passages=sourceUnits.map(unit=>{
+   if(unit.end>text.length||text.slice(previous,unit.start).trim()||splitsSurrogate(unit.start)||splitsSurrogate(unit.end))throw new Error("CV_SOURCE_INVALID");
+   const passage=text.slice(unit.start,unit.end);if(!passage.trim())throw new Error("CV_SOURCE_INVALID");previous=unit.end;return passage;
+  });
+  if(text.slice(previous).trim())throw new Error("CV_SOURCE_INVALID");
+  return passages;
+ }
  return text.split(/\n\s*\n/).flatMap(block=>{
   const parts:string[]=[];let offset=0;
   while(offset<block.length){const limit=Math.min(offset+4000,block.length);const newline=limit<block.length?block.lastIndexOf("\n",limit-1):-1;const split=newline>=offset+2000?newline+1:limit;const high=block.charCodeAt(split-1),low=block.charCodeAt(split);const end=split<block.length && high>=0xD800 && high<=0xDBFF && low>=0xDC00 && low<=0xDFFF?split-1:split;const part=block.slice(offset,end);if(part.trim())parts.push(part);offset=end;}
@@ -46,11 +68,12 @@ export function hasMergedCvSections(text:string):boolean {
 }
 
 /** Apply reviewed substitutions to exact source ranges, retaining all other whitespace and text. */
-export function reviewedCvText(source:string,changes:{paragraphIndex:number;oldText:string;text:string}[]):string|null {
- const paragraphs=tailoringPassages(source),ranges:{start:number;end:number}[]=[];
+export function reviewedCvText(source:string,changes:{paragraphIndex:number;oldText:string;text:string}[],sourceUnits?:CvSourceUnit[]|null):string|null {
+ let paragraphs:string[];try{paragraphs=tailoringPassages(source,sourceUnits);}catch{return null;}
+ const ranges:{start:number;end:number}[]=[];
  let position=0;
- for(const paragraph of paragraphs){const start=source.indexOf(paragraph,position);if(start<0)return null;position=start+paragraph.length;ranges.push({start,end:position});}
- if(new Set(changes.map(c=>c.paragraphIndex)).size!==changes.length || changes.some(c=>!Number.isInteger(c.paragraphIndex) || c.paragraphIndex<0 || c.oldText!==paragraphs[c.paragraphIndex] || !c.text.trim() || c.text.length>4000))return null;
+ for(const [index,paragraph] of paragraphs.entries()){const start=sourceUnits?.[index].start??source.indexOf(paragraph,position);if(start<0)return null;position=sourceUnits?.[index].end??start+paragraph.length;ranges.push({start,end:position});}
+ if(new Set(changes.map(c=>c.paragraphIndex)).size!==changes.length || changes.some(c=>!Number.isInteger(c.paragraphIndex) || c.paragraphIndex<0 || c.oldText!==paragraphs[c.paragraphIndex] || sourceUnits!=null&&sourceUnits[c.paragraphIndex]?.editable!==true || !c.text.trim() || c.text.length>4000))return null;
  let cursor=0,output="";
  for(const change of [...changes].sort((a,b)=>a.paragraphIndex-b.paragraphIndex)){const range=ranges[change.paragraphIndex];output+=source.slice(cursor,range.start)+change.text;cursor=range.end;}
  return output+source.slice(cursor);

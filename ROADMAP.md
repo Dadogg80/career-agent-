@@ -293,3 +293,9 @@ Implemented for review: exclude exact related-job headings and recognizable repe
 Local language recovery now retains literal natural-language labels and stated proficiency from explicit rows/sections, including bounded PDF row pairs and wrapped oral/written qualifiers. Documentary facts use existing population/review rules and enter the full confirmed matching set; coverage distinguishes LANGUAGE passages. No provider/default changes, evidence subsetting or new AI calls. Lexical guards and bounded language-row grammar do not establish semantic completeness or a best model.
 
 Next: verify controlled project capture when providers permit; split PDF CV profile paragraphs, competency groups and employment contributions into source-bound editable units; then repeat a low-call frozen-input model comparison. Independent final-document readiness and broader design review remain pending.
+
+## 2026-10-14 — Logical CV source units and PDF paragraph bundle
+
+Implemented with focused validation, ready for review: application-owned exact source units for new tailoring generations, shared AI/planning/review/assembly metadata, protected recognized identity/headings/dated headers and unchanged legacy session indexes (ADR 0046). PDF paragraph-gap preservation applies only to new uploads/explicit rereading; originals stay unchanged. Geometry and conservative context recognition do not establish exhaustive recall or template fidelity. Retain full confirmed evidence and existing approvals/defaults without extra calls.
+
+Next: required Foundation CI and owner review for this related bundle, then controlled frozen-input Gemini/Groq comparison and project-recall validation. Independent semantic/structural/visual file review, supported template fidelity and broader design review remain pending. Prepare a reviewable PR without automatic merge.
