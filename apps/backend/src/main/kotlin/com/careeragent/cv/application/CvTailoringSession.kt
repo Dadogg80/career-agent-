@@ -27,10 +27,19 @@ interface CvTailoringSessionRepository {
 /** Wording approval is never factual confirmation or final document approval. */
 object TailoringReviewPolicy {
     fun validate(snapshot: TailoringSnapshot, reviews: List<WordingReview>) {
+        val units=snapshot.result.sourceUnits
+        if(units!=null) {
+            if(!CvSourceUnits.valid(snapshot.text,units)) throw CvFailure("CV_SOURCE_CONFLICT",409)
+            val passages=CvSourceUnits.passages(snapshot.text,units)
+            if(snapshot.result.proposals.any {it.oldText!=passages.getOrNull(it.paragraphIndex)})
+                throw CvFailure("CV_SOURCE_CONFLICT",409)
+        }
         if (reviews.size > snapshot.result.proposals.size || reviews.map { it.paragraphIndex }.distinct().size != reviews.size ||
             reviews.any { review -> snapshot.result.proposals.none { it.paragraphIndex == review.paragraphIndex } ||
                 review.text.isBlank() || review.text.length > 4000 || review.text.any { it.isISOControl() && it !in "\n\r\t" } })
             throw CvFailure("CV_INVALID", 400)
+        if(units!=null && reviews.any { it.decision==WordingDecision.ACCEPTED && !units[it.paragraphIndex].editable })
+            throw CvFailure("CV_WORDING_UNSUPPORTED",400)
         if (reviews.any { review -> review.decision == WordingDecision.ACCEPTED &&
             !CvWordingGuard.supported(snapshot.result.proposals.first { it.paragraphIndex == review.paragraphIndex }.copy(newText=review.text),snapshot.claims,snapshot.result.sections?.any {section->review.paragraphIndex in section.paragraphIndexes && section.kind in setOf(CvSectionKind.EXPERIENCE,CvSectionKind.EDUCATION)}==true) })
             throw CvFailure("CV_WORDING_UNSUPPORTED",400)
@@ -47,7 +56,8 @@ class CvTailoringSessions(private val repository: CvTailoringSessionRepository, 
         val job = jobs.get(identity, jobId)
         val result = tailoring.propose(identity, jobId, request)
         val saved = repository.create(identity, jobId, TailoringSnapshot(result, request.text, match.claims,
-            job.content.requirements.map { it.quote }, request.locale))
+            job.content.requirements.map { it.quote }, request.locale,
+            promptVersion=if(result.sourceUnits!=null) "cv-section-wording-v6" else "cv-section-wording-v5"))
         return result.copy(sessionId = saved.id)
     }
     fun draft(identity: VerifiedIdentity, jobId: UUID, sessionId: UUID, revision: Long) = repository.draft(identity,jobId,sessionId,revision)

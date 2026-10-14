@@ -20,8 +20,8 @@ object CvSections {
         CvSectionKind.EXPERIENCE to listOf("arbeidserfaring", "yrkeserfaring", "work experience", "employment", "experience", "professional experience", "prosjekter", "projects", "arbeid og prosjekter"),
         CvSectionKind.EDUCATION to listOf("utdanning", "education", "kurs", "courses", "sertifiseringer", "certifications", "utdanning og kurs"),
         CvSectionKind.ADDITIONAL to listOf("tilleggsinformasjon", "additional information", "språk", "languages", "interesser", "interests", "referanser", "references"))
-    private fun kind(line: String): CvSectionKind? {
-        val label = line.trim().removeSuffix(":").trim().lowercase(java.util.Locale.ROOT)
+    internal fun kind(line: String): CvSectionKind? {
+        val label = line.trim().replace(Regex("^#{1,6}\\s+"),"").removeSurrounding("**").removeSuffix(":").trim().lowercase(java.util.Locale.ROOT)
         return headings.entries.find { label in it.value }?.key
     }
     fun identify(text: String, paragraphs: List<String>): List<CvSection> {

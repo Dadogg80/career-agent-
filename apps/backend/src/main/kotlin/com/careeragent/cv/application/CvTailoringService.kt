@@ -24,7 +24,8 @@ data class CvTextProposal(val paragraphIndex: Int, val oldText: String, val newT
     val claimIds: List<UUID>, val requirementIndexes: List<Int>)
 data class CvTailoringResult(val documentId: UUID, val matchId: UUID, val provider: String, val model: String,
     val proposals: List<CvTextProposal>, val omittedItems: Int, val visibility: List<CvVisibilityAssessment>? = null,
-    val sessionId: UUID? = null, val sections: List<CvSection>? = null, val sectionPlans: List<CvSectionPlan>? = null, val passagePlans: List<CvPassagePlan>? = null)
+    val sessionId: UUID? = null, val sections: List<CvSection>? = null, val sectionPlans: List<CvSectionPlan>? = null,
+    val passagePlans: List<CvPassagePlan>? = null, val sourceUnits: List<CvSourceUnit>? = null)
 
 /** Session-only suggestions: never write candidate facts, master files or exported CV versions. */
 @Service
@@ -46,10 +47,14 @@ class CvTailoringService(private val jobs: SavedJobRepository, private val docum
         if (base.text != request.text) throw CvFailure("CV_SOURCE_CONFLICT",409)
         val match = matching.load(identity,jobId) ?: throw CvFailure("CV_SOURCE_CONFLICT",409)
         if (match.id != request.matchId || match.stale || !match.automaticEvidence) throw CvFailure("CV_SOURCE_CONFLICT",409)
-        val paragraphs = paragraphs(base.text)
-        if (paragraphs.size > 500) throw CvFailure("CV_CONTENT_LIMIT",400)
+        val sourceUnits = CvSourceUnits.create(base.text)
+        if (sourceUnits.size > 500) throw CvFailure("CV_CONTENT_LIMIT",400)
+        val paragraphs = CvSourceUnits.passages(base.text,sourceUnits)
         val sections = CvSections.identify(base.text, paragraphs)
-        val input = mapper.writeValueAsString(mapOf("baseParagraphs" to paragraphs.mapIndexed { index,text -> mapOf("index" to index,"text" to text) },
+        val input = mapper.writeValueAsString(mapOf("baseParagraphs" to paragraphs.mapIndexed { index,text ->
+            val unit=sourceUnits[index]
+            mapOf("index" to index,"text" to text,"kind" to unit.kind.name,"editable" to unit.editable,"contextIndex" to unit.contextIndex)
+        },
             "sections" to sections,
             "jobAndEvidence" to mapper.readTree(matching.compactInput(job.content.text,job.content.requirements.mapIndexed { i,r -> mapOf("index" to i,"label" to r.label,"quote" to r.quote,"kind" to r.kind) },match.claims)),
             "assessment" to match.assessments))
@@ -59,7 +64,9 @@ class CvTailoringService(private val jobs: SavedJobRepository, private val docum
             used.incrementAndGet()
             val output = ApprovedAiModel(ai,routing,plan).generateJson(prompt(request.locale),input,schema,AiTask.CV_TAILORING)
             val (parsedProposals,parseOmitted) = parse(output,paragraphs,match.claims.map { it.id }.toSet(),job.content.requirements.size)
-            val proposals = parsedProposals.filter { proposal -> sections.none {it.heading!=null && proposal.paragraphIndex in it.paragraphIndexes && paragraphs[proposal.paragraphIndex].trim()==it.heading} }.filter { CvWordingGuard.supported(it,match.claims,sections.any {section->it.paragraphIndex in section.paragraphIndexes && section.kind in setOf(CvSectionKind.EXPERIENCE,CvSectionKind.EDUCATION)}) }
+            val proposals = parsedProposals.filter { sourceUnits[it.paragraphIndex].editable }
+                .filter { proposal -> sections.none {it.heading!=null && proposal.paragraphIndex in it.paragraphIndexes && paragraphs[proposal.paragraphIndex].trim()==it.heading} }
+                .filter { CvWordingGuard.supported(it,match.claims,sections.any {section->it.paragraphIndex in section.paragraphIndexes && section.kind in setOf(CvSectionKind.EXPERIENCE,CvSectionKind.EDUCATION)}) }
             val blocked = parsedProposals.filter { it !in proposals }.map { it.paragraphIndex }.toSet()
             val omitted = parseOmitted + blocked.size
             val passagePlans=CvPassagePlans.parse(mapper.readTree(output),paragraphs.size,proposals,match.claims.map {it.id}.toSet(),job.content.requirements.size,request.locale,blocked,parseOmitted>0)
@@ -68,7 +75,7 @@ class CvTailoringService(private val jobs: SavedJobRepository, private val docum
                 else assessment.copy(action=CvSectionAction.NEEDS_REVIEW,assessed=false,reviewedParagraphIndexes=null,
                     reason=when {
                         parseOmitted>0 -> if(request.locale=="nb") "Ett eller flere tekstforslag kunne ikke valideres. Gyldige forslag er beholdt, men full gjennomgang er ikke dokumentert." else "One or more wording proposals could not be validated. Valid suggestions are retained, but complete review has not been established."
-                        sections.find {it.id==assessment.sectionId}!!.paragraphIndexes.any {it in blocked} -> if(request.locale=="nb") "Et forslag endret tall uten tilstrekkelig kildegrunnlag eller utelot historiske årstall eller forsøkte å endre en beskyttet seksjonsoverskrift. Kontroller seksjonen; gyldige forslag er beholdt." else "A proposal introduced unsupported numeric wording omitted historical years or tried to change a protected section heading. Review this section; valid proposals are retained."
+                        sections.find {it.id==assessment.sectionId}!!.paragraphIndexes.any {it in blocked} -> if(request.locale=="nb") "Et forslag endret tall uten tilstrekkelig kildegrunnlag, utelot historiske årstall eller forsøkte å endre beskyttet identitet, overskrift, historisk rolle eller periode. Kontroller seksjonen; gyldige forslag er beholdt." else "A proposal introduced unsupported numeric wording, omitted historical years or tried to change protected identity, headings, historical roles or dates. Review this section; valid proposals are retained."
                         else -> if(request.locale=="nb") "Ett eller flere avsnitt mangler en ferdig egen vurdering. Gyldige forslag er beholdt; gjennomgå de merkede avsnittene." else "One or more passages lack a completed individual assessment. Valid proposals are retained; inspect the labelled passages."
                     })
             }
@@ -78,7 +85,7 @@ class CvTailoringService(private val jobs: SavedJobRepository, private val docum
             val selection = plan.tasks.getValue(AiTask.CV_TAILORING)
             return CvTailoringResult(request.documentId,match.id,selection.provider,selection.model,proposals,omitted,
                 validatedVisibility(mapper.readTree(output),paragraphs,match,job.content.requirements.size,request.locale),
-                sections = sections, sectionPlans = sectionPlans, passagePlans = passagePlans)
+                sections = sections, sectionPlans = sectionPlans, passagePlans = passagePlans, sourceUnits = sourceUnits)
         } finally { permit.release() }
     }
     private fun normalizedEvidence(text: String) = Normalizer.normalize(text,Normalizer.Form.NFC)
@@ -105,6 +112,7 @@ class CvTailoringService(private val jobs: SavedJobRepository, private val docum
     private fun prompt(locale: String) = """TASK: Assess base-CV visibility for EVERY supplied requirement and propose up to ${CvTailoringLimits.PROPOSALS} useful targeted CV paragraph changes, in ${if(locale=="nb") "Norwegian Bokmål" else "English"}.
         PURPOSE: Make confirmed experience more visible for this job, across professions. CONTEXT: A current evidence-based match and the user's base CV.
         AVAILABLE FACTS / ALLOWED SOURCES: Only supplied confirmedClaims and candidatePassages support new factual wording. Base CV wording is not additional confirmation. Advertisement is employer requirements, never candidate experience.
+        SOURCE UNITS: baseParagraphs are ordered exact source units, including separate profile paragraphs, skills groups, entry headers and contributions where source structure supports them. Each unit has kind, editable and optional contextIndex. Units with editable=false are protected: KEEP_UNCHANGED, never propose edits, including identity/contact, section headings and historical entry titles/dates. A contextIndex refers to another supplied source unit defining this unit's entry scope; preserve that literal employer/client/role/period association. It is context, not additional confirmation. Never borrow another entry's employer, dates or role. If the source association or confirmed evidence scope is uncertain, use NEEDS_REVIEW rather than inventing context or rewriting protected fields. Review every editable introduction and contribution separately using its existing index. Do not infer new unit boundaries or return source-unit metadata; the application owns it.
         FORBIDDEN ASSUMPTIONS: No invented numbers, titles, licenses, motivation, responsibility, outcomes, dates or personal qualities. Keep employer/client/role distinct and chronology unchanged. Never rewrite identity/contact paragraphs or historical titles/dates. Transferability is not equivalence. Assessment evidenceRelation TRANSFERABLE must retain its limitation in wording; never convert web React into React Native experience. Assessment requirementNature FORMAL requires explicit qualification evidence, not analogous work. Respect explicitly offered qualification alternatives. Unknown capability is not a real gap. Do not add unconfirmed qualifications. Consider every supplied paragraph, including headline, all profile paragraphs, skills and experience; leave accurate irrelevant sections unchanged. Do not rewrite the entire CV.
         VISIBILITY: Inspect all supplied baseParagraphs. Return one visibility item for every supplied requirementIndex, including indices beyond twelve. status VISIBLE means supported relevant own experience is explicit; WEAKLY_VISIBLE means established experience is only named or its relevant scope/context is unclear; NOT_VISIBLE means established relevant experience is not expressed anywhere in this base CV. NEEDS_CLARIFICATION means candidate evidence or qualification scope is unresolved; missing evidence is not a proven skill gap. UNASSESSED means you cannot assess this criterion. Advertisement wording is never proof of candidate experience. Base CV alone does not confirm qualifications. Transferable experience must retain its actual scope, never label it equivalent to the criterion.
         Each visibility item has requirementIndex, status, reason, claimIds and passages (paragraphIndex, quote verbatim from that base paragraph, <=500 characters). VISIBLE/WEAKLY_VISIBLE/NOT_VISIBLE require claimIds from that criterion's established assessment evidence. VISIBLE and WEAKLY_VISIBLE require literal passages; NOT_VISIBLE has no passages. Reasons explain the actual visibility and limitations, <=600 characters. NEEDS_CLARIFICATION references confirmed evidence when relevant, but never establishes new facts. No quotation can prove exhaustive absence; review the whole text before suggesting NOT_VISIBLE. Keep every criterion, use concise reasons, max five passages and ten claims per item.

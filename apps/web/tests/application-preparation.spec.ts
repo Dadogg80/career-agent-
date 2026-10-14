@@ -1,5 +1,6 @@
 import {expect,test,type Page} from "@playwright/test";
-import {tailoringPassages,isTailoringResult,reviewedCvText} from "../lib/cv-tailoring";
+import {tailoringPassages,isTailoringResult,isCvSourceUnits,reviewedCvText,type CvSourceUnit,type TailoringResult} from "../lib/cv-tailoring";
+import {isTailoringSession,type TailoringSession} from "../lib/cv-tailoring-session";
 import {isPersonalMatch} from "../lib/personal-match";
 import {matchInsights,relationLabel} from "../lib/match-insights";
 const jobId="52345678-1234-1234-1234-123456789abc",claimId="62345678-1234-1234-1234-123456789abc",documentId="72345678-1234-1234-1234-123456789abc",matchId="82345678-1234-1234-1234-123456789abc",time="2026-10-07T00:00:00Z";
@@ -188,6 +189,69 @@ test("reviewed substitutions preserve repeated passages whitespace untouched his
  expect(reviewedCvText(source,[])).toBe(source);expect(reviewedCvText(source,[{paragraphIndex:2,oldText:"Repeated contribution",text:"Approved second contribution"}])).toBe(source.replace("Repeated contribution\n\n2021","Approved second contribution\n\n2021"));
  expect(reviewedCvText(source,[{paragraphIndex:1,oldText:"Wrong original",text:"Changed"}])).toBeNull();const change={paragraphIndex:1,oldText:"Repeated contribution",text:"Changed"};expect(reviewedCvText(source,[change,change])).toBeNull();
  const long="a".repeat(3999)+"😀"+"b".repeat(4100);const parts=tailoringPassages(long);expect(reviewedCvText(long,[{paragraphIndex:1,oldText:parts[1],text:"Reviewed section"}])).toBe(parts[0]+"Reviewed section"+parts[2]);
+});
+
+test("logical CV units preserve profile skills and entry context across saved review and exact preview copy",async({page})=>{
+ const sessionId="55555555-5555-4555-8555-555555555555";
+ const parts=["Fictional engineer","fictional@example.test","Profile","First profile paragraph. 😀","Second profile paragraph.","Skills","Backend: Kotlin, SQL","Delivery: Mentoring, quality","Experience","Fictional employer · Engineer · 2021–2023","Delivered supported APIs.","• Built Kotlin APIs.","• Built Kotlin APIs."];
+ const source=`  ${parts.slice(0,2).join("\n")}\n \n${parts.slice(2,5).join("\n")}\n\n${parts.slice(5,8).join("\n")}\n\n${parts.slice(8).join("\n")}\n\n`;
+ const kinds:CvSourceUnit["kind"][]=["IDENTITY","IDENTITY","SECTION_HEADING","TEXT","TEXT","SECTION_HEADING","SKILL_GROUP","SKILL_GROUP","SECTION_HEADING","ENTRY_HEADER","TEXT","BULLET","BULLET"];
+ let cursor=0;
+ const sourceUnits:CvSourceUnit[]=parts.map((part,paragraphIndex)=>{const start=source.indexOf(part,cursor);cursor=start+part.length;const kind=kinds[paragraphIndex];return {paragraphIndex,start,end:cursor,kind,editable:!["IDENTITY","SECTION_HEADING","ENTRY_HEADER"].includes(kind),contextIndex:paragraphIndex>9?9:null};});
+ const proposals=[3,6,12].map(paragraphIndex=>({...result.proposals[0],paragraphIndex,oldText:parts[paragraphIndex],newText:paragraphIndex===12?"• Developed supported Kotlin APIs.":paragraphIndex===6?"Backend delivery: Kotlin and SQL": "Supported API engineering experience. 😀"}));
+ const sections:NonNullable<TailoringResult["sections"]>=[{id:"cv-1234567890abcdef-0",kind:"UNCLASSIFIED",heading:null,paragraphIndexes:[0,1]},{id:"cv-1234567890abcdef-1",kind:"PROFILE",heading:"Profile",paragraphIndexes:[2,3,4]},{id:"cv-1234567890abcdef-2",kind:"SKILLS",heading:"Skills",paragraphIndexes:[5,6,7]},{id:"cv-1234567890abcdef-3",kind:"EXPERIENCE",heading:"Experience",paragraphIndexes:[8,9,10,11,12]}];
+ const structured:TailoringResult={...result,provider:"Gemini",sessionId,proposals,sections,sourceUnits,sectionPlans:sections.map(section=>({sectionId:section.id,action:"NEEDS_REVIEW",priority:"LOW",reason:"Review supported wording separately.",claimIds:[],requirementIndexes:[],assessed:false})),passagePlans:sourceUnits.map(unit=>({paragraphIndex:unit.paragraphIndex,action:proposals.some(p=>p.paragraphIndex===unit.paragraphIndex)?"PROPOSE_CHANGES":"KEEP_UNCHANGED",reason:unit.editable?"Retain or clarify this supported contribution.":"Retain this original heading or entry context.",claimIds:proposals.some(p=>p.paragraphIndex===unit.paragraphIndex)?[claimId]:[],requirementIndexes:proposals.some(p=>p.paragraphIndex===unit.paragraphIndex)?[0]:[],assessed:true}))};
+ const saved:TailoringSession={id:sessionId,jobId,revision:1,createdAt:time,stale:false,snapshot:{result:structured,text:source,claims:match.claims,quotes:job.content.requirements.map(r=>r.quote),locale:"nb",promptVersion:"cv-section-wording-v6"},reviews:proposals.map(p=>({paragraphIndex:p.paragraphIndex,text:p.newText,decision:"ACCEPTED"}))};
+ expect(tailoringPassages(source,sourceUnits)).toEqual(parts);expect(tailoringPassages(source)).toHaveLength(4);
+ expect(isTailoringResult(structured)).toBe(true);expect(isTailoringSession(saved)).toBe(true);
+ const legacyParts=tailoringPassages(source),legacy={...saved,snapshot:{...saved.snapshot,promptVersion:"cv-section-wording-v5",result:{...result,sessionId,proposals:[{...result.proposals[0],oldText:legacyParts[1]}]}},reviews:[]};
+ expect(isTailoringSession(legacy)).toBe(true);expect(isTailoringSession({...legacy,snapshot:{...legacy.snapshot,result:{...legacy.snapshot.result,sourceUnits:null}}})).toBe(true);
+ for(const index of [0,2,9]){
+  const protectedProposal={...proposals[0],paragraphIndex:index,oldText:parts[index]};
+  expect(isTailoringResult({...structured,passagePlans:null,proposals:[protectedProposal]})).toBe(false);
+  expect(isTailoringSession({...saved,snapshot:{...saved.snapshot,result:{...structured,passagePlans:null,proposals:[protectedProposal]}},reviews:[{paragraphIndex:index,text:"Changed protected context",decision:"ACCEPTED"}]})).toBe(false);
+  expect(reviewedCvText(source,[{paragraphIndex:index,oldText:parts[index],text:"Changed protected context"}],sourceUnits)).toBeNull();
+ }
+ const splitEmoji=sourceUnits.map(unit=>unit.paragraphIndex===3?{...unit,end:unit.end-1}:unit);
+ const splitEmojiStart=sourceUnits.map(unit=>unit.paragraphIndex===3?{...unit,start:unit.end-1}:unit);
+ const missingText=sourceUnits.map(unit=>unit.paragraphIndex===4?{...unit,start:unit.start+1}:unit);
+ const badContext=sourceUnits.map(unit=>unit.paragraphIndex===11?{...unit,contextIndex:10}:unit);
+ const malformed=[[],splitEmoji,splitEmojiStart,missingText,badContext,sourceUnits.map(unit=>unit.paragraphIndex===1?{...unit,start:0}:unit),sourceUnits.map(unit=>unit.paragraphIndex===12?{...unit,end:source.length+1}:unit)];
+ for(const units of malformed){expect(()=>tailoringPassages(source,units)).toThrow("CV_SOURCE_INVALID");expect(isTailoringSession({...saved,snapshot:{...saved.snapshot,result:{...structured,sourceUnits:units}}})).toBe(false);expect(reviewedCvText(source,[],units)).toBeNull();}
+ expect(()=>tailoringPassages(source+"Uncovered content",sourceUnits)).toThrow("CV_SOURCE_INVALID");
+ for(const contextIndex of [11,12,0])expect(isCvSourceUnits(sourceUnits.map(unit=>unit.paragraphIndex===11?{...unit,contextIndex}:unit))).toBe(false);
+ expect(isCvSourceUnits(sourceUnits.map(unit=>unit.paragraphIndex===9?{...unit,editable:true}:unit))).toBe(false);
+ const unit=(end:number):CvSourceUnit=>({paragraphIndex:0,start:0,end,kind:"TEXT",editable:true,contextIndex:null});
+ expect(tailoringPassages("a".repeat(4000),[unit(4000)])[0]).toHaveLength(4000);expect(isCvSourceUnits([unit(4001)])).toBe(false);
+ const manyUnits=(count:number):CvSourceUnit[]=>Array.from({length:count},(_,paragraphIndex)=>({...unit(paragraphIndex*2+1),paragraphIndex,start:paragraphIndex*2}));
+ expect(tailoringPassages("a ".repeat(500),manyUnits(500))).toHaveLength(500);expect(isCvSourceUnits(manyUnits(501))).toBe(false);expect(isCvSourceUnits(new Array(2))).toBe(false);
+ expect(isTailoringSession({...saved,snapshot:{...saved.snapshot,result:{...structured,passagePlans:structured.passagePlans?.map(p=>p.paragraphIndex===4?{...p,claimIds:[documentId]}:p)}}})).toBe(false);
+ expect(isTailoringSession({...saved,snapshot:{...saved.snapshot,result:{...structured,passagePlans:structured.passagePlans?.map(p=>p.paragraphIndex===4?{...p,requirementIndexes:[1]}:p)}}})).toBe(false);
+ let expected=source;for(const p of [...proposals].reverse()){const range=sourceUnits[p.paragraphIndex];expected=expected.slice(0,range.start)+p.newText+expected.slice(range.end);}
+ expect(reviewedCvText(source,saved.reviews.map(r=>({paragraphIndex:r.paragraphIndex,oldText:parts[r.paragraphIndex],text:r.text})),sourceUnits)).toBe(expected);
+ await page.addInitScript(()=>Object.defineProperty(navigator,"clipboard",{configurable:true,value:{writeText:async(text:string)=>{(window as unknown as {copiedCv:string}).copiedCv=text;}}}));
+ await fixtures(page);let savedResponse:unknown=legacy,generatedResponse:unknown=structured,calls=0;
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>r.fulfill({json:savedResponse}));
+ await page.route(`**/api/profile/me/documents/${documentId}`,r=>r.fulfill({json:{document:{...doc,textCharacters:source.length},text:source}}));
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{calls++;return r.fulfill({json:generatedResponse});});
+ await page.goto(`/jobs/${jobId}/apply`);await expect(page.locator(".tailoring-proposal")).toHaveCount(1);
+ savedResponse=saved;await page.reload();
+ const plan=page.locator(".cv-section-review"),ledger=page.getByRole("region",{name:"Gjennomgang av avsnitt"});
+ await plan.getByRole("button",{name:/Profile/}).click();await expect(ledger.getByText("2 avsnitt · 1 tekstforslag",{exact:true})).toBeVisible();
+ await ledger.locator("summary").nth(1).click();await expect(ledger.getByText(parts[4],{exact:true})).toHaveCount(2);
+ const sectionOriginal=plan.locator("details.source-evidence");await sectionOriginal.locator("summary").click();await expect(sectionOriginal.locator("pre")).toBeVisible();expect(await sectionOriginal.locator("pre").textContent()).toBe(source.slice(sourceUnits[2].start,sourceUnits[4].end));
+ await plan.getByRole("button",{name:/Skills/}).click();await expect(ledger.getByText("2 avsnitt · 1 tekstforslag",{exact:true})).toBeVisible();await expect(ledger.getByText("Kompetansegruppe 1",{exact:true})).toBeVisible();
+ await plan.getByRole("button",{name:/Experience/}).click();await expect(ledger.getByText("4 avsnitt · 1 tekstforslag",{exact:true})).toBeVisible();await expect(ledger.getByText("Bevares uendret",{exact:true})).toBeVisible();
+ const contribution=ledger.locator("ol > li").nth(3);await contribution.locator("summary").click();await expect(contribution.getByRole("heading",{name:"Tilhører denne oppføringen",exact:true})).toBeVisible();
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);await ledger.screenshot({path:"/tmp/career-cv-logical-units-mobile.png"});
+ await plan.getByRole("button",{name:"Alle forslag",exact:true}).click();await page.getByRole("button",{name:"Behandlet · 3",exact:true}).click();
+ const bullet=page.locator(".tailoring-proposal").filter({has:page.getByRole("heading",{name:"Erfaringspunkt 13",exact:true})});await expect(bullet.getByText(parts[9],{exact:true})).toBeVisible();await expect(page.locator(".tailoring-proposal")).toHaveCount(3);
+ const handoff=page.locator(".reviewed-cv-text");await handoff.locator("summary").click();await expect(handoff.getByLabel("CV-tekst med godkjente endringer")).toHaveValue(expected);
+ await handoff.getByRole("button",{name:"Kopier CV-teksten",exact:true}).click();expect(await page.evaluate(()=>(window as unknown as {copiedCv:string}).copiedCv)).toBe(expected);
+ await page.reload();await expect(page.getByRole("button",{name:"Behandlet · 3",exact:true})).toBeVisible();expect(calls).toBe(0);
+ generatedResponse={...structured,passagePlans:structured.passagePlans?.map(p=>p.paragraphIndex===4?{...p,claimIds:[documentId]}:p)};
+ await page.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for CV-forslag",exact:true}).check();await page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true}).click();
+ await expect(page.getByText("AI-forslagene kunne ikke fullføres nå.",{exact:false})).toBeVisible();await page.getByRole("button",{name:"Behandlet · 3",exact:true}).click();await expect(page.locator(".tailoring-proposal")).toHaveCount(3);expect(calls).toBe(1);
 });
 
 test("without a master CV preparation does not silently select a certificate and changing CV clears consent",async({page})=>{

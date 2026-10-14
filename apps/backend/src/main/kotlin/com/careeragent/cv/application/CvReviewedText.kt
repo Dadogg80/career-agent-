@@ -17,12 +17,13 @@ object CvReviewedText {
         parts
     }
     fun assemble(snapshot: TailoringSnapshot, reviews: List<WordingReview>): String {
-        val paragraphs=paragraphs(snapshot.text)
-        var cursor=0;val ranges=paragraphs.map { p -> val start=snapshot.text.indexOf(p,cursor);if(start<0)throw CvFailure("CV_SOURCE_CONFLICT",409);cursor=start+p.length;start to cursor }
+        val paragraphs=CvSourceUnits.passages(snapshot.text,snapshot.result.sourceUnits)
+        var cursor=0;val ranges=snapshot.result.sourceUnits?.map { it.start to it.end } ?: paragraphs.map { p -> val start=snapshot.text.indexOf(p,cursor);if(start<0)throw CvFailure("CV_SOURCE_CONFLICT",409);cursor=start+p.length;start to cursor }
         cursor=0
         val text=buildString {
             reviews.filter { it.decision==WordingDecision.ACCEPTED }.sortedBy { it.paragraphIndex }.forEach { review ->
                 val proposal=snapshot.result.proposals.single { it.paragraphIndex==review.paragraphIndex }
+                if (snapshot.result.sourceUnits?.getOrNull(review.paragraphIndex)?.editable==false) throw CvFailure("CV_WORDING_UNSUPPORTED",400)
                 if(paragraphs.getOrNull(review.paragraphIndex)!=proposal.oldText)throw CvFailure("CV_SOURCE_CONFLICT",409)
                 val range=ranges[review.paragraphIndex];append(snapshot.text.substring(cursor,range.first));append(review.text);cursor=range.second
             };append(snapshot.text.substring(cursor))

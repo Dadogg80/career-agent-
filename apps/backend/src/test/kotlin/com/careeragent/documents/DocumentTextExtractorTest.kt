@@ -64,7 +64,8 @@ class DocumentTextExtractorTest {
             }; document.save(output)
         }
         val text=extractor.extract(output.toByteArray(),"pdf")
-        assertThat(text).contains("Sidebar context entry 0\nSidebar context entry 1", "Project contribution number 0\nProject contribution number 1")
+        assertThat(text).containsPattern("Sidebar context entry 0\\s+Sidebar context entry 1")
+        assertThat(text).containsPattern("Project contribution number 0\\s+Project contribution number 1")
         assertThat(text.indexOf("Sidebar context entry 5")).isLessThan(text.indexOf("Project contribution number 0"))
         for(row in 0..5) {assertThat(text).contains("Sidebar context entry $row","Project contribution number $row")}
     }
@@ -147,7 +148,39 @@ class DocumentTextExtractorTest {
                 }
             }; document.save(out)
         }
-        assertThat(extractor.extract(out.toByteArray(), "pdf")).isEqualTo("First experience\nSecond experience")
+        assertThat(extractor.extract(out.toByteArray(), "pdf")).isEqualTo("First experience\n\nSecond experience")
+    }
+    @Test fun `PDF geometric profile paragraphs and wrapped employment bullets remain separate source units`() {
+        val output=ByteArrayOutputStream()
+        val profile=(1..3).map { listOf("Supported profile paragraph $it", "Complementary wrapped profile detail $it") }
+        val bullets=listOf(listOf("- Built reliable services", "with supported product contributions"),
+            listOf("- Improved testing", "through documented collaboration"))
+        PDDocument().use { document ->
+            document.addPage(PDPage())
+            PDPageContentStream(document,document.getPage(0)).use { stream ->
+                fun row(text:String,y:Float,size:Float=12f) {
+                    stream.beginText();stream.setFont(PDType1Font(Standard14Fonts.FontName.HELVETICA),size)
+                    stream.newLineAtOffset(30f,y);stream.showText(text);stream.endText()
+                }
+                row("NØKKELKVALIFIKASJONER",760f,16f)
+                profile.forEachIndexed { index,lines -> lines.forEachIndexed { line,text -> row(text,730f-index*52-line*16) } }
+                row("ARBEIDSERFARING",540f,16f)
+                row("2021 - 2024 Example AS - Developer",510f)
+                row("Introductory supported experience",484f)
+                bullets.forEachIndexed { index,lines -> lines.forEachIndexed { line,text -> row(text,452f-index*48-line*16) } }
+            };document.save(output)
+        }
+        val extracted=extractor.extract(output.toByteArray(),"pdf")
+        val units=com.careeragent.cv.application.CvReviewedText.paragraphs(extracted)
+        profile.forEach { assertThat(units).contains(it.joinToString("\n")) }
+        bullets.forEach { assertThat(units).contains(it.joinToString("\n")) }
+        assertThat(units).contains("NØKKELKVALIFIKASJONER","ARBEIDSERFARING")
+        val sections=com.careeragent.cv.application.CvSections.identify(extracted,units)
+        assertThat(sections.map { it.kind }).containsExactly(com.careeragent.cv.application.CvSectionKind.PROFILE,
+            com.careeragent.cv.application.CvSectionKind.EXPERIENCE)
+        assertThat(sections.first().paragraphIndexes).hasSize(4)
+        assertThat(extracted.filterNot(Char::isWhitespace)).isEqualTo((listOf("NØKKELKVALIFIKASJONER")+profile.flatten()+
+            listOf("ARBEIDSERFARING","2021 - 2024 Example AS - Developer","Introductory supported experience")+bullets.flatten()).joinToString("").filterNot(Char::isWhitespace))
     }
     @Test fun `DOCX and PDF extract text without altering originals`() {
         val docx = DocumentFixture.docx("Built APIs with Kotlin"); val before = docx.copyOf()

@@ -1,16 +1,16 @@
 "use client";
 import { useMutation } from "@tanstack/react-query";
 import { Copy, CircleCheck, FileText } from "lucide-react";
-import { reviewedCvText,type TextProposal } from "../lib/cv-tailoring";
+import { reviewedCvText,type CvSourceUnit,type TextProposal } from "../lib/cv-tailoring";
 import type { Locale } from "../lib/translations";
 import { Card,CardHeader,CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Textarea } from "./ui/textarea";
 
-export function ReviewedCvText({source,proposals,decisions,edits,locale,current,durable=false,reviewPending=false}:{source:string;proposals:TextProposal[];decisions:Record<number,"ACCEPTED"|"REJECTED">;edits:Record<number,string>;locale:Locale;current:boolean;durable?:boolean;reviewPending?:boolean}) {
+export function ReviewedCvText({source,sourceUnits,proposals,decisions,edits,locale,current,durable=false,reviewPending=false}:{source:string;sourceUnits?:CvSourceUnit[]|null;proposals:TextProposal[];decisions:Record<number,"ACCEPTED"|"REJECTED">;edits:Record<number,string>;locale:Locale;current:boolean;durable?:boolean;reviewPending?:boolean}) {
  const nb=locale==="nb",accepted=proposals.filter(p=>decisions[p.paragraphIndex]==="ACCEPTED");
- const text=reviewedCvText(source,accepted.map(p=>({paragraphIndex:p.paragraphIndex,oldText:p.oldText,text:edits[p.paragraphIndex]??p.newText})));
+ const text=reviewedCvText(source,accepted.map(p=>({paragraphIndex:p.paragraphIndex,oldText:p.oldText,text:edits[p.paragraphIndex]??p.newText})),sourceUnits);
  const copy=useMutation({retry:false,gcTime:0,mutationFn:async(value:string)=>{if(!navigator.clipboard?.writeText)throw new Error("CLIPBOARD_UNAVAILABLE");await navigator.clipboard.writeText(value);return value;}});
  const copied=current && !reviewPending && copy.data===text;
  return <Card className="reviewed-cv-text"><CardHeader><div className="workspace-heading"><h3><FileText size={18}/>{nb?"Samle de godkjente endringene":"Combine your approved changes"}</h3><Badge variant="outline">{accepted.length} {nb?"godkjent":"approved"}</Badge></div><p className="hint">{nb?"Bare godkjente forslag erstatter tekst. Resten beholdes fra grunnlags-CV-en. Dette er ren tekst; originalens layout og fil endres ikke.":"Only approved proposals replace text. Everything else stays from your base CV. This is plain text; your original layout and file are unchanged."}</p></CardHeader><CardContent>

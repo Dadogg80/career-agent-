@@ -35,4 +35,29 @@ class CvWordingGuardTest {
             .isInstanceOf(CvFailure::class.java).hasMessage("CV_WORDING_UNSUPPORTED")
         TailoringReviewPolicy.validate(snapshot,listOf(WordingReview(0,"Worked on APIs in 2023.",WordingDecision.ACCEPTED)))
     }
+    @Test fun `source unit entry headers cannot acquire a different historical title through wording acceptance`() {
+        val source="2021 – 2023 Fictional employer – Developer"
+        val edit=CvTextProposal(0,source,"2021 – 2023 Fictional employer – Senior Developer","More prominent title",listOf(id),listOf(0))
+        val unit=CvSourceUnit(0,0,source.length,CvSourceUnitKind.ENTRY_HEADER,false)
+        val result=CvTailoringResult(UUID.randomUUID(),UUID.randomUUID(),"Gemini","fixture-model",listOf(edit),0,sourceUnits=listOf(unit))
+        val snapshot=TailoringSnapshot(result,source,emptyList(),listOf("API work"),"nb")
+        TailoringReviewPolicy.validate(snapshot,listOf(WordingReview(0,edit.newText,WordingDecision.PENDING)))
+        assertThatThrownBy {TailoringReviewPolicy.validate(snapshot,listOf(WordingReview(0,edit.newText,WordingDecision.ACCEPTED)))}
+            .isInstanceOf(CvFailure::class.java).hasMessage("CV_WORDING_UNSUPPORTED")
+        // Existing sessions retain their old review policy rather than acquiring new inferred ranges.
+        val legacy=snapshot.copy(result=result.copy(sourceUnits=null))
+        TailoringReviewPolicy.validate(legacy,listOf(WordingReview(0,edit.newText,WordingDecision.ACCEPTED)))
+        assertThat(legacy.promptVersion).isEqualTo("cv-section-wording-v5")
+    }
+    @Test fun `invalid source ranges and proposal old text cannot support saved wording review`() {
+        val source="Worked on APIs in 2023."
+        val unit=CvSourceUnit(0,0,source.length,CvSourceUnitKind.TEXT,true)
+        val result=CvTailoringResult(UUID.randomUUID(),UUID.randomUUID(),"Gemini","fixture-model",listOf(proposal("Worked on APIs.")),0,sourceUnits=listOf(unit))
+        val snapshot=TailoringSnapshot(result,source,emptyList(),listOf("API work"),"nb")
+        TailoringReviewPolicy.validate(snapshot,listOf(WordingReview(0,"Worked on APIs in 2023.",WordingDecision.ACCEPTED)))
+        val invalid=snapshot.copy(result=result.copy(sourceUnits=listOf(unit.copy(end=source.length+1))))
+        assertThatThrownBy {TailoringReviewPolicy.validate(invalid,emptyList())}.isInstanceOf(CvFailure::class.java).hasMessage("CV_SOURCE_CONFLICT")
+        val foreign=snapshot.copy(result=result.copy(proposals=listOf(proposal("Worked on APIs.").copy(oldText="Invented original wording"))))
+        assertThatThrownBy {TailoringReviewPolicy.validate(foreign,emptyList())}.isInstanceOf(CvFailure::class.java).hasMessage("CV_SOURCE_CONFLICT")
+    }
 }

@@ -60,3 +60,9 @@ Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert i
 - [0040 — Source-bound CV sections and preliminary review plans](0040-source-bound-cv-section-review.md) — accepted incremental continuation; conservative source structure, explicit section outcomes and current wording navigation.
 
 - [0041 — Immutable reviewed CV wording drafts](0041-reviewed-cv-wording-drafts.md)
+
+- [0042 — Selected presentation sections](0042-selected-presentation-sections.md)
+- [0043 — Reviewed CV file drafts](0043-reviewed-cv-file-drafts.md)
+- [0044 — DOCX paragraph boundaries and broader CV wording coverage](0044-docx-cv-paragraph-coverage.md)
+- [0045 — Individual source-bound CV passage assessments](0045-individual-cv-passage-assessments.md)
+- [0046 — Logical CV source units and geometric PDF paragraphs](0046-logical-cv-source-units-and-pdf-paragraphs.md) — accepted incremental continuation; exact stored ranges, protected headers and unchanged legacy indexes.

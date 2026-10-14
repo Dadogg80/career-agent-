@@ -67,6 +67,31 @@ class CvTailoringSessionIntegrationTest {
     private fun review(f: Fixture, session: CvTailoringSession, text: String = "Developed APIs using Kotlin", decision: String = "ACCEPTED", revision: Long = session.revision) =
         put("${f.path}/session").with(caller(f.user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("sessionId" to session.id,"revision" to revision,"reviews" to listOf(mapOf("paragraphIndex" to 1,"text" to text,"decision" to decision)))))
 
+    @Test fun `new logical source units survive storage reopening and exact reviewed draft assembly`() {
+        val f=fixture();val identity=VerifiedIdentity(issuer,f.user)
+        val text="Fictional developer\nPROFILE\nBuilt Kotlin APIs.\n\nImproved API documentation.\n"+
+            "WORK EXPERIENCE\n2021 – 2023 Example AS – Developer\nBuilt Kotlin APIs\n- Supported API users."
+        jdbc.update("UPDATE career_document SET extracted_text=? WHERE id=?",text,f.doc)
+        val units=CvSourceUnits.create(text)
+        val unit=units.last {it.kind==CvSourceUnitKind.TEXT}
+        val proposal=CvTextProposal(unit.paragraphIndex,text.substring(unit.start,unit.end),"Developed APIs using Kotlin","Clarifies sourced API work",listOf(f.claim),listOf(0))
+        val snapshot=f.snapshot.copy(text=text,promptVersion="cv-section-wording-v6",
+            result=f.snapshot.result.copy(proposals=listOf(proposal),sourceUnits=units))
+        val stored=repository.create(identity,f.job,snapshot)
+        val reopened=repository.latest(identity,f.job)!!
+        assertEquals(units,reopened.snapshot.result.sourceUnits)
+        assertEquals("cv-section-wording-v6",reopened.snapshot.promptVersion)
+        mvc.perform(get("${f.path}/session").with(caller(f.user))).andExpect(status().isOk)
+            .andExpect(jsonPath("$.snapshot.result.sourceUnits.length()").value(units.size))
+        val reviewed=repository.review(identity,f.job,TailoringReviewRequest(stored.id,stored.revision,
+            listOf(WordingReview(unit.paragraphIndex,proposal.newText,WordingDecision.ACCEPTED))))
+        val draft=repository.draft(identity,f.job,reviewed.id,reviewed.revision)
+        assertEquals(text.substring(0,unit.start)+proposal.newText+text.substring(unit.end),draft.content.reviewedSource!!.text)
+        assertEquals(text,jdbc.queryForObject("SELECT extracted_text FROM career_document WHERE id=?",String::class.java,f.doc))
+        assertEquals(2L,jdbc.queryForObject("SELECT revision FROM competency_claim WHERE id=?",Long::class.java,f.claim))
+        verifyNoInteractions(ai)
+    }
+
     @Test fun `generation persists an owned snapshot and review survives reopening without factual promotion or AI calls`() {
         val f = fixture()
         mvc.perform(get("${f.path}/session").with(caller(f.user))).andExpect(status().isOk).andExpect(content().string("null"))
