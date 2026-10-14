@@ -79,7 +79,8 @@ object CvSourceUnits {
                     }
                     flush()
                 }
-                history && shortTitle && Regex("\\s[-–—]\\s").containsMatchIn(line.text) -> {
+                history && shortTitle && Regex("\\s[-–—]\\s").containsMatchIn(line.text) &&
+                    !Regex("(?iu)\\s[-–—]\\s+(?:og|and|eller|or)\\b").containsMatchIn(line.text) -> {
                     // An undated header may start a different entry. Never carry the preceding entry's scope into it.
                     flush(); context=null; begin(line,CvSourceUnitKind.ENTRY_HEADER); flush()
                 }
@@ -92,7 +93,9 @@ object CvSourceUnits {
                     val labelOnly = start != null && unitKind == CvSourceUnitKind.SKILL_GROUP && end == lines.getOrNull(i-1)?.end &&
                         !text.substring(start!!,end).contains('\n')
                     val bareBullet = start != null && unitKind == CvSourceUnitKind.BULLET && text.substring(start!!,end).trim() in setOf("-","*","•","▪","‣")
-                    if (blankBoundary && !labelOnly && !bareBullet) flush()
+                    val unfinishedBullet = start != null && unitKind == CvSourceUnitKind.BULLET &&
+                        text.substring(start!!,end).trimEnd().lastOrNull() !in listOf('.', '!', '?', ':')
+                    if (blankBoundary && !labelOnly && !bareBullet && !unfinishedBullet) flush()
                     if (start == null) begin(line) else end = line.end
                 }
             }

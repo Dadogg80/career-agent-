@@ -7,6 +7,19 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class CvSourceUnitsTest {
+    @Test fun `compound prose and wrapped bullet remain under the dated employer`() {
+        val text="WORK EXPERIENCE\n2021 - 2024 First Company - Founder\n"+
+            "Founder of a consulting - and product studio\nbuilding reliable services.\n"+
+            "- Combined delivery, architecture,\n\nand operational support.\n\n"+
+            "Second Company - Consultant\n- Supported teams."
+        val units=CvSourceUnits.create(text);val passages=CvSourceUnits.passages(text,units)
+        val headers=units.filter {it.kind==CvSourceUnitKind.ENTRY_HEADER}
+        assertThat(headers).hasSize(2)
+        val bullets=units.filter {it.kind==CvSourceUnitKind.BULLET}
+        assertThat(passages[bullets[0].paragraphIndex]).contains("architecture,\n\nand operational support.")
+        assertThat(bullets.map {it.contextIndex}).containsExactlyElementsOf(headers.map {it.paragraphIndex})
+        assertThat(units.single {passages[it.paragraphIndex].startsWith("Founder of")}.editable).isTrue()
+    }
     private val source="Fictional Pilot\nContact: pilot@example.test\nNØKKELKVALIFIKASJONER\n"+
         "First profile paragraph across\nwrapped lines.\n\nSecond profile paragraph.\n\nThird profile paragraph.\n"+
         "KJERNEKOMPETANSE\nClinical care\n\nAssessment, medication and clinical records\nCoordination\n"+

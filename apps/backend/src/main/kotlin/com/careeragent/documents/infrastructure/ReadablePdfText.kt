@@ -76,22 +76,26 @@ internal object ReadablePdfText {
         data class Band(val start: Float, val columns: Boolean)
         val bands = mutableListOf<Band>()
         val period = Regex("(?:\\b(?:19|20)\\d{2}\\b|\\b\\d{2}[./](?:19|20)\\d{2}\\b)")
-        val rows = lines(positions)
+        val rows = lines(positions).map { row -> row.filter { it.unicode.any { character -> !character.isWhitespace() } } }.filter { it.isNotEmpty() }
         for (line in rows) {
             val left = line.filter { it.xDirAdj < split }
             val right = line.filter { it.xDirAdj >= split }
             val leftText = left.joinToString("") { it.unicode }
             val dateRow = left.isNotEmpty() && right.isNotEmpty() && period.containsMatchIn(leftText)
                 && leftText.count(Char::isLetter) < leftText.length * .1f
-            val crosses = left.isNotEmpty() && right.isNotEmpty()
-                && gaps(line, width).none { split > it.left && split < it.right }
+            // Once repeated wide gaps establish a column, a longer cell may leave a
+            // narrower gutter. Ordinary word spacing must still count as crossing.
+            val crosses = left.isNotEmpty() && right.isNotEmpty() &&
+                right.first().xDirAdj - left.maxOf { it.xDirAdj + it.widthDirAdj } <
+                maxOf(width * .01f, line.maxOf { it.fontSizeInPt } * .6f)
             // A gutter in a skills grid must not bisect the full-width employment section below it.
             // Dates and their organization/title are one timeline row, not independent columns.
             val letters = leftText.filter(Char::isLetter)
             val standaloneHeading = right.isEmpty() && letters.length >= 4 && letters.all(Char::isUpperCase)
                 && rows.none { other -> other !== line && kotlin.math.abs(other.first().yDirAdj-line.first().yDirAdj) < line.first().fontSizeInPt*1.25f
                     && other.any { it.xDirAdj >= split } }
-            val columns = line.first().yDirAdj >= top && !crosses && !dateRow && !standaloneHeading
+            val labeledValue = right.isNotEmpty() && Regex("(?iu)^(språk|languages|interesser|interests|referanser|references):?$").matches(leftText.trim())
+            val columns = line.first().yDirAdj >= top && !crosses && !dateRow && !standaloneHeading && !labeledValue
             if (bands.lastOrNull()?.columns != columns) bands.add(Band(line.minOf { it.yDirAdj } - .5f, columns))
         }
         // Bound PDF reparsing for irregular layouts; row ordering preserves every glyph on fallback.
@@ -107,7 +111,9 @@ internal object ReadablePdfText {
     private fun gutter(positions: List<TextPosition>, width: Float): Pair<Float, Float>? {
         val lines = lines(positions)
         val gaps = lines.flatMap { gaps(it, width) }
-        val split = gaps.map { (it.left + it.right) / 2 }.filter { it in width * .15f..width * .85f }
+        // Align with the repeated right-column start, not the middle of a wide
+        // gap: a later, longer left cell may extend beyond that midpoint.
+        val split = gaps.map { it.right - .5f }.filter { it in width * .15f..width * .85f }
             .maxByOrNull { cut -> gaps.count { cut > it.left && cut < it.right } } ?: return null
         val supported = gaps.filter { split > it.left && split < it.right }
         if (supported.map { it.y }.distinct().size < 4) return null

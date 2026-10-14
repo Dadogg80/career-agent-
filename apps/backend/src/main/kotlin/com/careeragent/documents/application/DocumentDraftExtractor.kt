@@ -75,11 +75,28 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
                 checkItem(it.isIntegralNumber && it.canConvertToInt(),DocumentOmissionReason.INVALID_EVIDENCE_IDS)
                 passages.getOrNull(it.intValue())?.text ?: throw OmittedItem(DocumentOmissionReason.INVALID_EVIDENCE_IDS)
             }
+            checkItem(texts.none { it.isBlank() },DocumentOmissionReason.UNSUPPORTED_QUOTE)
             val quote = if (texts.size == 1) texts.first() else {
-                val first = source.indexOf(texts.first()); checkItem(first >= 0,DocumentOmissionReason.UNSUPPORTED_QUOTE)
-                var end = first
-                texts.forEach { text -> val position = source.indexOf(text, end); checkItem(position >= 0,DocumentOmissionReason.UNSUPPORTED_QUOTE); end = position + text.length }
-                source.substring(first,end)
+                // A heading may also occur in a contents list. Accept only one
+                // distinct bounded literal span; never bridge from that earlier label.
+                val matches = linkedSetOf<String>()
+                var first = source.indexOf(texts.first())
+                var exceeded = false
+                while (first >= 0 && matches.size < 2) {
+                    var end = first
+                    var complete = true
+                    for (text in texts) {
+                        val position = source.indexOf(text,end)
+                        if (position < 0) { complete = false; break }
+                        end = position + text.length
+                        if (end-first > 1000) { exceeded = true; complete = false; break }
+                    }
+                    if (complete) matches.add(source.substring(first,end))
+                    first = source.indexOf(texts.first(),first+1)
+                }
+                checkItem(matches.size <= 1,DocumentOmissionReason.UNSUPPORTED_QUOTE)
+                checkItem(matches.isNotEmpty(),if (exceeded) DocumentOmissionReason.QUOTE_LIMIT else DocumentOmissionReason.UNSUPPORTED_QUOTE)
+                matches.single()
             }
             checkItem(quote.length <= 1000,DocumentOmissionReason.QUOTE_LIMIT)
             checkItem(source.contains(quote),DocumentOmissionReason.UNSUPPORTED_QUOTE); return quote

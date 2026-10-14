@@ -39,6 +39,61 @@ object DocumentFixture {
 }
 class DocumentTextExtractorTest {
     private val extractor = DocumentTextExtractor()
+    @Test fun `narrower skill cell gutters keep every group intact and metadata labels stay with values`() {
+        val output=ByteArrayOutputStream()
+        val font=PDType1Font(Standard14Fonts.FontName.HELVETICA)
+        val long="Backend services, integration and operations"
+        val right=30f+font.getStringWidth(long)/1000*11f+11f
+        PDDocument().use { document ->
+            document.addPage(PDPage())
+            PDPageContentStream(document,document.getPage(0)).use { stream ->
+                fun row(text:String,x:Float,y:Float) {
+                    stream.beginText();stream.setFont(font,11f);stream.newLineAtOffset(x,y);stream.showText(text);stream.endText()
+                }
+                row("CORE SKILLS",30f,760f)
+                for(i in 0..2) {
+                    val y=720f-i*60
+                    row("Area $i",30f,y);row("Group $i",right,y)
+                    row(if(i==1)long else "Tools, methods",30f,y-18);row("Quality, delivery",right,y-18)
+                    row("Service support",30f,y-32);row("Review, testing",right,y-32)
+                }
+                row("ADDITIONAL INFORMATION",30f,500f)
+                row("Languages",30f,470f);row("Norwegian - native",right,470f)
+                row("Interests",30f,445f);row("Outdoor activities",right,445f)
+                row("References",30f,420f);row("Available on request",right,420f)
+            };document.save(output)
+        }
+        val text=extractor.extract(output.toByteArray(),"pdf")
+        val units=com.careeragent.cv.application.CvSourceUnits.create(text)
+        val groups=units.filter {it.kind==com.careeragent.cv.application.CvSourceUnitKind.SKILL_GROUP}.map {text.substring(it.start,it.end)}
+        assertThat(groups).hasSize(6)
+        assertThat(groups.single {it.startsWith("Area 1")}).contains(long).doesNotContain("Quality")
+        assertThat(text).contains("Languages Norwegian - native","Interests Outdoor activities","References Available on request")
+    }
+
+    @Test fun `employment bullets continue across pages under their own dated employer`() {
+        val output=ByteArrayOutputStream()
+        PDDocument().use { document ->
+            repeat(2){document.addPage(PDPage())}
+            for(page in 0..1) PDPageContentStream(document,document.getPage(page)).use { stream ->
+                fun row(text:String,y:Float){stream.beginText();stream.setFont(PDType1Font(Standard14Fonts.FontName.HELVETICA),11f);stream.newLineAtOffset(40f,y);stream.showText(text);stream.endText()}
+                if(page==0){row("WORK EXPERIENCE",160f);row("2022 - 2024 First Company - Engineer",140f);row("Built reliable digital services.",120f)}
+                else {
+                    for(i in 0..3)row("- First employer contribution $i.",740f-i*25)
+                    row("2019 - 2021 Second Company - Founder",610f)
+                    row("Founded a consulting - and product studio",590f);row("building services.",575f)
+                    for(i in 0..2)row("- Second employer contribution $i.",545f-i*25)
+                }
+            };document.save(output)
+        }
+        val text=extractor.extract(output.toByteArray(),"pdf")
+        val units=com.careeragent.cv.application.CvSourceUnits.create(text)
+        val headers=units.filter {it.kind==com.careeragent.cv.application.CvSourceUnitKind.ENTRY_HEADER}
+        val bullets=units.filter {it.kind==com.careeragent.cv.application.CvSourceUnitKind.BULLET}
+        assertThat(headers).hasSize(2);assertThat(bullets).hasSize(7)
+        assertThat(bullets.take(4)).allMatch {it.contextIndex==headers[0].paragraphIndex}
+        assertThat(bullets.drop(4)).allMatch {it.contextIndex==headers[1].paragraphIndex}
+    }
     @Test fun `letter tracking does not manufacture spaces inside words and real spaces survive`() {
         val output = ByteArrayOutputStream()
         PDDocument().use { document ->

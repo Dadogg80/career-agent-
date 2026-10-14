@@ -10,6 +10,24 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class ProjectHistoryExtractionTest {
+ @Test fun `a repeated contents heading resolves to its unique bounded project evidence without increasing limits`() {
+  val mapper=jacksonObjectMapper();val detail="Atlas Planner\n2023 - 2024 Own prototype\nMy role: Product developer"
+  val source="CONTENTS\nAtlas Planner\n"+"Other source content. ".repeat(80)+"\n"+detail
+  val output=mapper.writeValueAsString(mapOf("competencies" to emptyList<Any>(),"profile" to emptyList<Any>(),"history" to listOf(
+   mapOf("kind" to "PROJECT","title" to "Atlas Planner","organization" to "","client" to "","deliveryRole" to "Product developer","periodText" to "2023 - 2024","description" to "Own prototype","evidenceIds" to listOf(0,1,2)))))
+  val extractor=DocumentDraftExtractor(object:AiModel{override fun generateJson(system:String,user:String,schema:Map<String,Any>)=""},mapper)
+  val passages=detail.lines().map {DocumentDraftExtractor.Passage(it)}
+  val result=extractor.parse(output,passages,UUID.randomUUID(),source,"nb")
+  assertThat(result.entries.single().quote).isEqualTo(detail)
+  assertThat(result.omitted).isZero()
+  val ambiguous=detail.replace("Own prototype","First prototype")+"\n"+detail.replace("Own prototype","Second prototype")
+  val boundaryPassages=listOf(DocumentDraftExtractor.Passage("Atlas Planner"),DocumentDraftExtractor.Passage("My role: Product developer"))
+  val boundaryOutput=mapper.readTree(output)
+  (boundaryOutput.path("history")[0] as com.fasterxml.jackson.databind.node.ObjectNode).set<com.fasterxml.jackson.databind.JsonNode>("evidenceIds",mapper.valueToTree(listOf(0,1)))
+  val rejected=extractor.parse(boundaryOutput.toString(),boundaryPassages,UUID.randomUUID(),ambiguous,"nb")
+  assertThat(rejected.entries).isEmpty()
+  assertThat(rejected.omissionReasons.single().reason.name).isEqualTo("UNSUPPORTED_QUOTE")
+ }
  @Test fun `own projects remain separate history without inventing an employer or month`() {
   val source="01 Atlas Planner\n2023-2025 • Own prototype\nMy role: Product developer\n02 Boreal Tools\nPeriod unknown • Own project\nMy role: API developer"
   val mapper=jacksonObjectMapper()

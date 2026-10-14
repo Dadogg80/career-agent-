@@ -620,3 +620,8 @@ As a candidate, I can inspect separate profile paragraphs, skills groups and con
 ## Source-retrieval model completeness — 2026-10-14
 
 As the pilot user, I can independently choose any supported Gemini Flash/Lite source model or Groq 20B/120B before retrieving an advertisement, including Flash-Lite 3.5 and Flash 3.7. Existing defaults and explicit overrides remain. Selection alone starts no request; the source fingerprint must match the chosen model, independently of requirement analysis. Catalog presence/configured keys do not guarantee capacity. Failed retrieval keeps the URL and offers explicit retry/pasted text without silently switching models. Received text remains an AI-prepared excerpt.
+
+
+## Preserve CV entry continuity — 2026-10-14
+
+As a candidate, my employment header, introduction and contribution bullets stay associated when a PDF page ends mid-entry. Two-column skill groups retain the correct labels/content, metadata labels retain values, and ordinary compound prose cannot create a new employer scope. Synthetic checks cover four continued bullets for one employer and three for the next, plus six skills groups with a narrow gutter. Repeated contents headings must not cause valid project evidence to be discarded or competing source accounts to be silently chosen.
