@@ -17,7 +17,7 @@ const visibility=[{requirementIndex:0,status:"VISIBLE",reason:"The CV describes 
 async function fixtures(page:Page,{missing=false,stale=false}={}) {
  await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>r.fulfill({json:null}));
  await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
- await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:gemini,DOCUMENT_EXTRACTION:gemini,PROFILE_SUMMARY:gemini,PERSONAL_MATCH:gemini},documents:approval,documentExcerpt:approval,matching:approval,job:approval,tailoring:approval,options:{documents:options,documentExcerpt:options,matching:options,job:options,tailoring:options}}}));
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:gemini,DOCUMENT_EXTRACTION:gemini,PROFILE_SUMMARY:gemini,PERSONAL_MATCH:gemini,CV_TAILORING:gemini},documents:approval,documentExcerpt:approval,matching:approval,job:approval,tailoring:approval,options:{documents:options,documentExcerpt:options,matching:options,job:options,tailoring:options}}}));
  await page.route("**/api/profile/me/documents",r=>r.fulfill({json:missing?[]:[doc]}));
  await page.route(`**/api/profile/me/documents/${documentId}`,r=>r.fulfill({json:{document:doc,text:cv}}));
  await page.route("**/api/profile/me/claims",r=>r.fulfill({json:missing?[]:[claim]}));

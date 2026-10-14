@@ -117,7 +117,7 @@ test("partial evidence is visible in both languages and valid cards remain usabl
 test("advertisement retry can select Gemini without refetching source and displays the actual result model",async({page})=>{
  const groq={provider:"Groq",model:"openai/gpt-oss-20b"},gemini={provider:"Gemini",model:"gemini-3.5-flash"};
  const original={token:"b".repeat(64),selections:[groq]},alternative={token:"c".repeat(64),selections:[gemini]};const options=[{approval:original,available:true},{approval:alternative,available:true}];
- await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:groq,DOCUMENT_EXTRACTION:groq,PROFILE_SUMMARY:groq,PERSONAL_MATCH:groq},documents:original,documentExcerpt:original,matching:original,job:original,options:{documents:options,documentExcerpt:options,matching:options,job:options}}}));
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:groq,DOCUMENT_EXTRACTION:groq,PROFILE_SUMMARY:groq,PERSONAL_MATCH:groq,CV_TAILORING:groq},documents:original,documentExcerpt:original,matching:original,job:original,options:{documents:options,documentExcerpt:options,matching:options,job:options}}}));
  let calls=0;
  await page.route("**/api/jobs/requirements",r=>{
   calls++;if(calls===1)return r.fulfill({status:429,headers:{"Retry-After":"968"},json:{code:"AI_RATE_LIMITED"}});
@@ -133,7 +133,7 @@ test("job analysis offers separate Groq and Gemini models for the analysis call"
  const groq={provider:"Groq",model:"openai/gpt-oss-20b"},flash={provider:"Gemini",model:"gemini-3.5-flash"},lite={provider:"Gemini",model:"gemini-3.5-flash-lite"};
  const original={token:"a".repeat(64),selections:[groq]},flashApproval={token:"b".repeat(64),selections:[flash]},liteApproval={token:"c".repeat(64),selections:[lite]};
  const options=[{approval:original,available:true},{approval:flashApproval,available:true},{approval:liteApproval,available:true}];
- await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:groq,DOCUMENT_EXTRACTION:groq,PROFILE_SUMMARY:groq,PERSONAL_MATCH:groq},documents:original,documentExcerpt:original,matching:original,job:original,options:{documents:options,documentExcerpt:options,matching:options,job:options}}}));
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{tasks:{JOB_ANALYSIS:groq,DOCUMENT_EXTRACTION:groq,PROFILE_SUMMARY:groq,PERSONAL_MATCH:groq,CV_TAILORING:groq},documents:original,documentExcerpt:original,matching:original,job:original,options:{documents:options,documentExcerpt:options,matching:options,job:options}}}));
  let sentApproval="";
  await page.route("**/api/jobs/requirements",r=>{sentApproval=r.request().postDataJSON().aiApproval;return r.fulfill({json:{...result,aiSelection:lite}});});
  await page.goto("/jobs/analyze");
@@ -168,7 +168,7 @@ function sourceModelConfiguration() {
  const jobGroq={token:"f".repeat(64),selections:[groq]},jobGemini={token:"e".repeat(64),selections:[gemini]};
  const jobOptions=[{approval:jobGroq,available:true},{approval:jobGemini,available:true}];
  const configuration={
-  tasks:{JOB_ANALYSIS:groq,DOCUMENT_EXTRACTION:groq,PROFILE_SUMMARY:groq,PERSONAL_MATCH:groq},
+  tasks:{JOB_ANALYSIS:groq,DOCUMENT_EXTRACTION:groq,PROFILE_SUMMARY:groq,PERSONAL_MATCH:groq,CV_TAILORING:groq},
   sourceBrowser:groq,sourceRetrieval:sourceOptions[0].approval,documents:jobGroq,documentExcerpt:jobGroq,matching:jobGroq,job:jobGroq,
   options:{documents:jobOptions,documentExcerpt:jobOptions,matching:jobOptions,job:jobOptions,sourceRetrieval:sourceOptions}
  };
@@ -185,7 +185,10 @@ test("source retrieval accepts a larger bounded model catalog and preserves priv
  expect(isAiConfiguration({...configuration,options:{...configuration.options,sourceRetrieval:expanded}})).toBe(true);
  expect(isAiConfiguration({...configuration,options:{...configuration.options,sourceRetrieval:[...expanded,sourceOptions[0]]}})).toBe(false);
  expect(isAiConfiguration({...configuration,options:{...configuration.options,sourceRetrieval:[{...sourceOptions[0],approval:{...sourceOptions[0].approval,token:"invalid"}}]}})).toBe(false);
- for(const area of ["documents","documentExcerpt","matching","job","tailoring"])expect(isAiConfiguration({...configuration,options:{...configuration.options,[area]:sourceOptions.slice(0,6)}})).toBe(false);
+ for(const area of ["documents","documentExcerpt","matching","job","tailoring"]){
+  expect(isAiConfiguration({...configuration,options:{...configuration.options,[area]:expanded.slice(0,10)}})).toBe(true);
+  expect(isAiConfiguration({...configuration,options:{...configuration.options,[area]:expanded.slice(0,11)}})).toBe(false);
+ }
 });
 
 test("FINN retrieval and requirement analysis have separate model approvals",async({page})=>{
