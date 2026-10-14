@@ -53,8 +53,12 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
     private fun candidatePlans(tasks: Array<out AiTask>): List<AiPlan> {
         val taskSet = tasks.toSet()
         val plans = if (taskSet == setOf(AiTask.JOB_SOURCE_RETRIEVAL)) mutableListOf(
-            plan(tasks), plan(tasks, "Groq"), plan(tasks, "Gemini", "gemini-3.8-flash"),
-        ) else mutableListOf(
+            plan(tasks),
+            plan(tasks, "Groq", "openai/gpt-oss-20b"),
+            plan(tasks, "Groq", "openai/gpt-oss-120b"),
+        ).apply {
+            addAll(GeminiSourceModels.models.map { plan(tasks, "Gemini", it) })
+        } else mutableListOf(
             plan(tasks), plan(tasks, "Groq"), plan(tasks, "Gemini"),
             plan(tasks, "Gemini", "gemini-3.6-flash"),
             plan(tasks, "Gemini", "gemini-3.5-flash-lite"),

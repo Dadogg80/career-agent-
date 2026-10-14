@@ -346,3 +346,8 @@ The owner approved regular Flash 3.6 as the default Gemini job/match fallback an
 ## 2026-10-14 — Logical CV source units and geometric PDF paragraphs
 
 Accept [ADR 0046](adr/0046-logical-cv-source-units-and-pdf-paragraphs.md): create bounded application-owned UTF-16 source ranges only for new tailoring generations and reuse them throughout planning, review and assembly. Recognized identity/headings/dated entry headers stay protected. Optional metadata lives in existing immutable JSON; absent/null preserves the legacy algorithm and indexes, while invalid stored ranges fail closed. PDFBox paragraph gaps change only new extraction/explicit rereading, with original bytes preserved. Conservative geometry/context labels do not establish template fidelity, exhaustive recall or factual truth. Retain full confirmed evidence, existing consent/defaults and one-call budgets. Bundle related source-quality corrections in one coherent PR, use focused validation and do not merge automatically.
+
+
+## Source model selection extension — 2026-10-14
+
+Accepted owner request: expand only the public-source chooser to the application's six supported Gemini Flash/Lite IDs plus Groq 20B/120B, preserving defaults, explicit overrides and independent approval fingerprints. ADR 0037's dated extension introduces generateContent URL Context for the additional Gemini choices with same-candidate exact-URL SUCCESS metadata and STOP text. The existing 3.8 Interactions citation contract remains unchanged. Metadata is not an independent output citation or completeness proof. No dynamic unbounded catalog, automatic fallback, private-task expansion or billing change.
