@@ -3,6 +3,7 @@ import {tailoringPassages,isTailoringResult,isCvSourceUnits,reviewedCvText,type 
 import {isTailoringSession,type TailoringSession} from "../lib/cv-tailoring-session";
 import {isPersonalMatch} from "../lib/personal-match";
 import {matchInsights,relationLabel} from "../lib/match-insights";
+// Manual screenshots are local debugging artifacts, not CI assertions.
 const jobId="52345678-1234-1234-1234-123456789abc",claimId="62345678-1234-1234-1234-123456789abc",documentId="72345678-1234-1234-1234-123456789abc",matchId="82345678-1234-1234-1234-123456789abc",time="2026-10-07T00:00:00Z";
 const cv="Fictional engineer\n\nBuilt Kotlin APIs for a fictional employer and improved service reliability.";
 const claim={id:claimId,skill:"Kotlin",statement:cv.split("\n\n")[1],context:"Fictional employer",sourceNote:"Own statement",status:"CONFIRMED",revision:2,createdAt:time,updatedAt:time};
@@ -39,7 +40,7 @@ test("saved job opens contextual preparation with whole source consent and edita
  await article.getByRole("button",{name:"Godkjenn teksten",exact:true}).click();await expect(article).toHaveCount(0);
  await page.getByRole("button",{name:"Behandlet · 1",exact:true}).click();await expect(article).toContainText("Godkjent tekst");
  await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
- await page.screenshot({path:"/tmp/career-preparation-mobile.png",fullPage:true});
+ if(!process.env.CI)await page.screenshot({path:"/tmp/career-preparation-mobile.png",fullPage:true});
  expect(calls).toBe(1);expect(errors).toEqual([]);
  await page.reload();await expect(page.locator(".tailoring-proposal")).toHaveCount(0);expect(calls).toBe(1);
 });
@@ -124,8 +125,8 @@ test("application priorities distinguish direct transferable and formal evidence
  for(const label of ["Fremhev dokumenterte eksempler","Forklar overførbar erfaring","Kontroller kvalifikasjonskrav"])await guide.locator("summary").filter({hasText:label}).click();
  await expect(guide).toContainText("Fictional employer");await expect(guide).toContainText("mobile delivery is not documented");await expect(guide).toContainText(criteria[2].quote);
  await guide.getByRole("button",{name:"Om søknadsprioriteringene",exact:true}).click();await expect(page.getByRole("tooltip")).toContainText("allerede er synlig i CV-en");await page.keyboard.press("Escape");
- await page.screenshot({path:"/tmp/career-relations-preparation-desktop.png",fullPage:true});
- await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:"/tmp/career-relations-preparation-mobile.png",fullPage:true});
+ if(!process.env.CI)await page.screenshot({path:"/tmp/career-relations-preparation-desktop.png",fullPage:true});
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);if(!process.env.CI)await page.screenshot({path:"/tmp/career-relations-preparation-mobile.png",fullPage:true});
  await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await expect(page.getByRole("region",{name:"Priorities from your job match",exact:true})).toContainText("Review qualification requirements");expect(calls).toBe(0);
  await page.route(`**/api/profile/me/jobs/${jobId}/match`,r=>r.fulfill({json:{...assessed,stale:true}}));await page.reload();await expect(page.locator(".match-application-focus")).toContainText("earlier assessment");expect(calls).toBe(0);
 });
@@ -146,7 +147,7 @@ test("CV visibility shares one approved call with wording and exposes literal so
  await review.getByRole("button",{name:"Om synlighet i CV-en",exact:true}).click();await expect(page.getByRole("tooltip")).toContainText("ikke manglende kompetanse");await page.keyboard.press("Escape");
  await review.getByRole("button",{name:/Ikke vurdert/}).click();await expect(review.locator(".cv-visibility-item")).toHaveCount(0);await review.getByRole("button",{name:/Alle/}).click();
  await review.getByLabel("Søk i CV-vurderingen").fill("nonexistent criterion");await expect(review.locator(".cv-visibility-item")).toHaveCount(0);await review.getByLabel("Søk i CV-vurderingen").fill("Kotlin");await expect(review.locator(".cv-visibility-item")).toHaveCount(1);
- await page.screenshot({path:"/tmp/career-visibility-desktop.png",fullPage:true});await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:"/tmp/career-visibility-mobile.png",fullPage:true});
+ if(!process.env.CI)await page.screenshot({path:"/tmp/career-visibility-desktop.png",fullPage:true});await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);if(!process.env.CI)await page.screenshot({path:"/tmp/career-visibility-mobile.png",fullPage:true});
  await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await expect(review).toContainText("earlier CV assessment");await expect(review).toContainText("What does your CV show?");expect(calls).toBe(1);
 });
 
@@ -173,7 +174,7 @@ test("reviewed CV handoff copies only approved edits and blocks stale wording wi
  const edited="Utviklet Kotlin-API-er for en fiktiv arbeidsgiver.";await article.getByLabel("Forslag – kan redigeres",{exact:true}).fill(edited);await article.getByRole("button",{name:"Godkjenn teksten",exact:true}).click();
  const expected=cv.replace(claim.statement,edited);await expect(handoff.getByLabel("CV-tekst med godkjente endringer")).toHaveValue(expected);await handoff.getByRole("button",{name:"Kopier CV-teksten",exact:true}).click();await expect(handoff.getByRole("status")).toContainText("CV-teksten er kopiert");expect(await page.evaluate(()=>(window as unknown as {copiedCv:string}).copiedCv)).toBe(expected);
  await page.getByRole("button",{name:"Behandlet · 1",exact:true}).click();await article.getByLabel("Forslag – kan redigeres",{exact:true}).fill("Et nytt, ubekreftet tekstvalg.");await expect(handoff.getByLabel("CV-tekst med godkjente endringer")).toHaveValue(cv);await expect(handoff.getByRole("button",{name:"Kopier CV-teksten",exact:true})).toBeDisabled();
- await page.getByRole("button",{name:"Til gjennomgang · 1",exact:true}).click();await article.getByRole("button",{name:"Godkjenn teksten",exact:true}).click();await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await handoff.screenshot({path:"/tmp/career-reviewed-cv-mobile.png"});
+ await page.getByRole("button",{name:"Til gjennomgang · 1",exact:true}).click();await article.getByRole("button",{name:"Godkjenn teksten",exact:true}).click();await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);if(!process.env.CI)await handoff.screenshot({path:"/tmp/career-reviewed-cv-mobile.png"});
  await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await expect(handoff).toContainText("Evidence or selections changed");await expect(handoff.getByRole("button",{name:"Copy CV text",exact:true})).toBeDisabled();expect(calls).toBe(1);
 });
 
@@ -243,7 +244,7 @@ test("logical CV units preserve profile skills and entry context across saved re
  await plan.getByRole("button",{name:/Skills/}).click();await expect(ledger.getByText("2 avsnitt · 1 tekstforslag",{exact:true})).toBeVisible();await expect(ledger.getByText("Kompetansegruppe 1",{exact:true})).toBeVisible();
  await plan.getByRole("button",{name:/Experience/}).click();await expect(ledger.getByText("4 avsnitt · 1 tekstforslag",{exact:true})).toBeVisible();await expect(ledger.getByText("Bevares uendret",{exact:true})).toBeVisible();
  const contribution=ledger.locator("ol > li").nth(3);await contribution.locator("summary").click();await expect(contribution.getByRole("heading",{name:"Tilhører denne oppføringen",exact:true})).toBeVisible();
- await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);await ledger.screenshot({path:"/tmp/career-cv-logical-units-mobile.png"});
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);if(!process.env.CI)await ledger.screenshot({path:"/tmp/career-cv-logical-units-mobile.png"});
  await plan.getByRole("button",{name:"Alle forslag",exact:true}).click();await page.getByRole("button",{name:"Behandlet · 3",exact:true}).click();
  const bullet=page.locator(".tailoring-proposal").filter({has:page.getByRole("heading",{name:"Erfaringspunkt 13",exact:true})});await expect(bullet.getByText(parts[9],{exact:true})).toBeVisible();await expect(page.locator(".tailoring-proposal")).toHaveCount(3);
  const handoff=page.locator(".reviewed-cv-text");await handoff.locator("summary").click();await expect(handoff.getByLabel("CV-tekst med godkjente endringer")).toHaveValue(expected);
@@ -266,7 +267,7 @@ test("without a master CV preparation does not silently select a certificate and
  const consent=page.getByRole("checkbox",{name:"Jeg godkjenner at dette grunnlaget sendes til Gemini for CV-forslag",exact:true});
  await expect(select).toHaveValue("");await expect(page.getByText("Velg en CV for å fortsette",{exact:false})).toBeVisible();
  await expect(consent).toBeDisabled();await expect(submit).toBeDisabled();expect(sourceReads).toBe(0);
- await page.screenshot({path:"/tmp/career-base-cv-choice.png",fullPage:true});
+ if(!process.env.CI)await page.screenshot({path:"/tmp/career-base-cv-choice.png",fullPage:true});
  await select.selectOption(documentId);await expect(consent).toBeEnabled();await consent.check();await expect(submit).toBeEnabled();
  await select.selectOption("");await expect(consent).not.toBeChecked();await expect(submit).toBeDisabled();
  expect(sourceReads).toBe(1);expect(calls).toBe(0);
@@ -285,7 +286,7 @@ test("short CV extraction explains rereading instead of leaving an unexplained d
  await page.getByRole("combobox",{name:"Språk"}).selectOption("en");
  await expect(page.getByText("Too little text was extracted",{exact:false})).toBeVisible();
  await expect(page.getByRole("link",{name:"Open my documents",exact:true})).toHaveAttribute("href","/career/profile");
- await page.screenshot({path:"/tmp/career-short-cv-mobile.png",fullPage:true});
+ if(!process.env.CI)await page.screenshot({path:"/tmp/career-short-cv-mobile.png",fullPage:true});
 });
 
 test("saved wording review reopens without AI and retains edits after failed approval",async({page})=>{
@@ -302,7 +303,7 @@ test("saved wording review reopens without AI and retains edits after failed app
  });
  await page.goto(`/jobs/${jobId}/apply`);
  const proposal=page.locator(".tailoring-proposal"),editor=proposal.getByRole("textbox");
- await expect(proposal).toHaveCount(1);await page.setViewportSize({width:390,height:844});await expect(proposal.getByRole("button",{name:"Godkjenn teksten"})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await proposal.screenshot({path:"/tmp/career-cv-review-mobile.png"});await editor.fill("Built and maintained Kotlin APIs for Example AS.");
+ await expect(proposal).toHaveCount(1);await page.setViewportSize({width:390,height:844});await expect(proposal.getByRole("button",{name:"Godkjenn teksten"})).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);if(!process.env.CI)await proposal.screenshot({path:"/tmp/career-cv-review-mobile.png"});await editor.fill("Built and maintained Kotlin APIs for Example AS.");
  await proposal.getByRole("button",{name:"Godkjenn teksten"}).click();
  await expect(page.getByText("Valget kunne ikke lagres. Teksten er beholdt; prøv lagringen igjen.")).toBeVisible();
  await expect(editor).toHaveValue("Built and maintained Kotlin APIs for Example AS.");
@@ -368,7 +369,7 @@ test("source sections expose explicit keep and unfinished plans with filtered pr
  await expect(plan.getByText("Behold teksten",{exact:true})).toBeVisible();await expect(page.locator(".tailoring-proposal")).toHaveCount(0);
  await plan.getByRole("button",{name:/Kjernekompetanse/}).click();await expect(page.locator(".tailoring-proposal")).toHaveCount(1);
  await expect(plan.getByText("AI-prioritet: Høy")).toBeVisible();await expect(plan.getByText(/AI oppgir gjennomgang av 1\/1/)).toBeVisible();await plan.getByText("Se originaltekst og grunnlag",{exact:true}).click();await expect(plan.locator("pre")).toContainText("Kotlin APIs.");
- await plan.screenshot({path:"/tmp/career-cv-sections-mobile.png"});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ if(!process.env.CI)await plan.screenshot({path:"/tmp/career-cv-sections-mobile.png"});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await plan.getByRole("button",{name:/Utdanning/}).click();await expect(plan.getByText("Må gjennomgås",{exact:true})).toBeVisible();await expect(plan.getByText(/AI-prioritet/)).toHaveCount(0);
  await plan.getByRole("button",{name:/Kjernekompetanse/}).click();await page.locator(".tailoring-proposal").getByRole("button",{name:"Godkjenn teksten"}).click();
  await expect(page.getByRole("button",{name:"Til gjennomgang · 0",exact:true})).toBeVisible();await expect(plan.getByRole("button",{name:/Kjernekompetanse/})).toHaveAttribute("aria-pressed","true");
@@ -416,7 +417,7 @@ test("saved approved wording becomes a separate readable CV draft without AI or 
  await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/draft`,r=>{writes++;expect(r.request().headers()["x-csrf-token"]).toBe("synthetic-csrf");expect(r.request().postDataJSON()).toEqual({sessionId,revision:2});return r.fulfill({json:draft});});
  await page.route("**/api/profile/me/cvs**",r=>r.fulfill({json:r.request().url().endsWith("cleanup")?{remaining:0}:[draft]}));
  await page.route("**/api/profile/me/entries",r=>r.fulfill({json:[]}));
- await page.goto(`/jobs/${jobId}/apply`);await expect(page.locator(".preparation-readiness")).toContainText(doc.originalName);await page.screenshot({path:"/tmp/career-preparation-reviewed-desktop.png",fullPage:true});await page.setViewportSize({width:390,height:844});
+ await page.goto(`/jobs/${jobId}/apply`);await expect(page.locator(".preparation-readiness")).toContainText(doc.originalName);if(!process.env.CI)await page.screenshot({path:"/tmp/career-preparation-reviewed-desktop.png",fullPage:true});await page.setViewportSize({width:390,height:844});
  await page.getByRole("button",{name:"Lagre tilpasset CV-utkast",exact:true}).click();
  await expect(page.getByText("CV-utkastet er lagret. Dokumentkontroll gjenstår.")).toBeVisible();
  await page.getByRole("link",{name:"Se i Mine CV-er"}).click();
@@ -425,7 +426,7 @@ test("saved approved wording becomes a separate readable CV draft without AI or 
  await expect(page.getByRole("button",{name:"Dokumentkontroll gjenstår",exact:true})).toBeDisabled();
  await expect(page.getByText("Klar til å bruke",{exact:true})).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
- await page.screenshot({path:"/tmp/career-reviewed-cv-draft-mobile.png"});expect(ai).toBe(0);expect(writes).toBe(1);
+ if(!process.env.CI)await page.screenshot({path:"/tmp/career-reviewed-cv-draft-mobile.png"});expect(ai).toBe(0);expect(writes).toBe(1);
 });
 
 test("reviewed draft proxy rejects injected text owner fields foreign origins and anonymous creation",async({request})=>{
@@ -483,7 +484,7 @@ test("paragraph ledger shows all profile paragraphs without claiming individual 
  await ledger.locator("summary").first().click();await expect(ledger.getByText("Opprinnelig AI-forslag",{exact:true})).toBeVisible();
  await expect(ledger.getByText(proposal.newText,{exact:true})).toBeVisible();expect(calls).toBe(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
- await ledger.screenshot({path:"/tmp/cv-passage-review-mobile.png"});
+ if(!process.env.CI)await ledger.screenshot({path:"/tmp/cv-passage-review-mobile.png"});
 });
 
 test("individual passage assessments distinguish keep from unfinished and validate their exact evidence",async({page})=>{

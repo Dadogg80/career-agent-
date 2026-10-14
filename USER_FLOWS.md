@@ -143,7 +143,7 @@ flowchart TD
     J -->|Edit source text| M[Mark result outdated]
 ```
 
-The result places the employer/role overview, applicant profile, offered benefits and practical details (location, contact and deadline) before requirement cards. Literal labeled practical fields may fill an otherwise missing extracted fact; other unknowns remain explicit. Applicant and offer excerpts have compact previews with scrollable source readers. Full source wording is expandable and stays distinct from AI-extracted requirements. If source-backed suggestions were omitted, the user sees the count and can inspect the received text, add a manually labeled detail with a verbatim source quote, and remove it again. Manual details stay in the current page session and are persisted only when the user explicitly saves the job snapshot; they never create another AI call or alter the omitted count. Retrieval and requirement analysis have separate model choices and approval fingerprints. NAV URL import makes no AI call. FINN retrieval offers Groq Browser Search or Gemini 3.8 Flash URL Context. The Gemini result requires successful retrieval plus a citation to the exact requested URL and remains labeled as an AI-prepared excerpt, not original page text. Missing/mismatched evidence remains `SOURCE_NOT_AVAILABLE`; there is no automatic provider switch. The pilot does not save input or results across reload unless the user saves a job snapshot. API-returned application links are not fetched. The current interface does not offer automated submission or personal match scores.
+The result places the employer/role overview, applicant profile, offered benefits and practical details (location, contact and deadline) before requirement cards. Literal labeled practical fields may fill an otherwise missing extracted fact; other unknowns remain explicit. Applicant and offer excerpts have compact previews with scrollable source readers. Full source wording is expandable and stays distinct from AI-extracted requirements. If source-backed suggestions were omitted, the user sees the count and can inspect the received text, add a manually labeled detail with a verbatim source quote, and remove it again. Manual details stay in the current page session and are persisted only when the user explicitly saves the job snapshot; they never create another AI call or alter the omitted count. Retrieval and requirement analysis have separate model choices and approval fingerprints. NAV URL import makes no AI call. FINN retrieval offers Groq 20B/120B Browser Search and Gemini 3.5/3.1 Flash-Lite or 3.5/3.6/3.7/3.8 Flash URL Context. Generation routes require same-candidate successful exact-URL tool metadata and STOP text; the existing 3.8 Interactions route also requires an exact-URL output citation. All remain labeled AI-prepared excerpts. Changing a model sends no request and leaves the requirement-analysis choice independent. A configured key enables a menu choice; it does not guarantee live capacity or quota. Missing/mismatched evidence remains `SOURCE_NOT_AVAILABLE`; there is no automatic provider switch. The pilot does not save input or results across reload unless the user saves a job snapshot. API-returned application links are not fetched. The current interface does not offer automated submission or personal match scores.
 
 ## FINN source branch
 
@@ -152,9 +152,9 @@ flowchart TD
     A[Paste modern FINN job URL] --> B[Validate and canonicalize exact advertisement link]
     B --> C{Selected retrieval plan}
     C -->|Groq| D[Bounded Groq Browser Search]
-    C -->|Gemini| E[Gemini 3.8 URL Context]
+    C -->|Gemini| E[Selected Flash or Lite URL Context]
     D --> F{Exact browser.open source result available?}
-    E --> G{Successful exact-URL retrieval and citation?}
+    E --> G{Completed text and exact-URL tool proof?}
     F -->|No| H[Keep URL, explain error and offer pasted text]
     G -->|No| H
     F -->|Yes| I[Retain excerpt and show retrieval complete]

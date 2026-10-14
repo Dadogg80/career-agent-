@@ -11,6 +11,7 @@ import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.net.http.HttpHeaders
+import java.security.MessageDigest
 import java.util.Optional
 
 class GeminiAiModelTest {
@@ -180,7 +181,7 @@ class GeminiAiModelTest {
                 .isEqualTo(AiSelection("Gemini","gemini-3.5-flash-lite"))
         }
     }
-    @Test fun `3 point 8 Flash is selectable for job analysis while source retrieval offers only compatible models`() {
+    @Test fun `source retrieval offers bounded model choices with exact scoped approvals`() {
         val routing = AiRouting(MockEnvironment().withProperty("GROQ_API_KEY","fictional-key").withProperty("GEMINI_API_KEY","fictional-key"))
         val jobModel = routing.options(AiTask.JOB_ANALYSIS).single {
             it.available && it.approval.selections.singleOrNull() == AiSelection("Gemini", "gemini-3.8-flash")
@@ -189,8 +190,106 @@ class GeminiAiModelTest {
             .isEqualTo(AiSelection("Gemini", "gemini-3.8-flash"))
         val sourceOptions = routing.options(AiTask.JOB_SOURCE_RETRIEVAL)
         assertThat(sourceOptions.map { it.approval.selections.single() })
-            .containsExactly(AiSelection("Groq", "openai/gpt-oss-20b"), AiSelection("Gemini", "gemini-3.8-flash"))
+            .containsExactly(
+                AiSelection("Groq", "openai/gpt-oss-20b"),
+                AiSelection("Groq", "openai/gpt-oss-120b"),
+                AiSelection("Gemini", "gemini-3.5-flash-lite"),
+                AiSelection("Gemini", "gemini-3.5-flash"),
+                AiSelection("Gemini", "gemini-3.6-flash"),
+                AiSelection("Gemini", "gemini-3.7-flash"),
+                AiSelection("Gemini", "gemini-3.8-flash"),
+                AiSelection("Gemini", "gemini-3.1-flash-lite"),
+            )
         assertThat(sourceOptions).allMatch { it.available }
+        assertThat(sourceOptions.map { it.approval.token }).hasSize(8).doesNotHaveDuplicates()
+        sourceOptions.forEach { option ->
+            val selected = routing.resolveApproval(option.approval.token, AiTask.JOB_SOURCE_RETRIEVAL)
+            assertThat(selected.tasks).containsOnlyKeys(AiTask.JOB_SOURCE_RETRIEVAL)
+            assertThat(selected.tasks.getValue(AiTask.JOB_SOURCE_RETRIEVAL)).isEqualTo(option.approval.selections.single())
+        }
+        assertThat(routing.selection(AiTask.JOB_SOURCE_RETRIEVAL)).isEqualTo(AiSelection("Groq", "openai/gpt-oss-20b"))
+    }
+
+    @Test fun `source options preserve configured defaults and explicit source overrides without expanding the catalog`() {
+        val env = MockEnvironment().withProperty("GROQ_API_KEY", "fictional-key")
+            .withProperty("GEMINI_API_KEY", "fictional-key")
+            .withProperty("GROQ_MODEL", "openai/gpt-oss-120b")
+        val config = AiRouting(env)
+        assertThat(config.selection(AiTask.JOB_SOURCE_RETRIEVAL)).isEqualTo(AiSelection("Groq", "openai/gpt-oss-20b"))
+        env.setProperty("GROQ_BROWSER_MODEL", "configured-browser-model")
+        val configured = config.preview(AiTask.JOB_SOURCE_RETRIEVAL)
+        assertThat(configured.selections).containsExactly(AiSelection("Groq", "configured-browser-model"))
+        assertThat(config.options(AiTask.JOB_SOURCE_RETRIEVAL)).hasSize(9)
+        assertThat(config.options(AiTask.JOB_SOURCE_RETRIEVAL).map { it.approval.token }).doesNotHaveDuplicates()
+        assertThat(config.options(AiTask.JOB_SOURCE_RETRIEVAL).first().approval).isEqualTo(configured)
+        assertThat(config.resolveApproval(configured.token, AiTask.JOB_SOURCE_RETRIEVAL).approval).isEqualTo(configured)
+        env.setProperty("GROQ_JOB_SOURCE_MODEL", "openai/gpt-oss-120b")
+        assertThat(config.selection(AiTask.JOB_SOURCE_RETRIEVAL)).isEqualTo(AiSelection("Groq", "openai/gpt-oss-120b"))
+        assertThat(config.options(AiTask.JOB_SOURCE_RETRIEVAL)).hasSize(8)
+        env.setProperty("AI_JOB_SOURCE_PROVIDER", "gemini")
+        env.setProperty("GEMINI_MODEL", "gemini-3.6-flash")
+        assertThat(config.selection(AiTask.JOB_SOURCE_RETRIEVAL)).isEqualTo(AiSelection("Gemini", "gemini-3.8-flash"))
+        env.setProperty("GEMINI_JOB_SOURCE_MODEL", "gemini-3.7-flash")
+        assertThat(config.selection(AiTask.JOB_SOURCE_RETRIEVAL)).isEqualTo(AiSelection("Gemini", "gemini-3.7-flash"))
+        assertThat(config.options(AiTask.JOB_SOURCE_RETRIEVAL)).hasSize(8)
+        assertThat(config.options(AiTask.JOB_SOURCE_RETRIEVAL).first().approval).isEqualTo(config.preview(AiTask.JOB_SOURCE_RETRIEVAL))
+        assertThat(config.selection(AiTask.DOCUMENT_EXTRACTION)).isEqualTo(AiSelection("Groq", "openai/gpt-oss-120b"))
+    }
+
+    @Test fun `source alternatives require configured recipient keys and preserve legacy default approvals`() {
+        val env = MockEnvironment().withProperty("GROQ_API_KEY", "fictional-key")
+        val config = AiRouting(env)
+        val options = config.options(AiTask.JOB_SOURCE_RETRIEVAL)
+        assertThat(options.filter { it.approval.selections.single().provider == "Groq" }).allMatch { it.available }
+        assertThat(options.filter { it.approval.selections.single().provider == "Gemini" }).allMatch { !it.available }
+        options.filter { it.approval.selections.single().provider == "Gemini" }.forEach { option ->
+            assertThatThrownBy { config.resolveApproval(option.approval.token, AiTask.JOB_SOURCE_RETRIEVAL) }
+                .isInstanceOfSatisfying(AiFailure::class.java) { assertThat(it.code).isEqualTo("AI_APPROVAL_CHANGED") }
+        }
+        env.setProperty("GEMINI_API_KEY", "fictional-key")
+        assertThat(config.options(AiTask.JOB_SOURCE_RETRIEVAL)).allMatch { it.available }
+        env.setProperty("GROQ_API_KEY", "")
+        val default = config.preview(AiTask.JOB_SOURCE_RETRIEVAL)
+        assertThat(config.resolveApproval(null, AiTask.JOB_SOURCE_RETRIEVAL).approval).isEqualTo(default)
+        assertThat(config.resolveApproval(default.token, AiTask.JOB_SOURCE_RETRIEVAL).approval).isEqualTo(default)
+        val groqAlternative = config.options(AiTask.JOB_SOURCE_RETRIEVAL).single {
+            it.approval.selections.single() == AiSelection("Groq", "openai/gpt-oss-120b")
+        }
+        assertThat(groqAlternative.available).isFalse()
+        assertThatThrownBy { config.resolveApproval(groqAlternative.approval.token, AiTask.JOB_SOURCE_RETRIEVAL) }
+            .isInstanceOf(AiFailure::class.java)
+    }
+
+    @Test fun `expanded source approvals cannot authorize private tasks or arbitrary models`() {
+        val config = AiRouting(MockEnvironment().withProperty("GROQ_API_KEY", "fictional-key")
+            .withProperty("GEMINI_API_KEY", "fictional-key"))
+        val sourceOptions = config.options(AiTask.JOB_SOURCE_RETRIEVAL)
+        for (task in AiTask.entries.filter { it != AiTask.JOB_SOURCE_RETRIEVAL }) {
+            val expected = mutableListOf(
+                AiSelection("Groq", "openai/gpt-oss-20b"),
+                AiSelection("Gemini", if (task in setOf(AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY, AiTask.CV_TAILORING)) "gemini-3.5-flash-lite" else "gemini-3.6-flash"),
+                AiSelection("Gemini", "gemini-3.6-flash"),
+                AiSelection("Gemini", "gemini-3.5-flash-lite"),
+            ).distinct().toMutableList()
+            if (task == AiTask.JOB_ANALYSIS) expected.add(AiSelection("Gemini", "gemini-3.8-flash"))
+            assertThat(config.options(task).map { it.approval.selections.single() }).containsExactlyElementsOf(expected)
+            sourceOptions.forEach { option ->
+                assertThatThrownBy { config.resolveApproval(option.approval.token, task) }
+                    .isInstanceOfSatisfying(AiFailure::class.java) { assertThat(it.code).isEqualTo("AI_APPROVAL_CHANGED") }
+            }
+        }
+        val privateApproval = config.preview(AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY)
+        assertThatThrownBy { config.resolveApproval(privateApproval.token, AiTask.JOB_SOURCE_RETRIEVAL) }
+            .isInstanceOf(AiFailure::class.java)
+        sourceOptions.forEach { option ->
+            assertThatThrownBy { config.resolveApproval(option.approval.token, AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY) }
+                .isInstanceOf(AiFailure::class.java)
+        }
+        val forged = MessageDigest.getInstance("SHA-256")
+            .digest("JOB_SOURCE_RETRIEVAL:Gemini:gemini-unlisted-model".toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
+        assertThatThrownBy { config.resolveApproval(forged, AiTask.JOB_SOURCE_RETRIEVAL) }
+            .isInstanceOfSatisfying(AiFailure::class.java) { assertThat(it.code).isEqualTo("AI_APPROVAL_CHANGED") }
     }
     @Test fun `Lite defaults apply to document and profile tasks while analytical and Groq overrides remain intact`() {
         val env = MockEnvironment().withProperty("AI_PROVIDER", "gemini")

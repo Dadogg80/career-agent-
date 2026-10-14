@@ -602,3 +602,8 @@ As a user, I can choose regular Gemini 3.6 Flash while retaining Flash-Lite for 
 ## 2026-10-14 — Logical CV source units and PDF paragraphs
 
 As a candidate, I can inspect separate profile paragraphs, skills groups and contributions with their literal entry context before reviewing wording. New tailoring uses bounded exact source ranges, protects recognized identity/headings/dated entry headers, and applies accepted wording only to editable units. Invalid stored ranges block review/assembly; older sessions retain their original paragraph indexes. New PDF uploads and explicit original rereading preserve geometric paragraph gaps without changing original files. This does not promise complete semantic recall, template fidelity or final document readiness.
+
+
+## Source-retrieval model completeness — 2026-10-14
+
+As the pilot user, I can independently choose any supported Gemini Flash/Lite source model or Groq 20B/120B before retrieving an advertisement, including Flash-Lite 3.5 and Flash 3.7. Existing defaults and explicit overrides remain. Selection alone starts no request; the source fingerprint must match the chosen model, independently of requirement analysis. Catalog presence/configured keys do not guarantee capacity. Failed retrieval keeps the URL and offers explicit retry/pasted text without silently switching models. Received text remains an AI-prepared excerpt.

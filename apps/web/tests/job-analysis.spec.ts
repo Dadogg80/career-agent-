@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { isAiConfiguration } from "../lib/ai-configuration";
 
 const source = "Vi søker en utvikler. Du må ha erfaring med Kotlin. PostgreSQL er en fordel.";
 const result = { facts: [], requirements: [{ label: "Kotlin", kind: "REQUIRED", quote: "Du må ha erfaring med Kotlin." }] };
@@ -142,12 +143,12 @@ test("job analysis offers separate Groq and Gemini models for the analysis call"
  await expect.poll(async()=>{const b=await heading.boundingBox();return Math.round(b!.height);}).toBe(Math.round(before!.height));
  const optionsBox=await page.locator('.ai-choice[data-choice-area="job"] .ai-choice-options').boundingBox();
  expect(optionsBox!.width).toBeGreaterThan(250);expect(optionsBox!.x).toBeGreaterThanOrEqual(0);
- await page.screenshot({path:"/tmp/career-job-model-popup-desktop.png"});
+ if(!process.env.CI)await page.screenshot({path:"/tmp/career-job-model-popup-desktop.png"});
  await page.locator('.ai-choice[data-choice-area="job"] summary').press("Escape");
  await page.setViewportSize({width:390,height:850});
  await page.locator('.ai-choice[data-choice-area="job"] summary').click();
  await expect.poll(async()=>{const b=await page.locator('.ai-choice[data-choice-area="job"] .ai-choice-options').boundingBox();return !!b&&b.x>=15&&b.x+b.width<=375;}).toBe(true);
- await page.screenshot({path:"/tmp/career-job-model-popup-mobile.png"});
+ if(!process.env.CI)await page.screenshot({path:"/tmp/career-job-model-popup-mobile.png"});
 
  await expect(page.locator(".ai-choice-options")).toBeVisible();
  await expect(page.locator(".ai-choice-option")).toHaveCount(3);
@@ -160,37 +161,67 @@ test("job analysis offers separate Groq and Gemini models for the analysis call"
  expect(sentApproval).toBe(liteApproval.token);
 });
 
-test("FINN retrieval and requirement analysis have separate model approvals",async({page})=>{
+function sourceModelConfiguration() {
  const groq={provider:"Groq",model:"openai/gpt-oss-20b"},gemini={provider:"Gemini",model:"gemini-3.8-flash"};
- const sourceGroq={token:"d".repeat(64),selections:[groq]},sourceGemini={token:"e".repeat(64),selections:[gemini]};
- const jobGroq={token:"f".repeat(64),selections:[groq]},jobGemini={token:"1".repeat(64),selections:[gemini]};
- const sourceOptions=[{approval:sourceGroq,available:true},{approval:sourceGemini,available:true}];
+ const sourceSelections=[groq,{provider:"Groq",model:"openai/gpt-oss-120b"},...["gemini-3.5-flash-lite","gemini-3.5-flash","gemini-3.6-flash","gemini-3.7-flash","gemini-3.8-flash","gemini-3.1-flash-lite"].map(model=>({provider:"Gemini",model}))];
+ const sourceOptions=sourceSelections.map((selection,index)=>({approval:{token:(index+1).toString(16).repeat(64),selections:[selection]},available:true}));
+ const jobGroq={token:"f".repeat(64),selections:[groq]},jobGemini={token:"e".repeat(64),selections:[gemini]};
  const jobOptions=[{approval:jobGroq,available:true},{approval:jobGemini,available:true}];
- await page.route("**/api/ai/config",r=>r.fulfill({json:{
+ const configuration={
   tasks:{JOB_ANALYSIS:groq,DOCUMENT_EXTRACTION:groq,PROFILE_SUMMARY:groq,PERSONAL_MATCH:groq},
-  sourceBrowser:groq,sourceRetrieval:sourceGroq,documents:jobGroq,documentExcerpt:jobGroq,matching:jobGroq,job:jobGroq,
+  sourceBrowser:groq,sourceRetrieval:sourceOptions[0].approval,documents:jobGroq,documentExcerpt:jobGroq,matching:jobGroq,job:jobGroq,
   options:{documents:jobOptions,documentExcerpt:jobOptions,matching:jobOptions,job:jobOptions,sourceRetrieval:sourceOptions}
- }}));
- const finn="https://www.finn.no/job/ad/478077416";
- let retrievalApproval="",analysisApproval="";
+ };
+ return {configuration,sourceOptions,jobGroq,jobGemini};
+}
+
+test("source retrieval accepts a larger bounded model catalog and preserves private task limits",()=>{
+ const {configuration,sourceOptions}=sourceModelConfiguration();
+ expect(sourceOptions).toHaveLength(8);
+ expect(isAiConfiguration(configuration)).toBe(true);
+ const configuredOption={approval:{token:"9".repeat(64),selections:[{provider:"Gemini",model:"configured-source-model"}]},available:true};
+ expect(isAiConfiguration({...configuration,options:{...configuration.options,sourceRetrieval:[...sourceOptions,configuredOption]}})).toBe(true);
+ const expanded=Array.from({length:16},(_,index)=>({...sourceOptions[index%sourceOptions.length],approval:{...sourceOptions[index%sourceOptions.length].approval,token:index.toString(16).padStart(64,"0")}}));
+ expect(isAiConfiguration({...configuration,options:{...configuration.options,sourceRetrieval:expanded}})).toBe(true);
+ expect(isAiConfiguration({...configuration,options:{...configuration.options,sourceRetrieval:[...expanded,sourceOptions[0]]}})).toBe(false);
+ expect(isAiConfiguration({...configuration,options:{...configuration.options,sourceRetrieval:[{...sourceOptions[0],approval:{...sourceOptions[0].approval,token:"invalid"}}]}})).toBe(false);
+ for(const area of ["documents","documentExcerpt","matching","job","tailoring"])expect(isAiConfiguration({...configuration,options:{...configuration.options,[area]:sourceOptions.slice(0,6)}})).toBe(false);
+});
+
+test("FINN retrieval and requirement analysis have separate model approvals",async({page})=>{
+ const {configuration,sourceOptions,jobGroq,jobGemini}=sourceModelConfiguration();
+ expect(isAiConfiguration(configuration)).toBe(true);
+ await page.route("**/api/ai/config",r=>r.fulfill({json:configuration}));
+ const sourceApprovals=["gemini-3.5-flash-lite","gemini-3.7-flash"].map(model=>sourceOptions.find(option=>option.approval.selections[0].model===model)!.approval);
+ const urls=["https://www.finn.no/job/ad/478077416","https://www.finn.no/job/ad/478077417"];
+ const retrievalApprovals:string[]=[],analysisApprovals:string[]=[];
  await page.route("**/api/jobs/import",r=>{
-  retrievalApproval=r.request().postDataJSON().aiApproval;
-  return r.fulfill({json:{sourceUrl:finn,title:"Backendutvikler",text:source,retrievedAt:"2026-10-07T00:00:00Z",sourceType:"GEMINI_URL_CONTEXT_EXCERPT",aiSelection:gemini}});
+  const index=retrievalApprovals.length,body=r.request().postDataJSON();
+  expect(body).toEqual({url:urls[index],aiApproval:sourceApprovals[index].token});retrievalApprovals.push(body.aiApproval);
+  return r.fulfill({json:{sourceUrl:body.url,title:"Backendutvikler",text:source,retrievedAt:"2026-10-07T00:00:00Z",sourceType:"GEMINI_URL_CONTEXT_EXCERPT",aiSelection:sourceApprovals[index].selections[0]}});
  });
  await page.route("**/api/jobs/requirements",r=>{
-  analysisApproval=r.request().postDataJSON().aiApproval;
-  return r.fulfill({json:{...result,aiSelection:gemini}});
+  const body=r.request().postDataJSON();expect(body).toEqual({text:source,locale:"nb",aiApproval:jobGemini.token});analysisApprovals.push(body.aiApproval);
+  return r.fulfill({json:{...result,aiSelection:jobGemini.selections[0]}});
  });
  await page.goto("/jobs/analyze");
- const sourceChoiceMenu = page.locator('.ai-choice[data-choice-area="sourceRetrieval"] .ai-choice-menu summary');
- await expect(sourceChoiceMenu).toBeVisible();
- await sourceChoiceMenu.click();
- await page.locator('.ai-choice[data-choice-area="sourceRetrieval"] .ai-choice-option').filter({hasText:"gemini-3.8-flash"}).click();
- await page.locator('.ai-choice[data-choice-area="job"] summary').click();
- await page.locator('.ai-choice[data-choice-area="job"] .ai-choice-option').filter({hasText:"gemini-3.8-flash"}).click();
- await page.getByRole("textbox",{name:"Lenke til stillingsannonse"}).fill(finn);
- await page.getByRole("button",{name:"Analyser lenke",exact:true}).click();
- await expect(page.locator(".analysis-quality-source")).toContainText("AI-forberedt utdrag");
- expect(retrievalApproval).toBe(sourceGemini.token);
- expect(analysisApproval).toBe(jobGemini.token);
+ const sourceChoice=page.locator('.ai-choice[data-choice-area="sourceRetrieval"]'),jobChoice=page.locator('.ai-choice[data-choice-area="job"]');
+ const sourceChoiceMenu=sourceChoice.locator(".ai-choice-menu summary");
+ await expect(sourceChoiceMenu).toBeVisible();await sourceChoiceMenu.click();
+ await expect(sourceChoice.locator(".ai-choice-option strong")).toHaveText(sourceOptions.map(option=>{const selection=option.approval.selections[0];return `${selection.provider} · ${selection.model}`;}));
+ await sourceChoiceMenu.press("Escape");
+ await jobChoice.locator("summary").click();await jobChoice.getByText("Gemini · gemini-3.8-flash",{exact:true}).click();
+ await expect(sourceChoice.locator(".ai-identity")).toContainText(jobGroq.selections[0].model);
+ expect(retrievalApprovals).toEqual([]);expect(analysisApprovals).toEqual([]);
+ for(const [index,approval] of sourceApprovals.entries()){
+  await sourceChoiceMenu.click();await sourceChoice.getByText(`Gemini · ${approval.selections[0].model}`,{exact:true}).click();
+  await expect(sourceChoice.locator(".ai-identity")).toContainText(approval.selections[0].model);
+  await expect(jobChoice.locator(".ai-identity")).toContainText(jobGemini.selections[0].model);
+  expect(retrievalApprovals).toHaveLength(index);expect(analysisApprovals).toHaveLength(index);
+  await page.getByRole("textbox",{name:"Lenke til stillingsannonse"}).fill(urls[index]);await page.getByRole("button",{name:"Analyser lenke",exact:true}).click();
+  await expect(page.locator(".analysis-result-identities .ai-identity").filter({hasText:"Kildeinnhenting"})).toContainText(approval.selections[0].model);
+  await expect(page.locator(".analysis-result-identities .ai-identity").filter({hasText:"Brukt i analysen"})).toContainText(jobGemini.selections[0].model);
+  await expect(page.locator(".analysis-quality-source")).toContainText("AI-forberedt utdrag");
+  expect(retrievalApprovals).toEqual(sourceApprovals.slice(0,index+1).map(a=>a.token));expect(analysisApprovals).toEqual(Array(index+1).fill(jobGemini.token));
+ }
 });

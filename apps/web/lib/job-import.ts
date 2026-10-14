@@ -9,7 +9,7 @@ export function isImportedJob(v: unknown): v is ImportedJob {
   const finn = groq || gemini;
   return (nav || finn) &&
     (x.aiSelection==null || groq && isAiSelection(x.aiSelection) && x.aiSelection.provider==="Groq" ||
-      gemini && isAiSelection(x.aiSelection) && x.aiSelection.provider==="Gemini" && x.aiSelection.model==="gemini-3.8-flash") &&
+      gemini && isAiSelection(x.aiSelection) && x.aiSelection.provider==="Gemini") &&
     typeof x.title === "string" && x.title.length > 0 && x.title.length <= 300 &&
     typeof x.text === "string" && x.text.trim().length >= 40 && x.text.length <= 15000 &&
     typeof x.retrievedAt === "string" && Number.isFinite(Date.parse(x.retrievedAt));
