@@ -14,8 +14,8 @@ export function wordingSourceDrafts(session:TailoringSession) {
  const s=session.snapshot;
  return s.result.proposals.filter(p=>session.reviews.find(r=>r.paragraphIndex===p.paragraphIndex)?.decision!=="REJECTED").map(p=>{
   const unit=s.result.sourceUnits?.[p.paragraphIndex],context=unit?.contextIndex!=null?s.result.sourceUnits?.[unit.contextIndex]:null;
-  return {paragraphIndex:p.paragraphIndex,original:p.oldText,draft:session.reviews.find(r=>r.paragraphIndex===p.paragraphIndex)?.text??p.newText,
-   entryContext:context?s.text.slice(context.start,context.end):null,confirmedEvidence:s.claims.filter(c=>p.claimIds.includes(c.id)),jobCriteria:p.requirementIndexes.map(index=>({index,quote:s.quotes[index]}))};
+  return {paragraphIndex:p.paragraphIndex,draft:session.reviews.find(r=>r.paragraphIndex===p.paragraphIndex)?.text??p.newText,
+   entryContext:context?s.text.slice(context.start,context.end):null,confirmedEvidence:s.claims.filter(c=>p.claimIds.includes(c.id))};
  });
 }
 /** Validate the exact saved revision, wording and literal per-proposal evidence, never just a plausible status. */

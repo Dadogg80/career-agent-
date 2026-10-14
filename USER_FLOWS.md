@@ -656,7 +656,7 @@ For new structured Groq calls rejected with HTTP 413, the application explains t
 
 ## Optional source review of saved CV wording — 2026-10-14
 
-After saving a wording draft, optionally request a separate AI source review of all active (not rejected) proposals. Preview the exact saved text, original passage, known entry context, referenced confirmed evidence and associated criteria. Choose an available model and approve this one additional call separately from generation. Changing the model, saved revision, language or unsaved edits clears consent. No call starts on opening, saving or approving wording.
+After saving a wording draft, optionally request a separate AI source review of all active (not rejected) proposals. Preview the exact saved text, known entry context and referenced confirmed evidence. The source opinion checks factual scope separately from advertisement relevance. Choose an available model and approve this one additional call separately from generation. Changing the model, saved revision, language or unsaved edits clears consent. No call starts on opening, saving or approving wording.
 
 Findings distinguish AI-found support, scope needing review, potentially unsupported assertions and unassessed text. Each supplied quotation must literally belong to the proposal's referenced evidence. Findings do not confirm facts or approve wording/files. Earlier findings remain readable after failure or edits, explicitly marked as earlier when their exact saved revision no longer matches. Save edits before requesting another review. Findings are page-session-only; the durable wording session and existing human approval remain unchanged.
 
@@ -666,3 +666,10 @@ Findings distinguish AI-found support, scope needing review, potentially unsuppo
 Optional source review keeps complete evidence and entry context inside each draft. Its single approved request now reserves an output budget based on proposal count (2,048 tokens minimum, 16,384 maximum), independently of unchanged generation budgets. The system does not truncate evidence, retry an incomplete result or switch models automatically. Missing/invalid literal support stays unassessed. Small requests can still fail provider limits, and AI support remains an opinion requiring human review.
 
 New CV source-unit creation keeps hyphen-ended employment prose followed by “og”/“and” in the same known entry, across an internal blank. Original text, stored legacy ranges and factual statuses remain unchanged; new dated employers/headings still reset context.
+
+
+## Source-only wording opinions and exact excerpts — 2026-10-14
+
+Optional saved-wording review now sends the saved draft, its linked confirmed statements/context and known entry scope. Job criteria and original CV prose remain available in normal preparation but are excluded from this factual-support opinion. The preview and consent describe this narrower disclosure. The selected model returns source references and a typed issue with an exact phrase to inspect. The application supplies literal saved excerpts and Norwegian/English explanations; providers no longer copy quotations or write those explanations.
+
+Scope, uncertain source, context, absent support and contradiction remain advisory findings. A missing/foreign reference, invalid phrase or malformed assessment becomes unassessed; valid sibling results remain. Complete linked evidence and late qualifiers are retained even for long sources. Original files, profile facts, match scores, saved wording and decisions remain unchanged; no automatic follow-up call or final CV approval is added.
