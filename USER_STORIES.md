@@ -625,3 +625,7 @@ As the pilot user, I can independently choose any supported Gemini Flash/Lite so
 ## Preserve CV entry continuity — 2026-10-14
 
 As a candidate, my employment header, introduction and contribution bullets stay associated when a PDF page ends mid-entry. Two-column skill groups retain the correct labels/content, metadata labels retain values, and ordinary compound prose cannot create a new employer scope. Synthetic checks cover four continued bullets for one employer and three for the next, plus six skills groups with a narrow gutter. Repeated contents headings must not cause valid project evidence to be discarded or competing source accounts to be silently chosen.
+
+## Review scope and language — 2026-10-14
+
+As a candidate, I need the match to distinguish a supported part of a requirement from unproven duration, responsibility or specialist scope. I need CV review explanations in my selected language for every source unit, with reasons tied to the actual passage and job. A previous optimistic match must not authorize invented experience in a new CV proposal. Current implementation strengthens provider instructions and retains source/reference checks; independent semantic assurance and consistently useful reasoning remain quality work.

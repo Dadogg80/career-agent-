@@ -1,6 +1,11 @@
 import { expect, test, type Page } from "@playwright/test";
+
 import { collectionExcerpts } from "../lib/document-excerpts";
 import type { DocumentDetail } from "../lib/documents";
+import { mockAiConfiguration } from "./helpers/mock-ai-configuration";
+
+test.beforeEach(async ({ page }) => { await mockAiConfiguration(page); });
+
 const id = "12345678-1234-1234-1234-123456789abc";
 const second = "22345678-1234-1234-1234-123456789abc";
 const time = "2026-10-07T00:00:00Z";

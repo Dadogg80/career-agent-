@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
+
 import { automaticMatchEvidence, matchCoverage, matchSourcePreview } from "../lib/match-planning";
 import { isPersonalMatch } from "../lib/personal-match";
 import { isExtraction } from "../lib/job-requirements";
+import { mockAiConfiguration } from "./helpers/mock-ai-configuration";
+
+test.beforeEach(async ({ page }) => { await mockAiConfiguration(page); });
+
 const jobId = "52345678-1234-1234-1234-123456789abc";
 const claimId = "62345678-1234-1234-1234-123456789abc";
 const pendingId = "72345678-1234-1234-1234-123456789abc";

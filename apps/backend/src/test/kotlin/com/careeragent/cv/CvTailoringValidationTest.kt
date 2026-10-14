@@ -65,7 +65,7 @@ class CvTailoringValidationTest {
   for(unit in units) assertThat(supplied[unit.paragraphIndex].path("text").asText()).isEqualTo(source.substring(unit.start,unit.end))
   assertThat(documents.detail(identity,documentId).text).isEqualTo(source)
  }
- @Test fun `new source unit sessions record v6 without changing legacy snapshot defaults`() {
+ @Test fun `new source unit sessions record v7 without changing legacy snapshot defaults`() {
   val match=setup()
   val unit=CvSourceUnit(0,0,text.length,CvSourceUnitKind.TEXT,true)
   val generated=CvTailoringResult(documentId,matchId,"Groq","fixture-model",emptyList(),0,sourceUnits=listOf(unit))
@@ -76,7 +76,7 @@ class CvTailoringValidationTest {
   `when`(repository.create(eq(identity) ?: identity,eq(jobId) ?: jobId,any(TailoringSnapshot::class.java) ?: TailoringSnapshot(generated,text,match.claims,emptyList(),"en")))
    .thenAnswer {call ->
     val snapshot=call.getArgument<TailoringSnapshot>(2)
-    assertThat(snapshot.promptVersion).isEqualTo("cv-section-wording-v6")
+    assertThat(snapshot.promptVersion).isEqualTo("cv-section-wording-v7")
     assertThat(snapshot.result.sourceUnits).containsExactly(unit)
     CvTailoringSession(sessionId,jobId,1,snapshot,emptyList(),OffsetDateTime.now())
    }

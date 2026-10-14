@@ -1,5 +1,8 @@
 import { expect, test } from "@playwright/test";
 import { isAiConfiguration } from "../lib/ai-configuration";
+import { mockAiConfiguration } from "./helpers/mock-ai-configuration";
+
+test.beforeEach(async ({ page }) => { await mockAiConfiguration(page); });
 
 const source = "Vi søker en utvikler. Du må ha erfaring med Kotlin. PostgreSQL er en fordel.";
 const result = { facts: [], requirements: [{ label: "Kotlin", kind: "REQUIRED", quote: "Du må ha erfaring med Kotlin." }] };

@@ -23,6 +23,6 @@ test("an unavailable service shows an error and retry can recover", async ({ pag
   await page.goto("/jobs/analyze");
   await expect(page.locator(".connection-status").getByRole("status")).toHaveText("Tjenesten er ikke tilgjengelig akkurat nå");
   await page.unroute("**/api/status");
-  await page.getByRole("button", { name: "Prøv igjen" }).click();
+  await page.locator(".connection-status").getByRole("button", { name: "Prøv igjen", exact: true }).click();
   await expect(page.locator(".connection-status").getByRole("status")).toHaveText("Tjenesten er tilgjengelig");
 });

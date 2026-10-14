@@ -1,4 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { mockAiConfiguration } from "./helpers/mock-ai-configuration";
+
+test.beforeEach(async ({ page }) => { await mockAiConfiguration(page); });
+
 const text = "Example AS bygger tjenester.\nDu utvikler API-er.\nDu liker samarbeid.\nVi tilbyr fleksibel arbeidstid.\nKontakt Kari Test.\nArbeidssted: Oslo\nSøknadsfrist: 30.10.2026\nKotlin er nødvendig.";
 const facts = [
   { kind: "COMPANY", label: "Bedrift", value: "AI paraphrase must not replace source", quote: "Example AS bygger tjenester." },

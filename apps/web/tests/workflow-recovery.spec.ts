@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { mockAiConfiguration } from "./helpers/mock-ai-configuration";
+
+test.beforeEach(async ({ page }) => { await mockAiConfiguration(page); });
 const text = "Example AS builds public services. Kotlin experience is required. The office is in Oslo.";
 test("failed refresh retains supported facts and requirements while explaining partial processing without a red error", async ({ page }) => {
  let calls = 0;

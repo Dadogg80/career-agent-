@@ -50,6 +50,7 @@ npm ci
 npm run build
 npm run typecheck
 npx playwright install chromium
+npm run test:contracts
 npm run test:e2e
 ```
 
