@@ -95,7 +95,9 @@ object CvSourceUnits {
                     val bareBullet = start != null && unitKind == CvSourceUnitKind.BULLET && text.substring(start!!,end).trim() in setOf("-","*","•","▪","‣")
                     val unfinishedBullet = start != null && unitKind == CvSourceUnitKind.BULLET &&
                         text.substring(start!!,end).trimEnd().lastOrNull() !in listOf('.', '!', '?', ':')
-                    if (blankBoundary && !labelOnly && !bareBullet && !unfinishedBullet) flush()
+                    val compoundContinuation = start != null && history && unitContext != null && unitKind == CvSourceUnitKind.TEXT &&
+                        text.substring(start!!,end).trimEnd().endsWith('-') && Regex("(?iu)^(?:og|and)\\b").containsMatchIn(line.text.trimStart())
+                    if (blankBoundary && !labelOnly && !bareBullet && !unfinishedBullet && !compoundContinuation) flush()
                     if (start == null) begin(line) else end = line.end
                 }
             }

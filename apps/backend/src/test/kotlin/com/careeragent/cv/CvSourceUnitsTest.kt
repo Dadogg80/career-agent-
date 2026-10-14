@@ -7,6 +7,17 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class CvSourceUnitsTest {
+    @Test fun `hyphenated history prose keeps its conjunction continuation while later paragraphs and employers stay separate`() {
+        for((prefix,suffix) in listOf("Samarbeidet med produkt-" to "og prosjektorganisasjonen.","Worked with product-" to "and project teams.")) {
+            val text="WORK EXPERIENCE\n2021 – 2023 Example Company – Developer\n$prefix\n\n$suffix\n\nA separate complete paragraph.\n\n2024 – present Other Company – Engineer\nAnother contribution."
+            val units=CvSourceUnits.create(text);val passages=CvSourceUnits.passages(text,units)
+            assertThat(passages).contains("$prefix\n\n$suffix","A separate complete paragraph.")
+            assertThat(units.filter {it.kind==CvSourceUnitKind.ENTRY_HEADER}).hasSize(2)
+            val joined=units.single {passages[it.paragraphIndex]=="$prefix\n\n$suffix"}
+            assertThat(passages[joined.contextIndex!!]).contains("Example Company")
+            assertThat(passages[units.last().contextIndex!!]).contains("Other Company")
+        }
+    }
     @Test fun `compound prose and wrapped bullet remain under the dated employer`() {
         val text="WORK EXPERIENCE\n2021 - 2024 First Company - Founder\n"+
             "Founder of a consulting - and product studio\nbuilding reliable services.\n"+

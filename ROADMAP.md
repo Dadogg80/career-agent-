@@ -333,3 +333,12 @@ Next: independently check factual scope in proposed wording and improve useful s
 Implemented for review under ADR 0047: a separate recipient/model-approved, read-only AI opinion on saved active wording proposals. The input omits generation reasons and match judgments, retains referenced confirmed sources and entry context, and uses revision/source checks before and after the call. Invalid/missing literal support becomes unassessed; the UI distinguishes uncertainty from support and marks earlier results after edits. No automatic extra generation call, factual promotion, approval change, migration or model-default change.
 
 Next: measure this review's semantic quality with independently selected expectations before claiming reliable detection; improve passage/group reasoning and measure capacity-preserving request/output budgets. Durable review findings, enforcement of resolved findings and independent semantic/structural/visual review of actual DOCX/PDF remain pending. Page-session opinions do not complete final-file readiness.
+
+
+## 2026-10-14 — Measured source-review capacity and unresolved semantic quality
+
+Continued from merged PR #68/main 3c06809. Implemented request-local output limits for the optional saved-wording source opinion, preserving full per-draft evidence and unchanged generation/matching defaults. Corrected a residual hyphen/conjunction split in new employment prose source units without rewriting stored sources/ranges.
+
+Six explicitly authorized live calls compared Flash-Lite 3.5 and Groq GPT-OSS 20B: both met all eight synthetic expectations, but six real-document excerpt controls exposed false support, nonliteral quotations and language failures. Shared dictionaries saved 5.4% input bytes in that fixture but added 11.2% in the synthetic case; contradictory scope outcomes prevent a quality-preserving compression claim. Keep the existing nested evidence representation. One sample per model/format is not a repeatability benchmark or best-model ranking.
+
+Next: retain these independently chosen controls, isolate missing per-proposal support from true competency gaps, improve literal-quotation fidelity and Norwegian reasoning, and verify stability before further compaction or default changes. Broader project recall, complete matching/generation journey checks and independent final-file review remain separate unfinished milestones. No automatic semantic approval or merge.

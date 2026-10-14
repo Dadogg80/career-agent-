@@ -659,3 +659,10 @@ For new structured Groq calls rejected with HTTP 413, the application explains t
 After saving a wording draft, optionally request a separate AI source review of all active (not rejected) proposals. Preview the exact saved text, original passage, known entry context, referenced confirmed evidence and associated criteria. Choose an available model and approve this one additional call separately from generation. Changing the model, saved revision, language or unsaved edits clears consent. No call starts on opening, saving or approving wording.
 
 Findings distinguish AI-found support, scope needing review, potentially unsupported assertions and unassessed text. Each supplied quotation must literally belong to the proposal's referenced evidence. Findings do not confirm facts or approve wording/files. Earlier findings remain readable after failure or edits, explicitly marked as earlier when their exact saved revision no longer matches. Save edits before requesting another review. Findings are page-session-only; the durable wording session and existing human approval remain unchanged.
+
+
+## Saved-wording review capacity and source continuity — 2026-10-14
+
+Optional source review keeps complete evidence and entry context inside each draft. Its single approved request now reserves an output budget based on proposal count (2,048 tokens minimum, 16,384 maximum), independently of unchanged generation budgets. The system does not truncate evidence, retry an incomplete result or switch models automatically. Missing/invalid literal support stays unassessed. Small requests can still fail provider limits, and AI support remains an opinion requiring human review.
+
+New CV source-unit creation keeps hyphen-ended employment prose followed by “og”/“and” in the same known entry, across an internal blank. Original text, stored legacy ranges and factual statuses remain unchanged; new dated employers/headings still reset context.

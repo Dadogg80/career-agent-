@@ -16,3 +16,8 @@ Retain the existing one-call approval, full confirmed matching evidence, model d
 ## Continuity correction — 2026-10-14
 
 A further private two-page check exposed narrow skills rows crossing the midpoint of an otherwise valid gutter. Anchor at the repeated right-column start and retain narrower geometric separation once the column is established; ordinary word gaps still imply a full-width row. Known language/interests/references rows retain their values. Compound conjunction prose does not establish a new undated entry header, and a nonterminal wrapped bullet stays one unit across an internal blank line. Dated/new section headers continue to reset scope. These changes affect new source reading/unit creation, preserving immutable legacy text and stored ranges. Synthetic fixtures cover narrow six-group grids and cross-page employer continuity. This remains conservative reading geometry, not template reconstruction or semantic completeness.
+
+
+## Hyphen/conjunction prose continuation — 2026-10-14
+
+Within a known employment entry, keep a text unit ending in a hyphen together with its next “og”/“and” line even across a geometric blank. Heading/dated-entry detection still runs first; normal complete paragraphs and new employers remain separate. Preserve exact text and offsets. This only changes newly created units, never persisted legacy ranges. A fresh private two-page reading retained three profile paragraphs, six skills groups, four cross-page contributions for the first employer and three for the next. Visual comparison used the supplied screenshots and both rendered original PDF pages; this is source-structure validation, not a generated-file readiness check.
