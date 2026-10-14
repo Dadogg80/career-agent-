@@ -241,7 +241,7 @@ class DocumentWorkflowIntegrationTest {
         environment.propertySources.addFirst(org.springframework.core.env.MapPropertySource(name,mapOf("GEMINI_API_KEY" to "fictional-test-key")))
         try {
             val config=json.readTree(mvc.perform(get("/api/ai/config")).andExpect(status().isOk).andReturn().response.contentAsString)
-            val alternative=config["options"]["documents"].first { it["approval"]["selections"].all { selection -> selection["provider"].asText()=="Gemini" } }
+            val alternative=config["options"]["documents"].first { it["approval"]["selections"].all { selection -> selection["provider"].asText()=="Gemini" && selection["model"].asText()=="gemini-3.5-flash-lite" } }
             assertThat(alternative["available"].asBoolean()).isTrue()
             assertThat(config.toString()).doesNotContain("fictional-test-key")
             val endpoint="$path/${paused["id"].asText()}/provider"
