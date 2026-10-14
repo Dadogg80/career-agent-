@@ -1,4 +1,7 @@
 import { expect, test } from "@playwright/test";
+import { mockAiConfiguration } from "../tests/helpers/mock-ai-configuration";
+
+test.beforeEach(async ({ page }) => { await mockAiConfiguration(page); });
 
 const jobUrl = "https://www.finn.no/job/ad/478077416";
 const text = "Vi søker en utvikler. Du må ha erfaring med Kotlin og PostgreSQL.";
