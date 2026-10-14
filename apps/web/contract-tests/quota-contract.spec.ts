@@ -6,6 +6,7 @@ import { personalMatchProxy } from "../lib/personal-match-api";
 import { documentAnalysisProxy } from "../lib/document-analysis-api";
 import { isExtraction } from "../lib/job-requirements";
 import { POST as tailor } from "../app/api/profile/me/jobs/[jobId]/tailoring/route";
+import { POST as sourceReview } from "../app/api/profile/me/jobs/[jobId]/tailoring/source-review/route";
 
 test("oversized structured requests keep HTTP 413 across proxies without exposing provider details or retrying", async () => {
   const original = globalThis.fetch;
@@ -25,13 +26,14 @@ test("oversized structured requests keep HTTP 413 across proxies without exposin
       await personalMatchProxy(request(`/api/profile/me/jobs/${id}/match`, { text, claims: [{ id, revision: 2 }], locale: "nb", consent: true }), id),
       await documentAnalysisProxy(request(`/api/profile/me/documents/${id}/analysis`, { text, locale: "nb", consent: true }), id),
       await tailor(request(`/api/profile/me/jobs/${id}/tailoring`, { documentId: id, matchId: id, text, locale: "nb", consent: true, aiApproval: "a".repeat(64) }), { params: Promise.resolve({ jobId: id }) }),
+      await sourceReview(request(`/api/profile/me/jobs/${id}/tailoring/source-review`, { sessionId:id,revision:1,paragraphIndexes:[1],locale:"nb",consent:true,aiApproval:"a".repeat(64) }), { params:Promise.resolve({jobId:id}) }),
     ];
     for (const response of responses) {
       expect(response.status).toBe(413);
       expect(await response.json()).toEqual({ code: "AI_REQUEST_TOO_LARGE" });
       expect(response.headers.get("Retry-After")).toBeNull();
     }
-    expect(forwarded).toHaveLength(4);
+    expect(forwarded).toHaveLength(5);
   } finally { globalThis.fetch = original; }
 });
 
@@ -63,12 +65,13 @@ test("advertisement matching and document proxies preserve daily quota delays wi
       await importJob(request("/api/jobs/import", { url: "https://www.finn.no/job/ad/123456" })),
       await personalMatchProxy(request(`/api/profile/me/jobs/${id}/match`, { text, claims: [{ id, revision: 2 }], locale: "nb", consent: true }), id),
       await documentAnalysisProxy(request(`/api/profile/me/documents/${id}/analysis`, { text, locale: "nb", consent: true }), id),
+      await sourceReview(request(`/api/profile/me/jobs/${id}/tailoring/source-review`, { sessionId:id,revision:1,paragraphIndexes:[1],locale:"nb",consent:true,aiApproval:"a".repeat(64) }), { params:Promise.resolve({jobId:id}) }),
     ];
     for (const response of responses) {
       expect(response.status).toBe(429);
       expect(response.headers.get("Retry-After")).toBe("968");
       expect(await response.text()).not.toContain("PRIVATE PROVIDER ACCOUNT DETAILS");
     }
-    expect(calls).toBe(4);
+    expect(calls).toBe(5);
   } finally { globalThis.fetch = original; }
 });

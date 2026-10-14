@@ -60,3 +60,6 @@ Structured HTTP 413 responses now retain `AI_REQUEST_TOO_LARGE`/413 through adve
 ## Task configuration and current optimizations
 
 Optional backend `GROQ_JOB_MODEL`, `GROQ_DOCUMENT_MODEL`, `GROQ_PROFILE_MODEL` and `GROQ_MATCH_MODEL` fall back to `GROQ_MODEL`. Unset values preserve the current 20B default. Browser Search continues using `GROQ_MODEL`; it cannot be combined with strict JSON. Do not copy experimental model overrides without quality validation. See [GROQ_OPTIMIZATION.md](GROQ_OPTIMIZATION.md) for documented caching, usage headers, output budgets and account quota limits. Document workflow pacing is configured by `DOCUMENT_AI_BATCH_DELAY_SECONDS` (default 65); it does not solve daily exhaustion.
+
+
+Optional saved-wording source review reuses the explicit CV_TAILORING provider/model selection but requires its own per-run consent. It makes at most one call per action and has a separate process-local `WORDING_REVIEW_AI_MAX_REQUESTS` budget (default 5). Generation and its budget remain unchanged. Existing provider output limits/cooldowns still apply; model availability or this review's accuracy is not guaranteed. A rejected/failed review retains saved drafts and previous page-session findings, with no automatic provider change, retry or evidence truncation.

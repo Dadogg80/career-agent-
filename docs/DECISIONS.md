@@ -376,3 +376,8 @@ Refinement of the accepted matching/CV standard, not a new architecture: assess 
 Reuse the existing match/result IDs and source metadata to display relevance alongside CV visibility. Do not infer full qualification from visibility or substitute the latest match into an older CV result. This adds no persisted assessment snapshot or automatic reanalysis; an overwritten old assessment remains explicitly unavailable.
 
 Groq structured HTTP 413 becomes AI_REQUEST_TOO_LARGE/413 rather than AI_UNAVAILABLE/503. Preserve only the safe code through the affected proxies, exclude provider text and Retry-After, and do not create a quota cooldown. Request-size rejection can reflect provider request/token capacity; no fixed account limit or automatic evidence truncation is introduced. Existing explicit model/recipient approvals govern recovery. No model defaults, schema migration or new provider calls are required.
+
+
+## Optional saved-wording source opinion — 2026-10-14
+
+Accepted incremental continuation: [ADR 0047](adr/0047-optional-wording-source-review.md). Use a separately approved review of saved draft wording rather than treating lexical guards or generation judgments as semantic proof. Reuse existing owned sessions, task routing/model choices and safe error handling. Results remain read-only, revision-bound AI opinions; no automatic acceptance, factual promotion, extra generation call or final-file approval is introduced.

@@ -652,3 +652,10 @@ New approved matching runs explicitly assess the complete stated requirement and
 Open a CV visibility item to see the associated match classification and explanation beside the visibility judgment. Clearly expressed experience can still be only partly relevant to the criterion. Transferability and stale-match labels use existing metadata only. A classification is shown only when the loaded match ID equals the CV result's saved match ID; otherwise the original visibility/proposals remain readable with a neutral missing-assessment explanation. Reopening never attaches a newer assessment or starts AI.
 
 For new structured Groq calls rejected with HTTP 413, the application explains the request-size rejection and preserves the source, profile and earlier results. There is no quota countdown or automatic retry/model change for this error. Select another available model and renew the existing approval to try a new analysis. Matching still includes the complete confirmed evidence set. Existing historical generic errors are not reclassified.
+
+
+## Optional source review of saved CV wording — 2026-10-14
+
+After saving a wording draft, optionally request a separate AI source review of all active (not rejected) proposals. Preview the exact saved text, original passage, known entry context, referenced confirmed evidence and associated criteria. Choose an available model and approve this one additional call separately from generation. Changing the model, saved revision, language or unsaved edits clears consent. No call starts on opening, saving or approving wording.
+
+Findings distinguish AI-found support, scope needing review, potentially unsupported assertions and unassessed text. Each supplied quotation must literally belong to the proposal's referenced evidence. Findings do not confirm facts or approve wording/files. Earlier findings remain readable after failure or edits, explicitly marked as earlier when their exact saved revision no longer matches. Save edits before requesting another review. Findings are page-session-only; the durable wording session and existing human approval remain unchanged.

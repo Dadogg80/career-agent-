@@ -87,3 +87,6 @@ New wording runs persist private source/match/model snapshots and revision-check
 
 
 New CV wording sessions include a source-bound section review plan and section navigation. AI can explicitly recommend keeping text, propose supported changes or mark a section for review. Unclear source structure/missing assessments remain visible; legacy sessions disclose missing plans. This remains text preparation, with standard/tailored artifact integration and actual-file quality review pending.
+
+
+Saved CV wording also offers an optional, separately approved source review (ADR 0047). One additional selected-model call checks active drafts against their referenced evidence and entry context, without using generation judgments as proof. Findings are advisory and page-session-only; they do not confirm experience, approve text or establish final-file readiness.
