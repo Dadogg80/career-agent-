@@ -635,3 +635,10 @@ During a newly approved document analysis, local recovery retains explicit natur
 ## 2026-10-14 — Logical CV units and PDF rereading
 
 New PDF uploads and explicit Read original again preserve geometric paragraph gaps and ordinary wrapped lines. Rereading keeps the original bytes and can make older exact-source work stale; saved historical wording remains readable. Start new tailoring only with the existing current-source/model-bound approval. The section ledger then shows application-owned text/skills/contribution units and recognized protected identity/headings/entry headers, with literal entry context when supported. Review/edit/accept stays in the existing wording cards; accepted replacements use those same stored ranges. Invalid stored units block review/copy/draft assembly instead of silently changing indexes. Sessions without source-unit metadata keep legacy segmentation and review behavior. No extra provider request or final approval is introduced.
+
+
+## Cross-page CV context — 2026-10-14
+
+New PDF uploads and explicit original rereading retain narrow skills columns as complete heading/content groups and keep known metadata labels beside their values. Employment bullets may continue onto the next page without resetting their dated employer scope. Compound prose such as “consulting - and product studio” is editable description, not a new protected entry header; an unfinished wrapped bullet remains one source unit. Previously saved text, original bytes and stored review ranges remain unchanged. Rereading requires a fresh analysis where the existing source checks demand it.
+
+Numbered AI evidence may repeat a heading from a contents list. Source validation accepts a unique literal span within the existing quote limit, rather than bridging from the first repeated label. Competing distinct bounded spans remain rejected. This does not establish that generated wording is factually complete.

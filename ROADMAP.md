@@ -301,3 +301,12 @@ Next: verify controlled project capture when providers permit; split PDF CV prof
 Implemented with focused validation, ready for review: application-owned exact source units for new tailoring generations, shared AI/planning/review/assembly metadata, protected recognized identity/headings/dated headers and unchanged legacy session indexes (ADR 0046). PDF paragraph-gap preservation applies only to new uploads/explicit rereading; originals stay unchanged. Geometry and conservative context recognition do not establish exhaustive recall or template fidelity. Retain full confirmed evidence and existing approvals/defaults without extra calls.
 
 Next: required Foundation CI and owner review for this related bundle, then controlled frozen-input Gemini/Groq comparison and project-recall validation. Independent semantic/structural/visual file review, supported template fidelity and broader design review remain pending. Prepare a reviewable PR without automatic merge.
+
+
+## 2026-10-14 — CV continuity and controlled model findings
+
+Reviewed owner PR #64 on main d7c5f34 and retained its full model selection/opt-in diagnostics. Implemented for review: stable right-column boundaries for narrow skill grids, row association for known metadata labels, conservative compound-description/unfinished-bullet handling, and unique bounded literal evidence spans when contents headings repeat. Original files, saved source text/ranges, review decisions and model defaults are unchanged.
+
+Completed a bounded comparison using the complete current two-page CV, two detailed project pages, six independently reviewed frozen criteria and documentary test fixtures. Flash-Lite 3.5 completed extraction, matching and wording; offline replay after the source correction recovered two supported projects. Groq 20B encountered schema/429 issues; Groq 120B supplied more cautious match judgments; both Groq wording requests hit HTTP 413. This is limited case evidence, not a universal model ranking or full project-document benchmark.
+
+Next: tighten complete-criterion evidence assessment (including agentic versus assisted development and experience scope), replace generic/English CV review reasons with specific localized reasoning, and explain/measure oversized Groq requests without dropping confirmed evidence. Then repeat the same frozen comparison. Final file review and broader UX work remain pending.

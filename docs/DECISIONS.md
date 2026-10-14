@@ -361,3 +361,8 @@ Accept [ADR 0046](adr/0046-logical-cv-source-units-and-pdf-paragraphs.md): creat
 ## Source model selection extension — 2026-10-14
 
 Accepted owner request: expand only the public-source chooser to the application's six supported Gemini Flash/Lite IDs plus Groq 20B/120B, preserving defaults, explicit overrides and independent approval fingerprints. ADR 0037's dated extension introduces generateContent URL Context for the additional Gemini choices with same-candidate exact-URL SUCCESS metadata and STOP text. The existing 3.8 Interactions citation contract remains unchanged. Metadata is not an independent output citation or completeness proof. No dynamic unbounded catalog, automatic fallback, private-task expansion or billing change.
+
+
+## CV continuity and repeated source labels — 2026-10-14
+
+Implementation correction within ADR 0046/0023: repeated geometric right-column starts anchor skills grids even when a longer cell narrows the gutter. Known metadata label/value rows retain row association. Compound conjunction prose is not an undated entry header; unfinished wrapped contributions retain their entry. For multi-passage evidence, require one distinct literal source span within the existing bound; reject competing spans and retain field/ID/quote limits. Do not widen limits or rewrite saved sources/ranges to hide extraction errors.
