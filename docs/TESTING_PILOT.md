@@ -26,6 +26,12 @@ No arbitrary imported-layout editing, automatic CV rewriting, external messaging
 
 Automated results are recorded in [DEVELOPMENT_LOG.md](DEVELOPMENT_LOG.md). Mocked provider replies validate control flow and evidence rules; they do not establish live AI completeness or output quality. Renderer tests plus a real local identity/PostgreSQL/export smoke establish more than button-only tests, but do not establish rendering fidelity in every DOCX reader.
 
+### Efficient automated validation
+
+From `apps/web`, `npm run test:contracts` runs the existing pure data/proxy contracts without Java, Next.js or Chromium. Use a focused Playwright spec for the changed browser journey during development. Complete web validation runs both `npm run test:contracts` and `npm run test:e2e`; the development-origin suite remains `npm run test:dev`. AI replies are mocked unless a separate live probe is explicitly enabled.
+
+GitHub Foundation runs once for each PR update and again on main after merge. Feature-branch pushes do not launch a duplicate full run. A newer update cancels the older run for that same PR/ref. Gradle dependencies are cached; production browser specs use two workers in CI and one locally, with ten-second action waits rather than spending the full case timeout on a disabled control. Development-origin tests remain serial. Mocked AI workflows explicitly configure their synthetic models; the real keyless backend retains unavailable-model guards. Ownership, source/revision, consent and data-preservation checks remain part of Foundation.
+
 ## Read-only evidence diagnostics
 
 After uploading or reopening documents, choose **Check documents**. Verify original/text pass only when the actual checks succeed; an unanalyzed file stays unanalyzed, OCR needs visual review, and partial input stays partial. Check that the result summary distinguishes passed, review-needed and not-run checks; open a source from the report and compare it with the unchanged original. Confirm the report remains usable on a narrow mobile viewport and a desktop-width viewport. Rerun checking with no AI quota consumption. A quoted technology still needs contextual review; the report never certifies exhaustive extraction. Keep actual CVs/provider responses out of Git and test artifacts intended for sharing.

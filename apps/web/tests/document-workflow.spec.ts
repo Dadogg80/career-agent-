@@ -1,7 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
+
 import { isClaim } from "../lib/claims";
 import { isEntry } from "../lib/career-entries";
 import { isDocumentRun } from "../lib/document-workflow";
+import { mockAiConfiguration } from "./helpers/mock-ai-configuration";
+
+test.beforeEach(async ({ page }) => { await mockAiConfiguration(page); });
+
 const id="12345678-1234-1234-1234-123456789abc",second="22345678-1234-1234-1234-123456789abc",runId="32345678-1234-1234-1234-123456789abc",key="42345678-1234-1234-1234-123456789abc";
 const time="2026-10-08T00:00:00Z";
 const text="## Example AS\nSenior Developer 2021 – 2024\nBuilt APIs using Kotlin and PostgreSQL.";

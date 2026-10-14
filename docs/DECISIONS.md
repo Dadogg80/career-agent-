@@ -366,3 +366,7 @@ Accepted owner request: expand only the public-source chooser to the application
 ## CV continuity and repeated source labels — 2026-10-14
 
 Implementation correction within ADR 0046/0023: repeated geometric right-column starts anchor skills grids even when a longer cell narrows the gutter. Known metadata label/value rows retain row association. Compound conjunction prose is not an undated entry header; unfinished wrapped contributions retain their entry. For multi-passage evidence, require one distinct literal source span within the existing bound; reject competing spans and retain field/ID/quote limits. Do not widen limits or rewrite saved sources/ranges to hide extraction errors.
+
+## Whole-criterion and localized wording instructions — 2026-10-14
+
+Refinement of the accepted matching/CV standard, not a new architecture: assess complete literal scope and stated alternatives; keep unsupported qualifiers unresolved rather than promoting keyword overlap. Explicitly request the selected language for all user-facing wording/review fields and complete protected-unit declarations. New source-unit wording snapshots use v7; previous v5/v6 snapshots remain readable and unchanged. A match classification is never an additional confirmed fact. Existing reference/lexical checks are not semantic entailment validation; bounded follow-up results retain that quality limitation. Model defaults, complete evidence inclusion, explicit consent and provider routing remain unchanged.

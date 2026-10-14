@@ -1,4 +1,7 @@
 import { test, expect } from "@playwright/test";
+import { mockAiConfiguration } from "../tests/helpers/mock-ai-configuration";
+
+test.beforeEach(async ({ page }) => { await mockAiConfiguration(page); });
 
 const source = `Example employer careers page — customer service adviser
 Application deadline

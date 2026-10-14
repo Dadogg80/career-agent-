@@ -1,8 +1,13 @@
 name: Foundation checks
 
 on:
-  push:
   pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: foundation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -19,6 +24,10 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+          cache: gradle
+          cache-dependency-path: |
+            apps/backend/*.gradle.kts
+            apps/backend/gradle/wrapper/gradle-wrapper.properties
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
@@ -30,6 +39,9 @@ jobs:
       - name: Install web dependencies from lockfile
         working-directory: apps/web
         run: npm ci
+      - name: Fast data and proxy contracts without application servers
+        working-directory: apps/web
+        run: npm run test:contracts
       - name: Production build and type check
         working-directory: apps/web
         run: npm run build && npm run typecheck

@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 import type { DiagnosticEvent } from "../lib/analysis-workflow";
 import type { AiCallDiagnostic, AiCallDiagnosticsSnapshot } from "../lib/ai-call-diagnostics";
+import { mockAiConfiguration } from "../tests/helpers/mock-ai-configuration";
+
+test.beforeEach(async ({ page }) => { await mockAiConfiguration(page); });
 
 function mockAiDiagnostics(page: import("@playwright/test").Page) {
   let capturing = false;
@@ -212,7 +215,7 @@ test("shared diagnostics explicitly capture and display model exchanges in docum
   await page.route("**/api/status", route => route.fulfill({ json: { status: "UP" } }));
   await page.route("**/api/auth/session", route => route.fulfill({ json: { authenticated: true, loginAvailable: true, profilesAvailable: true, csrfToken: "test-token" } }));
   await page.route("**/api/ai/config", route => route.fulfill({ json: {
-    tasks: { JOB_ANALYSIS: selection, DOCUMENT_EXTRACTION: selection, PROFILE_SUMMARY: selection, PERSONAL_MATCH: selection },
+    tasks: { JOB_ANALYSIS: selection, DOCUMENT_EXTRACTION: selection, PROFILE_SUMMARY: selection, PERSONAL_MATCH: selection, CV_TAILORING: selection },
     documents: approval, documentExcerpt: approval, matching: approval, job: approval,
   } }));
   await page.route("**/api/profile/me", route => route.fulfill({ json: { id: "12345678-1234-1234-1234-123456789abc", displayName: "Synthetic Pilot", preferredLanguage: "nb", revision: 1 } }));
@@ -331,7 +334,7 @@ test("document overview has no DEV panel; opened document analysis does", async 
   await page.route("**/api/status", route => route.fulfill({ json: { status: "UP" } }));
   await page.route("**/api/auth/session", route => route.fulfill({ json: { authenticated: true, loginAvailable: true, profilesAvailable: true, csrfToken: "synthetic-csrf" } }));
   await page.route("**/api/ai/config", route => route.fulfill({ json: {
-    tasks: { JOB_ANALYSIS: selection, DOCUMENT_EXTRACTION: selection, PROFILE_SUMMARY: selection, PERSONAL_MATCH: selection },
+    tasks: { JOB_ANALYSIS: selection, DOCUMENT_EXTRACTION: selection, PROFILE_SUMMARY: selection, PERSONAL_MATCH: selection, CV_TAILORING: selection },
     documents: approval, documentExcerpt: approval, matching: approval, job: approval,
   } }));
   await page.route("**/api/profile/me", route => route.fulfill({ json: { id: "12345678-1234-1234-1234-123456789abc", displayName: "Synthetic Pilot", preferredLanguage: "nb", revision: 1 } }));
