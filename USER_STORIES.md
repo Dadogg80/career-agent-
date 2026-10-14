@@ -635,3 +635,8 @@ As a candidate, I need the match to distinguish a supported part of a requiremen
 As a candidate, I can inspect the exact associated match classification/reason when reviewing how visible my experience is in the CV. Partial relevance remains partial even when that experience is clearly written. A newer match is never substituted into an older CV review. If the old assessment is no longer available, my saved wording/evidence remains readable without an invented association or extra AI call.
 
 As a candidate, I receive an actionable explanation when Groq rejects a structured request as too large, with my complete evidence and earlier proposals retained. Switching models requires the existing explicit approval; the system does not silently drop competencies, switch providers or retry.
+
+
+## Inspect factual scope before wording approval — 2026-10-14
+
+As a candidate, I can ask for a separate, explicitly approved source opinion on saved CV proposals, including my saved edits. I can inspect employer context and literal evidence, understand which phrases may overstate responsibility or specialist scope, and retain earlier findings after provider failure. An AI support label is an opinion, never a factual confirmation, automatic acceptance, match-score change or CV_READY. A changed saved revision invalidates the current association; rejected proposals are excluded.

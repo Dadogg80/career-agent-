@@ -66,3 +66,5 @@ Accepted ADR-er registrerer eksplisitte føringer i produktvisjonen. Detaljert i
 - [0044 — DOCX paragraph boundaries and broader CV wording coverage](0044-docx-cv-paragraph-coverage.md)
 - [0045 — Individual source-bound CV passage assessments](0045-individual-cv-passage-assessments.md)
 - [0046 — Logical CV source units and geometric PDF paragraphs](0046-logical-cv-source-units-and-pdf-paragraphs.md) — accepted incremental continuation; exact stored ranges, protected headers and unchanged legacy indexes.
+
+- [0047 — Optional saved-wording source review](0047-optional-wording-source-review.md) — accepted incremental continuation; separately approved read-only AI opinion, exact saved revision and no final-file approval.

@@ -326,3 +326,10 @@ The owner prioritized faster development validation: one Foundation run per PR u
 Implemented for review: visibility items show existing relevance/scope explanations from the exact associated match ID. Missing/overwritten assessments disclose their absence instead of substituting a newer match. New Groq structured HTTP 413 responses retain a distinct sanitized code/status through public/private proxies and explain model recovery without truncation, automatic retries or false quota waits. Original sources, saved proposals, consent and defaults remain unchanged.
 
 Next: independently check factual scope in proposed wording and improve useful section/group reasoning. An exact match association and literal quotation do not establish semantic entailment. Measure compact request representations against provider limits while retaining all confirmed evidence; no evidence-dropping fallback is authorized. Database-test startup reuse remains a separate measured efficiency opportunity.
+
+
+## 2026-10-14 — Optional saved-wording source review
+
+Implemented for review under ADR 0047: a separate recipient/model-approved, read-only AI opinion on saved active wording proposals. The input omits generation reasons and match judgments, retains referenced confirmed sources and entry context, and uses revision/source checks before and after the call. Invalid/missing literal support becomes unassessed; the UI distinguishes uncertainty from support and marks earlier results after edits. No automatic extra generation call, factual promotion, approval change, migration or model-default change.
+
+Next: measure this review's semantic quality with independently selected expectations before claiming reliable detection; improve passage/group reasoning and measure capacity-preserving request/output budgets. Durable review findings, enforcement of resolved findings and independent semantic/structural/visual review of actual DOCX/PDF remain pending. Page-session opinions do not complete final-file readiness.

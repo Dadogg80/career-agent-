@@ -20,6 +20,7 @@ import { ReviewedCvDraft } from "./reviewed-cv-draft";
 import { ReviewedCvText } from "./reviewed-cv-text";
 import { CvSectionReview } from "./cv-section-review";
 import { CvVisibilityReview } from "./cv-visibility-review";
+import { CvWordingSourceReview } from "./cv-wording-source-review";
 import { MatchApplicationFocus } from "./match-application-focus";
 import { PersonalJobMatch } from "./personal-job-match";
 import { AnalysisDiagnostics } from "./analysis-diagnostics";
@@ -152,6 +153,7 @@ export function JobApplicationPreparation({jobId,locale}:{jobId:string;locale:Lo
   </section></div></CardContent></Card>
   {saved && <CvSectionReview result={saved.result} text={saved.text} claims={saved.claims} quotes={saved.quotes} locale={locale} selected={selectedSection} onSelect={setSelectedSection}/> }
   {saved && <CvVisibilityReview result={saved.result} claims={saved.claims} quotes={saved.quotes} locale={locale} current={current} match={match.data}/>}
+  {persisted && saved && saved.result.proposals.length>0 && <CvWordingSourceReview session={persisted} locale={locale} current={current&&!analyze.isPending&&!saveReview.isPending} dirty={reviewDirty} csrfToken={session.data?.csrfToken??""}/>}
   {persisted && <ReviewedCvDraft session={persisted} current={current} pending={reviewDirty || saveReview.isPending} csrfToken={session.data?.csrfToken??""} locale={locale}/>}
   {saved && saved.result.proposals.length>0 && <ReviewedCvText source={saved.text} sourceUnits={saved.result.sourceUnits} proposals={saved.result.proposals} decisions={decisions} edits={edits} locale={locale} durable={!!persisted} reviewPending={reviewDirty || saveReview.isPending} current={current}/>}
   {saved && <Card><CardHeader><div className="workspace-heading"><h3>{nb?"Gjennomgå tekstforslag":"Review text suggestions"}</h3><Badge variant="outline">{pending.length} {nb?"venter på gjennomgang":"pending review"}</Badge></div><AiIdentity selections={[{provider:saved.result.provider,model:saved.result.model}]} locale={locale}/><p className="hint">{nb?"Forslag og godkjenninger lagres privat. Lagre tekstutkast før du går videre. Ingen ny CV-fil lages ennå; godkjent ordlyd er ikke en faktabekreftelse eller sluttkontroll.":"Suggestions and approvals are saved privately. Save wording drafts before leaving. No new CV file is created yet; wording approval is not factual confirmation or final review."}</p></CardHeader><CardContent>

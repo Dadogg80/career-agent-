@@ -40,6 +40,7 @@ class CvTailoringSessionIntegrationTest {
     @org.springframework.test.context.bean.override.mockito.MockitoSpyBean lateinit var renderer: com.careeragent.cv.infrastructure.StandardCvRenderer
     @MockitoBean lateinit var ai: AiModel
     @MockitoBean lateinit var tailoring: CvTailoringService
+    @Autowired lateinit var routing: com.careeragent.ai.application.AiRouting
     private val issuer = "https://identity.example.test"
     private fun caller(user: String) = oidcLogin().idToken { it.issuer(issuer).subject(user).audience(listOf("career-agent")).issuedAt(Instant.now()).expiresAt(Instant.now().plusSeconds(600)) }
     data class Fixture(val user: String, val owner: UUID, val job: UUID, val doc: UUID, val claim: UUID, val snapshot: TailoringSnapshot) {
@@ -66,6 +67,28 @@ class CvTailoringSessionIntegrationTest {
     private fun save(f: Fixture) = repository.create(VerifiedIdentity(issuer,f.user),f.job,f.snapshot)
     private fun review(f: Fixture, session: CvTailoringSession, text: String = "Developed APIs using Kotlin", decision: String = "ACCEPTED", revision: Long = session.revision) =
         put("${f.path}/session").with(caller(f.user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(mapOf("sessionId" to session.id,"revision" to revision,"reviews" to listOf(mapOf("paragraphIndex" to 1,"text" to text,"decision" to decision)))))
+
+    @Test fun `source review requires login csrf ownership consent and current saved revision without changing wording`() {
+        val f=fixture();val other=fixture();val identity=VerifiedIdentity(issuer,f.user)
+        val session=repository.create(identity,f.job,f.snapshot)
+        val body=mapOf("sessionId" to session.id,"revision" to session.revision,"paragraphIndexes" to listOf(1),"locale" to "nb","consent" to true,
+            "aiApproval" to routing.preview(com.careeragent.ai.application.AiTask.CV_TAILORING).token)
+        fun request(user:String=f.user,value:Map<String,Any> = body)=post("${f.path}/source-review").with(caller(user)).with(csrf()).contentType("application/json").content(json.writeValueAsString(value))
+        mvc.perform(post("${f.path}/source-review").with(csrf()).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isUnauthorized)
+        mvc.perform(post("${f.path}/source-review").with(caller(f.user)).contentType("application/json").content(json.writeValueAsString(body))).andExpect(status().isForbidden)
+        mvc.perform(request(other.user)).andExpect(status().isNotFound)
+        mvc.perform(request(value=body+("consent" to false))).andExpect(status().isBadRequest)
+        mvc.perform(request(value=body+("revision" to 99))).andExpect(status().isConflict)
+        verifyNoInteractions(ai)
+        `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(com.careeragent.ai.application.AiTask.CV_TAILORING) ?: com.careeragent.ai.application.AiTask.CV_TAILORING)).thenReturn(
+            json.writeValueAsString(mapOf("items" to listOf(mapOf("paragraphIndex" to 1,"status" to "NEEDS_REVIEW","reason" to "Kontroller omfanget av API-ansvaret.","evidence" to listOf(mapOf("claimId" to f.claim,"quote" to "Built Kotlin APIs")))))))
+        mvc.perform(request()).andExpect(status().isOk).andExpect(header().string("Cache-Control","no-store"))
+            .andExpect(jsonPath("$.items[0].status").value("NEEDS_REVIEW")).andExpect(jsonPath("$.revision").value(session.revision))
+        assertEquals(session,repository.latest(identity,f.job))
+        jdbc.update("UPDATE competency_claim SET revision=revision+1 WHERE id=?",f.claim)
+        mvc.perform(request()).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("CV_SOURCE_CONFLICT"))
+        verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),eq(com.careeragent.ai.application.AiTask.CV_TAILORING) ?: com.careeragent.ai.application.AiTask.CV_TAILORING)
+    }
 
     @Test fun `new logical source units survive storage reopening and exact reviewed draft assembly`() {
         val f=fixture();val identity=VerifiedIdentity(issuer,f.user)

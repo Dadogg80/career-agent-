@@ -558,3 +558,38 @@ test("a provider request-size rejection explains recovery and keeps earlier CV p
  await expect(page.getByText("Vent før nytt forsøk",{exact:true})).toHaveCount(0);
  expect(calls).toBe(2);
 });
+
+test("optional wording source review requires separate consent preserves findings on failure and marks edits as stale",async({page})=>{
+ await fixtures(page);
+ const sessionId="92345678-1234-1234-1234-123456789abc";
+ let stored:TailoringSession={id:sessionId,jobId,revision:1,createdAt:time,stale:false,reviews:[],snapshot:{result:{...result,provider:"Gemini",sessionId},text:cv,claims:match.claims,quotes:job.content.requirements.map(r=>r.quote),locale:"nb",promptVersion:"cv-section-wording-v7"}};
+ let calls=0,writes=0;
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>{
+  if(r.request().method()==="PUT"){writes++;stored={...stored,revision:stored.revision+1,reviews:r.request().postDataJSON().reviews};}
+  return r.fulfill({json:stored});
+ });
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/source-review`,r=>{
+  const body=r.request().postDataJSON();expect(Object.keys(body).sort()).toEqual(["aiApproval","consent","locale","paragraphIndexes","revision","sessionId"]);
+  expect(body).toMatchObject({sessionId,revision:1,paragraphIndexes:[1],consent:true});calls++;
+  return calls===1?r.fulfill({json:{sessionId,revision:1,...gemini,locale:"nb",items:[{paragraphIndex:1,text:result.proposals[0].newText,status:"NEEDS_REVIEW",reason:"API-arbeidet er dokumentert; selvstendig driftsansvar må vurderes.",evidence:[{claimId,quote:"Built Kotlin APIs"}]}]}}):r.fulfill({status:413,json:{code:"AI_REQUEST_TOO_LARGE"}});
+ });
+ await page.goto(`/jobs/${jobId}/apply`);
+ const panel=page.locator(".cv-wording-source-review"),button=panel.getByRole("button",{name:"Kontroller ordlyd mot kildene",exact:true});
+ const consent=panel.getByRole("checkbox",{name:/Jeg godkjenner at lagret ordlyd/});
+ await expect(button).toBeDisabled();expect(calls).toBe(0);
+ await panel.getByText(/Se lagret tekst og kilder som sendes/).click();await expect(panel).toContainText(result.proposals[0].newText);
+ await consent.check();await button.click();
+ const findings=panel.getByLabel("Resultat av kildegjennomgang");
+ await expect(findings).toContainText("Omfang må vurderes");await expect(findings).toContainText("Built Kotlin APIs");
+ expect(writes).toBe(0);await expect(consent).not.toBeChecked();
+ await consent.check();await panel.getByLabel("Bytt AI-modell").click();await panel.getByRole("button",{name:/Groq · openai\/gpt-oss-20b/}).click();
+ await expect(consent).not.toBeChecked();await expect(button).toBeDisabled();
+ await consent.check();await button.click();await expect(panel.getByRole("status").filter({hasText:"AI-leverandøren avviste størrelsen"})).toBeVisible();
+ await expect(findings).toContainText("Omfang må vurderes");await expect(page.locator(".tailoring-proposal")).toHaveCount(1);
+ await page.locator(".tailoring-proposal").getByLabel("Forslag – kan redigeres",{exact:true}).fill("Developed documented Kotlin APIs.");
+ await expect(panel).toContainText("Lagre tekstutkastene først");await expect(consent).toBeDisabled();await expect(findings).toContainText("Tidligere kildegjennomgang");
+ await page.getByRole("button",{name:"Lagre tekstutkast",exact:true}).click();
+ await expect(findings).toContainText("Tidligere kildegjennomgang");expect(writes).toBe(1);expect(calls).toBe(2);
+ await page.setViewportSize({width:390,height:844});expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.reload();await expect(page.locator(".cv-wording-source-review")).toBeVisible();await expect(page.getByLabel("Resultat av kildegjennomgang")).toHaveCount(0);expect(calls).toBe(2);
+});
