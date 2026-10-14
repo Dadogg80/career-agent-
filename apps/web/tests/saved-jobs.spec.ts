@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { mockAiConfiguration } from "./helpers/mock-ai-configuration";
 const id = "52345678-1234-1234-1234-123456789abc";
 const text = "Example AS builds services. Kotlin is required. The office is in Oslo.";
 const extraction = { requirements: [{ label: "Kotlin", kind: "REQUIRED", quote: "Kotlin is required." }], facts: [{ kind: "LOCATION", label: "Arbeidssted", value: "Oslo", quote: "The office is in Oslo." }], omittedItems: 0 };
@@ -6,6 +7,7 @@ const content = { title: "Fictional Kotlin developer", sourceUrl: null, sourceTy
 const job = { id, content, createdAt: "2026-10-07T00:00:00Z" };
 
 test("saving an analysis retains its actual text and source without another AI call", async ({ page }) => {
+ await mockAiConfiguration(page);
  let calls = 0; let saves = 0;
  await page.route("**/api/auth/session", r => r.fulfill({ json: { authenticated: true, loginAvailable: true, profilesAvailable: true, csrfToken: "synthetic-csrf" } }));
  await page.route("**/api/jobs/requirements", r => { calls++; return r.fulfill({ json: extraction }); });
