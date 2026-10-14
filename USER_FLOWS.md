@@ -646,3 +646,9 @@ Numbered AI evidence may repeat a heading from a contents list. Source validatio
 ## Whole-criterion matching and localized wording review — 2026-10-14
 
 New approved matching runs explicitly assess the complete stated requirement and explain supported scope separately from unresolved qualifiers. New CV wording runs request the chosen language for every user-facing reason, individual reviews for protected as well as editable source units, and specific skills-group reasoning. A previous strong match is guidance, never another confirmed candidate fact. Source-unit wording sessions record prompt version v7; previous results, sources, approvals and review decisions remain readable and unchanged. These instructions improve the contract but do not independently certify factual completeness or useful wording. No analysis starts automatically.
+
+## CV visibility context and oversized AI calls — 2026-10-14
+
+Open a CV visibility item to see the associated match classification and explanation beside the visibility judgment. Clearly expressed experience can still be only partly relevant to the criterion. Transferability and stale-match labels use existing metadata only. A classification is shown only when the loaded match ID equals the CV result's saved match ID; otherwise the original visibility/proposals remain readable with a neutral missing-assessment explanation. Reopening never attaches a newer assessment or starts AI.
+
+For new structured Groq calls rejected with HTTP 413, the application explains the request-size rejection and preserves the source, profile and earlier results. There is no quota countdown or automatic retry/model change for this error. Select another available model and renew the existing approval to try a new analysis. Matching still includes the complete confirmed evidence set. Existing historical generic errors are not reclassified.

@@ -54,6 +54,8 @@ The frontend additionally pauses for 10 seconds after FINN retrieval before init
 
 json_validate_failed indicates model output failed the requested schema (for example, an invalid fact kind), distinct from a network failure. Allowed kinds are spelled out in the prompt and the sanitized UI code is AI_INVALID_RESULT. Unsupported source quotations are omitted with a visible count when other supported cards remain; invalid structures/bounds or wholly unsupported results still fail. No raw failed_generation is logged or shown.
 
+Structured HTTP 413 responses now retain `AI_REQUEST_TOO_LARGE`/413 through advertisement, document, personal-match and CV-wording proxies. They are not mapped to a generic service outage or a 429 quota countdown. The UI preserves approved evidence and previous results and offers explicit model selection with renewed approval. Provider response text and Retry-After are discarded for this failure; no automatic retry, provider switch or competency trimming occurs. A size rejection may involve request/token capacity, not just file bytes; output-budget/input compaction remains a separate measurement task. Previously stored generic failures are not retrospectively relabeled.
+
 
 ## Task configuration and current optimizations
 

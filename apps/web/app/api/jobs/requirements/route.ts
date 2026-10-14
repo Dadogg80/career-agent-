@@ -48,12 +48,12 @@ export async function POST(request: Request) {
     });
     const value: unknown = await response.json();
     if (!response.ok) {
-      const codes = ["INVALID_INPUT", "AI_NOT_CONFIGURED", "AI_APPROVAL_CHANGED", "AI_ACCESS_DENIED", "AI_RATE_LIMITED", "AI_BUSY", "AI_BUDGET_REACHED", "AI_INVALID_RESULT", "AI_UNAVAILABLE"];
+      const codes = ["INVALID_INPUT", "AI_NOT_CONFIGURED", "AI_APPROVAL_CHANGED", "AI_ACCESS_DENIED", "AI_RATE_LIMITED", "AI_BUSY", "AI_BUDGET_REACHED", "AI_INVALID_RESULT", "AI_UNAVAILABLE", "AI_REQUEST_TOO_LARGE"];
       const code = value && typeof value === "object" && "code" in value && codes.includes(String(value.code)) ? value.code : "AI_UNAVAILABLE";
       const seconds = Number(response.headers.get("retry-after"));
       const retryAfterSeconds = response.status === 429 ? parseRetryAfter(seconds) : undefined;
       const reason = value && typeof value === "object" && "reason" in value ? safeAnalysisReason(value.reason) : undefined;
-      return Response.json({ code, ...(reason ? { reason } : {}), ...(retryAfterSeconds ? { retryAfterSeconds } : {}) }, { headers: { "Cache-Control": "no-store", ...(retryAfterSeconds ? { "Retry-After": String(retryAfterSeconds) } : {}) }, status: [400,409,429,502,503].includes(response.status) ? response.status : 503 });
+      return Response.json({ code, ...(reason ? { reason } : {}), ...(retryAfterSeconds ? { retryAfterSeconds } : {}) }, { headers: { "Cache-Control": "no-store", ...(retryAfterSeconds ? { "Retry-After": String(retryAfterSeconds) } : {}) }, status: [400,409,413,429,502,503].includes(response.status) ? response.status : 503 });
     }
     if (!isExtraction(value)) throw new Error("Invalid result");
     return Response.json(value, { headers: { "Cache-Control": "no-store" } });

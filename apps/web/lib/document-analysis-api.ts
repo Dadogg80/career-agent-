@@ -30,7 +30,7 @@ export async function documentAnalysisProxy(request: Request, id?: string) {
     if (!upstream.ok) {
       const reason = safeAnalysisReason(value && typeof value === "object" && "reason" in value ? value.reason : undefined);
       const retry = upstream.headers.get("retry-after");
-      const response = privateResponse({ ...mappedPrivateError(value), ...(reason ? { reason } : {}) }, upstream, [400,401,403,404,409,429,502,503].includes(upstream.status) ? upstream.status : 503);
+      const response = privateResponse({ ...mappedPrivateError(value), ...(reason ? { reason } : {}) }, upstream, [400,401,403,404,409,413,429,502,503].includes(upstream.status) ? upstream.status : 503);
       if (upstream.status === 429 && parseRetryAfter(retry)) response.headers.set("Retry-After", String(parseRetryAfter(retry)));
       return response;
     }

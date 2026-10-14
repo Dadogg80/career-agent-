@@ -629,3 +629,9 @@ As a candidate, my employment header, introduction and contribution bullets stay
 ## Review scope and language — 2026-10-14
 
 As a candidate, I need the match to distinguish a supported part of a requirement from unproven duration, responsibility or specialist scope. I need CV review explanations in my selected language for every source unit, with reasons tied to the actual passage and job. A previous optimistic match must not authorize invented experience in a new CV proposal. Current implementation strengthens provider instructions and retains source/reference checks; independent semantic assurance and consistently useful reasoning remain quality work.
+
+## Keep CV visibility distinct from relevance — 2026-10-14
+
+As a candidate, I can inspect the exact associated match classification/reason when reviewing how visible my experience is in the CV. Partial relevance remains partial even when that experience is clearly written. A newer match is never substituted into an older CV review. If the old assessment is no longer available, my saved wording/evidence remains readable without an invented association or extra AI call.
+
+As a candidate, I receive an actionable explanation when Groq rejects a structured request as too large, with my complete evidence and earlier proposals retained. Switching models requires the existing explicit approval; the system does not silently drop competencies, switch providers or retry.

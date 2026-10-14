@@ -370,3 +370,9 @@ Implementation correction within ADR 0046/0023: repeated geometric right-column 
 ## Whole-criterion and localized wording instructions — 2026-10-14
 
 Refinement of the accepted matching/CV standard, not a new architecture: assess complete literal scope and stated alternatives; keep unsupported qualifiers unresolved rather than promoting keyword overlap. Explicitly request the selected language for all user-facing wording/review fields and complete protected-unit declarations. New source-unit wording snapshots use v7; previous v5/v6 snapshots remain readable and unchanged. A match classification is never an additional confirmed fact. Existing reference/lexical checks are not semantic entailment validation; bounded follow-up results retain that quality limitation. Model defaults, complete evidence inclusion, explicit consent and provider routing remain unchanged.
+
+## Match-bound visibility and structured request rejection — 2026-10-14
+
+Reuse the existing match/result IDs and source metadata to display relevance alongside CV visibility. Do not infer full qualification from visibility or substitute the latest match into an older CV result. This adds no persisted assessment snapshot or automatic reanalysis; an overwritten old assessment remains explicitly unavailable.
+
+Groq structured HTTP 413 becomes AI_REQUEST_TOO_LARGE/413 rather than AI_UNAVAILABLE/503. Preserve only the safe code through the affected proxies, exclude provider text and Retry-After, and do not create a quota cooldown. Request-size rejection can reflect provider request/token capacity; no fixed account limit or automatic evidence truncation is introduced. Existing explicit model/recipient approvals govern recovery. No model defaults, schema migration or new provider calls are required.

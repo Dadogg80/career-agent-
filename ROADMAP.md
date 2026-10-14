@@ -320,3 +320,9 @@ Five bounded follow-up calls used frozen candidate/ad data: Lite 3.5 and Groq 20
 Next: strengthen unsupported-scope and visibility review, improve useful per-group wording explanations, and handle Groq HTTP 413 accurately before measuring capacity-preserving compaction. Keep complete confirmed evidence, exact source units and user approval; do not force edits merely to increase proposal counts. Full browser CI remains a delivery gate; repair stale model-availability fixtures instead of weakening product guards.
 
 The owner prioritized faster development validation: one Foundation run per PR update, cancellation of superseded runs, cached Gradle dependencies, two CI browser workers and a separate server-free lane for six existing data/proxy contracts. Focused local checks remain the development default. Measure the first complete CI run before claiming a total speedup; further pruning should remove demonstrated overlap while retaining source/ownership/data-preservation coverage.
+
+## 2026-10-14 — Match-bound visibility and request-limit recovery
+
+Implemented for review: visibility items show existing relevance/scope explanations from the exact associated match ID. Missing/overwritten assessments disclose their absence instead of substituting a newer match. New Groq structured HTTP 413 responses retain a distinct sanitized code/status through public/private proxies and explain model recovery without truncation, automatic retries or false quota waits. Original sources, saved proposals, consent and defaults remain unchanged.
+
+Next: independently check factual scope in proposed wording and improve useful section/group reasoning. An exact match association and literal quotation do not establish semantic entailment. Measure compact request representations against provider limits while retaining all confirmed evidence; no evidence-dropping fallback is authorized. Database-test startup reuse remains a separate measured efficiency opportunity.
