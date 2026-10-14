@@ -5,6 +5,7 @@ import com.careeragent.ai.application.AiSelection
 import com.careeragent.ai.application.AiModel
 import com.careeragent.ai.application.AiModelCapabilities
 import com.careeragent.ai.application.AiTask
+import com.careeragent.ai.application.boundedOutputTokens
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -59,12 +60,12 @@ class GroqAiModel(
 
     override fun generateJson(system: String, user: String, schema: Map<String, Any>): String = generateJson(system,user,schema,AiTask.JOB_ANALYSIS)
 
-    internal fun requestBody(system:String,user:String,schema:Map<String,Any>,task:AiTask, explicitModel:String? = null):Map<String,Any> {
+    internal fun requestBody(system:String,user:String,schema:Map<String,Any>,task:AiTask, explicitModel:String? = null, maxOutputTokens:Int? = null):Map<String,Any> {
         val selected=explicitModel ?: when(task) { AiTask.JOB_ANALYSIS->jobModel; AiTask.JOB_SOURCE_RETRIEVAL->model; AiTask.DOCUMENT_EXTRACTION->documentModel; AiTask.PROFILE_SUMMARY->profileModel; AiTask.PERSONAL_MATCH->matchModel; AiTask.CV_TAILORING->tailoringModel }.ifBlank { model }
         // Only models verified by Groq's strict-JSON documentation can be configured here.
         if(selected !in AiModelCapabilities.groqStructuredModels)throw AiFailure("AI_NOT_CONFIGURED",503)
         val result=linkedMapOf<String,Any>("model" to selected,"reasoning_effort" to "low",
-            "max_completion_tokens" to when(task) { AiTask.PROFILE_SUMMARY -> 1800; AiTask.CV_TAILORING -> 16384; else -> 3500 },
+            "max_completion_tokens" to boundedOutputTokens(when(task) { AiTask.PROFILE_SUMMARY -> 1800; AiTask.CV_TAILORING -> 16384; else -> 3500 },maxOutputTokens),
             "messages" to listOf(mapOf("role" to "system","content" to system),mapOf("role" to "user","content" to user)),
             "response_format" to mapOf("type" to "json_schema","json_schema" to mapOf("name" to "career_analysis","strict" to true,"schema" to schema)))
         if(selected.startsWith("openai/"))result["include_reasoning"]=false else result["reasoning_format"]="hidden"
@@ -75,9 +76,13 @@ class GroqAiModel(
         if(selection.provider != "Groq") throw AiFailure("AI_NOT_CONFIGURED",503)
         return generateJson(system,user,schema,task,selection.model)
     }
-    private fun generateJson(system: String, user: String, schema: Map<String, Any>, task:AiTask, explicitModel:String?): String {
+    override fun generateJson(system: String, user: String, schema: Map<String, Any>, task:AiTask, selection:AiSelection, maxOutputTokens:Int): String {
+        if(selection.provider != "Groq") throw AiFailure("AI_NOT_CONFIGURED",503)
+        return generateJson(system,user,schema,task,selection.model,maxOutputTokens)
+    }
+    private fun generateJson(system: String, user: String, schema: Map<String, Any>, task:AiTask, explicitModel:String?, maxOutputTokens:Int? = null): String {
         if (apiKey.isBlank()) throw AiFailure("AI_NOT_CONFIGURED", 503)
-        val body = requestBody(system,user,schema,task,explicitModel)
+        val body = requestBody(system,user,schema,task,explicitModel,maxOutputTokens)
         val selectedModel = body.getValue("model") as String
         val cooldown = cooldowns.forModel("Groq", selectedModel)
         val remaining = cooldown.remainingSeconds()

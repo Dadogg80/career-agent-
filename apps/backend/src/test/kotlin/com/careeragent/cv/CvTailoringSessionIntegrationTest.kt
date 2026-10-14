@@ -80,14 +80,14 @@ class CvTailoringSessionIntegrationTest {
         mvc.perform(request(value=body+("consent" to false))).andExpect(status().isBadRequest)
         mvc.perform(request(value=body+("revision" to 99))).andExpect(status().isConflict)
         verifyNoInteractions(ai)
-        `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(com.careeragent.ai.application.AiTask.CV_TAILORING) ?: com.careeragent.ai.application.AiTask.CV_TAILORING)).thenReturn(
+        `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(com.careeragent.ai.application.AiTask.CV_TAILORING) ?: com.careeragent.ai.application.AiTask.CV_TAILORING,any(com.careeragent.ai.application.AiSelection::class.java) ?: com.careeragent.ai.application.AiSelection("Groq","openai/gpt-oss-20b"),anyInt())).thenReturn(
             json.writeValueAsString(mapOf("items" to listOf(mapOf("paragraphIndex" to 1,"status" to "NEEDS_REVIEW","reason" to "Kontroller omfanget av API-ansvaret.","evidence" to listOf(mapOf("claimId" to f.claim,"quote" to "Built Kotlin APIs")))))))
         mvc.perform(request()).andExpect(status().isOk).andExpect(header().string("Cache-Control","no-store"))
             .andExpect(jsonPath("$.items[0].status").value("NEEDS_REVIEW")).andExpect(jsonPath("$.revision").value(session.revision))
         assertEquals(session,repository.latest(identity,f.job))
         jdbc.update("UPDATE competency_claim SET revision=revision+1 WHERE id=?",f.claim)
         mvc.perform(request()).andExpect(status().isConflict).andExpect(jsonPath("$.code").value("CV_SOURCE_CONFLICT"))
-        verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),eq(com.careeragent.ai.application.AiTask.CV_TAILORING) ?: com.careeragent.ai.application.AiTask.CV_TAILORING)
+        verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),eq(com.careeragent.ai.application.AiTask.CV_TAILORING) ?: com.careeragent.ai.application.AiTask.CV_TAILORING,any(com.careeragent.ai.application.AiSelection::class.java) ?: com.careeragent.ai.application.AiSelection("Groq","openai/gpt-oss-20b"),anyInt())
     }
 
     @Test fun `new logical source units survive storage reopening and exact reviewed draft assembly`() {

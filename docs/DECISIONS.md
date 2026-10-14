@@ -381,3 +381,10 @@ Groq structured HTTP 413 becomes AI_REQUEST_TOO_LARGE/413 rather than AI_UNAVAIL
 ## Optional saved-wording source opinion — 2026-10-14
 
 Accepted incremental continuation: [ADR 0047](adr/0047-optional-wording-source-review.md). Use a separately approved review of saved draft wording rather than treating lexical guards or generation judgments as semantic proof. Reuse existing owned sessions, task routing/model choices and safe error handling. Results remain read-only, revision-bound AI opinions; no automatic acceptance, factual promotion, extra generation call or final-file approval is introduced.
+
+
+## 2026-10-14 — Bound optional review output; defer shared evidence dictionaries
+
+Accepted refinement of ADR 0047: the optional review sends complete per-draft evidence and known entry context, with a request-local output reservation of max(2,048, min(16,384, 1,024 + 384 × proposal count)). Existing task defaults, provider selection, consent and source/revision guards remain unchanged. Both structured provider protocols must honor an explicit limit; unsupported adapters fail closed. No evidence trimming or automatic retry/fallback is introduced.
+
+A private six-call comparison used independent synthetic expectations and frozen real-document excerpts. Both models passed the synthetic controls, but actual excerpts exposed incorrect support and quote/language failures. Experimental shared dictionaries reduced bytes only when sources repeated; semantic outcomes varied across model/format. Defer that representation change rather than treating byte savings as proven quality preservation. These findings do not establish a universally superior model or final-file safety. Source opinions remain advisory.

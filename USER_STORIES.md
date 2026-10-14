@@ -640,3 +640,10 @@ As a candidate, I receive an actionable explanation when Groq rejects a structur
 ## Inspect factual scope before wording approval — 2026-10-14
 
 As a candidate, I can ask for a separate, explicitly approved source opinion on saved CV proposals, including my saved edits. I can inspect employer context and literal evidence, understand which phrases may overstate responsibility or specialist scope, and retain earlier findings after provider failure. An AI support label is an opinion, never a factual confirmation, automatic acceptance, match-score change or CV_READY. A changed saved revision invalidates the current association; rejected proposals are excluded.
+
+
+## Efficient source opinions without weaker evidence — 2026-10-14
+
+As a candidate, a small optional wording review should not reserve the full generation output allowance. Acceptance: request-local proposal-count limits reach the explicitly approved Groq/Gemini adapter; other task budgets, complete per-draft evidence, consent, source/revision checks and no-retry behavior remain unchanged. Provider capacity and semantic correctness are not guaranteed. Controlled real-document excerpts exposed false support and nonliteral quotations, so shared cross-draft evidence compression is deferred and human review remains necessary.
+
+As a candidate, a wrapped compound employment description stays one source unit while separate paragraphs and employers retain their boundaries. Only new source-unit creation changes; saved historical indexes remain readable.

@@ -19,21 +19,21 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
     private val cooldowns: AiCooldowns = AiCooldowns()) : AiModel {
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    internal fun requestBody(system: String, user: String, schema: Map<String, Any>, task: AiTask): Map<String, Any> = mapOf(
+    internal fun requestBody(system: String, user: String, schema: Map<String, Any>, task: AiTask, maxOutputTokens:Int? = null): Map<String, Any> = mapOf(
         "systemInstruction" to mapOf("parts" to listOf(mapOf("text" to system))),
         "contents" to listOf(mapOf("role" to "user", "parts" to listOf(mapOf("text" to user)))),
         "generationConfig" to mapOf("responseMimeType" to "application/json", "responseJsonSchema" to schema,
             "thinkingConfig" to mapOf("thinkingLevel" to "LOW"),
-            "maxOutputTokens" to when(task) { AiTask.PROFILE_SUMMARY -> 4096; AiTask.CV_TAILORING -> 16384; else -> 8192 }))
+            "maxOutputTokens" to boundedOutputTokens(when(task) { AiTask.PROFILE_SUMMARY -> 4096; AiTask.CV_TAILORING -> 16384; else -> 8192 },maxOutputTokens)))
 
-    internal fun interactionsRequestBody(system: String, user: String, schema: Map<String, Any>, task: AiTask): Map<String, Any> = mapOf(
+    internal fun interactionsRequestBody(system: String, user: String, schema: Map<String, Any>, task: AiTask, maxOutputTokens:Int? = null): Map<String, Any> = mapOf(
         "model" to "gemini-3.8-flash",
         "system_instruction" to system,
         "input" to user,
         "response_format" to mapOf("type" to "text", "mime_type" to "application/json", "schema" to schema),
         "generation_config" to mapOf(
             "thinking_level" to "low",
-            "max_output_tokens" to when(task) { AiTask.PROFILE_SUMMARY -> 4096; AiTask.CV_TAILORING -> 16384; else -> 8192 },
+            "max_output_tokens" to boundedOutputTokens(when(task) { AiTask.PROFILE_SUMMARY -> 4096; AiTask.CV_TAILORING -> 16384; else -> 8192 },maxOutputTokens),
         ),
     )
 
@@ -86,7 +86,9 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
 
     override fun generateJson(system: String, user: String, schema: Map<String, Any>) = generateJson(system, user, schema, AiTask.JOB_ANALYSIS)
     override fun generateJson(system: String, user: String, schema: Map<String, Any>, task: AiTask): String = generateJson(system,user,schema,task,routing.selection(task))
-    override fun generateJson(system: String, user: String, schema: Map<String, Any>, task: AiTask, selection: AiSelection): String {
+    override fun generateJson(system: String, user: String, schema: Map<String, Any>, task: AiTask, selection: AiSelection): String = generateAtSelection(system,user,schema,task,selection,null)
+    override fun generateJson(system: String, user: String, schema: Map<String, Any>, task: AiTask, selection: AiSelection, maxOutputTokens: Int): String = generateAtSelection(system,user,schema,task,selection,maxOutputTokens)
+    private fun generateAtSelection(system: String, user: String, schema: Map<String, Any>, task: AiTask, selection: AiSelection, maxOutputTokens:Int?): String {
         if (apiKey.isBlank()) throw AiFailure("AI_NOT_CONFIGURED", 503)
         val selected = selection
         if (selected.provider != "Gemini" || selected.model !in AiModelCapabilities.geminiStructuredModels)
@@ -96,7 +98,7 @@ class GeminiAiModel(private val mapper: ObjectMapper, @Value("\${GEMINI_API_KEY:
         val interactions = selected.model == "gemini-3.8-flash"
         val endpoint = if (interactions) "https://generativelanguage.googleapis.com/v1beta/interactions"
             else "https://generativelanguage.googleapis.com/v1beta/models/${selected.model}:generateContent"
-        val body = if (interactions) interactionsRequestBody(system, user, schema, task) else requestBody(system, user, schema, task)
+        val body = if (interactions) interactionsRequestBody(system, user, schema, task,maxOutputTokens) else requestBody(system, user, schema, task,maxOutputTokens)
         val request = HttpRequest.newBuilder(URI.create(endpoint))
             .timeout(Duration.ofSeconds(if (task in setOf(AiTask.PERSONAL_MATCH,AiTask.CV_TAILORING)) 75 else 25)).header("x-goog-api-key", apiKey)
             .header("Content-Type", "application/json").header("User-Agent", "career-agent/0.1")

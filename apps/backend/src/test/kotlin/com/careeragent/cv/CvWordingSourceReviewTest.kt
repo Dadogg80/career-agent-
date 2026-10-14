@@ -32,7 +32,7 @@ class CvWordingSourceReviewTest {
 
     @Test fun `review uses owned saved edited wording and referenced evidence without generation judgments or writes`() {
         `when`(sessions.latest(identity,jobId)).thenReturn(session)
-        `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)).thenAnswer { call ->
+        `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING,any(AiSelection::class.java) ?: AiSelection("Groq","openai/gpt-oss-20b"),anyInt())).thenAnswer { call ->
             val prompt=call.getArgument<String>(0);val input=call.getArgument<String>(1)
             assertThat(prompt).contains("Norwegian Bokmål","Review EVERY factual assertion","jobCriteria are employer requirements","never final CV approval")
             assertThat(input).doesNotContain("GENERATION_REASON_IS_NOT_PROOF","OTHER_EMPLOYER_NOT_REFERENCED","classification")
@@ -40,6 +40,7 @@ class CvWordingSourceReviewTest {
             assertThat(draft.path("draft").asText()).isEqualTo("Developed API integrations.")
             assertThat(draft.path("entryContext").asText()).contains("Example AS", "2021")
             assertThat(draft.path("confirmedEvidence").size()).isEqualTo(1)
+            assertThat(call.getArgument<Int>(5)).isEqualTo(2048)
             output("NEEDS_REVIEW")
         }
         val result=service.review(identity,jobId,request)
@@ -47,9 +48,10 @@ class CvWordingSourceReviewTest {
         assertThat(result.items.single().text).isEqualTo(session.reviews.single().text)
         assertThat(result.sessionId).isEqualTo(sessionId);assertThat(result.revision).isEqualTo(3)
         assertThat(mockingDetails(sessions).invocations.map {it.method.name}).containsOnly("latest")
-        verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)
+        verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING,any(AiSelection::class.java) ?: AiSelection("Groq","openai/gpt-oss-20b"),anyInt())
         assertThatThrownBy {service.review(identity,jobId,request)}.hasMessage("AI_BUDGET_REACHED")
         verifyNoMoreInteractions(ai)
+        assertThat(service.outputBudget(6)).isEqualTo(3328);assertThat(service.outputBudget(8)).isEqualTo(4096);assertThat(service.outputBudget(40)).isEqualTo(16384)
     }
     @Test fun `literal evidence validation rejects invented foreign missing and duplicate support without discarding valid items`() {
         val texts=mapOf(2 to proposal.newText)
@@ -82,14 +84,14 @@ class CvWordingSourceReviewTest {
     }
     @Test fun `changed revision during review rejects the response and provider failures are never retried`() {
         `when`(sessions.latest(identity,jobId)).thenReturn(session,session.copy(revision=4))
-        `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)).thenReturn(output())
+        `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING,any(AiSelection::class.java) ?: AiSelection("Groq","openai/gpt-oss-20b"),anyInt())).thenReturn(output())
         assertThatThrownBy {service.review(identity,jobId,request)}.hasMessage("CV_CONFLICT")
         assertThat(mockingDetails(sessions).invocations.map {it.method.name}).containsOnly("latest")
         reset(ai)
         val next=CvWordingSourceReview(sessions,routing,ai,mapper,1)
         `when`(sessions.latest(identity,jobId)).thenReturn(session)
-        `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)).thenThrow(AiFailure("AI_RATE_LIMITED",429,120))
+        `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING,any(AiSelection::class.java) ?: AiSelection("Groq","openai/gpt-oss-20b"),anyInt())).thenThrow(AiFailure("AI_RATE_LIMITED",429,120))
         assertThatThrownBy {next.review(identity,jobId,request)}.isInstanceOfSatisfying(AiFailure::class.java) {assertThat(it.retryAfterSeconds).isEqualTo(120)}
-        verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)
+        verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING,any(AiSelection::class.java) ?: AiSelection("Groq","openai/gpt-oss-20b"),anyInt())
     }
 }

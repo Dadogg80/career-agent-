@@ -21,3 +21,10 @@ Findings are read-only and page-session-only, bound to the exact saved revision/
 ## Consequences and limits
 
 No schema migration or new dependency. The user can explicitly choose the same or a different supported model for a second opinion. The additional quota use is visible and optional. Source-bound AI opinions can still be wrong and require independent benchmark/human assessment; no detection accuracy is claimed from mocked tests. Persisted findings, resolved-finding gates, capacity optimization and independent semantic/structural/visual inspection of actual DOCX/PDF are later work. Generation retains the single-call invariant from ADR 0046; this explicit separate action does not silently extend it.
+
+
+## Capacity refinement and live-quality limits — 2026-10-14
+
+Keep the original nested per-draft evidence/context/criteria input. Optional review alone uses a request-local output budget of `(1024 + 384 * proposalCount).coerceIn(2048, 16384)`. Route that exact budget to the approved provider/model, bounded by its existing task limit. Generation, other task defaults and complete matching evidence remain unchanged. The formula is a reservation bound, not a prediction of provider token usage or a completeness guarantee. Existing incomplete-output/invalid-item behavior, separate consent and no retries remain.
+
+An explicitly authorized private comparison made six live calls: two synthetic model checks and four checks of the same six real-document controls across nested/shared input forms. Both models met eight synthetic expectations. On real excerpts, false support and nonliteral quotes remained; shared versus nested outcomes varied. Input bytes were 5.4% lower for shared real excerpts but 11.2% higher for the low-sharing synthetic fixture. No claim of token/latency improvement, semantic equivalence or universal model superiority follows. Shared evidence dictionaries are not shipped; further compaction requires independent quality/stability evidence. Real documents, outputs and the private harness stay outside Git. Persisted findings and actual final-file review remain deferred.
