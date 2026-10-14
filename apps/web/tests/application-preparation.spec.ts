@@ -3,6 +3,7 @@ import {tailoringPassages,isTailoringResult,isCvSourceUnits,reviewedCvText,type 
 import {isTailoringSession,type TailoringSession} from "../lib/cv-tailoring-session";
 import {isPersonalMatch} from "../lib/personal-match";
 import {matchInsights,relationLabel} from "../lib/match-insights";
+import { mockAiConfiguration } from "./helpers/mock-ai-configuration";
 // Manual screenshots are local debugging artifacts, not CI assertions.
 const jobId="52345678-1234-1234-1234-123456789abc",claimId="62345678-1234-1234-1234-123456789abc",documentId="72345678-1234-1234-1234-123456789abc",matchId="82345678-1234-1234-1234-123456789abc",time="2026-10-07T00:00:00Z";
 const cv="Fictional engineer\n\nBuilt Kotlin APIs for a fictional employer and improved service reliability.";
@@ -505,4 +506,55 @@ test("individual passage assessments distinguish keep from unfinished and valida
  await expect(ledger.getByText("AI anbefaler å beholde",{exact:true})).toBeVisible();await ledger.locator("summary").nth(1).click();await expect(ledger.getByText(passagePlans[2].reason,{exact:true})).toBeVisible();
  await expect(ledger.getByText("Må gjennomgås",{exact:true})).toBeVisible();
  await page.reload();await page.locator(".cv-section-review").getByRole("button",{name:/Nøkkelkvalifikasjoner/}).click();await expect(ledger.getByText("AI anbefaler å beholde",{exact:true})).toBeVisible();
+});
+
+test("CV visibility distinguishes partial relevance and never attaches a newer match to saved wording", async ({ page }) => {
+ await fixtures(page);
+ const reason="API-er er dokumentert; omfanget av produksjonsansvar er uavklart.";
+ let active={...match,assessments:[{...match.assessments[0],classification:"PARTIAL",reason,evidenceRelation:"DIRECT",requirementNature:"PRACTICAL"}]};
+ const sessionId="92345678-1234-1234-1234-123456789abc";
+ const stored={id:sessionId,jobId,revision:1,createdAt:time,stale:false,reviews:[],snapshot:{result:{...result,sessionId,visibility},text:cv,claims:match.claims,quotes:job.content.requirements.map(r=>r.quote),locale:"nb",promptVersion:"cv-section-wording-v5"}};
+ let calls=0;
+ await page.route(`**/api/profile/me/jobs/${jobId}/match`,r=>r.fulfill({json:active}));
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>r.fulfill({json:stored}));
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{calls++;return r.fulfill({status:500,json:{}});});
+ await page.goto(`/jobs/${jobId}/apply`);
+ const review=page.locator(".cv-visibility-review");
+ await review.locator("summary").click();
+ await expect(review).toContainText("Tydelig i CV-en");
+ const relevance=review.getByRole("group",{name:"Matchgrunnlag for dette kravet"});
+ await expect(relevance).toContainText("Delvis relevant");
+ await expect(relevance).toContainText(reason);
+ await expect(relevance).toContainText("bare dekker deler av kravet");
+ await page.setViewportSize({width:390,height:844});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ active={...active,id:"a2345678-1234-1234-1234-123456789abc",assessments:[{...active.assessments[0],reason:"NEW_MATCH_MUST_NOT_BE_ATTACHED"}]};
+ await page.reload();
+ await review.locator("summary").click();
+ await expect(review).toContainText("En nyere match er ikke koblet");
+ await expect(review.getByRole("group",{name:"Matchgrunnlag for dette kravet"})).toHaveCount(0);
+ await expect(review).not.toContainText("NEW_MATCH_MUST_NOT_BE_ATTACHED");
+ expect(calls).toBe(0);
+});
+
+test("a provider request-size rejection explains recovery and keeps earlier CV proposals", async ({ page }) => {
+ await fixtures(page);
+ await mockAiConfiguration(page);
+ let calls=0;
+ await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{
+  expect(r.request().postDataJSON().text).toBe(cv);
+  calls++;
+  return calls===1?r.fulfill({json:{...result,provider:"Groq",model:"openai/gpt-oss-20b"}}):r.fulfill({status:413,json:{code:"AI_REQUEST_TOO_LARGE"}});
+ });
+ await page.goto(`/jobs/${jobId}/apply`);
+ const consent=page.getByRole("checkbox",{name:/Jeg godkjenner at dette grunnlaget/});
+ const submit=page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true});
+ await consent.check();await submit.click();
+ await expect(page.locator(".tailoring-proposal")).toHaveCount(1);
+ await consent.check();await submit.click();
+ await expect(page.getByRole("status").filter({hasText:"AI-leverandøren avviste størrelsen"})).toContainText("Velg en annen tilgjengelig modell");
+ await expect(page.locator(".tailoring-proposal")).toHaveCount(1);
+ await expect(page.getByLabel("Velg CV som utgangspunkt")).toHaveValue(documentId);
+ await expect(page.getByText("Vent før nytt forsøk",{exact:true})).toHaveCount(0);
+ expect(calls).toBe(2);
 });

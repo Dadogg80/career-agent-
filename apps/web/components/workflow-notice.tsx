@@ -1,6 +1,7 @@
 import { Info, FileText } from "lucide-react";
 import type { Locale } from "../lib/translations";
 import { Button } from "./ui/button";
+import { aiRequestLimitMessage } from "../lib/ai-request-limits";
 
 /** User recovery guidance; technical codes remain in the opt-in diagnostics. */
 export function WorkflowNotice({ code, locale, area = "advertisement", retained = false, previous = false, onPaste }: {
@@ -11,7 +12,10 @@ export function WorkflowNotice({ code, locale, area = "advertisement", retained 
  const changed=code==="AI_APPROVAL_CHANGED";
  const limit = ["AI_BUDGET_REACHED", "SOURCE_BUDGET_REACHED"].includes(code);
  let title: string; let text: string;
- if (area === "advertisement" && retained) {
+ if (code === "AI_REQUEST_TOO_LARGE") {
+  title = nb ? "AI-kallet overstiger leverandørens grense" : "The request exceeds the provider’s limit";
+  text = aiRequestLimitMessage(locale);
+ } else if (area === "advertisement" && retained) {
   title = previous ? (nb ? "Den tidligere analysen er beholdt" : "Your previous analysis is retained") : (nb ? "Annonsen er klar til å lese" : "The advertisement is ready to read");
   text = rate ? (nb ? "Automatisk sortering venter på tilgjengelig AI-kvote. Les teksten nedenfor mens vi venter; prøv sorteringen igjen når ventetiden er over." : "Automatic structuring is waiting for available AI quota. Read the text below while waiting; try structuring again after the pause.") : configuration ? (nb ? "Automatisk sortering er ikke tilgjengelig i dette oppsettet. Du kan lese og lagre annonseteksten nedenfor." : "Automatic structuring is not available in this setup. You can read and save the advertisement text below.") : limit ? (nb ? "Grensen for automatisk sortering i denne pilotøkten er nådd. Annonseteksten er fortsatt tilgjengelig nedenfor." : "This pilot session has reached its automatic structuring limit. The advertisement text remains available below.") : (nb ? "Noen opplysninger er ikke sortert automatisk. Vi viser teksten vi har, uten å gjette. Du kan lagre annonsen eller prøve sorteringen igjen." : "Some details have not been structured automatically. We show the text we have without guessing. Save the advertisement or try structuring again.");
  } else if (area === "advertisement") {

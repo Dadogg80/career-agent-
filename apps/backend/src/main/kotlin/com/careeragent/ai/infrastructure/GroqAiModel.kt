@@ -45,6 +45,7 @@ class GroqAiModel(
     internal fun providerFailure(status: Int, body: String, retryAfter: String?, model: String = this.model): AiFailure? = when (status) {
         200 -> null
         401, 403 -> AiFailure("AI_ACCESS_DENIED", 503)
+        413 -> AiFailure("AI_REQUEST_TOO_LARGE", 413)
         429 -> {
             val message = try { mapper.readTree(body).path("error").path("message").textValue() } catch (_: Exception) { null }
             AiFailure("AI_RATE_LIMITED", 429, cooldowns.forModel("Groq", model).record(retryAfter, message))

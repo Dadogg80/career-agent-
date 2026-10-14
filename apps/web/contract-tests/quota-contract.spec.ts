@@ -5,6 +5,35 @@ import { POST as importJob } from "../app/api/jobs/import/route";
 import { personalMatchProxy } from "../lib/personal-match-api";
 import { documentAnalysisProxy } from "../lib/document-analysis-api";
 import { isExtraction } from "../lib/job-requirements";
+import { POST as tailor } from "../app/api/profile/me/jobs/[jobId]/tailoring/route";
+
+test("oversized structured requests keep HTTP 413 across proxies without exposing provider details or retrying", async () => {
+  const original = globalThis.fetch;
+  const forwarded: string[] = [];
+  globalThis.fetch = async input => {
+    forwarded.push(String(input));
+    return Response.json({ code: "AI_REQUEST_TOO_LARGE", message: "PRIVATE_PROVIDER_DETAILS" },
+      { status: 413, headers: { "Retry-After": "120" } });
+  };
+  const id = "52345678-1234-1234-1234-123456789abc";
+  const text = "Fictional CV evidence describing backend API development with Kotlin.";
+  const request = (path: string, body: unknown) => new Request(`http://127.0.0.1:3000${path}`,
+    { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  try {
+    const responses = [
+      await analyze(request("/api/jobs/requirements", { text, locale: "nb" })),
+      await personalMatchProxy(request(`/api/profile/me/jobs/${id}/match`, { text, claims: [{ id, revision: 2 }], locale: "nb", consent: true }), id),
+      await documentAnalysisProxy(request(`/api/profile/me/documents/${id}/analysis`, { text, locale: "nb", consent: true }), id),
+      await tailor(request(`/api/profile/me/jobs/${id}/tailoring`, { documentId: id, matchId: id, text, locale: "nb", consent: true, aiApproval: "a".repeat(64) }), { params: Promise.resolve({ jobId: id }) }),
+    ];
+    for (const response of responses) {
+      expect(response.status).toBe(413);
+      expect(await response.json()).toEqual({ code: "AI_REQUEST_TOO_LARGE" });
+      expect(response.headers.get("Retry-After")).toBeNull();
+    }
+    expect(forwarded).toHaveLength(4);
+  } finally { globalThis.fetch = original; }
+});
 
 test("long delays remain bounded without being shortened to five minutes", () => {
   expect(retryAfterSeconds("967.68")).toBe(968);

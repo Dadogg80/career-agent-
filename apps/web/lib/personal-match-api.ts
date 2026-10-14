@@ -19,7 +19,7 @@ export async function personalMatchProxy(request: Request, id: string) {
  try {
   const r = await fetch(`${privateBase()}/api/profile/me/jobs/${id}/match`, { method: request.method, headers, body, cache:"no-store", redirect:"manual", signal:AbortSignal.timeout(request.method === "POST" ? 90000 : 30000) });
   let v: unknown = await r.json();
-  if (!r.ok) { const response = privateResponse(mappedPrivateError(v), r, [400,401,403,404,409,429,502,503].includes(r.status) ? r.status : 503); const retry = r.headers.get("retry-after"); if (r.status === 429 && parseRetryAfter(retry)) response.headers.set("Retry-After", String(parseRetryAfter(retry))); return response; }
+  if (!r.ok) { const response = privateResponse(mappedPrivateError(v), r, [400,401,403,404,409,413,429,502,503].includes(r.status) ? r.status : 503); const retry = r.headers.get("retry-after"); if (r.status === 429 && parseRetryAfter(retry)) response.headers.set("Retry-After", String(parseRetryAfter(retry))); return response; }
   if (request.method === "GET") { if (!v || typeof v !== "object" || !("analysis" in v)) throw new Error("Invalid response"); v = v.analysis; }
   if (!(v === null && request.method === "GET") && !isPersonalMatch(v)) throw new Error("Invalid response");
   return privateResponse(v, r);

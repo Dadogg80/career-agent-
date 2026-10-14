@@ -1,3 +1,4 @@
+import { aiRequestLimitMessage } from "./ai-request-limits";
 export const jobTranslations = {
   nb: {
     pacing: "Venter før analyse …",
@@ -110,6 +111,7 @@ export const jobTranslations = {
       AI_BUDGET_REACHED: "Grensen for denne kjøringen er nådd. Ingen flere AI-kall utføres.",
       AI_INVALID_RESULT: "AI returnerte feil format eller manglet gyldige sitater. Teksten er beholdt; prøv analysen igjen.",
       AI_UNAVAILABLE: "Analysen er ikke tilgjengelig akkurat nå. Teksten din er beholdt; du kan prøve igjen.",
+      AI_REQUEST_TOO_LARGE: aiRequestLimitMessage("nb"),
     },
   },
   en: {
@@ -223,6 +225,7 @@ export const jobTranslations = {
       AI_BUDGET_REACHED: "The limit for this run has been reached. No more AI calls will be made.",
       AI_INVALID_RESULT: "AI returned an invalid format or lacked valid quotations. Your text is retained; try analyzing again.",
       AI_UNAVAILABLE: "Analysis is currently unavailable. Your text has been retained; you can try again.",
+      AI_REQUEST_TOO_LARGE: aiRequestLimitMessage("en"),
     },
   },
 };

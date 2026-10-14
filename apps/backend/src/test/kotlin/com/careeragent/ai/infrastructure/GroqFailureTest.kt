@@ -7,6 +7,17 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
 class GroqFailureTest {
+    @Test fun `oversized provider requests retain their status without leaking details or starting a quota pause`() {
+        val cooldowns = AiCooldowns()
+        val model = GroqAiModel(jacksonObjectMapper(), "", "openai/gpt-oss-20b", cooldowns)
+        val failure = model.providerFailure(413, "PRIVATE_PROVIDER_DETAILS", "120")!!
+        assertThat(failure.code).isEqualTo("AI_REQUEST_TOO_LARGE")
+        assertThat(failure.httpStatus).isEqualTo(413)
+        assertThat(failure.message).isEqualTo("AI_REQUEST_TOO_LARGE")
+        assertThat(failure.retryAfterSeconds).isNull()
+        assertThat(failure.reason).isNull()
+        assertThat(cooldowns.forModel("Groq", "openai/gpt-oss-20b").remainingSeconds()).isZero()
+    }
     @Test fun `every structured generation task accepts each shared Groq capability`() {
         val model=GroqAiModel(jacksonObjectMapper(),"","openai/gpt-oss-20b",AiCooldowns())
         for(task in AiTask.entries.filter { it!=AiTask.JOB_SOURCE_RETRIEVAL }) {
