@@ -6,6 +6,7 @@ import com.careeragent.ai.application.AiSelection
 import com.careeragent.ai.application.AiTask
 import com.careeragent.ai.application.GeminiSourceModels
 import com.careeragent.ai.infrastructure.AiCooldowns
+import com.careeragent.ai.infrastructure.AiCallDiagnostics
 import com.careeragent.jobs.application.AdvertisementBrowser
 import com.careeragent.jobs.application.FinnAdvertisementRetriever
 import com.careeragent.jobs.application.ImportFailure
@@ -37,8 +38,29 @@ class GeminiUrlContextHttpTransport(
     private val mapper: ObjectMapper,
     @Value("\${GEMINI_API_KEY:}") private val apiKey: String,
     private val client: HttpClient = urlContextHttpClient(),
+    private val diagnostics: AiCallDiagnostics = AiCallDiagnostics(false),
 ) : GeminiUrlContextTransport {
     override fun complete(body: Map<String, Any>): GeminiContextResponse {
+        val model = body["model"] as? String ?: "unknown"
+        val input = body["input"] as? String ?: body["contents"]?.let { mapper.writeValueAsString(it) }.orEmpty()
+        val instructions = if (body.containsKey("input")) input else "The exact URL Context instructions are included in the provider request."
+        return diagnostics.trace(
+            AiTask.JOB_SOURCE_RETRIEVAL,
+            "Gemini",
+            model,
+            "https://generativelanguage.googleapis.com/v1beta/${if (body.containsKey("contents")) "models/$model:generateContent" else "interactions"}",
+            instructions,
+            input,
+            mapper.writeValueAsString(body - setOf("input", "contents")),
+        ) { trace ->
+            val response = completeRequest(body)
+            trace.response(response.body)
+            if (response.status != 200) trace.failure("SOURCE_HTTP_${response.status}")
+            response
+        }
+    }
+
+    private fun completeRequest(body: Map<String, Any>): GeminiContextResponse {
         if (apiKey.isBlank()) throw ImportFailure("SOURCE_AI_NOT_CONFIGURED", 503)
         val model = body["model"] as? String
         if (model !in GeminiSourceModels.models) throw ImportFailure("SOURCE_MODEL_UNSUPPORTED", 400)

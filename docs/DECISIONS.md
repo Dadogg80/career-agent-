@@ -1,8 +1,16 @@
 # Beslutningsregister
 
+## Task-specific AI model choices — 2026-10-14
+
+Accepted: use the owner's existing full selector as the canonical catalogue in every AI-call model menu: Groq `openai/gpt-oss-20b` and `openai/gpt-oss-120b`; Gemini `gemini-3.1-flash-lite`, `gemini-3.5-flash-lite`, `gemini-3.5-flash`, `gemini-3.6-flash`, `gemini-3.7-flash` and `gemini-3.8-flash`. Route choices through their provider-specific protocols; do not silently omit these models from structured-generation tasks. The resumable document workflow remains one approved provider/model plan for both extraction and profile synthesis, so choices must work for both stages. Configured-key status is not a promise of live model access, quota, quality or availability. Preserve defaults, per-recipient approval, budgets, saved work and explicit recovery; never rotate models automatically. Show safe task-specific failure categories and downstream document-validation outcomes without exposing provider payloads.
+
 ## Saved-job presentation — 2026-10-12
 
 Accepted: reuse existing owner-scoped saved-match queries and score calculation, improving presentation without triggering AI or changing scoring. Show stale/provisional states in text as well as color. Identify both Gemini/Groq browser excerpts as excerpts; retain unknown facts instead of inferring employer/deadline. Search/sort are local and deterministic; a single visible card receives full desktop width. Separate the primary apply class from the outline/open class that previously forced dark text onto a dark green background. Explicit header/content classes match the actual local Card API instead of nonexistent data-slot attributes.
+
+## DEV panel placement — 2026-10-14
+
+Accepted: mount the local DEV diagnostics panel only alongside the AI workflow it inspects. Keep it off saved-job/document/profile/dashboard/CV/application overview pages; show it in job analysis, an opened saved-job match, active document analysis and CV preparation. Scope opened-job calls to that job and document calls to the active workflow. The prior global `Foundation` mount caused the overview-page leakage. This keeps diagnostic context aligned with its owner and avoids a global panel that obscures unrelated navigation.
 
 
 Confirmed records explicit user requirements; recommendations record design proposals. Implementation has started, and the user has delegated routine choices. Accepted implementation decisions identify their scope and do not imply that the full MVP is approved or completed.
@@ -97,6 +105,8 @@ D-019 (Accepted, explicit UI requirement): move development diagnostics into the
 D-020 (Accepted, delegated local-pilot decision): use optional local Keycloak with Spring Security OIDC/PKCE before storing career evidence. This provides real authentication without a paid provider or custom password service. Implement owned name/language/revision first, with CSRF, same-origin proxies and PostgreSQL isolation/conflict tests. No private data goes to Groq. Production IdP, HTTPS and private-document/privacy policy remain separate work. See ADR 0013 and IDENTITY_SETUP.md.
 
 D-021 (Accepted, explicit profile UX request): add an optional private profile photo to the signed-in owner's compact profile identity card. Accept bounded JPG/PNG input, validate and normalize it server-side, store the JPEG against the existing profile owner, and serve it uncached only through authenticated same-origin proxies. Photo changes do not change profile facts/revision and do not enter AI requests. Keep profile preferences limited to existing name/language until additional personal data and visibility are explicitly designed. See ADR 0036.
+
+D-022 (Accepted, explicit developer-tool request): provide one local DEV Sheet beside relevant AI workflows that shows actual instructions, user input, schema/tool configuration and provider response. Do not surface it on unrelated workspace pages or the saved-job list; an opened saved-job match panel filters calls to that exact job. Private text capture is off until explicit in-app start, restricted to loopback diagnostics, never logged/persisted, bounded to 200 calls/12 million characters, expires after 10 minutes, and automatically stops after 30 minutes. Stop preserves the short-lived buffer for inspection; clear deletes immediately. Keep the existing public-ad event log content-free and separate from this local private-content trace. No live AI request is made by opening the panel.
 
 
 ## 2026-10-07: approved delivery scope and defaults

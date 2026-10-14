@@ -74,7 +74,9 @@ class DocumentWorkflowController(private val workflows:ObjectProvider<DocumentAn
     @ExceptionHandler(DocumentFailure::class) fun rejected(error:DocumentFailure)=org.springframework.http.ResponseEntity.status(error.status).header("Cache-Control","no-store").body(mapOf("code" to error.code))
     @ExceptionHandler(com.careeragent.ai.application.AiFailure::class) fun failed(error:com.careeragent.ai.application.AiFailure):org.springframework.http.ResponseEntity<*> {
         val response=org.springframework.http.ResponseEntity.status(error.httpStatus).header("Cache-Control","no-store")
-        error.retryAfterSeconds?.let { response.header("Retry-After",it.toString()) }; return response.body(mapOf("code" to error.code))
+        error.retryAfterSeconds?.let { response.header("Retry-After",it.toString()) }
+        val reason=com.careeragent.ai.application.AiFailureReasons.safe(error.reason)
+        return response.body(if(reason==null) mapOf("code" to error.code) else mapOf("code" to error.code,"reason" to reason))
     }
     @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException::class) fun malformed()=org.springframework.http.ResponseEntity.badRequest().header("Cache-Control","no-store").body(mapOf("code" to "DOCUMENT_AI_INPUT_INVALID"))
     @ExceptionHandler(EntryFailure::class) fun entryFailure(error:EntryFailure)=org.springframework.http.ResponseEntity.status(error.status).header("Cache-Control","no-store").body(mapOf("code" to error.code))

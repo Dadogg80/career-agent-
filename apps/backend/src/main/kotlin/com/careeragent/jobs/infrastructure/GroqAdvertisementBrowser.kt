@@ -2,6 +2,8 @@ package com.careeragent.jobs.infrastructure
 
 import com.careeragent.jobs.application.*
 import com.careeragent.ai.infrastructure.AiCooldowns
+import com.careeragent.ai.infrastructure.AiCallDiagnostics
+import com.careeragent.ai.application.AiTask
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -16,8 +18,28 @@ class GroqBrowserTransport(
     private val mapper: ObjectMapper,
     @Value("\${GROQ_API_KEY:}") private val apiKey: String,
     private val cooldowns: AiCooldowns,
+    private val diagnostics: AiCallDiagnostics = AiCallDiagnostics(false),
 ) {
     fun complete(body: Map<String, Any>, model: String): String {
+        val messages = body["messages"] as? List<*>
+        val instructions = (messages?.getOrNull(0) as? Map<*, *>)?.get("content") as? String ?: ""
+        val input = (messages?.getOrNull(1) as? Map<*, *>)?.get("content") as? String ?: ""
+        return diagnostics.trace(
+            AiTask.JOB_SOURCE_RETRIEVAL,
+            "Groq",
+            model,
+            "https://api.groq.com/openai/v1/chat/completions",
+            instructions,
+            input,
+            mapper.writeValueAsString(body - "messages"),
+        ) { trace ->
+            val response = completeRequest(body, model)
+            trace.response(response)
+            response
+        }
+    }
+
+    private fun completeRequest(body: Map<String, Any>, model: String): String {
         val cooldown = cooldowns.forModel("Groq", model)
         val remaining = cooldown.remainingSeconds()
         if (remaining > 0) throw ImportFailure("SOURCE_RATE_LIMITED", 429, remaining)

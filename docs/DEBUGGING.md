@@ -1,4 +1,14 @@
-# Advertisement workflow diagnostics
+# AI call and advertisement diagnostics
+
+## Temporary AI request/response inspection
+
+The DEV Sheet is available beside job analysis, document analysis, CV preparation, and the personal-match panel inside an opened saved-job detail. It is not shown on the saved-job list or unrelated workspace views. The opened-job match panel shows only captured calls for that job ID; opening another job does not mix match history into its panel. Its **Start content capture** control is off until explicitly enabled. When enabled, the backend records the actual structured-model instructions, user input, schema/tool configuration and model text, plus the exact request/response payloads for Groq Browser Search and Gemini URL Context. Provider/model, task, endpoint, elapsed time and safe failure codes are shown per call. Calls from one resumable document workflow are grouped and numbered across `/next` requests.
+
+This intentionally sensitive view can display advertisement text, document excerpts and profile/CV content. Use it only on the local pilot and do not share the screen while open. Captured content is held only in backend process memory, for up to 10 minutes, with a 200-call and 12-million-character total bound; an individual field is limited to 60,000 characters and marked when truncated. Capture automatically stops after 30 minutes. Stopping capture keeps the existing in-memory entries for inspection; **Clear content** removes them immediately. Backend restart also clears all entries. Closing the Sheet removes its client query-cache copy; reopening fetches the current backend buffer. No prompt, input or response is written to application logs, browser console, database or files. The existing sanitized `[Career Agent]` events remain content-free.
+
+The inspection endpoint is loopback-only, exposed through a same-origin local Next.js proxy and controlled by explicit in-app consent. `AI_CALL_DIAGNOSTICS_ENABLED=false` disables payload capture support; it defaults to enabled for the loopback-only local pilot. Do not enable this facility on a shared or public deployment. Do not send private documents to public advertisement endpoints: this trace view is a distinct local-only diagnostics surface, not the advertisement event log or an authorization to change provider consent.
+
+Open the DEV tab, review the privacy notice, start capture, and then run the desired workflow. Expand a run, then choose **Inspect call content** on a numbered call to inspect **Instructions**, **Input**, **Schema and tools**, and **Model response**. Payload text is rendered only after opening its call. The panel polls only while open and capture is active. Calls reflect the provider exchange; an application-level validator may still reject an otherwise successful provider response.
 
 The local pilot must make URL retrieval, analysis and failures inspectable before profile/CV work continues. This panel describes actual application events; it is not a simulated agent activity feed.
 
@@ -16,7 +26,7 @@ Expected retrieval/provider failures are logged with `console.warn`, preserving 
 
 Close the panel using its translated close button or Escape; keyboard focus returns to the edge tab. Closing hides the panel, while the current run remains in workspace memory. The panel fits narrow screens and respects reduced-motion preferences. The Sheet uses the existing Radix Dialog dependency; opening it makes no provider request.
 
-The panel and logs are enabled by default in development. Production builds hide them unless explicitly enabled with `NEXT_PUBLIC_JOB_DIAGNOSTICS=true` before building. Source previews are rendered as text, never HTML. Only the latest run is retained in component memory (bounded to 40 events); reload clears it. There is no exported diagnostic file or server log of advertisement bodies. Browser developer tools can retain their own console history independently.
+The legacy stage panel and its content-free events are enabled by default in development. Production builds hide them unless explicitly enabled with `NEXT_PUBLIC_JOB_DIAGNOSTICS=true` before building. Source previews are rendered as text, never HTML. Only the latest run is retained in component memory (bounded to 40 events); reload clears it. There is no exported diagnostic file or server log of advertisement bodies. Browser developer tools can retain their own console history independently. Full provider request/response bodies use the separate explicit-consent buffer described above.
 
 ## Configure pacing
 
@@ -42,7 +52,7 @@ Ten seconds is a configurable pacing aid, not an assurance that the shared accou
 
 The backend cooldown blocks further dispatch for the provider/model that returned a rate response, including calls from other features using that same model. A different configured model has its own application cooldown and remains selectable. Advertisement, document and personal-matching proxies and controls preserve the delay; they no longer shorten it to five minutes. Long UI waits display minutes/hours. Existing text and earlier saved results remain available. Cooldowns are process-local and are lost on backend restart; provider project/account quotas can still span models. The app does not poll for quota, forecast token availability, automatically retry failures, rotate keys or upgrade the account.
 
-No advertisement body, title, full URL, contact details, raw provider payload, exception message or API key is added to console events. Development source inspection is explicitly expanded in the UI. Current use remains public advertisements only; this does not authorize private CV diagnostics or production private-data processing.
+No advertisement body, title, full URL, contact details, raw provider payload, exception message or API key is added to console events. Development source inspection is explicitly expanded in the UI. The optional local in-memory AI trace is separate from those events and can display private documents only after explicit capture is started; this does not authorize production private-data processing.
 
 ## Validation boundary
 

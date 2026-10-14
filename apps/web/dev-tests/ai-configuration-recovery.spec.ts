@@ -1,9 +1,30 @@
 import { test, expect } from "@playwright/test";
 
 const selection={provider:"Gemini",model:"gemini-3.5-flash-lite"};
-const approval={token:"a".repeat(64),selections:[selection]};
-const option={approval,available:true};
-const configuration={tasks:{JOB_ANALYSIS:selection,DOCUMENT_EXTRACTION:selection,PROFILE_SUMMARY:selection,PERSONAL_MATCH:selection},documents:approval,documentExcerpt:approval,matching:approval,job:approval,tailoring:approval,sourceRetrieval:approval,options:{documents:[option],documentExcerpt:[option],matching:[option],job:[option],tailoring:[option],sourceRetrieval:[option]}};
+const structuredModels=[
+ {provider:"Groq",model:"openai/gpt-oss-20b"},
+ {provider:"Groq",model:"openai/gpt-oss-120b"},
+ {provider:"Gemini",model:"gemini-3.8-flash"},
+ {provider:"Gemini",model:"gemini-3.7-flash"},
+ {provider:"Gemini",model:"gemini-3.6-flash"},
+ {provider:"Gemini",model:"gemini-3.5-flash"},
+ selection,
+ {provider:"Gemini",model:"gemini-3.1-flash-lite"},
+];
+const sourceModels=[{provider:"Groq",model:"openai/gpt-oss-20b"},{provider:"Groq",model:"openai/gpt-oss-120b"},
+ {provider:"Gemini",model:"gemini-3.5-flash-lite"},{provider:"Gemini",model:"gemini-3.5-flash"},
+ {provider:"Gemini",model:"gemini-3.6-flash"},{provider:"Gemini",model:"gemini-3.7-flash"},
+ {provider:"Gemini",model:"gemini-3.8-flash"},{provider:"Gemini",model:"gemini-3.1-flash-lite"}];
+const optionFor=(model:{provider:string;model:string},index:number)=>({approval:{token:"a".repeat(63)+index.toString(16),selections:[model]},available:true});
+const allStructuredOptions=structuredModels.map(optionFor);
+const selectedOption=allStructuredOptions.find(o=>o.approval.selections[0].model===selection.model)!;
+const structuredOptions=[selectedOption,...allStructuredOptions.filter(o=>o!==selectedOption)];
+const approval=selectedOption.approval;
+const allSourceOptions=sourceModels.map(optionFor);
+const sourceDefault=allSourceOptions.find(o=>o.approval.selections[0].model==="gemini-3.8-flash")!;
+const sourceOptions=[sourceDefault,...allSourceOptions.filter(o=>o!==sourceDefault)];
+const sourceApproval=sourceDefault.approval;
+const configuration={tasks:{JOB_ANALYSIS:selection,DOCUMENT_EXTRACTION:selection,PROFILE_SUMMARY:selection,PERSONAL_MATCH:selection,CV_TAILORING:selection},documents:approval,documentExcerpt:approval,matching:approval,job:approval,tailoring:approval,sourceRetrieval:sourceApproval,options:{documents:structuredOptions,documentExcerpt:structuredOptions,matching:structuredOptions,job:structuredOptions,tailoring:structuredOptions,sourceRetrieval:sourceOptions}};
 
 for (const locale of ["nb","en"] as const) {
  test(`configuration retry recovers without starting AI (${locale})`,async({page})=>{
@@ -39,7 +60,7 @@ test("CV preparation can recover a missing task configuration and still requires
  let configCalls=0,aiCalls=0,recovered=false;
  await page.route("**/api/status",r=>r.fulfill({json:{status:"UP"}}));
  await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:true,loginAvailable:true,profilesAvailable:true,csrfToken:"synthetic-csrf"}}));
- await page.route("**/api/ai/config",r=>{configCalls++;return r.fulfill({json:{...configuration,tailoring:recovered?approval:undefined,options:{...configuration.options,tailoring:recovered?[option]:[]}}});});
+ await page.route("**/api/ai/config",r=>{configCalls++;return r.fulfill({json:{...configuration,tailoring:recovered?approval:undefined,options:{...configuration.options,tailoring:recovered?structuredOptions:[]}}});});
  await page.route("**/api/profile/me/claims",r=>r.fulfill({json:[claim]}));
  await page.route("**/api/profile/me/documents",r=>r.fulfill({json:[doc]}));
  await page.route(`**/api/profile/me/documents/${documentId}`,r=>r.fulfill({json:{document:doc,text}}));
@@ -48,14 +69,67 @@ test("CV preparation can recover a missing task configuration and still requires
  await page.route(`**/api/profile/me/jobs/${jobId}/tailoring/session`,r=>r.fulfill({json:null}));
  await page.route(`**/api/profile/me/jobs/${jobId}/tailoring`,r=>{aiCalls++;return r.fulfill({status:500,json:{}});});
  await page.goto(`/jobs/${jobId}/apply`);
+ const tailoring=page.locator('[data-choice-area="tailoring"]');
  await expect(page.locator(".ai-configuration-status")).toContainText("Ingen AI-modell tilgjengelig");
  const consent=page.getByRole("checkbox",{name:/Jeg godkjenner at dette grunnlaget/});
  const submit=page.getByRole("button",{name:"Foreslå tilspisset CV-tekst",exact:true});
  await expect(consent).toBeDisabled();await expect(submit).toBeDisabled();
  const beforeRetry=configCalls;recovered=true;
  await page.locator(".ai-configuration-status").getByRole("button",{name:"Prøv igjen",exact:true}).click();
- await expect(page.locator(".ai-choice")).toContainText("Gemini · gemini-3.5-flash-lite");
+ await expect(tailoring).toContainText("Tilpasning av CV-tekst");
+ await expect(tailoring).toContainText("Gemini · gemini-3.5-flash-lite");
+ await tailoring.locator("summary").click();
+ await expect(tailoring.locator('[role="group"] button')).toHaveCount(8);
  await expect(consent).toBeEnabled();await expect(consent).not.toBeChecked();await expect(submit).toBeDisabled();
  await expect(page.getByLabel("Velg CV som utgangspunkt")).toHaveValue(documentId);
  expect(configCalls).toBe(beforeRetry+1);expect(aiCalls).toBe(0);
+});
+
+test("job retrieval and structured analysis expose separate supported model selectors",async({page})=>{
+ await page.setViewportSize({width:390,height:900});
+ let aiCalls=0;
+ await page.route("**/api/status",r=>r.fulfill({json:{status:"UP"}}));
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:false,loginAvailable:true,profilesAvailable:true}}));
+ await page.route("**/api/ai/config",r=>r.fulfill({json:configuration}));
+ await page.route("**/api/jobs/import",r=>{aiCalls++;return r.fulfill({status:500,json:{}});});
+ await page.route("**/api/jobs/requirements",r=>{aiCalls++;return r.fulfill({status:500,json:{}});});
+ await page.goto("/jobs/analyze");
+ const analysis=page.locator('[data-choice-area="job"]');
+ const retrieval=page.locator('[data-choice-area="sourceRetrieval"]');
+ await expect(analysis).toContainText(/Analyze requirements|Analyser krav/);
+ await expect(retrieval).toContainText(/Retrieve ad|Hent annonse/);
+ await analysis.locator("summary").click();
+ await expect(analysis.locator('[role="group"]').getByRole("button")).toHaveCount(8);
+ await expect(analysis).not.toContainText("qwen/qwen3.8-27b");
+ for(const {model} of structuredModels) await expect(analysis).toContainText(model);
+ await expect(analysis).toContainText(/adapter-protocol-supported|støttet adapterprotokoll/);
+ await analysis.getByRole("button",{name:/openai\/gpt-oss-120b/}).click();
+ await expect(analysis).toContainText("Groq · openai/gpt-oss-120b");
+ await retrieval.locator("summary").click();
+ await expect(retrieval.locator('[role="group"]').getByRole("button")).toHaveCount(8);
+ await expect(retrieval).not.toContainText("qwen/qwen3.8-27b");
+ expect(aiCalls).toBe(0);
+});
+
+test("unsupported configured default stays visible but is not added to the eight runnable choices",async({page})=>{
+ const unsupported={provider:"Groq",model:"qwen/qwen3.8-27b"};
+ const unsupportedApproval={token:"0".repeat(64),selections:[unsupported]};
+ let aiCalls=0;
+ await page.route("**/api/status",r=>r.fulfill({json:{status:"UP"}}));
+ await page.route("**/api/auth/session",r=>r.fulfill({json:{authenticated:false,loginAvailable:true,profilesAvailable:true}}));
+ await page.route("**/api/ai/config",r=>r.fulfill({json:{...configuration,
+  tasks:{...configuration.tasks,JOB_ANALYSIS:unsupported},
+  job:unsupportedApproval,
+ }}));
+ await page.route("**/api/jobs/requirements",r=>{aiCalls++;return r.fulfill({status:500,json:{}});});
+ await page.goto("/jobs/analyze");
+ const choice=page.locator('[data-choice-area="job"]');
+ await expect(choice).toContainText("Groq · qwen/qwen3.8-27b");
+ await expect(choice).toContainText("Konfigurert standardmodell støttes ikke");
+ await choice.locator("summary").click();
+ const options=choice.locator('[role="group"] button');
+ await expect(options).toHaveCount(8);
+ await expect(choice.getByRole("button",{name:/qwen\/qwen3\.8-27b/})).toHaveCount(0);
+ expect(aiCalls).toBe(0);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

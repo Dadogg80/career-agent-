@@ -30,7 +30,9 @@ Milestone: a candidate reaches useful reviewed role-specific text proposals with
 | TanStack Query and shadcn/ui foundation | Implemented, required by AGENTS.md |
 | Public ad text analysis, NAV API and bounded FINN browser import | Implemented and merged; FINN excerpts may be partial/stale |
 | Independent job-ad retrieval and requirement-analysis choices | Existing flow merged; expanded source choices locally implemented on `fix/source-retrieval-model-options`: six Gemini Flash/Lite and Groq 20B/120B. Lite 3.5 successfully retrieved an approved public FINN link; other model readiness is not established by catalog presence |
+| Shared eight-model selector across structured AI tasks and supported source retrieval | Implemented locally on `feat/full-model-selection-and-document-diagnostics`; provider-specific structured/retrieval protocols remain separate, defaults and recipient-bound approvals are preserved, and configured keys do not guarantee live access or quality |
 | Compact requirement filters/detail dialogs, pacing and DEV diagnostics Sheet | Implemented and merged |
+| Explicit local AI prompt/input/schema/response inspection beside job analysis, opened saved-job matching, active document analysis and CV preparation, with bounded volatile multi-call capture | Implemented locally on `feat/full-model-selection-and-document-diagnostics`; overview pages do not mount the panel, and calls are scoped to the active job/document workflow. Focused verification is recorded in `docs/DEVELOPMENT_LOG.md` |
 | PostgreSQL/Flyway and local OIDC/PKCE basic profile | Implemented and merged, PR #12 |
 | Responsive document checks/reader, missed-passage recovery and compact profile identity with private photo | Implemented and locally verified: backend suite, frontend production build/typecheck and all 127 production Playwright tests pass |
 | Wrapped FINN title repair / handled-error console warning | Implemented and merged, PR #13 |

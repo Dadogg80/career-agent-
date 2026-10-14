@@ -34,7 +34,8 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
     private val model: AiModel, private val mapper: ObjectMapper, private val entries: CareerEntryService, private val claims: ClaimService,
     @Value("\${DOCUMENT_AI_MAX_REQUESTS:40}") private val maxRequests: Int,
     @Value("\${DOCUMENT_AI_BATCH_DELAY_SECONDS:65}") private val delaySeconds: Int, private val routing: AiRouting = AiRouting(),
-    @Value("\${DOCUMENT_GEMINI_BATCH_DELAY_SECONDS:5}") private val geminiDelaySeconds: Int = 5) {
+    @Value("\${DOCUMENT_GEMINI_BATCH_DELAY_SECONDS:5}") private val geminiDelaySeconds: Int = 5,
+    private val outcomeRecorder: AiOutcomeRecorder) {
     private val permit=Semaphore(1); private val used=AtomicInteger()
     fun latest(identity: VerifiedIdentity, scope: String) = runs.latest(identity,scope)?.let { checked(identity,it).view() }
     fun load(identity: VerifiedIdentity, id: UUID) = checked(identity,runs.load(identity,id)).view()
@@ -68,7 +69,7 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
         try {
             checked(identity,claimed)
             return runs.finish(identity,claimed,claimed.copy(revision=claimed.revision+1,status="RUNNING",issue=null,nextAt=null,
-                aiApproval=plan.approval.token,plannedSelections=plan.approval.selections)).view()
+                issueReason=null,aiApproval=plan.approval.token,plannedSelections=plan.approval.selections)).view()
         } finally { runs.release(identity,id,claimed.revision) }
     }
     fun next(identity: VerifiedIdentity, id: UUID, revision: Long): DocumentRunView {
@@ -88,7 +89,7 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
                 val coverage=DocumentEvidenceInventory.assess(state.approved,state.analysis)
                 if(coverage.missing.none { it.documentId==pending.documentId && it.start==pending.sourceStart }) {
                     // Earlier follow-up may already represent this source: commit the skipped step without AI/budget use.
-                    return runs.finish(identity,state,state.copy(revision=state.revision+1,completed=state.completed+1,status="RUNNING",issue=null,nextAt=null,
+                    return runs.finish(identity,state,state.copy(revision=state.revision+1,completed=state.completed+1,status="RUNNING",issue=null,issueReason=null,nextAt=null,
                         coverage=coverage.report(state.batches.count { it.repair }))).view()
                 }
             }
@@ -98,14 +99,18 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
             val selected=plan.tasks.getValue(if(state.completed==state.batches.size)AiTask.PROFILE_SUMMARY else AiTask.DOCUMENT_EXTRACTION)
             val actual=(state.analysis.aiSelections+selected).distinct()
             if(state.completed==state.batches.size) {
-                val profile=extractor.summarize(state.analysis.profile,state.analysis.suggestions,state.locale,state.analysis.careerEntries)
+                val profile=validatedDocumentStep(AiTask.PROFILE_SUMMARY) {
+                    extractor.summarize(state.analysis.profile,state.analysis.suggestions,state.locale,state.analysis.careerEntries)
+                }
                 checked(identity,state)
                 val analysis=state.analysis.copy(aiSelections=actual,provider=actual.map { it.provider }.distinct().joinToString(" + "),profile=profile,summary=profile.map { CompetencySummary(it.text.take(500),it.quote.take(600),it.documentId) })
-                return runs.finish(identity,state,state.copy(revision=state.revision+1,completed=state.completed+1,status="COMPLETED",issue=null,nextAt=null,analysis=analysis,
+                return runs.finish(identity,state,state.copy(revision=state.revision+1,completed=state.completed+1,status="COMPLETED",issue=null,issueReason=null,nextAt=null,analysis=analysis,
                     coverage=if(state.coverageReview)DocumentEvidenceInventory.assess(state.approved,analysis).report(state.batches.count { it.repair }) else null)).view()
             }
             val batch=state.batches[state.completed]
-            val raw=extractor.extract(batch,state.approved.getValue(batch.documentId),state.locale)
+            val raw=validatedDocumentStep(AiTask.DOCUMENT_EXTRACTION) {
+                extractor.extract(batch,state.approved.getValue(batch.documentId),state.locale)
+            }
             val original=state.sources.getValue(batch.documentId)
             val result=raw.copy(suggestions=raw.suggestions.filter { original.contains(it.quote) && (it.contextQuote==null || original.contains(it.contextQuote)) },
                 profile=raw.profile.filter { original.contains(it.quote) },entries=raw.entries.filter { original.contains(it.quote) })
@@ -129,14 +134,25 @@ class DocumentAnalysisWorkflow(private val documents: DocumentRepository, privat
             val repairs=if(assessment!=null && !state.repairScheduled)DocumentEvidenceInventory.repairBatches(assessment,state.approved) else emptyList()
             val batches=state.batches+repairs
             return runs.finish(identity,state,state.copy(revision=state.revision+1,completed=completed,
-                status="RUNNING",issue=null,batches=batches,repairScheduled=state.repairScheduled || assessment!=null,
+                status="RUNNING",issue=null,issueReason=null,batches=batches,repairScheduled=state.repairScheduled || assessment!=null,
                 coverage=assessment?.report(batches.count { it.repair }) ?: state.coverage,
                 nextAt=OffsetDateTime.now(ZoneOffset.UTC).plusSeconds((if(plan.tasks.getValue(if(completed==batches.size)AiTask.PROFILE_SUMMARY else AiTask.DOCUMENT_EXTRACTION).provider=="Gemini")geminiDelaySeconds else delaySeconds).coerceIn(0,300).toLong()),analysis=analysis)).view()
         } catch(error: AiFailure) {
             val state=claimed ?: throw error
             return runs.finish(identity,state,state.copy(revision=state.revision+1,status="PAUSED",issue=error.code,
+                issueReason=AiFailureReasons.safe(error.reason) ?: if(error.code=="AI_INVALID_RESULT") AiFailureReasons.DOCUMENT_RESULT_INVALID else null,
                 nextAt=error.retryAfterSeconds?.let { OffsetDateTime.now(ZoneOffset.UTC).plusSeconds(it.toLong()) })).view()
         } finally { claimed?.let { runs.release(identity,id,it.revision) }; permit.release() }
+    }
+    private inline fun <T> validatedDocumentStep(task: AiTask, action: () -> T): T = try {
+        val result=action()
+        val outcome=if(result is DocumentDraftExtractor.Result && result.omissionReasons.any { it.reason==DocumentOmissionReason.INVALID_STRUCTURE })
+            "RECOVERED_INVALID_RESULT" else "VALIDATED"
+        outcomeRecorder.documentValidationOutcome(task,outcome)
+        result
+    } catch(error: AiFailure) {
+        if(error.code=="AI_INVALID_RESULT") outcomeRecorder.documentValidationOutcome(task,"INVALID_RESULT")
+        throw error
     }
     private fun normal(value:String)=java.text.Normalizer.normalize(value,java.text.Normalizer.Form.NFC).trim().replace(Regex("(?U)\\s+")," ").lowercase(java.util.Locale.ROOT)
     private fun mergeSuggestions(values: List<CompetencySuggestion>)=values.groupBy {

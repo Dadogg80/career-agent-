@@ -52,23 +52,17 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
     }
     private fun candidatePlans(tasks: Array<out AiTask>): List<AiPlan> {
         val taskSet = tasks.toSet()
-        val plans = if (taskSet == setOf(AiTask.JOB_SOURCE_RETRIEVAL)) mutableListOf(
-            plan(tasks),
-            plan(tasks, "Groq", "openai/gpt-oss-20b"),
-            plan(tasks, "Groq", "openai/gpt-oss-120b"),
-        ).apply {
-            addAll(GeminiSourceModels.models.map { plan(tasks, "Gemini", it) })
-        } else mutableListOf(
-            plan(tasks), plan(tasks, "Groq"), plan(tasks, "Gemini"),
-            plan(tasks, "Gemini", "gemini-3.6-flash"),
-            plan(tasks, "Gemini", "gemini-3.5-flash-lite"),
-        )
-        if (taskSet == setOf(AiTask.JOB_ANALYSIS)) plans += plan(tasks, "Gemini", "gemini-3.8-flash")
-        return plans.distinctBy { it.approval.token }
+        val selections = if (taskSet == setOf(AiTask.JOB_SOURCE_RETRIEVAL)) {
+            AiModelCapabilities.jobSourceRetrievalSelections
+        } else {
+            AiModelCapabilities.structuredSelections()
+        }
+        return selections.map { plan(tasks, it.provider, it.model) }.distinctBy { it.approval.token }
     }
 
     fun preview(vararg tasks: AiTask) = plan(tasks).approval
-    private fun available(plan: AiPlan) = plan.tasks.values.all {
+    private fun supported(plan: AiPlan) = AiModelCapabilities.supports(plan.tasks.keys, plan.tasks.values)
+    private fun available(plan: AiPlan) = supported(plan) && plan.tasks.values.all {
         environment.getProperty("${it.provider.uppercase()}_API_KEY")?.isNotBlank() == true
     }
     fun options(vararg tasks: AiTask): List<AiOption> =
@@ -77,7 +71,7 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
     fun resolveApproval(token: String?, vararg tasks: AiTask): AiPlan {
         val current = plan(tasks)
         // Legacy approvals apply only to the current Groq plan. Alternatives require an explicit fingerprint.
-        if (token == current.approval.token || token == null && current.tasks.values.all { it.provider == "Groq" }) return current
+        if (supported(current) && (token == current.approval.token || token == null && current.tasks.values.all { it.provider == "Groq" })) return current
         candidatePlans(tasks).firstOrNull { available(it) && token == it.approval.token }?.let { return it }
         throw AiFailure("AI_APPROVAL_CHANGED", 409)
     }
