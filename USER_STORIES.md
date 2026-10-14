@@ -647,3 +647,8 @@ As a candidate, I can ask for a separate, explicitly approved source opinion on 
 As a candidate, a small optional wording review should not reserve the full generation output allowance. Acceptance: request-local proposal-count limits reach the explicitly approved Groq/Gemini adapter; other task budgets, complete per-draft evidence, consent, source/revision checks and no-retry behavior remain unchanged. Provider capacity and semantic correctness are not guaranteed. Controlled real-document excerpts exposed false support and nonliteral quotations, so shared cross-draft evidence compression is deferred and human review remains necessary.
 
 As a candidate, a wrapped compound employment description stays one source unit while separate paragraphs and employers retain their boundaries. Only new source-unit creation changes; saved historical indexes remain readable.
+
+
+## Read exact sources with a localized explanation — 2026-10-14
+
+As a candidate, I can inspect the exact stored excerpt selected for a saved wording opinion and a concise explanation in my chosen language. Acceptance: source-only input excludes advertisement persuasion and original wording as proof, retains every referenced statement/context character and qualification, and uses per-draft application-owned source IDs. The provider identifies a literal draft phrase for a problem; the server validates references and renders localized issue explanations. Invalid/foreign references remain unassessed; selected source text is never paraphrased or silently corrected. Accurate quotation does not make the AI judgment factual confirmation, and provider mistakes remain possible.

@@ -578,6 +578,7 @@ test("optional wording source review requires separate consent preserves finding
  const consent=panel.getByRole("checkbox",{name:/Jeg godkjenner at lagret ordlyd/});
  await expect(button).toBeDisabled();expect(calls).toBe(0);
  await panel.getByText(/Se lagret tekst og kilder som sendes/).click();await expect(panel).toContainText(result.proposals[0].newText);
+ await panel.getByText("Kildegrunnlag og kontekst",{exact:true}).click();await expect(panel).toContainText(match.claims[0].statement);await expect(panel).not.toContainText(job.content.requirements[0].quote);
  await consent.check();await button.click();
  const findings=panel.getByLabel("Resultat av kildegjennomgang");
  await expect(findings).toContainText("Omfang må vurderes");await expect(findings).toContainText("Built Kotlin APIs");

@@ -342,3 +342,12 @@ Continued from merged PR #68/main 3c06809. Implemented request-local output limi
 Six explicitly authorized live calls compared Flash-Lite 3.5 and Groq GPT-OSS 20B: both met all eight synthetic expectations, but six real-document excerpt controls exposed false support, nonliteral quotations and language failures. Shared dictionaries saved 5.4% input bytes in that fixture but added 11.2% in the synthetic case; contradictory scope outcomes prevent a quality-preserving compression claim. Keep the existing nested evidence representation. One sample per model/format is not a repeatability benchmark or best-model ranking.
 
 Next: retain these independently chosen controls, isolate missing per-proposal support from true competency gaps, improve literal-quotation fidelity and Norwegian reasoning, and verify stability before further compaction or default changes. Broader project recall, complete matching/generation journey checks and independent final-file review remain separate unfinished milestones. No automatic semantic approval or merge.
+
+
+## 2026-10-14 — Source-only review and application-resolved citations
+
+Continued from merged PR #69/main f1ac5c1. Implemented v2 of the optional source opinion: exclude advertisement/original wording from candidate proof, preserve full linked statements/context under each proposal, return numbered literal source references and typed findings, and render concise localized explanations with exact problematic draft phrases. Long-source qualifiers and distinct claim revisions remain intact; existing public results, consent, one-call/output budgets, immutable sources and human decisions are preserved.
+
+Four controlled live calls on frozen fixtures returned valid references in all 28 assessments. Both Lite 3.5 and Groq 20B met eight synthetic expectations; the six real-document controls yielded six expected Lite outcomes and four Groq outcomes. Groq still accepted unsupported scope, so semantic reliability remains unfinished. Neither defaults nor factual approval rules change.
+
+Next: carry stronger source discipline into initial proposal generation and rerun the joined project-extraction/matching/whole-CV wording journey on frozen inputs, with limited calls and separate recall, scope, linkage and writing-quality measures. Additional semantic stability/held-out checks and independent final-file readiness remain distinct milestones. Avoid multiplying advisory calls to hide unresolved generation defects.
