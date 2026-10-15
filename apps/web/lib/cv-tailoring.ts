@@ -1,3 +1,4 @@
+import { type AiProvider } from "./ai-configuration";
 import { MAX_JOB_REQUIREMENTS } from "./job-requirements";
 import { claimId } from "./claims";
 import { isAiSelection } from "./ai-configuration";
@@ -8,7 +9,7 @@ export type CvPassagePlan={paragraphIndex:number;action:"KEEP_UNCHANGED"|"PROPOS
 export type TextProposal = { paragraphIndex:number;oldText:string;newText:string;reason:string;claimIds:string[];requirementIndexes:number[] };
 export type VisibilityStatus = "VISIBLE"|"WEAKLY_VISIBLE"|"NOT_VISIBLE"|"NEEDS_CLARIFICATION"|"UNASSESSED";
 export type CvVisibility = {requirementIndex:number;status:VisibilityStatus;reason:string;claimIds:string[];passages:{paragraphIndex:number;quote:string}[]};
-export type TailoringResult = { documentId:string;matchId:string;provider:"Groq"|"Gemini";model:string;proposals:TextProposal[];omittedItems:number;visibility?:CvVisibility[]|null;sessionId?:string|null;sections?:CvSection[]|null;sectionPlans?:CvSectionPlan[]|null;passagePlans?:CvPassagePlan[]|null;sourceUnits?:CvSourceUnit[]|null };
+export type TailoringResult = { documentId:string;matchId:string;provider:AiProvider;model:string;proposals:TextProposal[];omittedItems:number;visibility?:CvVisibility[]|null;sessionId?:string|null;sections?:CvSection[]|null;sectionPlans?:CvSectionPlan[]|null;passagePlans?:CvPassagePlan[]|null;sourceUnits?:CvSourceUnit[]|null };
 /** Ordered UTF-16 source ranges supplied by the application; source text is checked separately. */
 export function isCvSourceUnits(value:unknown):value is CvSourceUnit[] {
  if(!Array.isArray(value)||!value.length||value.length>500)return false;

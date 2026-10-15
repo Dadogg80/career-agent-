@@ -16,7 +16,7 @@ export function AiActivity({label,detail,waiting=false}:{label:string;detail?:st
 
 export function AiIdentity({selections,provider,locale,label,pending=false}: {selections?:AiSelection[];provider?:string;locale:Locale;label?:string;pending?:boolean}) {
   const values=selections?.length?selections:provider?provider.split(" + ").map(p=>({provider:p,model:""})):[];
-  return <div className="ai-identity" aria-label={locale==="nb"?"AI-leverandør og modell":"AI provider and model"}>{label && <small>{label}</small>}{values.map(s=><Badge key={`${s.provider}:${s.model}`} variant="outline" className={`ai-identity-chip ${s.provider==="Gemini"?"ai-gemini":"ai-groq"}`}><Sparkles size={12}/><span>{s.provider} · {s.model || (locale==="nb"?"modell ikke lagret":"model not recorded")}</span></Badge>)}{!values.length && <small>{pending?(locale==="nb"?"Henter AI-oppsett …":"Loading AI configuration …"):(locale==="nb"?"Leverandør og modell ikke registrert":"Provider and model not recorded")}</small>}</div>;
+  return <div className="ai-identity" aria-label={locale==="nb"?"AI-leverandør og modell":"AI provider and model"}>{label && <small>{label}</small>}{values.map(s=><Badge key={`${s.provider}:${s.model}`} variant="outline" className={`ai-identity-chip ${s.provider==="Gemini"?"ai-gemini":s.provider==="OpenAI"?"ai-openai":"ai-groq"}`}><Sparkles size={12}/><span>{s.provider} · {s.model || (locale==="nb"?"modell ikke lagret":"model not recorded")}</span></Badge>)}{!values.length && <small>{pending?(locale==="nb"?"Henter AI-oppsett …":"Loading AI configuration …"):(locale==="nb"?"Leverandør og modell ikke registrert":"Provider and model not recorded")}</small>}</div>;
 }
 type ConfigurationStatus = {isFetching:boolean;isError:boolean;refetch:()=>unknown};
 

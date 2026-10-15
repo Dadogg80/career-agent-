@@ -677,3 +677,8 @@ Scope, uncertain source, context, absent support and contradiction remain adviso
 ## Initial CV wording source excerpts — 2026-10-15
 
 New CV generations keep complete confirmed candidate statements/context separate from job requirements and prior relevance associations. Every retained proposal must link literal excerpts from each referenced claim. Invalid source links omit that proposal and leave review coverage unfinished; valid siblings and original sources remain. Excerpts are saved with new wording snapshots; old sessions remain readable. This adds no extra AI action or automatic approval. Literal quotation is provenance, not proof that the wording's complete factual scope is correct; observed specialist-scope errors still require human review.
+
+
+## Optional OpenAI selection — 2026-10-15
+
+For structured document/profile analysis, job analysis, matching or CV text tasks, the user may explicitly select a configured OpenAI model through the existing task selector. Existing defaults stay unchanged. Private-data approval remains bound to the selected provider/model; no analysis starts from changing a model alone. Completed results retain provider identity, and previous results survive failures. Source retrieval remains a separate Groq/Gemini choice; this addition does not improve source completeness or change the approved CV workflow.

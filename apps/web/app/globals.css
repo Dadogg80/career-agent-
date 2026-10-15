@@ -2148,3 +2148,7 @@ button:disabled { cursor:not-allowed; }
  .diagnostic-sheet { width:calc(100vw - 12px); max-width:none; padding:16px; }
  .ai-call-sections pre { max-height:240px; }
 }
+
+/* OpenAI identity uses the existing accessible provider-chip pattern. */
+.ai-openai { border-color:#99c8c1; background:#edf8f5; color:#145c50; }
+.ai-choice-option[data-provider="openai"] .ai-choice-option-icon { background:#edf8f5; color:#145c50; }

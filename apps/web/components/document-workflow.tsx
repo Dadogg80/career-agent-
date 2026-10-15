@@ -113,6 +113,7 @@ export function DocumentWorkflow({ scope, documents, locale, csrfToken, onAuthRe
   const issue=error?.name==="AbortError"?null:error?.message ?? current?.issue;
   const issueReason=current && current.issue===issue?current.issueReason:((error as (Error & {reason?:AiFailureReason})|undefined)?.reason ?? null);
   function reasonText(reason:AiFailureReason){return ({
+    OUTPUT_REFUSED:nb?"AI-leverandøren avslo forespørselen. Tidligere forslag er bevart.":"The AI provider refused the request. Previous drafts are retained.",
     EMPTY_OUTPUT:nb?"Modellen returnerte ikke noe brukbart innhold.":"The model returned no usable content.",
     MALFORMED_JSON:nb?"Modellsvar kunne ikke leses som gyldig JSON.":"The model response was not valid JSON.",
     OUTPUT_INCOMPLETE:nb?"Modellsvar ble avbrutt før det var ferdig.":"The model response ended before it was complete.",

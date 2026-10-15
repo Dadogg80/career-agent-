@@ -359,3 +359,8 @@ Continued from merged PR #70/main 3759980. New v8 CV proposals require literal e
 Nine bounded live attempts included a final equivalent-input comparison: Lite extracted one project from one detailed page, both models processed six frozen criteria with differing scope judgments, Lite returned three CV changes with 41/42 valid individual assessments, and Groq 20B failed project schema/large-CV capacity. Literal source checks still accepted a semantically unsupported specialist expansion from Lite. This is not completed factual validation, all-project recall or a full login-to-export journey.
 
 Next: address unsupported assertion scope before adding more advisory layers; improve specific skills-group/employment reasoning and inspect rejected match evidence. Measure Groq's complete request/output reservation without dropping confirmed evidence. Structured project dates/history reconciliation, broader recall and independent final-file review remain separate milestones. No model/default change or automatic approval.
+
+
+## 2026-10-15 — Optional OpenAI baseline integration
+
+Added an explicit Responses API generation adapter, provider-bound approvals, frontend result compatibility and non-content usage/cost estimates under ADR 0049. Existing Groq/Gemini defaults, FINN retrieval, prompts and source validators are unchanged. Offline verification is complete; the approved four-analysis comparison remains blocked by Responses `invalid_api_key`. Next: correct the environment binding, run three Mini analyses and one GPT-5.4 reference within the approved USD 0.50 budget, then assess concrete criterion coverage and separate model/system failures. The original six pipeline improvements remain deferred.

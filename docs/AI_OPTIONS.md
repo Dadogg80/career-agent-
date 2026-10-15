@@ -37,3 +37,8 @@ Ingen automatisk betalt fallback. Kvotefeil skal bevare arbeidet og tillate retr
 ## Gemini integration — 2026-10-08
 
 The owner authorized opt-in Gemini integration. Stable 3.5 Flash passed the actual synthetic document-extraction/profile pipeline; 3.8 Flash model listing succeeded but generation returned 503. Keep Groq defaults when no provider is configured. Model distribution is explicit per task, without automatic quota failover. No owner documents were sent to Google during integration. See [Gemini setup](GEMINI_SETUP.md). Earlier candidate-only descriptions are superseded for this local slice; comparative real-document quality remains open.
+
+
+## Optional OpenAI Responses provider — 2026-10-15
+
+OpenAI is now an explicitly selectable structured-generation provider: `gpt-5.4-mini` by default within OpenAI, with `gpt-5.4` as an optional reference. Existing Groq/Gemini defaults and browser retrieval options remain unchanged. Read [OPENAI_PROVIDER.md](OPENAI_PROVIDER.md) for credentials, consent, structured output, usage/cost estimates and the pending authentication-gated comparison. Availability in the selector reflects configuration only, not verified live access or quality.

@@ -1,15 +1,26 @@
-export type AiSelection = { provider: "Groq" | "Gemini"; model: string };
+export const aiProviders = ["Groq", "Gemini", "OpenAI"] as const;
+export type AiProvider = typeof aiProviders[number];
+export type AiProviderLabel = AiProvider | `${AiProvider} + ${AiProvider}` | `${AiProvider} + ${AiProvider} + ${AiProvider}`;
+export function isAiProvider(value: unknown): value is AiProvider {
+  return typeof value === "string" && (aiProviders as readonly string[]).includes(value);
+}
+export function isAiProviderLabel(value: unknown): value is AiProviderLabel {
+  if (typeof value !== "string") return false;
+  const providers = value.split(" + ");
+  return providers.length >= 1 && providers.length <= aiProviders.length && new Set(providers).size === providers.length && providers.every(isAiProvider);
+}
+export type AiSelection = { provider: AiProvider; model: string };
 export type AiApproval = { token: string; selections: AiSelection[] };
 export type AiOption = { approval: AiApproval; available: boolean };
 export type AiArea = "documents" | "documentExcerpt" | "matching" | "job" | "tailoring" | "sourceRetrieval";
-export const aiFailureReasons=["EMPTY_OUTPUT","MALFORMED_JSON","OUTPUT_INCOMPLETE","PROVIDER_SCHEMA_MISMATCH","DOCUMENT_RESULT_INVALID"] as const;
+export const aiFailureReasons=["OUTPUT_REFUSED","EMPTY_OUTPUT","MALFORMED_JSON","OUTPUT_INCOMPLETE","PROVIDER_SCHEMA_MISMATCH","DOCUMENT_RESULT_INVALID"] as const;
 export type AiFailureReason=typeof aiFailureReasons[number];
 export function isAiFailureReason(value:unknown):value is AiFailureReason {return typeof value==="string" && (aiFailureReasons as readonly string[]).includes(value);}
 export type AiConfiguration = { tailoring?:AiApproval; sourceBrowser?:AiSelection; sourceRetrieval?:AiApproval; tasks: Record<"JOB_ANALYSIS" | "DOCUMENT_EXTRACTION" | "PROFILE_SUMMARY" | "PERSONAL_MATCH" | "CV_TAILORING", AiSelection>; documents: AiApproval; documentExcerpt: AiApproval; matching: AiApproval; job?:AiApproval; options?: Partial<Record<AiArea,AiOption[]>> };
 export function isAiSelection(s: unknown): s is AiSelection {
   if(!s || typeof s!=="object")return false;
   const value=s as AiSelection;
-  return ["Groq","Gemini"].includes(value.provider) && typeof value.model==="string" && /^[A-Za-z0-9./_-]{1,100}$/.test(value.model);
+  return isAiProvider(value.provider) && typeof value.model==="string" && /^[A-Za-z0-9./_-]{1,100}$/.test(value.model);
 }
 export function isAiConfiguration(value: unknown): value is AiConfiguration {
   if (!value || typeof value !== "object") return false;

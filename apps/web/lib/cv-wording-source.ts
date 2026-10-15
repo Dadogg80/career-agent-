@@ -1,9 +1,10 @@
+import { type AiProvider } from "./ai-configuration";
 import { claimId } from "./claims";
 import { isAiSelection } from "./ai-configuration";
 import type { TailoringSession } from "./cv-tailoring-session";
 
 export type WordingSourceItem = { paragraphIndex:number;text:string;status:"SUPPORTED"|"NEEDS_REVIEW"|"UNSUPPORTED"|"UNASSESSED";reason:string;evidence:{claimId:string;quote:string}[] };
-export type WordingSourceResult = { sessionId:string;revision:number;provider:"Groq"|"Gemini";model:string;locale:"nb"|"en";items:WordingSourceItem[] };
+export type WordingSourceResult = { sessionId:string;revision:number;provider:AiProvider;model:string;locale:"nb"|"en";items:WordingSourceItem[] };
 export function isWordingSourceResult(value:unknown):value is WordingSourceResult {
  if(!value||typeof value!=="object")return false;
  const v=value as WordingSourceResult;

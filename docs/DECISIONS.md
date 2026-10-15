@@ -399,3 +399,8 @@ Use typed findings and short verbatim problematic draft phrases to render bounde
 ## 2026-10-15 — Initial wording evidence contract (ADR 0048)
 
 Accepted [ADR 0048](adr/0048-initial-cv-proposal-source-excerpts.md): new v8 generations retain complete claim text, separate job/relevance metadata from proof, require exact per-claim proposal excerpts and persist them additively. Preserve existing sources, legacy snapshots, full evidence, one-call consent and defaults. Controlled generation still produced unsupported specialist wording with literal citations, so this decision establishes provenance only; semantic correctness and useful group reasoning remain unresolved.
+
+
+## 2026-10-15 — Explicit OpenAI generation provider (ADR 0049)
+
+Accepted [ADR 0049](adr/0049-optional-openai-responses-provider.md): reuse AiModel/routing/consent with a separate OpenAI Responses adapter, unchanged generation prompts and source validators, no retrieval tools/default changes/fallback, and dated token-derived cost estimates. Managed cloud credentials use CAREER_OPENAI_API_KEY because OPENAI-prefixed names are reserved there. Current authentication failures are not model-quality results; the approved comparison remains pending. No six-point pipeline improvement or official release is authorized by this provider addition.

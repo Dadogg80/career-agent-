@@ -23,9 +23,13 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
             AiTask.CV_TAILORING -> "TAILORING"
         }
         fun value(name: String, fallback: String) = environment.getProperty(name)?.trim()?.takeIf { it.isNotEmpty() } ?: fallback
-        val provider = explicitProvider?.lowercase() ?: value("AI_${suffix}_PROVIDER", value("AI_PROVIDER", "groq")).lowercase()
+        val globalProvider = value("AI_PROVIDER", "groq").lowercase()
+        // OpenAI supports structured generation, not the existing browser retrieval protocol.
+        val fallbackProvider = if (task == AiTask.JOB_SOURCE_RETRIEVAL && globalProvider == "openai") "groq" else globalProvider
+        val provider = explicitProvider?.lowercase() ?: value("AI_${suffix}_PROVIDER", fallbackProvider).lowercase()
         val defaultModel = when (provider) {
             "groq" -> "openai/gpt-oss-20b"
+            "openai" -> value("OPENAI_MODEL", "gpt-5.4-mini")
             "gemini" -> when (task) {
                 AiTask.JOB_SOURCE_RETRIEVAL -> "gemini-3.8-flash"
                 AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY, AiTask.CV_TAILORING -> "gemini-3.5-flash-lite"
@@ -39,7 +43,7 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
             if (task == AiTask.JOB_SOURCE_RETRIEVAL) value("GROQ_BROWSER_MODEL", defaultModel)
             else value("GROQ_MODEL", defaultModel)
         } else defaultModel
-        return AiSelection(if (provider == "gemini") "Gemini" else "Groq",
+        return AiSelection(when (provider) { "gemini" -> "Gemini"; "openai" -> "OpenAI"; else -> "Groq" },
             explicitModel ?: value("${prefix}_${suffix}_MODEL", modelFallback))
     }
 
@@ -63,7 +67,8 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
     fun preview(vararg tasks: AiTask) = plan(tasks).approval
     private fun supported(plan: AiPlan) = AiModelCapabilities.supports(plan.tasks.keys, plan.tasks.values)
     private fun available(plan: AiPlan) = supported(plan) && plan.tasks.values.all {
-        environment.getProperty("${it.provider.uppercase()}_API_KEY")?.isNotBlank() == true
+        if (it.provider == "OpenAI") openAiApiKey(environment).isNotEmpty()
+        else environment.getProperty("${it.provider.uppercase()}_API_KEY")?.isNotBlank() == true
     }
     fun options(vararg tasks: AiTask): List<AiOption> =
         candidatePlans(tasks).map { AiOption(it.approval, available(it)) }
@@ -77,3 +82,8 @@ class AiRouting(private val environment: Environment = StandardEnvironment()) {
     }
     fun requireApproval(token: String?, vararg tasks: AiTask) = resolveApproval(token, *tasks).approval
 }
+
+/** Cloud-managed environments reserve OPENAI_ names; ordinary local runs use the standard name. */
+fun openAiApiKey(environment: Environment): String =
+    environment.getProperty("OPENAI_API_KEY")?.trim()?.takeIf { it.isNotEmpty() }
+        ?: environment.getProperty("CAREER_OPENAI_API_KEY")?.trim().orEmpty()
