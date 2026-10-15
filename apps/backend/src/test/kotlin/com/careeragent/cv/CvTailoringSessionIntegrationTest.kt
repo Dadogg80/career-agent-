@@ -97,12 +97,13 @@ class CvTailoringSessionIntegrationTest {
         jdbc.update("UPDATE career_document SET extracted_text=? WHERE id=?",text,f.doc)
         val units=CvSourceUnits.create(text)
         val unit=units.last {it.kind==CvSourceUnitKind.TEXT}
-        val proposal=CvTextProposal(unit.paragraphIndex,text.substring(unit.start,unit.end),"Developed APIs using Kotlin","Clarifies sourced API work",listOf(f.claim),listOf(0))
+        val proposal=CvTextProposal(unit.paragraphIndex,text.substring(unit.start,unit.end),"Developed APIs using Kotlin","Clarifies sourced API work",listOf(f.claim),listOf(0),listOf(MatchEvidence(f.claim,"Kotlin")))
         val snapshot=f.snapshot.copy(text=text,promptVersion="cv-section-wording-v6",
             result=f.snapshot.result.copy(proposals=listOf(proposal),sourceUnits=units))
         val stored=repository.create(identity,f.job,snapshot)
         val reopened=repository.latest(identity,f.job)!!
         assertEquals(units,reopened.snapshot.result.sourceUnits)
+        assertEquals(proposal.sourceEvidence,reopened.snapshot.result.proposals.single().sourceEvidence)
         assertEquals("cv-section-wording-v6",reopened.snapshot.promptVersion)
         mvc.perform(get("${f.path}/session").with(caller(f.user))).andExpect(status().isOk)
             .andExpect(jsonPath("$.snapshot.result.sourceUnits.length()").value(units.size))

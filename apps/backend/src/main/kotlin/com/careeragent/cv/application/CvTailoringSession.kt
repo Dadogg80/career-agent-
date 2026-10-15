@@ -57,7 +57,7 @@ class CvTailoringSessions(private val repository: CvTailoringSessionRepository, 
         val result = tailoring.propose(identity, jobId, request)
         val saved = repository.create(identity, jobId, TailoringSnapshot(result, request.text, match.claims,
             job.content.requirements.map { it.quote }, request.locale,
-            promptVersion=if(result.sourceUnits!=null) "cv-section-wording-v7" else "cv-section-wording-v5"))
+            promptVersion=if(result.sourceUnits!=null) "cv-section-wording-v8" else "cv-section-wording-v5"))
         return result.copy(sessionId = saved.id)
     }
     fun draft(identity: VerifiedIdentity, jobId: UUID, sessionId: UUID, revision: Long) = repository.draft(identity,jobId,sessionId,revision)
