@@ -236,18 +236,23 @@ class SavedJobIntegrationTest {
   mvc.perform(post(endpoint).with(csrf()).contentType("application/json").content(json.writeValueAsString(input))).andExpect(status().isUnauthorized)
   verifyNoInteractions(ai)
   val generated=json.writeValueAsString(mapOf(
-   "proposals" to listOf(mapOf("paragraphIndex" to 1,"newText" to "Utviklet Kotlin-API-er for et fiktivt prosjekt.","reason" to "Synliggjør dokumentert API-erfaring.","claimIds" to listOf(claim),"requirementIndexes" to listOf(0))),
+   "proposals" to listOf(mapOf("paragraphIndex" to 1,"newText" to "Utviklet Kotlin-API-er for et fiktivt prosjekt.","reason" to "Synliggjør dokumentert API-erfaring.","claimIds" to listOf(claim),"requirementIndexes" to listOf(0),"sourceEvidence" to listOf(mapOf("claimId" to claim,"quote" to "Built APIs using Kotlin")))),
    "visibility" to listOf(mapOf("requirementIndex" to 0,"status" to "VISIBLE","reason" to "Dokumentert API-bidrag er synlig.","claimIds" to listOf(claim),"passages" to listOf(mapOf("paragraphIndex" to 1,"quote" to "Built APIs using Kotlin"))))
   ))
   `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(tailoring) ?: tailoring)).thenAnswer { invocation ->
    val sent=json.readTree(invocation.getArgument<String>(1))
    assertThat(sent["baseParagraphs"].map {it["text"].asText()}).containsExactly("Fictional engineer",cvText.substringAfter("\n\n"))
-   assertThat(sent["jobAndEvidence"]["confirmedClaims"].size()).isEqualTo(1)
+   assertThat(sent["confirmedEvidence"].size()).isEqualTo(1)
+   assertThat(sent["confirmedEvidence"][0]["id"].asText()).isEqualTo(claim)
+   assertThat(sent["confirmedEvidence"][0]["statement"].asText()).contains("Built APIs using Kotlin")
+   assertThat(sent.has("assessment")).isFalse()
    generated
   }
   send(user).andExpect(status().isOk).andExpect(header().string("Cache-Control","no-store"))
    .andExpect(jsonPath("$.proposals[0].oldText").value(cvText.substringAfter("\n\n"))).andExpect(jsonPath("$.provider").value("Groq"))
    .andExpect(jsonPath("$.visibility[0].status").value("VISIBLE")).andExpect(jsonPath("$.visibility[0].passages[0].quote").value("Built APIs using Kotlin"))
+   .andExpect(jsonPath("$.proposals[0].sourceEvidence[0].claimId").value(claim))
+   .andExpect(jsonPath("$.proposals[0].sourceEvidence[0].quote").value("Built APIs using Kotlin"))
   mvc.perform(get("/api/profile/me/documents/$documentId").with(caller(user))).andExpect(jsonPath("$.text").value(cvText))
   mvc.perform(get("/api/profile/me/cvs").with(caller(user))).andExpect(jsonPath("$.length()").value(0))
   mvc.perform(post("/api/profile/me/claims/$claim/review").with(caller(user)).with(csrf()).contentType("application/json").content("""{"decision":"REJECT","revision":2}""")).andExpect(status().isOk)
