@@ -1,4 +1,5 @@
-export const analysisFailureReasons = ["PROVIDER_SCHEMA_MISMATCH", "OUTPUT_INCOMPLETE", "EMPTY_OUTPUT", "MALFORMED_JSON", "NO_SUPPORTED_ITEMS", "INVALID_STRUCTURE"] as const;
+import type { AiProvider } from "./ai-configuration";
+export const analysisFailureReasons = ["OUTPUT_REFUSED", "PROVIDER_SCHEMA_MISMATCH", "OUTPUT_INCOMPLETE", "EMPTY_OUTPUT", "MALFORMED_JSON", "NO_SUPPORTED_ITEMS", "INVALID_STRUCTURE"] as const;
 export type AnalysisFailureReason = typeof analysisFailureReasons[number];
 export function safeAnalysisReason(value: unknown): AnalysisFailureReason | undefined { return analysisFailureReasons.includes(value as AnalysisFailureReason) ? value as AnalysisFailureReason : undefined; }
 
@@ -11,7 +12,7 @@ export type DiagnosticEvent = {
   stage: AnalysisStage;
   state: StageState;
   details: {
-    provider?: "Groq" | "Gemini";
+    provider?: AiProvider;
     model?: string;
     endpoint?: "/api/jobs/import" | "/api/jobs/requirements";
     httpStatus?: number;

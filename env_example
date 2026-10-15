@@ -42,3 +42,17 @@ DATABASE_PASSWORD=""
 # GEMINI_TAILORING_MODEL=
 # GROQ_TAILORING_MODEL=
 # TAILORING_AI_MAX_REQUESTS=5
+
+# Optional OpenAI Responses API; leave existing task/provider defaults unchanged.
+# Store credentials only in the ignored backend .env or managed secret settings.
+# OPENAI_API_KEY=
+# Managed cloud alternative when OPENAI_ environment names are reserved:
+# CAREER_OPENAI_API_KEY=
+# OPENAI_MODEL=gpt-5.4-mini
+# OPENAI_JOB_MODEL=
+# OPENAI_DOCUMENT_MODEL=
+# OPENAI_PROFILE_MODEL=
+# OPENAI_MATCH_MODEL=
+# OPENAI_TAILORING_MODEL=
+# Explicit per-task selection uses AI_JOB_PROVIDER=openai, etc.
+# OpenAI does not support JOB_SOURCE_RETRIEVAL in this adapter.

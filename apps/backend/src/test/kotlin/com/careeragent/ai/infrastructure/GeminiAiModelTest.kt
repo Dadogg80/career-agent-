@@ -268,7 +268,7 @@ class GeminiAiModelTest {
 
     @Test fun `structured tasks expose the complete adapter catalog and document plan is valid for both phases`() {
         val config = AiRouting(MockEnvironment().withProperty("GROQ_API_KEY", "fictional-key")
-            .withProperty("GEMINI_API_KEY", "fictional-key"))
+            .withProperty("GEMINI_API_KEY", "fictional-key").withProperty("OPENAI_API_KEY", "fictional-key"))
         val sourceOptions = config.options(AiTask.JOB_SOURCE_RETRIEVAL)
         for (task in AiTask.entries.filter { it != AiTask.JOB_SOURCE_RETRIEVAL }) {
             assertThat(config.options(task).map { it.approval.selections.single() })
@@ -310,7 +310,7 @@ class GeminiAiModelTest {
         assertThat(AiModelCapabilities.supports(setOf(AiTask.JOB_ANALYSIS),configured.selections)).isFalse()
         assertThatThrownBy { routing.resolveApproval(configured.token,AiTask.JOB_ANALYSIS) }
             .isInstanceOfSatisfying(AiFailure::class.java) { assertThat(it.code).isEqualTo("AI_APPROVAL_CHANGED") }
-        assertThat(routing.options(AiTask.JOB_ANALYSIS)).hasSize(8)
+        assertThat(routing.options(AiTask.JOB_ANALYSIS)).hasSize(AiModelCapabilities.structuredSelections().size)
         assertThat(routing.options(AiTask.JOB_ANALYSIS).map { it.approval.selections.single() })
             .containsExactlyElementsOf(AiModelCapabilities.structuredSelections())
         assertThat(routing.options(AiTask.JOB_ANALYSIS).filter { it.available })

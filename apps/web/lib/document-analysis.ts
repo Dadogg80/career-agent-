@@ -1,3 +1,4 @@
+import { isAiProviderLabel, type AiProviderLabel } from "./ai-configuration";
 import { isAiSelection, type AiSelection } from "./ai-configuration";
 import { claimId } from "./claims";
 import { validEntryContent, type EntryContent } from "./career-entries";
@@ -7,13 +8,13 @@ const validReviewState = (value:unknown) => value == null || ["DOCUMENTED","CONF
 export type CompetencySuggestion = { skill: string; statement: string; context: string; quote: string; documentId?: string | null; contextQuote?:string|null; additionalSources?: {documentId:string;quote:string}[]; category?:string; drafted?:boolean; recovered?:boolean; profileClaimId?:string|null; reviewState?:ProposalReviewState|null };
 export type ProfileDraft = {kind:string;text:string;documentId:string;quote:string;additionalSources?:{documentId:string;quote:string}[]};
 export type CareerDraft = {profileEntryId?:string|null;reviewState?:ProposalReviewState|null;key:string;content:EntryContent;periodText:string;documentId:string;quote:string;additionalSources?:{documentId:string;quote:string}[]};
-export type DocumentAnalysis = { id: string; locale: "nb" | "en"; provider: "Groq" | "Gemini" | "Groq + Gemini" | "Gemini + Groq"; summary: { text: string; quote: string; documentId?: string | null }[]; suggestions: CompetencySuggestion[]; inputCharacters: number; sourceCharacters: number; partial: boolean; omittedItems: number; createdAt: string; documents: { documentId:string; originalName:string; inputCharacters:number; sourceCharacters:number }[]; profile?:ProfileDraft[];careerEntries?:CareerDraft[]; aiSelections?:AiSelection[]; omissionReasons?:DocumentOmission[] };
+export type DocumentAnalysis = { id: string; locale: "nb" | "en"; provider: AiProviderLabel; summary: { text: string; quote: string; documentId?: string | null }[]; suggestions: CompetencySuggestion[]; inputCharacters: number; sourceCharacters: number; partial: boolean; omittedItems: number; createdAt: string; documents: { documentId:string; originalName:string; inputCharacters:number; sourceCharacters:number }[]; profile?:ProfileDraft[];careerEntries?:CareerDraft[]; aiSelections?:AiSelection[]; omissionReasons?:DocumentOmission[] };
 export function isDocumentAnalysis(value: unknown): value is DocumentAnalysis {
   if (!value || typeof value !== "object") return false;
   const d = value as Record<string, unknown>;
   const text = (value: unknown, max: number) => typeof value === "string" && value.trim().length > 0 && value.length <= max;
   const count = (value: unknown, min: number, max: number) => typeof value === "number" && Number.isInteger(value) && value >= min && value <= max;
-  return (d.aiSelections===undefined || Array.isArray(d.aiSelections) && d.aiSelections.length<=10 && d.aiSelections.every(isAiSelection)) && typeof d.id === "string" && claimId.test(d.id) && ["nb", "en"].includes(String(d.locale)) && ["Groq","Gemini","Groq + Gemini","Gemini + Groq"].includes(String(d.provider))
+  return (d.aiSelections===undefined || Array.isArray(d.aiSelections) && d.aiSelections.length<=10 && d.aiSelections.every(isAiSelection)) && typeof d.id === "string" && claimId.test(d.id) && ["nb", "en"].includes(String(d.locale)) && isAiProviderLabel(d.provider)
     && typeof d.createdAt === "string" && Number.isFinite(Date.parse(d.createdAt)) && typeof d.partial === "boolean"
     && count(d.inputCharacters, 0, 1200000) && count(d.sourceCharacters, 1, 1200000) && count(d.omittedItems, 0, 200)
     && (d.omissionReasons === undefined || isDocumentOmissions(d.omissionReasons))

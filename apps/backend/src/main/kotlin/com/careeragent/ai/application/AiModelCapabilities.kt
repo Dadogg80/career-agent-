@@ -2,6 +2,7 @@ package com.careeragent.ai.application
 
 /** Adapter-supported model choices for structured JSON generation. Retrieval tools have a separate catalog. */
 object AiModelCapabilities {
+    val openAiStructuredModels = listOf("gpt-5.4-mini", "gpt-5.4")
     val groqStructuredModels = listOf(
         "openai/gpt-oss-20b",
         "openai/gpt-oss-120b",
@@ -17,11 +18,13 @@ object AiModelCapabilities {
 
     fun structuredSelections() =
         groqStructuredModels.map { AiSelection("Groq", it) } +
-            geminiStructuredModels.map { AiSelection("Gemini", it) }
+            geminiStructuredModels.map { AiSelection("Gemini", it) } +
+            openAiStructuredModels.map { AiSelection("OpenAI", it) }
 
     fun supportsStructured(selection: AiSelection) = when (selection.provider) {
         "Groq" -> selection.model in groqStructuredModels
         "Gemini" -> selection.model in geminiStructuredModels
+        "OpenAI" -> selection.model in openAiStructuredModels
         else -> false
     }
 
@@ -42,6 +45,7 @@ object AiModelCapabilities {
 }
 
 object AiFailureReasons {
+    const val OUTPUT_REFUSED = "OUTPUT_REFUSED"
     const val EMPTY_OUTPUT = "EMPTY_OUTPUT"
     const val MALFORMED_JSON = "MALFORMED_JSON"
     const val OUTPUT_INCOMPLETE = "OUTPUT_INCOMPLETE"
@@ -49,6 +53,7 @@ object AiFailureReasons {
     const val DOCUMENT_RESULT_INVALID = "DOCUMENT_RESULT_INVALID"
 
     private val safeValues = setOf(
+        OUTPUT_REFUSED,
         EMPTY_OUTPUT,
         MALFORMED_JSON,
         OUTPUT_INCOMPLETE,

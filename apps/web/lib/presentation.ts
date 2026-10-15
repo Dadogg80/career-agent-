@@ -1,3 +1,4 @@
+import { isAiProviderLabel, type AiProviderLabel } from "./ai-configuration";
 import {claimId} from "./claims";
 import {isAiSelection,type AiSelection} from "./ai-configuration";
 import type {ProfileDraft} from "./document-analysis";
@@ -11,5 +12,5 @@ export function isPresentation(value:unknown):value is Presentation {
   !!s.item && ["PROFILE","CORE_SKILLS","KEY_INFORMATION","EXPERIENCE","EDUCATION","INTERESTS"].includes(s.item.kind) && text(s.item.text,1000) && claimId.test(s.item.documentId) && text(s.item.quote,1000) &&
   (s.item.additionalSources==null || Array.isArray(s.item.additionalSources) && s.item.additionalSources.length<=30 && s.item.additionalSources.every(e=>claimId.test(e.documentId) && text(e.quote,1000))) &&
   s.sources && typeof s.sources==="object" && !Array.isArray(s.sources) && Object.entries(s.sources).length<=20 && Object.entries(s.sources).every(([id,name])=>claimId.test(id)&&text(name,255)) &&
-  ["Groq","Gemini","Groq + Gemini","Gemini + Groq"].includes(s.provider) && Array.isArray(s.selections) && s.selections.length<=40 && s.selections.every(isAiSelection));
+  isAiProviderLabel(s.provider) && Array.isArray(s.selections) && s.selections.length<=40 && s.selections.every(isAiSelection));
 }

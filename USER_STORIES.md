@@ -656,3 +656,8 @@ As a candidate, I can inspect the exact stored excerpt selected for a saved word
 ## Trace initial wording to the actual claim — 2026-10-15
 
 As a candidate, every new retained CV proposal should identify literal evidence from each claim it uses. Acceptance: reject missing, foreign, invented or duplicate excerpts without losing valid siblings; preserve complete statements/context, revisions, employer scope and old sessions. Prior match judgments and skill labels cannot substitute for factual support. Persisted excerpts describe the original suggestion, not semantic verification of my later edits. Human approval and independent factual-scope review remain necessary.
+
+
+## Optional OpenAI provider — 2026-10-15
+
+As a user, I can explicitly choose OpenAI alongside existing structured-generation providers, see the actual provider/model identity, and approve private input for that recipient without changing existing defaults. As a maintainer, I can inspect non-content token usage and dated estimated costs, while distinguishing provider output, local validation and upstream source defects. Live quality comparisons require a fixed semantic criterion inventory, unchanged source/prompts and explicit spending authorization.
