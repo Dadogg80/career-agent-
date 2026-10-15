@@ -25,6 +25,7 @@ class CvTailoringValidationTest {
  private val identity=VerifiedIdentity("https://identity.example.test","fictional-user")
  private val jobId=UUID.randomUUID();private val documentId=UUID.randomUUID();private val matchId=UUID.randomUUID();private val claimId=UUID.randomUUID()
  private val text="Fictional engineer\n\nBuilt Kotlin APIs for a fictional employer and improved service reliability."
+ private val sourceClaims get()=listOf(MatchClaim(claimId,2,"Kotlin",text.substringAfter("\n\n"),"Fictional employer"))
  private val request=TailoringRequest(documentId,text,matchId,"en",true,routing.preview(AiTask.CV_TAILORING).token)
  private fun setup():PersonalMatch {
   val now=OffsetDateTime.now()
@@ -36,7 +37,71 @@ class CvTailoringValidationTest {
   `when`(matching.compactInput(anyString(),anyList(),anyList(),anyList())).thenReturn("""{"confirmedClaims":[],"candidatePassages":[]}""")
   return match
  }
- private fun proposal(id:UUID=claimId,index:Int=1,criterion:Int=0)=mapOf("paragraphIndex" to index,"newText" to "Developed Kotlin APIs for a fictional employer.","reason" to "Makes the documented API contribution visible.","claimIds" to listOf(id.toString()),"requirementIndexes" to listOf(criterion))
+ private fun proposal(id:UUID=claimId,index:Int=1,criterion:Int=0)=mapOf("paragraphIndex" to index,"newText" to "Developed Kotlin APIs for a fictional employer.","reason" to "Makes the documented API contribution visible.","claimIds" to listOf(id.toString()),"requirementIndexes" to listOf(criterion),"sourceEvidence" to listOf(mapOf("claimId" to id.toString(),"quote" to "Built Kotlin APIs")))
+ @Test fun `generation retains every complete claim and separates candidate proof from job judgments`() {
+  val match=setup()
+  val claims=(0..34).map { index -> MatchClaim(UUID.randomUUID(),index+1L,"Navigation label $index",
+   "Fictional contribution $index. Planned work remains unconfirmed.","Fictional client $index") }
+  `when`(matching.load(identity,jobId)).thenReturn(match.copy(claims=claims,assessments=listOf(
+   RequirementMatch(0,MatchKind.STRONG,"Optimistic judgment must not become candidate proof",listOf(MatchEvidence(claims[0].id,"Fictional contribution 0.")),"A leading question is not proof",evidenceRelation=EvidenceRelation.TRANSFERABLE,requirementNature=RequirementNature.PRACTICAL))))
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)).thenAnswer { call ->
+   val input=mapper.readTree(call.getArgument<String>(1))
+   assertThat(input.path("contract").asText()).isEqualTo("cv-section-wording-v8")
+   assertThat(input.path("confirmedEvidence").size()).isEqualTo(35)
+   claims.forEachIndexed { index,claim ->
+    val supplied=input.path("confirmedEvidence")[index]
+    assertThat(supplied.path("id").asText()).isEqualTo(claim.id.toString())
+    assertThat(supplied.path("revision").asLong()).isEqualTo(claim.revision)
+    assertThat(supplied.path("statement").asText()).isEqualTo(claim.statement)
+    assertThat(supplied.path("context").asText()).isEqualTo(claim.context)
+   }
+   assertThat(input.path("jobRequirements").path("requirements").size()).isEqualTo(1)
+   assertThat(input.has("candidatePassages")).isFalse()
+   assertThat(input.has("assessment")).isFalse()
+   assertThat(input.has("criterionEvidence")).isTrue()
+   assertThat(input.path("criterionEvidence")[0].path("claimIds").map {it.asText()}).containsExactly(claims[0].id.toString())
+   assertThat(input.path("criterionEvidence")[0].path("evidenceRelation").asText()).isEqualTo("TRANSFERABLE")
+   assertThat(call.getArgument<String>(1)).doesNotContain("Optimistic judgment", "A leading question", "STRONG")
+   assertThat(call.getArgument<String>(0)).contains("Link every factual assertion", "skillLabel is navigation metadata", "planned/uncertain")
+   """{"proposals":[]}"""
+  }
+  service.propose(identity,jobId,request)
+  verify(ai,times(1)).generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)
+ }
+ @Test fun `new proposals require literal evidence for every linked claim while retaining valid siblings`() {
+  val match=setup()
+  val foreign=MatchClaim(UUID.randomUUID(),1,"Label is not proof","Managed renewals, not revenue growth.","Another employer")
+  val claims=match.claims+foreign
+  val good=proposal()
+  fun proof(id:UUID,quote:String)=mapOf("claimId" to id.toString(),"quote" to quote)
+  val bad=listOf(
+   good-"sourceEvidence",
+   good+("sourceEvidence" to listOf(proof(claimId,foreign.statement))),
+   good+("sourceEvidence" to listOf(proof(claimId,"Fictional engineer"))),
+   good+("sourceEvidence" to listOf(proof(foreign.id,foreign.statement))),
+   good+("sourceEvidence" to listOf(proof(claimId,"Kotlin"),proof(claimId,"Kotlin"))),
+   good+mapOf("claimIds" to claims.map {it.id.toString()},"sourceEvidence" to listOf(proof(claimId,"Built Kotlin APIs"))),
+   good+mapOf("claimIds" to listOf(foreign.id.toString()),"sourceEvidence" to listOf(proof(foreign.id,foreign.skill)))
+  )
+  bad.forEach { invalid ->
+   val result=service.parse(mapper.writeValueAsString(mapOf("proposals" to listOf(invalid,good))),
+    service.paragraphs(text),claims,1)
+   assertThat(result.first).hasSize(1)
+   assertThat(result.first.single().sourceEvidence).containsExactly(MatchEvidence(claimId,"Built Kotlin APIs"))
+   assertThat(result.second).isEqualTo(1)
+  }
+ }
+ @Test fun `malformed source links leave generation review unfinished and never rewrite the source`() {
+  setup()
+  `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING))
+   .thenReturn(mapper.writeValueAsString(mapOf("proposals" to listOf(proposal()-"sourceEvidence"))))
+  val result=service.propose(identity,jobId,request)
+  assertThat(result.proposals).isEmpty()
+  assertThat(result.omittedItems).isEqualTo(1)
+  assertThat(result.passagePlans).allMatch {!it.assessed}
+  assertThat(result.sectionPlans).allMatch {!it.assessed}
+  assertThat(mockingDetails(documents).invocations.map {it.method.name}).containsOnly("detail")
+ }
  @Test fun `new generation supplies exact source units and rejects identity headings and historical header edits`() {
   setup()
   val source="Fictional engineer\nfictional@example.test\n\nPROFILE\nBuilt Kotlin APIs for a fictional employer.\n\n"+
@@ -65,7 +130,7 @@ class CvTailoringValidationTest {
   for(unit in units) assertThat(supplied[unit.paragraphIndex].path("text").asText()).isEqualTo(source.substring(unit.start,unit.end))
   assertThat(documents.detail(identity,documentId).text).isEqualTo(source)
  }
- @Test fun `new source unit sessions record v7 without changing legacy snapshot defaults`() {
+ @Test fun `new source unit sessions record v8 without changing legacy snapshot defaults`() {
   val match=setup()
   val unit=CvSourceUnit(0,0,text.length,CvSourceUnitKind.TEXT,true)
   val generated=CvTailoringResult(documentId,matchId,"Groq","fixture-model",emptyList(),0,sourceUnits=listOf(unit))
@@ -76,7 +141,7 @@ class CvTailoringValidationTest {
   `when`(repository.create(eq(identity) ?: identity,eq(jobId) ?: jobId,any(TailoringSnapshot::class.java) ?: TailoringSnapshot(generated,text,match.claims,emptyList(),"en")))
    .thenAnswer {call ->
     val snapshot=call.getArgument<TailoringSnapshot>(2)
-    assertThat(snapshot.promptVersion).isEqualTo("cv-section-wording-v7")
+    assertThat(snapshot.promptVersion).isEqualTo("cv-section-wording-v8")
     assertThat(snapshot.result.sourceUnits).containsExactly(unit)
     CvTailoringSession(sessionId,jobId,1,snapshot,emptyList(),OffsetDateTime.now())
    }
@@ -86,17 +151,17 @@ class CvTailoringValidationTest {
  }
  @Test fun `supported profile skill and experience improvements are not truncated after twelve`() {
   val paragraphs=(0..40).map { "Original paragraph $it" }
-  val items=paragraphs.indices.map { i -> mapOf("paragraphIndex" to i,"newText" to "Supported revised wording $i","reason" to "Relevant example","claimIds" to listOf(claimId.toString()),"requirementIndexes" to listOf(0)) }
-  val parsed=service.parse(mapper.writeValueAsString(mapOf("proposals" to items)),paragraphs,setOf(claimId),1)
+  val items=paragraphs.indices.map { i -> mapOf("paragraphIndex" to i,"newText" to "Supported revised wording $i","reason" to "Relevant example","claimIds" to listOf(claimId.toString()),"requirementIndexes" to listOf(0),"sourceEvidence" to listOf(mapOf("claimId" to claimId.toString(),"quote" to "Built Kotlin APIs"))) }
+  val parsed=service.parse(mapper.writeValueAsString(mapOf("proposals" to items)),paragraphs,sourceClaims,1)
   assertThat(parsed.first).hasSize(40)
   assertThat(parsed.first.map {it.paragraphIndex}).contains(12,13,39)
   assertThat(parsed.second).isEqualTo(1)
  }
  @Test fun `invalid references and duplicate edits are omitted without losing valid supported suggestions`() {
-  val result=service.parse(mapper.writeValueAsString(mapOf("proposals" to listOf(proposal(),proposal(UUID.randomUUID()),proposal(index=500),proposal(criterion=12),proposal()))),service.paragraphs(text),setOf(claimId),1)
+  val result=service.parse(mapper.writeValueAsString(mapOf("proposals" to listOf(proposal(),proposal(UUID.randomUUID()),proposal(index=500),proposal(criterion=12),proposal()))),service.paragraphs(text),sourceClaims,1)
   assertThat(result.first).hasSize(1);assertThat(result.first.single().oldText).isEqualTo(text.substringAfter("\n\n"));assertThat(result.second).isEqualTo(4)
-  assertThatThrownBy {service.parse("{broken",listOf(text),setOf(claimId),1)}.isInstanceOf(AiFailure::class.java)
-  assertThatThrownBy {service.parse("""{"proposals":[],"ownerId":"spoof"}""",listOf(text),setOf(claimId),1)}.isInstanceOf(AiFailure::class.java)
+  assertThatThrownBy {service.parse("{broken",listOf(text),sourceClaims,1)}.isInstanceOf(AiFailure::class.java)
+  assertThatThrownBy {service.parse("""{"proposals":[],"ownerId":"spoof"}""",listOf(text),sourceClaims,1)}.isInstanceOf(AiFailure::class.java)
  }
  @Test fun `long single paragraphs are segmented literally without dropping the middle or end`() {
   val source="start " + "Full literal source. ".repeat(2800) + " end"
@@ -184,10 +249,10 @@ class CvTailoringValidationTest {
  }
  @Test fun `tailoring references beyond criterion twelve retain exact source and reject nonexistent indices`() {
   val item=proposal()+("requirementIndexes" to (0 until 128).toList())
-  val parsed=service.parse(mapper.writeValueAsString(mapOf("proposals" to listOf(item))),listOf("Original text","Other original"),setOf(claimId),128)
+  val parsed=service.parse(mapper.writeValueAsString(mapOf("proposals" to listOf(item))),listOf("Original text","Other original"),sourceClaims,128)
   assertThat(parsed.first.single().requirementIndexes).hasSize(128).contains(127)
   assertThat(parsed.second).isZero()
-  val invalid=service.parse(mapper.writeValueAsString(mapOf("proposals" to listOf(item+("requirementIndexes" to listOf(128))))),listOf("Original text","Other original"),setOf(claimId),128)
+  val invalid=service.parse(mapper.writeValueAsString(mapOf("proposals" to listOf(item+("requirementIndexes" to listOf(128))))),listOf("Original text","Other original"),sourceClaims,128)
   assertThat(invalid.first).isEmpty();assertThat(invalid.second).isEqualTo(1)
  }
 
@@ -224,7 +289,7 @@ class CvTailoringValidationTest {
   assertThat(parse(mapOf("bad" to true))).allMatch {it.status==CvVisibility.UNASSESSED}
   assertThat(parse((0..256).map {item})).allMatch {it.status==CvVisibility.UNASSESSED}
   val output=mapper.writeValueAsString(mapOf("proposals" to listOf(proposal()),"visibility" to mapOf("bad" to true)))
-  assertThat(service.parse(output,service.paragraphs(text),setOf(claimId),3).first).hasSize(1)
+  assertThat(service.parse(output,service.paragraphs(text),sourceClaims,3).first).hasSize(1)
   assertThat(validatedVisibility(mapper.readTree("{}"),service.paragraphs(text),match,128,"en")).hasSize(128).allMatch {it.status==CvVisibility.UNASSESSED}
  }
 

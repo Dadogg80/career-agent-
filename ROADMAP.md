@@ -351,3 +351,11 @@ Continued from merged PR #69/main f1ac5c1. Implemented v2 of the optional source
 Four controlled live calls on frozen fixtures returned valid references in all 28 assessments. Both Lite 3.5 and Groq 20B met eight synthetic expectations; the six real-document controls yielded six expected Lite outcomes and four Groq outcomes. Groq still accepted unsupported scope, so semantic reliability remains unfinished. Neither defaults nor factual approval rules change.
 
 Next: carry stronger source discipline into initial proposal generation and rerun the joined project-extraction/matching/whole-CV wording journey on frozen inputs, with limited calls and separate recall, scope, linkage and writing-quality measures. Additional semantic stability/held-out checks and independent final-file readiness remain distinct milestones. Avoid multiplying advisory calls to hide unresolved generation defects.
+
+## 2026-10-15 — Initial generation provenance and measured remaining defects
+
+Continued from merged PR #70/main 3759980. New v8 CV proposals require literal excerpts from every linked claim, retain complete claim text and omit previous match classifications/reasons/questions from writing proof. Validated excerpts survive immutable snapshot storage; legacy sessions and the approved one-call workflow remain unchanged (ADR 0048).
+
+Nine bounded live attempts included a final equivalent-input comparison: Lite extracted one project from one detailed page, both models processed six frozen criteria with differing scope judgments, Lite returned three CV changes with 41/42 valid individual assessments, and Groq 20B failed project schema/large-CV capacity. Literal source checks still accepted a semantically unsupported specialist expansion from Lite. This is not completed factual validation, all-project recall or a full login-to-export journey.
+
+Next: address unsupported assertion scope before adding more advisory layers; improve specific skills-group/employment reasoning and inspect rejected match evidence. Measure Groq's complete request/output reservation without dropping confirmed evidence. Structured project dates/history reconciliation, broader recall and independent final-file review remain separate milestones. No model/default change or automatic approval.

@@ -652,3 +652,7 @@ As a candidate, a wrapped compound employment description stays one source unit 
 ## Read exact sources with a localized explanation — 2026-10-14
 
 As a candidate, I can inspect the exact stored excerpt selected for a saved wording opinion and a concise explanation in my chosen language. Acceptance: source-only input excludes advertisement persuasion and original wording as proof, retains every referenced statement/context character and qualification, and uses per-draft application-owned source IDs. The provider identifies a literal draft phrase for a problem; the server validates references and renders localized issue explanations. Invalid/foreign references remain unassessed; selected source text is never paraphrased or silently corrected. Accurate quotation does not make the AI judgment factual confirmation, and provider mistakes remain possible.
+
+## Trace initial wording to the actual claim — 2026-10-15
+
+As a candidate, every new retained CV proposal should identify literal evidence from each claim it uses. Acceptance: reject missing, foreign, invented or duplicate excerpts without losing valid siblings; preserve complete statements/context, revisions, employer scope and old sessions. Prior match judgments and skill labels cannot substitute for factual support. Persisted excerpts describe the original suggestion, not semantic verification of my later edits. Human approval and independent factual-scope review remain necessary.
