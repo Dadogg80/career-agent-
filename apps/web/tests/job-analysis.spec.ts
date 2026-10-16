@@ -189,8 +189,8 @@ test("source retrieval accepts a larger bounded model catalog and preserves priv
  expect(isAiConfiguration({...configuration,options:{...configuration.options,sourceRetrieval:[...expanded,sourceOptions[0]]}})).toBe(false);
  expect(isAiConfiguration({...configuration,options:{...configuration.options,sourceRetrieval:[{...sourceOptions[0],approval:{...sourceOptions[0].approval,token:"invalid"}}]}})).toBe(false);
  for(const area of ["documents","documentExcerpt","matching","job","tailoring"]){
-  expect(isAiConfiguration({...configuration,options:{...configuration.options,[area]:expanded.slice(0,10)}})).toBe(true);
-  expect(isAiConfiguration({...configuration,options:{...configuration.options,[area]:expanded.slice(0,11)}})).toBe(false);
+  expect(isAiConfiguration({...configuration,options:{...configuration.options,[area]:expanded}})).toBe(true);
+  expect(isAiConfiguration({...configuration,options:{...configuration.options,[area]:[...expanded,sourceOptions[0]]}})).toBe(false);
  }
 });
 
