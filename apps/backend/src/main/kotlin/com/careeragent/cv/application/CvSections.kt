@@ -16,7 +16,7 @@ data class CvSectionPlan(val sectionId: String, val action: CvSectionAction, val
 object CvSections {
     private val headings = mapOf(
         CvSectionKind.PROFILE to listOf("profil", "profile", "sammendrag", "summary", "professional summary", "nøkkelkvalifikasjoner", "key qualifications", "om meg", "about me"),
-        CvSectionKind.SKILLS to listOf("kjernekompetanse", "kompetanse", "core competencies", "core skills", "skills", "kompetanseoversikt"),
+        CvSectionKind.SKILLS to listOf("kjernekompetanse", "kompetanse", "ferdigheter", "core competencies", "core skills", "skills", "kompetanseoversikt"),
         CvSectionKind.EXPERIENCE to listOf("arbeidserfaring", "yrkeserfaring", "work experience", "employment", "experience", "professional experience", "prosjekter", "projects", "arbeid og prosjekter"),
         CvSectionKind.EDUCATION to listOf("utdanning", "education", "kurs", "courses", "sertifiseringer", "certifications", "utdanning og kurs"),
         CvSectionKind.ADDITIONAL to listOf("tilleggsinformasjon", "additional information", "språk", "languages", "interesser", "interests", "referanser", "references"))

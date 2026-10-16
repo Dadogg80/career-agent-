@@ -21,3 +21,7 @@ A further private two-page check exposed narrow skills rows crossing the midpoin
 ## Hyphen/conjunction prose continuation — 2026-10-14
 
 Within a known employment entry, keep a text unit ending in a hyphen together with its next “og”/“and” line even across a geometric blank. Heading/dated-entry detection still runs first; normal complete paragraphs and new employers remain separate. Preserve exact text and offsets. This only changes newly created units, never persisted legacy ranges. A fresh private two-page reading retained three profile paragraphs, six skills groups, four cross-page contributions for the first employer and three for the next. Visual comparison used the supplied screenshots and both rendered original PDF pages; this is source-structure validation, not a generated-file readiness check.
+
+## Bokmål skills-heading correction — 2026-10-16
+
+A fictional held-out live wording control exposed `Ferdigheter` being treated as editable prose, allowing a proposal to omit that heading. Recognize this common literal skills heading using the existing case/Markdown/colon normalization. New application-owned units separate and protect the heading; skills content stays editable and keeps all non-whitespace text. This is source-structure recognition across professions, not a profession-specific factual rule. Stored ranges, section indexes, old proposals/reviews and original files are not recomputed or rewritten. New runs retain the existing wording contract, full evidence and one-call consent/budget rules.

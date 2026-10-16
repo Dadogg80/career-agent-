@@ -673,3 +673,9 @@ As a candidate, each newly generated CV proposal must cite at least one literal 
 ## Statement-backed optional source opinions — 2026-10-16
 
 As a candidate, an AI-found-support opinion should cite the actual statements linked to my saved draft, including when I edited an older proposal. Acceptance: each cited claim needs a statement reference for a positive opinion; context-only citations become unassessed without discarding valid siblings. Adverse context findings can still cite employer/role context. Full sources, explicit selected-model approval, revision checks and human decisions remain. Independently selected synthetic scope controls measure model behavior separately from parser validity and do not establish universal semantic accuracy.
+
+## Preserve distinct source quotations and skills structure — 2026-10-16
+
+As a candidate, I can inspect different valid excerpts from one contribution in a new match, including a scope limitation instead of only an employer name. Acceptance: preserve distinct claim/quote pairs within the existing five-excerpt bound; identical duplicates collapse; claim identity, evidence checks, score rules and old snapshots remain unchanged.
+
+As a candidate using a Bokmål CV, `Ferdigheter` should be recognized as a protected section heading rather than part of editable prose. Acceptance: retain exact source text, separate the heading from skills content in new runs, and preserve all stored ranges/reviews without migration. Evaluate matching and initial wording across professions; classification/citation checks alone do not establish semantic correctness.

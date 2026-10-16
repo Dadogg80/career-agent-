@@ -104,7 +104,7 @@ class PersonalMatchService(private val jobs: SavedJobRepository, private val cla
                         require(normal(source).contains(normal(quote)))
                         MatchEvidence(id, quote)
                     } catch (_: IllegalArgumentException) { omitted++; null }
-                }.distinctBy { it.claimId }
+                }.distinct()
                 val adjusted = when {
                     supported.isEmpty() || relation == EvidenceRelation.UNKNOWN -> MatchKind.CLARIFY
                     nature == RequirementNature.FORMAL && relation == EvidenceRelation.TRANSFERABLE -> MatchKind.CLARIFY

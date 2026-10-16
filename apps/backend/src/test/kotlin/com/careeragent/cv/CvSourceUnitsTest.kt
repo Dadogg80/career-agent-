@@ -7,6 +7,25 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class CvSourceUnitsTest {
+    @Test fun `a newly recognized heading never reparses stored legacy ranges`() {
+        val text="Ferdigheter\nKundeservice og timeavtaler"
+        val stored=listOf(CvSourceUnit(0,0,text.length,CvSourceUnitKind.TEXT,true))
+        assertThat(CvSourceUnits.passages(text,stored)).containsExactly(text)
+        assertThat(CvSourceUnits.create(text)).hasSize(2)
+        assertThat(CvSourceUnits.passages(text,stored)).containsExactly(text)
+    }
+    @Test fun `Bokmal skills headings remain protected and separate from editable skill text`() {
+        for(heading in listOf("Ferdigheter","FERDIGHETER","Ferdigheter:","## Ferdigheter","**Ferdigheter**")) {
+            val text="Fictional candidate\n\nProfil\nErfaring fra kundearbeid.\n\n$heading\nKundeservice og timeavtaler\n\nArbeidserfaring\n2021–2024 Fictional employer – Assistant\nRegistrerte henvendelser."
+            val units=CvSourceUnits.create(text);val passages=CvSourceUnits.passages(text,units)
+            val index=passages.indexOf(heading)
+            assertThat(index).describedAs(heading).isGreaterThanOrEqualTo(0)
+            assertThat(units[index].kind).isEqualTo(CvSourceUnitKind.SECTION_HEADING)
+            assertThat(units[index].editable).isFalse()
+            assertThat(CvSections.identify(text,passages)).anyMatch {it.kind==CvSectionKind.SKILLS && it.heading==heading}
+            assertThat(passages.joinToString("").filterNot(Char::isWhitespace)).isEqualTo(text.filterNot(Char::isWhitespace))
+        }
+    }
     @Test fun `hyphenated history prose keeps its conjunction continuation while later paragraphs and employers stay separate`() {
         for((prefix,suffix) in listOf("Samarbeidet med produkt-" to "og prosjektorganisasjonen.","Worked with product-" to "and project teams.")) {
             val text="WORK EXPERIENCE\n2021 – 2023 Example Company – Developer\n$prefix\n\n$suffix\n\nA separate complete paragraph.\n\n2024 – present Other Company – Engineer\nAnother contribution."
