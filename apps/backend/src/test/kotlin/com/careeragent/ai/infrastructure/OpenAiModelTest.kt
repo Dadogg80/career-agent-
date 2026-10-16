@@ -80,6 +80,48 @@ class OpenAiModelTest {
         }
     }
 
+    @Test fun `Sol and Luna are explicit supported recipients across structured tasks without changing defaults`() {
+        val routing = AiRouting(environment)
+        for (name in listOf("gpt-6.1-sol", "gpt-6-luna")) {
+            val recipient = AiSelection("OpenAI", name)
+            for (task in AiTask.entries.filter { it != AiTask.JOB_SOURCE_RETRIEVAL }) {
+                val option = routing.options(task).single { it.approval.selections == listOf(recipient) }
+                assertThat(option.available).isTrue()
+                assertThat(routing.resolveApproval(option.approval.token, task).tasks.values).containsOnly(recipient)
+                val body = adapter().requestBody("rules", "source", emptyMap(), task, recipient)
+                assertThat(body["model"]).isEqualTo(name)
+                assertThat(body["reasoning"]).isEqualTo(mapOf("effort" to "medium"))
+                assertThat(body["store"]).isEqualTo(false)
+                assertThatThrownBy { adapter().requestBody("", "", emptyMap(), AiTask.JOB_SOURCE_RETRIEVAL, recipient) }
+                    .isInstanceOf(AiFailure::class.java)
+            }
+            val combined = routing.options(AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY)
+                .single { it.approval.selections == listOf(recipient) }
+            assertThat(routing.resolveApproval(combined.approval.token, AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY)
+                .tasks.values).containsOnly(recipient)
+            assertThat(combined.approval.token).isNotEqualTo(routing.preview(AiTask.DOCUMENT_EXTRACTION, AiTask.PROFILE_SUMMARY).token)
+            assertThat(AiRouting(MockEnvironment()).options(AiTask.JOB_ANALYSIS)
+                .single { it.approval.selections == listOf(recipient) }.available).isFalse()
+        }
+        val recipients = routing.options(AiTask.PERSONAL_MATCH).filter { it.approval.selections.single().provider == "OpenAI" }
+        assertThat(recipients.map { it.approval.token }).doesNotHaveDuplicates().hasSize(4)
+        assertThat(routing.selection(AiTask.JOB_ANALYSIS)).isEqualTo(AiSelection("Groq", "openai/gpt-oss-20b"))
+        assertThat(AiRouting(MockEnvironment().withProperty("AI_PROVIDER", "openai")).selection(AiTask.JOB_ANALYSIS)).isEqualTo(selection)
+    }
+
+    @Test fun `GPT6 estimates count cache writes and long-context rates without double charging reasoning`() {
+        val standard = OpenAiUsage(1000, 200, 200, 80, 1200, 100)
+        assertThat(standard.estimatedUsd("gpt-6.1-sol")).isEqualByComparingTo("0.00367")
+        assertThat(standard.estimatedUsd("gpt-6-luna")).isEqualByComparingTo("0.0001845")
+        assertThat(standard.estimatedUsd("gpt-5.4-mini")).isNull()
+        assertThat(OpenAiUsage(272000, 0, 100, 0, 272100).estimatedUsd("gpt-6.1-sol")).isEqualByComparingTo("0.545")
+        assertThat(OpenAiUsage(272001, 0, 100, 0, 272101).estimatedUsd("gpt-6.1-sol")).isEqualByComparingTo("1.089504")
+        val body = mapper.readTree("""{"input_tokens":1000,"output_tokens":200,"total_tokens":1200,"input_tokens_details":{"cached_tokens":200,"cache_write_tokens":100}}""")
+        assertThat(OpenAiUsage.parse(body)!!.cacheWriteTokens).isEqualTo(100)
+        (body.path("input_tokens_details") as com.fasterxml.jackson.databind.node.ObjectNode).put("cache_write_tokens", 801)
+        assertThat(OpenAiUsage.parse(body)).isNull()
+    }
+
     @Test fun `response parser accepts assistant JSON and ignores reasoning output`() {
         assertThat(adapter().content(response("{\"facts\":[]}"))).isEqualTo("{\"facts\":[]}")
     }

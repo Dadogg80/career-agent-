@@ -688,3 +688,7 @@ For structured document/profile analysis, job analysis, matching or CV text task
 Newly requested analyses preserve simple explicit qualification alternatives and scoped preferred examples. Document review retains literal skills-grid entries and the first language in an inline language row; work-entry instructions cover introductions and continuing bullets across pages. Existing saved results require an explicit new analysis to use changed extraction behavior. Provider/model approval, original files, review decisions and profile confirmation remain unchanged. No CV-tailoring or submission step is added.
 
 OpenAI analysis now waits up to five minutes per generation call without automatic retries. Multi-step document review retains progress between calls. Output budgets are configurable on the backend and include reasoning; model/provider choices and per-run private approval remain unchanged.
+
+## Sol and Luna task selection — 2026-10-16
+
+The existing structured-task menus also offer OpenAI `gpt-6.1-sol` and `gpt-6-luna`. Users choose before approving a run; changing from Sol to Luna clears private consent even though the provider stays OpenAI. Combined document review applies the approved model to both extraction and profile synthesis. Choosing a model alone sends nothing. Prior saved results keep their identity; defaults and the separate Groq/Gemini retrieval menu remain unchanged.

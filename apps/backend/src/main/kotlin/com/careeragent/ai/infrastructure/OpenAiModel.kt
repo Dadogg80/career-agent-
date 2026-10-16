@@ -146,8 +146,8 @@ class OpenAiModel(
             val estimate = usage?.estimatedUsd(selection.model)
             val actualModel = root.path("model").asText().takeIf { it.matches(Regex("[A-Za-z0-9._-]{1,100}")) }
             // Output tokens already include reasoning. Neither credentials nor prompt/output text belongs in logs.
-            logger.info("openai_usage task={} model={} actualModel={} inputTokens={} cachedTokens={} outputTokens={} reasoningTokens={} totalTokens={} estimatedUsd={} priceDate={} durationMs={}",
-                task, selection.model, actualModel, usage?.inputTokens, usage?.cachedTokens, usage?.outputTokens,
+            logger.info("openai_usage task={} model={} actualModel={} inputTokens={} cachedTokens={} cacheWriteTokens={} outputTokens={} reasoningTokens={} totalTokens={} estimatedUsd={} priceDate={} durationMs={}",
+                task, selection.model, actualModel, usage?.inputTokens, usage?.cachedTokens, usage?.cacheWriteTokens, usage?.outputTokens,
                 usage?.reasoningTokens, usage?.totalTokens, estimate?.toPlainString(), OpenAiUsage.PRICE_DATE,
                 (System.nanoTime() - start) / 1_000_000)
             return content(response.body())
@@ -162,31 +162,42 @@ class OpenAiModel(
 
 /** Standard text pricing estimate only, not an invoice or an account spending limit. */
 internal data class OpenAiUsage(val inputTokens: Long, val cachedTokens: Long, val outputTokens: Long,
-    val reasoningTokens: Long, val totalTokens: Long) {
+    val reasoningTokens: Long, val totalTokens: Long, val cacheWriteTokens: Long = 0) {
     fun estimatedUsd(model: String): BigDecimal? {
         val rates = when (model) {
             "gpt-5.4-mini" -> listOf("0.75", "0.075", "4.50")
             "gpt-5.4" -> listOf("2.50", "0.25", "15.00")
+            "gpt-6.1-sol" -> listOf("2.00", "0.10", "10.00")
+            "gpt-6-luna" -> listOf("0.10", "0.01", "0.50")
             else -> return null
         }.map(::BigDecimal)
-        return (BigDecimal.valueOf(inputTokens - cachedTokens) * rates[0] +
-            BigDecimal.valueOf(cachedTokens) * rates[1] + BigDecimal.valueOf(outputTokens) * rates[2])
-            .divide(BigDecimal("1000000"))
+        val gpt6 = model in setOf("gpt-6.1-sol", "gpt-6-luna")
+        // Only the GPT-6 cache-write and long-context prices have been verified here.
+        if (cacheWriteTokens > 0 && !gpt6) return null
+        val longContext = gpt6 && inputTokens > 272000
+        val inputMultiplier = if (longContext) BigDecimal("2") else BigDecimal.ONE
+        val outputMultiplier = if (longContext) BigDecimal("1.5") else BigDecimal.ONE
+        return ((BigDecimal.valueOf(inputTokens - cachedTokens - cacheWriteTokens) * rates[0] +
+            BigDecimal.valueOf(cachedTokens) * rates[1] +
+            BigDecimal.valueOf(cacheWriteTokens) * rates[0] * BigDecimal("1.25")) * inputMultiplier +
+            BigDecimal.valueOf(outputTokens) * rates[2] * outputMultiplier).divide(BigDecimal("1000000"))
     }
 
     companion object {
-        const val PRICE_DATE = "2026-10-15"
+        const val PRICE_DATE = "2026-10-16"
         fun parse(node: JsonNode): OpenAiUsage? {
             fun count(n: JsonNode): Long? = if (n.isIntegralNumber && n.canConvertToLong() && n.asLong() >= 0) n.asLong() else null
             val input = count(node.path("input_tokens")) ?: return null
             val output = count(node.path("output_tokens")) ?: return null
             val cachedNode = node.path("input_tokens_details").path("cached_tokens")
             val reasoningNode = node.path("output_tokens_details").path("reasoning_tokens")
+            val writesNode = node.path("input_tokens_details").path("cache_write_tokens")
             val cached = if (cachedNode.isMissingNode) 0L else count(cachedNode) ?: return null
+            val writes = if (writesNode.isMissingNode) 0L else count(writesNode) ?: return null
             val reasoning = if (reasoningNode.isMissingNode) 0L else count(reasoningNode) ?: return null
             val total = count(node.path("total_tokens")) ?: return null
-            if (cached > input || reasoning > output || input > Long.MAX_VALUE - output || total != input + output) return null
-            return OpenAiUsage(input, cached, output, reasoning, total)
+            if (cached > input || writes > input - cached || reasoning > output || input > Long.MAX_VALUE - output || total != input + output) return null
+            return OpenAiUsage(input, cached, output, reasoning, total, writes)
         }
     }
 }

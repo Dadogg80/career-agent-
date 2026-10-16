@@ -661,3 +661,7 @@ As a candidate, every new retained CV proposal should identify literal evidence 
 ## Optional OpenAI provider — 2026-10-15
 
 As a user, I can explicitly choose OpenAI alongside existing structured-generation providers, see the actual provider/model identity, and approve private input for that recipient without changing existing defaults. As a maintainer, I can inspect non-content token usage and dated estimated costs, while distinguishing provider output, local validation and upstream source defects. Live quality comparisons require a fixed semantic criterion inventory, unchanged source/prompts and explicit spending authorization.
+
+## Explicit Sol and Luna choices — 2026-10-16
+
+As a user, I can explicitly choose OpenAI GPT-6.1 Sol or GPT-6 Luna for structured advertisement, document/profile, matching and CV wording tasks. Acceptance: both appear in the complete shared catalog; existing defaults remain; selecting a model starts no analysis; model changes clear private consent even within OpenAI; actual saved result identity remains visible. Neither is offered as a source-retrieval model. Usage estimates remain distinct from actual billing.

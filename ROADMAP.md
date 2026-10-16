@@ -372,3 +372,15 @@ The local OpenAI authentication blocker is no longer reproduced: actual structur
 Implemented source-only recovery for explicit duties, simple alternative preservation, scoped preferred examples, additional skills-grid headings/wrapped final items and inline language rows. Document instructions cover each role's contributions, including page continuations; model defaults, factual confirmation, private approvals, original files and existing saved snapshots remain unchanged.
 
 Remaining priorities: independently test sufficient-alternative judgments and literal evidence selection; diagnose Groq structured-generation failures and Gemini availability separately; repeat held-out cross-profession controls before changing defaults. Success on one private CV is not general semantic completeness, a production quality gate or a CV-tailoring milestone. No merge/release is authorized by this comparison.
+
+## 2026-10-16 — Sol/Luna options and reviewed next-slice proposal
+
+PR #73 is verified merged at `31cea3e` with successful Foundation CI. The owner authorized explicit Sol/Luna choices, implemented on `feat/openai-sol-luna-options`: complete twelve-model structured catalog, bounded frontend capacity, unchanged defaults/retrieval and retained model-bound consent. This is model availability in the application, not account access or universal quality certification.
+
+Proposed next PR, for owner review: **joined evidence-to-wording quality controls**. Align with the latest journey-quality priorities, ADR 0048 and the approved master specification rather than rebuilding existing sections, durable review or standard exports.
+
+1. Define independently reviewed synthetic controls across at least three non-technology occupations and contrasting layouts; track source extraction, employer/project attribution, full-profile matching and initial CV wording separately. Include sufficient alternatives, formal qualifications, coursework versus delivered work, team versus personal responsibility and unsupported scope expansion.
+2. Reuse the existing source-unit, literal-excerpt and saved-wording review contracts. Add meaningful regression controls for demonstrated source/reference/scope defects and make narrowly evidenced corrections; preserve complete confirmed input, original files, exact revisions and one approved generation call. No extra automatic advisory layer or model-default change.
+3. Publish captured/unknown/incorrect-context/unsupported-proposal findings separately from count or quotation coverage. Use explicitly authorized bounded live calls only if needed to establish semantic behavior. Broader employer/project reconciliation, Groq capacity work and independent semantic/structural/visual review of actual DOCX/PDF remain distinct later slices.
+
+This is a proposal, not authorization to implement the full semantic or final-file review architecture.

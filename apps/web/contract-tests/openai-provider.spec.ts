@@ -30,3 +30,19 @@ test("stored OpenAI matching and mixed document history preserve the existing da
  expect(isAiProviderLabel("OpenAI + OpenAI")).toBe(false);
  expect(isAiProviderLabel("Groq + Gemini")).toBe(true);
 });
+
+
+test("the expanded twelve-model catalog remains valid and still rejects unbounded choices",()=>{
+ const selections=[
+  ...["openai/gpt-oss-20b","openai/gpt-oss-120b"].map(model=>({provider:"Groq",model})),
+  ...["gemini-3.8-flash","gemini-3.7-flash","gemini-3.6-flash","gemini-3.5-flash","gemini-3.5-flash-lite","gemini-3.1-flash-lite"].map(model=>({provider:"Gemini",model})),
+  ...["gpt-5.4-mini","gpt-5.4","gpt-6.1-sol","gpt-6-luna"].map(model=>({provider:"OpenAI",model})),
+ ];
+ const options=selections.map((s,i)=>({approval:{token:i.toString(16).padStart(64,"0"),selections:[s]},available:true}));
+ const config={tasks:Object.fromEntries(["JOB_ANALYSIS","DOCUMENT_EXTRACTION","PROFILE_SUMMARY","PERSONAL_MATCH","CV_TAILORING"].map(k=>[k,selection])),documents:approval,documentExcerpt:approval,matching:approval,tailoring:approval,job:approval,options:Object.fromEntries(["documents","documentExcerpt","matching","job","tailoring"].map(k=>[k,options]))};
+ expect(options).toHaveLength(12);
+ expect(isAiConfiguration(config)).toBe(true);
+ for(const area of ["documents","documentExcerpt","matching","job","tailoring"]) {
+  expect(isAiConfiguration({...config,options:{...config.options,[area]:Array(17).fill(options[0])}})).toBe(false);
+ }
+});

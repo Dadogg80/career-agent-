@@ -2,7 +2,7 @@ package com.careeragent.ai.application
 
 /** Adapter-supported model choices for structured JSON generation. Retrieval tools have a separate catalog. */
 object AiModelCapabilities {
-    val openAiStructuredModels = listOf("gpt-5.4-mini", "gpt-5.4")
+    val openAiStructuredModels = listOf("gpt-5.4-mini", "gpt-5.4", "gpt-6.1-sol", "gpt-6-luna")
     val groqStructuredModels = listOf(
         "openai/gpt-oss-20b",
         "openai/gpt-oss-120b",
