@@ -700,3 +700,9 @@ New wording runs use contract v9. Each referenced confirmed contribution needs i
 ## Statement-backed optional wording opinions — 2026-10-16
 
 A newly requested optional source opinion uses contract v3. To display AI-found support, the opinion must cite a statement passage from every contribution cited by that opinion. Context-only or missing statement references show an unassessed result, preserving valid sibling findings. Users can still inspect context when an employer/role association is unclear. This remains a separately approved, read-only opinion; stored proposals, wording decisions and profile facts are unchanged. Literal statement references do not prove semantic support or final-file readiness.
+
+## Distinct match quotations and protected skills headings — 2026-10-16
+
+A new match retains different valid quotations from the same confirmed contribution, so users can inspect employer context, the activity and a limiting qualifier together. Only identical claim/quotation pairs collapse; the five-excerpt bound and criterion-based scoring remain. Existing saved matches are not rewritten.
+
+New CV wording recognizes the literal Bokmål heading `Ferdigheter` as a skills section, including supported case/Markdown/colon formatting. Its heading is a separate protected source unit; the actual skills text remains editable. Stored source-unit ranges and historical wording decisions are unchanged. An explicit new generation uses the corrected section boundaries.

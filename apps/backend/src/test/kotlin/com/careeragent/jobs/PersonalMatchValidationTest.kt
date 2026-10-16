@@ -45,6 +45,20 @@ class PersonalMatchValidationTest {
   assertThatThrownBy { service.parse("{broken",1,setOf(0),listOf(claim),"en") }.isInstanceOf(AiFailure::class.java)
   assertThatThrownBy { service.parse("{\"assessments\":[],\"ownerId\":\"spoof\"}",1,setOf(0),listOf(claim),"en") }.isInstanceOf(AiFailure::class.java)
  }
+ @Test fun `distinct contribution context and caveat quotations from the same claim remain inspectable`() {
+  val scoped=claim.copy(statement="Performed visual checks. Worked under supervision.",context="Fictional workshop")
+  val quotes=listOf(scoped.context,"Performed visual checks.","Worked under supervision.","Worked under supervision.")
+  val item=mapOf("requirementIndex" to 0,"classification" to "PARTIAL","reason" to "Inspection is documented; independent responsibility is unclear.",
+   "question" to "","evidence" to quotes.map {mapOf("claimId" to scoped.id,"quote" to it)},
+   "evidenceRelation" to "DIRECT","requirementNature" to "PRACTICAL")
+  val parsed=service.parse(mapper.writeValueAsString(mapOf("assessments" to listOf(item))),1,setOf(0),listOf(scoped),"en")
+  assertThat(parsed.first.single().evidence.map {it.quote}).containsExactly(scoped.context,"Performed visual checks.","Worked under supervision.")
+  assertThat(parsed.first.single().classification).isEqualTo(MatchKind.PARTIAL)
+  assertThat(parsed.second).isZero()
+  val json=com.fasterxml.jackson.module.kotlin.jacksonObjectMapper()
+  assertThat(json.readValue(json.writeValueAsString(parsed.first.single()),RequirementMatch::class.java))
+   .isEqualTo(parsed.first.single())
+ }
  @Test fun `packing retains all 500 skill identities and distinct literal contexts`() {
   val selected=(0 until 500).map { MatchClaim(UUID.randomUUID(),2,"Skill $it",claim.statement,if(it<250)claim.context else "Other company") }
   val packed=mapper.readTree(service.compactInput("Fictional ad",emptyList(),selected))

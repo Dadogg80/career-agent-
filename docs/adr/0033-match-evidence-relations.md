@@ -29,3 +29,7 @@ Next: independently measure cross-profession criterion/relation quality and impl
 ## Owner-requested clarification review extension
 
 Use the existing owned claim/review API for explicit answer rejection. Show associated confirmed, draft and rejected answers with accurate status; rejected statements are excluded from matching and remain visible for deliberate correction/reconfirmation. A separate rejection dialog, revision checks, failure retention and saved-identity reuse protect against accidental removal and duplicates. Success feedback is in the containing match panel so cache refresh does not erase the outcome. Personal/related-scope controls are writing aids; only entered wording becomes confirmed evidence. No new negative-competency taxonomy or automatic positive relevance is introduced.
+
+## Distinct quotation preservation — 2026-10-16
+
+New match parsing deduplicates identical `{claimId, quote}` pairs rather than claim IDs alone. The existing maximum of five supplied excerpts and all owned-ID/literal-source checks remain. Distinct employer, contribution and qualifier excerpts from one claim must stay inspectable; only exact duplicate pairs collapse. Score/relation rules are per criterion and unchanged. Downstream wording still receives every confirmed source, with unique criterion-to-claim associations. Old saved matches remain readable without reanalysis or migration. This preserves evidence returned by the provider; it does not establish semantic entailment or make omitted quotations appear automatically.

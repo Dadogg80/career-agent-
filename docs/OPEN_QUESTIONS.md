@@ -43,7 +43,7 @@ Gemini 3.5 Flash is verified on synthetic extraction/profile data only. Gemini 3
 
 ## 2026-10-16 — Remaining measured analysis-quality questions
 
-- How should explicit sufficient alternatives be validated semantically without promoting unsupported matches? Instructions alone still sometimes penalize an interest alternative for undocumented professional delivery.
+- How should explicit sufficient alternatives be validated semantically without promoting unsupported matches? Instructions alone still sometimes penalize an interest alternative for undocumented professional delivery. Joined fictional controls also show wording uncertainty about an offered practice alternative despite a STRONG match. Independently measure the actual scope and avoid inventing unstated duration/qualification thresholds or treating the earlier judgment as a fact.
 - How can structured extraction retain all distinct role contributions reliably across repeated model calls? A private control improved named-technology recall while losing responsibilities; those measures must remain separate.
 - Groq's short generation can work while structured advertisement/document extraction returns provider schema-validation failures. Diagnose the actual failure envelope/output budget before any adapter/default change; do not add silent fallback or automatic retries.
 - Gemini availability failures must be measured separately from quality. A successful answer on one source is not a reliability benchmark or a general best-model result.
