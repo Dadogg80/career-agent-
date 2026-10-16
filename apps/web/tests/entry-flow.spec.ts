@@ -17,6 +17,27 @@ test("landing explains the workflow and leads to guest analysis without private 
  expect(privateCalls).toBe(0); expect(errors).toEqual([]);
 });
 
+test("shared buttons expose a visible focus indicator to keyboard users", async ({ page }) => {
+ await page.goto("/");
+ const target = page.getByRole("link", { name: "Prøv stillingsanalyse", exact: true });
+ for (let step = 0; step < 20 && !(await target.evaluate(element => element === document.activeElement)); step++) {
+  await page.keyboard.press("Tab");
+ }
+ await expect(target).toBeFocused();
+ const focusStyle = await target.evaluate(element => {
+  const style = getComputedStyle(element);
+  return {
+   isFocusVisible: element.matches(":focus-visible"),
+   outlineStyle: style.outlineStyle,
+   outlineWidth: style.outlineWidth,
+   boxShadow: style.boxShadow,
+  };
+ });
+ expect(focusStyle.isFocusVisible).toBe(true);
+ const hasVisibleOutline = focusStyle.outlineStyle !== "none" && parseFloat(focusStyle.outlineWidth) >= 2;
+ expect(hasVisibleOutline || focusStyle.boxShadow !== "none").toBe(true);
+});
+
 test("mobile landing language persists through dedicated sign-in and missing setup is actionable", async ({ page }) => {
  await page.setViewportSize({ width: 390, height: 844 });
  await page.goto("/");
@@ -76,6 +97,8 @@ test("mobile navigation is keyboard accessible and sign-out clears the workspace
  await page.route("**/api/auth/logout", r => { expect(r.request().headers()["x-csrf-token"]).toBe(session.csrfToken); logoutCalls++; authenticated = false; return r.fulfill({ status: 204 }); });
  await page.goto("/dashboard");
  await expect(page.getByRole("heading", { name: "Start med din kandidatprofil" })).toBeVisible();
+ expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+ await page.screenshot({ path: "/tmp/career-dashboard-mobile.png", fullPage: true });
  await page.getByRole("button", { name: "Åpne meny" }).click();
  await expect(page.getByRole("dialog")).toBeVisible();
  await page.keyboard.press("Escape"); await expect(page.getByRole("dialog")).toHaveCount(0);
