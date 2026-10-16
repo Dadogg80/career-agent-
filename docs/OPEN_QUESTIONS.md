@@ -40,3 +40,12 @@ The [relational proposal](CAREER_KNOWLEDGE_MODEL_PROPOSAL.md) is partially appli
 ## Gemini follow-up
 
 Gemini 3.5 Flash is verified on synthetic extraction/profile data only. Gemini 3.8 Flash is exposed as an explicit job-analysis choice and a separate FINN URL Context retrieval choice; the current backend returns these plans through the frontend proxy. This delivery validates request routing and strict retrieval/citation parsing with synthetic fixtures only, not a live 3.8 generation or real FINN response. An earlier 3.8 generation attempt returned 503, so account-specific generation readiness, quotas, real advertisement excerpt quality and URL Context completeness remain open alongside real-document semantic coverage, normalized aliases/context conflict review, native PDF and production data processing/retention. No automatic model/key rotation is planned.
+
+## 2026-10-16 — Remaining measured analysis-quality questions
+
+- How should explicit sufficient alternatives be validated semantically without promoting unsupported matches? Instructions alone still sometimes penalize an interest alternative for undocumented professional delivery.
+- How can structured extraction retain all distinct role contributions reliably across repeated model calls? A private control improved named-technology recall while losing responsibilities; those measures must remain separate.
+- Groq's short generation can work while structured advertisement/document extraction returns provider schema-validation failures. Diagnose the actual failure envelope/output budget before any adapter/default change; do not add silent fallback or automatic retries.
+- Gemini availability failures must be measured separately from quality. A successful answer on one source is not a reliability benchmark or a general best-model result.
+
+These are observed follow-ups, not approval for new architecture, additional providers, paid upgrades or factual-status changes.

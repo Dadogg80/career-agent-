@@ -10,7 +10,7 @@ object RequirementImportance {
     private val otherHeading = Regex("^(?:kvalifikasjoner|qualifications|requirements|egenskaper vi legger ekstra vekt på|personlige egenskaper|arbeidsoppgaver|responsibilities|vi tilbyr|what we offer|benefits|om oss|about us|hvem ser vi etter|kontakt|contact)[:? ]*$", RegexOption.IGNORE_CASE)
     private fun normalize(text: String) = text.replace(Regex("(?U)\\s+"), " ").trim()
 
-    fun classify(source: String, quote: String): RequirementKind {
+    fun classify(source: String, quote: String, label: String? = null): RequirementKind {
         val wanted = normalize(quote)
         val contexts = mutableListOf<RequirementKind>()
         var heading: RequirementKind? = null
@@ -25,11 +25,28 @@ object RequirementImportance {
             }
             // Use the containing sentence for short quotes, so qualifiers are not lost.
             for (sentence in line.split(Regex("(?<=[.!?])\\s+"))) {
-                if (normalize(sentence).contains(wanted)) contexts += wording(sentence, heading)
+                if (normalize(sentence).contains(wanted)) contexts += scopedPreference(sentence, wanted, label) ?: wording(sentence, heading)
             }
         }
-        if (contexts.isEmpty()) return wording(quote, null)
+        if (contexts.isEmpty()) {
+            // Multi-line contextual quotes still contain independently scoped preferred examples.
+            val scoped = quote.lines().mapNotNull { scopedPreference(it, wanted, label) }.distinct()
+            return scoped.singleOrNull() ?: wording(quote, null)
+        }
         return contexts.distinct().singleOrNull() ?: RequirementKind.UNCLEAR
+    }
+
+    // A preferred example after a comma must not weaken the broader capability before it.
+    private fun scopedPreference(sentence: String, quote: String, label: String?): RequirementKind? {
+        val match = Regex("(?iu),\\s*(?:gjerne|helst|preferably)\\s+([^,;.!?]+)").find(sentence) ?: return null
+        val preferred = normalize(match.groupValues[1])
+        val prefix = normalize(sentence.substring(0, match.range.first)).lowercase()
+        val target = normalize(label ?: quote).lowercase()
+        if (preferred.isBlank() || !target.contains(preferred.lowercase())) return null
+        // A combined criterion still contains the general capability and has mixed importance.
+        val explicitlyPreferredLabel = Regex("^(?:gjerne|helst|preferably)\\b").containsMatchIn(target)
+        if (prefix.isNotBlank() && target.contains(prefix) && !explicitlyPreferredLabel) return null
+        return RequirementKind.PREFERRED
     }
 
     private fun wording(text: String, heading: RequirementKind?): RequirementKind {

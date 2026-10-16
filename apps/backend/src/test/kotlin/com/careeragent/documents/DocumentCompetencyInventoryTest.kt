@@ -8,6 +8,32 @@ import org.junit.jupiter.api.Test
 import java.util.UUID
 
 class DocumentCompetencyInventoryTest {
+    @Test fun `an embedded skills group preserves basic level and explicit interest without inventing professional experience`() {
+        val source = "Kjernekompetanse\nC/C++ & embedded\nGrunnleggende C/C++-kjennskap, Raspberry Pi,\ninteresse for embedded-systemer,\nArbeidserfaring\n2020 – 2024 Example Clinic – Developer"
+        val found = DocumentCompetencyInventory.recover(AnalysisBatch(id,source,source.length),source,"en",emptyList())
+        assertThat(found.map { it.skill }).containsExactly("Grunnleggende C/C++-kjennskap","Raspberry Pi","interesse for embedded-systemer")
+        assertThat(found).allMatch { source.contains(it.quote) && it.statement.startsWith("The document lists ") && it.recovered && !it.drafted }
+        assertThat(found.map { it.statement }.joinToString()).doesNotContain("professional experience", "production")
+    }
+
+    @Test fun `wrapped comma lists retain a final multiword skill without treating following prose as a list`() {
+        val source = "Kjernekompetanse\nIntegrasjoner & web\nAPI-integrasjoner, webhooks,\nasynkrone prosesser\nJeg arbeidet med kundeløsninger.\n" +
+            "Arkitektur & modernisering\nSystemdesign, teknologimigrering og\nteknisk retning\nEducation\nManagement studies"
+        val found = DocumentCompetencyInventory.recover(AnalysisBatch(id,source,source.length),source,"en",emptyList())
+        assertThat(found.map { it.skill }).containsExactly("API-integrasjoner","webhooks","asynkrone prosesser","Systemdesign","teknologimigrering","teknisk retning")
+        assertThat(found).allMatch { source.contains(it.quote) && it.context == "Context not stated" }
+    }
+
+    @Test fun `skills grid subsection headings preserve listed items without borrowing employment context`() {
+        val source = "2020 – 2022 Fictional Clinic – Developer\nBuilt systems.\nKjernekompetanse\n" +
+            "Backend & systemutvikling\nKotlin, Python, REST\nDatabaser\nMariaDB, SQLite\n" +
+            "Integrasjoner & web\nReact, webhooks\nSky & leveranse\nDocker, testing\n" +
+            "Arbeidserfaring\n2022 – 2024 Other Clinic – Developer\nWorked with unrelated systems."
+        val found = DocumentCompetencyInventory.recover(AnalysisBatch(id,source,source.length),source,"en",emptyList())
+        assertThat(found.map { it.skill }).containsExactly("Kotlin","Python","REST","MariaDB","SQLite","React","webhooks","Docker","testing")
+        assertThat(found).allMatch { it.context == "Context not stated" && source.contains(it.quote) }
+    }
+
     @Test fun `colon headings dash separated technologies and single named items are recovered without company guessing`() {
         val source="## Example AS\nBuilt applications.\nKjernekompetanse\nBackend:\nNode.js - TypeScript - REST API - C++\nFrontend:\nReact - Next.js - HTML5 - CSS\nData:\nPostgreSQL - MongoDB\nCloud & DevOps:\nDocker\nEducation\nA narrative sentence is not a technology."
         val id=UUID.randomUUID()

@@ -57,4 +57,39 @@ Arbeid med pasienter"""
         assertThat(result.requirements).containsExactly(ExtractedRequirement("Mobile experience",RequirementKind.UNCLEAR,source))
         assertThat(result.omittedItems).isEqualTo(1)
     }
+    @Test fun `a preferred example retains its own importance without weakening the broader capability`() {
+        val source = "Relasjonsdatabaser, gjerne MariaDB"
+        assertThat(RequirementImportance.classify(source,source,"Relasjonsdatabaser")).isEqualTo(RequirementKind.UNCLEAR)
+        assertThat(RequirementImportance.classify(source,source,"Erfaring med MariaDB")).isEqualTo(RequirementKind.PREFERRED)
+        assertThat(RequirementImportance.classify(source,source,"Relasjonsdatabaser, gjerne MariaDB")).isEqualTo(RequirementKind.UNCLEAR)
+        assertThat(RequirementImportance.classify("Relasjonsdatabaser, gjerne MariaDB\nDu må ha MariaDB.","MariaDB","MariaDB")).isEqualTo(RequirementKind.UNCLEAR)
+    }
+
+    @Test fun `split simple alternatives become one literal criterion without adding mandatory branches`() {
+        val source = "A fictional employer seeks an applicant.\nFørerkort B eller vilje til å ta førerkort"
+        val quote = source.substringAfter('\n')
+        val mapper = jacksonObjectMapper()
+        val output = mapper.writeValueAsString(mapOf("facts" to emptyList<Any>(),"requirements" to listOf("Førerkort B","Vilje til å ta førerkort").map {
+            mapOf("label" to it,"kind" to "REQUIRED","quote" to quote)
+        }))
+        val extractor = RequirementExtractor(object: AiModel {
+            override fun generateJson(system:String,user:String,schema:Map<String,Any>) = output
+        },mapper)
+        val result = extractor.extract(source,"nb")
+        assertThat(result.requirements).containsExactly(ExtractedRequirement(quote,RequirementKind.UNCLEAR,quote))
+        assertThat(result.omittedItems).isEqualTo(1)
+        val compound = ExtractedRequirement("SQL",RequirementKind.UNCLEAR,"Java or Kotlin and SQL")
+        assertThat(RequirementSourceGuard.preserveSimpleAlternative(compound)).isEqualTo(compound)
+    }
+    @Test fun `preferred examples survive explanatory labels and multiline source context across professions`() {
+        val source = "Du har erfaring med flere av følgende områder:\nKundeservice\nSpråk, gjerne fransk"
+        assertThat(RequirementImportance.classify(source, source, "Gjerne fransk som tillegg til språkkompetanse"))
+            .isEqualTo(RequirementKind.PREFERRED)
+        assertThat(RequirementImportance.classify(source, source, "Kundeservice")).isEqualTo(RequirementKind.UNCLEAR)
+        assertThat(RequirementImportance.classify("Transport, gjerne pasienttransport", "Transport, gjerne pasienttransport",
+            "Gjerne pasienttransport som spesialisering innen transport")).isEqualTo(RequirementKind.PREFERRED)
+        assertThat(RequirementImportance.classify("Transport, gjerne pasienttransport", "Transport, gjerne pasienttransport",
+            "Transport og pasienttransport")).isEqualTo(RequirementKind.UNCLEAR)
+    }
+
 }

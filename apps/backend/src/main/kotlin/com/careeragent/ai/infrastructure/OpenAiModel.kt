@@ -36,14 +36,37 @@ class OpenAiModel(
             "service_tier" to "default",
             "instructions" to system,
             "input" to listOf(mapOf("role" to "user", "content" to listOf(mapOf("type" to "input_text", "text" to user)))),
-            "reasoning" to mapOf("effort" to "low"),
-            "max_output_tokens" to boundedOutputTokens(when (task) {
-                AiTask.PROFILE_SUMMARY -> 4096
-                AiTask.CV_TAILORING -> 16384
-                else -> 8192
-            }, maxOutputTokens),
+            "reasoning" to mapOf("effort" to reasoningEffort()),
+            "max_output_tokens" to boundedOutputTokens(outputLimit(task), maxOutputTokens),
             "text" to mapOf("format" to mapOf("type" to "json_schema", "name" to "career_analysis", "strict" to true, "schema" to schema)),
         )
+    }
+
+    internal fun requestTimeout(): Duration = Duration.ofSeconds(
+        configuredInt("OPENAI_REQUEST_TIMEOUT_SECONDS", 300, 30..300).toLong())
+
+    private fun reasoningEffort(): String = environment.getProperty("OPENAI_REASONING_EFFORT")
+        ?.trim()?.takeIf { it.isNotEmpty() }?.also {
+            if (it !in setOf("medium", "high")) throw AiFailure("AI_NOT_CONFIGURED", 503)
+        } ?: "medium"
+
+    private fun outputLimit(task: AiTask): Int {
+        val suffix = when (task) {
+            AiTask.JOB_ANALYSIS -> "JOB"
+            AiTask.DOCUMENT_EXTRACTION -> "DOCUMENT"
+            AiTask.PROFILE_SUMMARY -> "PROFILE"
+            AiTask.PERSONAL_MATCH -> "MATCH"
+            AiTask.CV_TAILORING -> "TAILORING"
+            else -> throw AiFailure("AI_NOT_CONFIGURED", 503)
+        }
+        val default = if (task == AiTask.PROFILE_SUMMARY) 16384 else 32768
+        val global = configuredInt("OPENAI_MAX_OUTPUT_TOKENS", default, 1..65536)
+        return configuredInt("OPENAI_${suffix}_MAX_OUTPUT_TOKENS", global, 1..65536)
+    }
+
+    private fun configuredInt(name: String, default: Int, range: IntRange): Int {
+        val raw = environment.getProperty(name)?.trim()?.takeIf { it.isNotEmpty() } ?: return default
+        return raw.toIntOrNull()?.takeIf { it in range } ?: throw AiFailure("AI_NOT_CONFIGURED", 503)
     }
 
     internal fun providerFailure(status: Int, body: String, retryAfter: String?, model: String): AiFailure? {
@@ -101,7 +124,7 @@ class OpenAiModel(
         val wait = cooldowns.forModel("OpenAI", selection.model).remainingSeconds()
         if (wait > 0) throw AiFailure("AI_RATE_LIMITED", 429, wait)
         val request = HttpRequest.newBuilder(URI.create("https://api.openai.com/v1/responses"))
-            .timeout(Duration.ofSeconds(75))
+            .timeout(requestTimeout())
             .header("Authorization", "Bearer $apiKey")
             .header("Content-Type", "application/json")
             .header("User-Agent", "career-agent/0.1")

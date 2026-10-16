@@ -364,3 +364,11 @@ Next: address unsupported assertion scope before adding more advisory layers; im
 ## 2026-10-15 — Optional OpenAI baseline integration
 
 Added an explicit Responses API generation adapter, provider-bound approvals, frontend result compatibility and non-content usage/cost estimates under ADR 0049. Existing Groq/Gemini defaults, FINN retrieval, prompts and source validators are unchanged. Offline verification is complete; the approved four-analysis comparison remains blocked by Responses `invalid_api_key`. Next: correct the environment binding, run three Mini analyses and one GPT-5.4 reference within the approved USD 0.50 budget, then assess concrete criterion coverage and separate model/system failures. The original six pipeline improvements remain deferred.
+
+## 2026-10-16 — Private multi-provider analysis comparison and focused corrections
+
+The local OpenAI authentication blocker is no longer reproduced: actual structured Mini generation succeeds. The owner approved a new private advertisement/document/match comparison plus demonstrated improvements, initially capped at USD 2 for OpenAI. This supersedes the earlier blocked-comparison status for the current local environment only; it does not establish a repair of other secret bindings.
+
+Implemented source-only recovery for explicit duties, simple alternative preservation, scoped preferred examples, additional skills-grid headings/wrapped final items and inline language rows. Document instructions cover each role's contributions, including page continuations; model defaults, factual confirmation, private approvals, original files and existing saved snapshots remain unchanged.
+
+Remaining priorities: independently test sufficient-alternative judgments and literal evidence selection; diagnose Groq structured-generation failures and Gemini availability separately; repeat held-out cross-profession controls before changing defaults. Success on one private CV is not general semantic completeness, a production quality gate or a CV-tailoring milestone. No merge/release is authorized by this comparison.

@@ -19,3 +19,15 @@ Deleting a profile claim removes its claim history but can leave earlier copies 
 The displayed percentage is deterministic documented requirement coverage: required weight 2, preferred/unclear weight 1; supported strong relevance earns full weight, partial half, unknown no documented coverage. The UI explains the calculation and unresolved criteria. This is not hiring probability, and missing evidence is not a confirmed skill gap. See ADR 0027.
 
 The saved-job card reads this persisted assessment and displays the same explained coverage percentage without calling AI. Missing assessments show a ready state; unavailable reads show a neutral unavailable state. Stale results are explicitly labeled for reassessment. Legacy selected-evidence results remain readable with their original attribution and staleness behavior.
+
+## Explicit alternatives and quality checks — 2026-10-16
+
+New advertisement extraction keeps short, simple source alternatives together instead of counting the branches as separate demands. Complex AND/OR clauses remain for semantic review. A specifically preferred example remains distinct from the broader capability when its label/source scope supports that distinction.
+
+Matching instructions evaluate the actual alternatives: explicitly accepted interest does not acquire an extra professional-delivery condition. This is an instruction to the model, not a guarantee that every judgment is correct. A missing document statement is still unknown rather than a proven gap, and a high coverage percentage does not validate the underlying extraction. Existing saved snapshots remain readable; the correction applies to newly requested analyses without changing consent or factual confirmation.
+
+Recognized explicit duty sections also receive bounded source-only recovery when the model omits their rows. Existing source-backed rows are retained without duplicates; the 128-criterion bound and omission reporting still apply. Arbitrary headings, ambiguous wrapping and semantic completeness are not guaranteed. This recovery runs locally after a structurally valid extraction and adds no provider request.
+
+### Criterion scope within contextual quotes
+
+The selected label locates one explicit source-backed criterion; a broader source quote may retain neighboring criteria as context. Matching must preserve the selected criterion's material qualifiers without importing separately assessed neighbors. A genuinely combined criterion still retains its AND conditions and explicitly sufficient OR alternatives. Unreconciled source scope requires clarification. This is a profession-independent interpretation rule, not a fixture-specific skill decision.

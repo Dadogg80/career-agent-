@@ -682,3 +682,9 @@ New CV generations keep complete confirmed candidate statements/context separate
 ## Optional OpenAI selection — 2026-10-15
 
 For structured document/profile analysis, job analysis, matching or CV text tasks, the user may explicitly select a configured OpenAI model through the existing task selector. Existing defaults stay unchanged. Private-data approval remains bound to the selected provider/model; no analysis starts from changing a model alone. Completed results retain provider identity, and previous results survive failures. Source retrieval remains a separate Groq/Gemini choice; this addition does not improve source completeness or change the approved CV workflow.
+
+### Analysis quality corrections — 2026-10-16
+
+Newly requested analyses preserve simple explicit qualification alternatives and scoped preferred examples. Document review retains literal skills-grid entries and the first language in an inline language row; work-entry instructions cover introductions and continuing bullets across pages. Existing saved results require an explicit new analysis to use changed extraction behavior. Provider/model approval, original files, review decisions and profile confirmation remain unchanged. No CV-tailoring or submission step is added.
+
+OpenAI analysis now waits up to five minutes per generation call without automatic retries. Multi-step document review retains progress between calls. Output budgets are configurable on the backend and include reasoning; model/provider choices and per-run private approval remain unchanged.

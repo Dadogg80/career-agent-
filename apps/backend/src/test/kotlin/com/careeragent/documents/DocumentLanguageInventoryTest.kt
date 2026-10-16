@@ -13,6 +13,16 @@ class DocumentLanguageInventoryTest {
     private val id = UUID.randomUUID()
     private fun recover(source: String) = DocumentLanguageInventory.recover(AnalysisBatch(id, source, source.length), source, "nb", emptyList())
 
+    @Test fun `table section and first language sharing a row retain the complete literal evidence`() {
+        val source = "Språk Norsk – morsmål\nItaliensk – morsmål\nEngelsk – flytende, muntlig og skriftlig\nInteresser Fotturer"
+        val result = recover(source)
+        assertThat(result.map { it.skill }).containsExactly("Norsk","Italiensk","Engelsk")
+        assertThat(result.first().quote).isEqualTo("Språk Norsk – morsmål")
+        assertThat(result).allMatch { source.contains(it.quote) && it.contextQuote == null }
+        assertThat(recover("Språk jeg ønsker å lære\nSpansk")).isEmpty()
+        assertThat(recover("Languages Java, Kotlin")).isEmpty()
+    }
+
     @Test fun `explicit CV language rows retain mother tongue and written oral wording without an inferred level`() {
         val source = "Språk\n\nNorsk  – morsmål \nItaliensk – morsmål\nEngelsk – flytende, muntlig og skriftlig\nInteresser\nCycling"
         val found = recover(source)

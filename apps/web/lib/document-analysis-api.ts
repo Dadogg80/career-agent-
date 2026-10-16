@@ -25,7 +25,7 @@ export async function documentAnalysisProxy(request: Request, id?: string) {
     } catch { return privateResponse({ code:"DOCUMENT_AI_INPUT_INVALID" }, undefined, 400); }
   }
   try {
-    const upstream = await fetch(`${privateBase()}/api/profile/me/documents${id ? `/${id}` : ""}/analysis`, { method:request.method, headers, body, cache:"no-store", redirect:"manual", signal:AbortSignal.timeout(30000) });
+    const upstream = await fetch(`${privateBase()}/api/profile/me/documents${id ? `/${id}` : ""}/analysis`, { method:request.method, headers, body, cache:"no-store", redirect:"manual", signal:AbortSignal.timeout(request.method === "POST" ? 305000 : 30000) });
     let value: unknown = await upstream.json();
     if (!upstream.ok) {
       const reason = safeAnalysisReason(value && typeof value === "object" && "reason" in value ? value.reason : undefined);

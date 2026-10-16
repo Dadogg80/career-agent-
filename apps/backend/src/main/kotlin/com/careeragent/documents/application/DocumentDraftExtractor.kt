@@ -158,7 +158,14 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
         fun prompt(locale: String)="""
             Extract a candidate's explicit experience from numbered source passages. This is one automatically selected
             portion of approved documents; read every passage. Return JSON competencies, profile and history.
-            Competencies: up to 20 contributions. Each has ALL explicitly named skills/technologies in that evidence
+            Competencies: up to 20 contributions. Inspect EVERY employment/project introduction and EVERY following
+            bullet before choosing global summary/list evidence. A page break or blank line does not end a role;
+            its bullets continue until the next employer/project or global section heading. Do not stop after skills lists.
+            Responsibilities without technology names are still competencies: use literal action/responsibility labels
+            such as "Samarbeidet", "Designet", "Moderniserte" or their actual source-language equivalents.
+            Preserve distinct customer collaboration, needs translation, technical decisions, quality and delivery
+            contributions when explicit. Do not spend all contribution slots repeating skills from the opening profile.
+            Each contribution has ALL explicitly named skills/technologies in that evidence
             (up to 12 literal skills per contribution), a short useful description of what the candidate actually did,
             category TECHNOLOGY/DELIVERY/LEADERSHIP/DOMAIN/LEARNING/OTHER, evidenceIds, contextId and context.
             If a list says Next.js, TypeScript, Node.js, PostgreSQL, Docker, include EACH named technology in skills.
@@ -177,6 +184,11 @@ internal class DocumentDraftExtractor(private val model: AiModel, private val ma
             evidence span, not every passage about the subject. The server rejects more than 6 IDs or oversized spans.
             Profile: up to 6 concise, readable text entries with kind PROFILE/CORE_SKILLS/KEY_INFORMATION/EXPERIENCE/
             EDUCATION/INTERESTS and evidenceIds. Only explicit interests; no guesses about motivation or personality.
+            History: for EMPLOYMENT use the literal role/job title as title and the literal employer as organization.
+            For EDUCATION/CERTIFICATION use the literal program/course as title and the named institution as organization.
+            Organization is REQUIRED and nonempty for every non-PROJECT entry. Do not put the employer/institution
+            only in title and leave organization empty. A repeated carried header supplies context, not a second role
+            without new work evidence. Keep all supported named institutions and preserve year-only date precision.
             History: identify employment, projects, education and courses/certifications with kind EMPLOYMENT/PROJECT/
             EDUCATION/CERTIFICATION. For a project catalog, create one PROJECT history entry for EACH explicitly
             named project with described candidate work, independently of its competency contributions. A skills

@@ -36,7 +36,7 @@ class OpenAiModelTest {
             assertThat(body.at("/text/format/strict").asBoolean()).isTrue()
             assertThat(body.path("store").asBoolean()).isFalse()
             assertThat(body.path("service_tier").asText()).isEqualTo("default")
-            assertThat(body.at("/reasoning/effort").asText()).isEqualTo("low")
+            assertThat(body.at("/reasoning/effort").asText()).isEqualTo("medium")
             assertThat(body.has("tools") || body.has("previous_response_id") || body.has("temperature")).isFalse()
         }
         assertThatThrownBy { adapter().requestBody("", "", schema, AiTask.JOB_SOURCE_RETRIEVAL, selection) }.isInstanceOf(AiFailure::class.java)
@@ -44,12 +44,40 @@ class OpenAiModelTest {
 
     @Test fun `OpenAI respects output ceilings and rejects unsupported recipients`() {
         assertThat(adapter().requestBody("", "", emptyMap(), AiTask.CV_TAILORING, selection, 2048)["max_output_tokens"]).isEqualTo(2048)
-        for (limit in listOf(0, -1, 8193)) assertThatThrownBy {
+        for (limit in listOf(0, -1, 32769)) assertThatThrownBy {
             adapter().requestBody("", "", emptyMap(), AiTask.JOB_ANALYSIS, selection, limit)
         }.isInstanceOf(AiFailure::class.java)
         for (invalid in listOf(AiSelection("Gemini", selection.model), AiSelection("OpenAI", "unlisted"))) assertThatThrownBy {
             adapter().requestBody("", "", emptyMap(), AiTask.JOB_ANALYSIS, invalid)
         }.isInstanceOf(AiFailure::class.java)
+    }
+
+    @Test fun `task budgets are configurable and smaller explicit bounds remain authoritative`() {
+        for (task in AiTask.entries.filter { it != AiTask.JOB_SOURCE_RETRIEVAL }) {
+            assertThat(adapter().requestBody("", "", emptyMap(), task, selection)["max_output_tokens"])
+                .isEqualTo(if (task == AiTask.PROFILE_SUMMARY) 16384 else 32768)
+        }
+        val env = MockEnvironment().withProperty("OPENAI_MAX_OUTPUT_TOKENS", "40000")
+            .withProperty("OPENAI_DOCUMENT_MAX_OUTPUT_TOKENS", "50000").withProperty("OPENAI_REASONING_EFFORT", "high")
+            .withProperty("OPENAI_REQUEST_TIMEOUT_SECONDS", "240")
+        val configured = adapter(env)
+        assertThat(configured.requestBody("", "", emptyMap(), AiTask.DOCUMENT_EXTRACTION, selection)["max_output_tokens"]).isEqualTo(50000)
+        assertThat(configured.requestBody("", "", emptyMap(), AiTask.PERSONAL_MATCH, selection)["max_output_tokens"]).isEqualTo(40000)
+        assertThat(configured.requestBody("", "", emptyMap(), AiTask.DOCUMENT_EXTRACTION, selection, 2048)["max_output_tokens"]).isEqualTo(2048)
+        assertThat(configured.requestBody("", "", emptyMap(), AiTask.JOB_ANALYSIS, selection)["reasoning"]).isEqualTo(mapOf("effort" to "high"))
+        assertThat(configured.requestTimeout().seconds).isEqualTo(240)
+    }
+
+    @Test fun `invalid budgets reasoning and timeouts fail before a provider request`() {
+        for ((name, value) in listOf("OPENAI_MAX_OUTPUT_TOKENS" to "65537", "OPENAI_MATCH_MAX_OUTPUT_TOKENS" to "0",
+            "OPENAI_MAX_OUTPUT_TOKENS" to "invalid", "OPENAI_REASONING_EFFORT" to "low")) {
+            assertThatThrownBy { adapter(MockEnvironment().withProperty(name, value))
+                .requestBody("", "", emptyMap(), AiTask.PERSONAL_MATCH, selection) }.isInstanceOf(AiFailure::class.java)
+        }
+        for (value in listOf("29", "301", "invalid")) {
+            assertThatThrownBy { adapter(MockEnvironment().withProperty("OPENAI_REQUEST_TIMEOUT_SECONDS", value)).requestTimeout() }
+                .isInstanceOf(AiFailure::class.java)
+        }
     }
 
     @Test fun `response parser accepts assistant JSON and ignores reasoning output`() {
@@ -119,6 +147,7 @@ class OpenAiModelTest {
         assertThat(routed.generateJson("rules", "data", emptyMap(), AiTask.JOB_ANALYSIS, selection)).isEqualTo("{}")
         val request = ArgumentCaptor.forClass(HttpRequest::class.java)
         verify(client, times(1)).send(request.capture(), any<HttpResponse.BodyHandler<String>>())
+        assertThat(request.value.timeout().orElseThrow().seconds).isEqualTo(300)
         assertThat(request.value.uri().toString()).isEqualTo("https://api.openai.com/v1/responses")
         assertThat(request.value.headers().firstValue("Authorization").orElse("")).isEqualTo("Bearer fictional-key")
         verifyNoInteractions(groq, gemini)

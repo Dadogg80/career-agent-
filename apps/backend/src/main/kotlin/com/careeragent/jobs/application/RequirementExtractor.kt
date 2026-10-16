@@ -30,10 +30,19 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
             """
             Extract every distinct explicit candidate requirement from the entire provided advertisement, and up to 10 useful facts.
             Do not select only the first, strongest or technical requirements. Review the beginning, middle and end.
+            Review role/responsibility sections and qualification sections separately before returning the union.
+            Duties are assessable criteria even when phrased as future work, not as prior-experience demands.
+            Include maintenance, backend/database design, technical decisions, process improvement, modernization
+            and customer collaboration WHEN explicitly stated; do not omit duties because skills overlap them.
+            Preserve each distinct stated scope without inventing a requirement from company descriptions.
             Include stated responsibilities, expertise, education, licenses/authorizations, experience, methods/tools,
             safety/compliance, leadership, communication, collaboration, language and working-pattern expectations
             across professions. Split independently assessable qualifications even when they share a source sentence.
             Preserve qualifiers and alternatives: "A or equivalent B" is one criterion, never two mandatory criteria.
+            An experience OR interest alternative must remain ONE criterion with BOTH branches in its label and quote.
+            A list introduced by "several of the following" does not require every listed area.
+            Separate a general capability from an explicitly preferred specialization; scope the latter quote
+            to its own qualifier, including Norwegian "gjerne", rather than making the whole capability optional.
             Do not turn company descriptions, benefits or a mentioned technology stack into candidate requirements.
             Avoid repeated criteria with identical meaning. Return at most ${JobAnalysisLimits.REQUIREMENTS} items as a defensive payload bound;
             this is not a target count. Prefer short complete source quotes and concise labels to avoid output truncation.
@@ -86,14 +95,14 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
                 val label = item.boundedText("label", 200)
                 val quote = item.boundedText("quote", 600)
                 val modelKind = RequirementKind.entries.find { it.name == item.path("kind").textValue() }
-                val kind = if (quote != null && modelKind != null) RequirementImportance.classify(analysisText, quote) else null
+                val kind = if (quote != null && modelKind != null) RequirementImportance.classify(analysisText, quote, label) else null
                 val sourceIssue = if (label != null && quote != null && source.contains(normalize(quote))) RequirementSourceGuard.omissionReason(analysisText,label,quote) else null
                 when {
                     label == null || quote == null || kind == null -> omit("INVALID_REQUIREMENT_FIELDS")
                     !source.contains(normalize(quote)) -> omit("UNSUPPORTED_REQUIREMENT_QUOTE")
                     sourceIssue != null -> omit(sourceIssue)
-                    requirements.any { RequirementSourceGuard.equivalent(it,ExtractedRequirement(label,kind,quote)) } -> omit("DUPLICATE_REQUIREMENT")
-                    else -> requirements.add(ExtractedRequirement(label, kind, quote))
+                    requirements.any { RequirementSourceGuard.equivalent(it,RequirementSourceGuard.preserveSimpleAlternative(ExtractedRequirement(label,kind,quote))) } -> omit("DUPLICATE_REQUIREMENT")
+                    else -> requirements.add(RequirementSourceGuard.preserveSimpleAlternative(ExtractedRequirement(label, kind, quote)))
                 }
             }
             omit("INSPECTION_LIMIT", (items.size() - JobAnalysisLimits.REQUIREMENTS).coerceAtLeast(0))
@@ -109,6 +118,8 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
                 }
             }
             omit("INSPECTION_LIMIT", (factItems.size() - 128).coerceAtLeast(0))
+            val recoveredRequirements = requirements + SourceDutyRecovery.recover(analysisText, requirements)
+            omit("REQUIREMENT_LIMIT", (recoveredRequirements.size - JobAnalysisLimits.REQUIREMENTS).coerceAtLeast(0))
             val sourcedFacts = SourceContactRecovery.merge(analysisText,locale,facts)
             // Validate first; late contact metadata must not lose capacity to earlier narrative sections.
             val retainedFacts = if (sourcedFacts.size <= 10) sourcedFacts else sourcedFacts.sortedBy { when (it.kind) {
@@ -122,9 +133,9 @@ class RequirementExtractor(private val model: AiModel, private val mapper: Objec
             if (omittedItems > 0) {
                 // Categories/counts only: no advertisement, contact details or provider payload.
                 logger.warn("Job analysis items omitted: count={} categories={}", omittedItems, omissions)
-                if (requirements.isEmpty() && retainedFacts.isEmpty()) throw AiFailure("AI_INVALID_RESULT", 502, reason = "NO_SUPPORTED_ITEMS")
+                if (recoveredRequirements.isEmpty() && retainedFacts.isEmpty()) throw AiFailure("AI_INVALID_RESULT", 502, reason = "NO_SUPPORTED_ITEMS")
             }
-            return RequirementExtraction(requirements, retainedFacts, omittedItems,plan?.tasks?.get(AiTask.JOB_ANALYSIS))
+            return RequirementExtraction(recoveredRequirements.take(JobAnalysisLimits.REQUIREMENTS), retainedFacts, omittedItems,plan?.tasks?.get(AiTask.JOB_ANALYSIS))
         } catch (failure: AiFailure) {
             throw failure
         } catch (_: Exception) {
