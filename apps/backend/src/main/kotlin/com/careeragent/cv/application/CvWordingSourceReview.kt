@@ -41,7 +41,7 @@ class CvWordingSourceReview(private val sessions: CvTailoringSessionRepository, 
         val texts = proposals.associate { p -> p.paragraphIndex to (session.reviews.find { it.paragraphIndex == p.paragraphIndex }?.text ?: p.newText) }
         val evidence = passages(session,proposals)
         val input = mapper.writeValueAsString(mapOf(
-            "contract" to "cv-wording-sources-v2",
+            "contract" to "cv-wording-sources-v3",
             "drafts" to proposals.map { p ->
                 val unit = snapshot.result.sourceUnits?.getOrNull(p.paragraphIndex)
                 val context = unit?.contextIndex?.let { snapshot.result.sourceUnits?.getOrNull(it) }
@@ -143,6 +143,13 @@ class CvWordingSourceReview(private val sessions: CvTailoringSessionRepository, 
                 }.distinct()
                 require(finding !in setOf(Finding.SUPPORTED,Finding.CONFLICT,Finding.SOURCE_UNCERTAIN) || evidence.isNotEmpty())
                 require(finding!=Finding.UNASSESSED || evidence.isEmpty())
+                if(finding==Finding.SUPPORTED) {
+                    val citedIds=proof.map {it.asInt()}.toSet()
+                    val statementClaims=sources.getValue(p.paragraphIndex)
+                        .filter {it.evidenceId in citedIds && it.field=="statement"}.map {it.claimId}.toSet()
+                    // Context cannot replace a cited contribution. Edited drafts may no longer use every linked claim.
+                    require(evidence.isNotEmpty() && evidence.all {it.claimId in statementClaims})
+                }
                 WordingSourceItem(p.paragraphIndex,texts.getValue(p.paragraphIndex),finding.status,reason(finding,phrase.asText(),locale),evidence)
             } catch (_: IllegalArgumentException) {
                 WordingSourceItem(p.paragraphIndex,texts.getValue(p.paragraphIndex),WordingSourceStatus.UNASSESSED,
@@ -151,10 +158,11 @@ class CvWordingSourceReview(private val sessions: CvTailoringSessionRepository, 
         }
     }
     private fun clean(text: String) = text.none { it.isISOControl() && it !in "\n\r\t" }
-    private val prompt = """CONTRACT: cv-wording-sources-v2. TASK: Classify factual support for EACH complete saved CV draft.
+    private val prompt = """CONTRACT: cv-wording-sources-v3. TASK: Classify factual support for EACH complete saved CV draft.
         PURPOSE: A separate source-scope opinion before human wording approval, never final CV approval. Do not rewrite or optimize wording for a job. No advertisement requirements, original CV wording, generator reasons or match judgments are supplied as proof.
         ALLOWED FACTS: Only that draft's confirmedEvidence passages support factual assertions. entryContext identifies employer/client/role/period scope, not additional factual confirmation. An employer name or topic alone cannot prove actions, skills, responsibility, duration or outcomes. Do not transfer facts across drafts or employers. Missing support is uncertainty, not proof that the candidate lacks competence.
         SOURCE REFERENCES: Every confirmedEvidence passage has an application-owned evidenceId, claimId, revision, field (statement/context) and literal text. Long fields are split into consecutive passages without dropping any text; read every passage and qualifier from a claim before judging it. Return only evidenceIds supplied under that SAME draft. Never invent, borrow, rewrite or translate sources. The application resolves IDs to exact saved quotations.
+        POSITIVE SUPPORT: SUPPORTED requires a statement-field reference from EVERY claim you cite as proof, never employer/context references alone. Context may supplement that claim's statement. Select references that support the complete current draft; an edited draft need not still use every originally linked claim. Read all linked sources and limitations, including uncited passages. If the complete draft cannot be supported, return the specific adverse or unassessed finding rather than selecting unrelated statements to satisfy the reference rule.
         CHECKS: Review EVERY factual assertion in the complete draft: own contribution versus team work, employer/client, practical work versus a course/list, responsibility versus participation, qualification scope, duration, technology specificity and claimed outcomes. General technical leadership does not establish people/budget responsibility. AI integrations do not establish autonomous-agent delivery; web React does not establish React Native. Preserve qualifiers, chronology and explicit limitations. Do not equate overlapping keywords with support. Judge the entire wording, not merely the topic.
         FINDING: SUPPORTED only when ALL assertions are supported at their actual scope, with evidenceIds supporting the complete wording. Otherwise select SCOPE_EXPANSION (broader responsibility, duration, specificity or outcome), CONTEXT_UNCLEAR (uncertain employer/client/role/period), SOURCE_UNCERTAIN (source caveats, possible or planned work), NO_SUPPORT (assertion absent from sources), CONFLICT (assertion contradicts sources), or UNASSESSED (cannot assess). Preserve all source limitations; overlapping keywords do not establish support.
         OUTPUT: items with paragraphIndex, finding, phrase and evidenceIds (at most ten distinct integers). One item per supplied paragraphIndex. For a problem, phrase is a short VERBATIM substring of the saved draft (1–240 characters) identifying the assertion to inspect; do not translate or paraphrase it. For SUPPORTED or UNASSESSED, phrase is empty. SUPPORTED, CONFLICT and SOURCE_UNCERTAIN require evidenceIds; UNASSESSED has none. Do not write a reason or quotation: the application renders localized explanations and exact source text.

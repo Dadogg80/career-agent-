@@ -127,3 +127,20 @@ Run affected controls from `apps/backend` with JDK 21:
 ```
 
 A separate regression first failed on context-only citation acceptance, then passed after the v9 statement-excerpt correction. The legacy-snapshot case retains v8 context citations without a new analysis or destructive migration. No private originals, OCR service or live provider request is used. Full semantic/model repeatability and actual exported-file review remain separate checks.
+
+## Independent optional-opinion scope evaluation
+
+`CvScopeControls` defines 21 fictional controls across healthcare, retail, trades, logistics, catering and finance, independently of model output. Positive paraphrases are paired with responsibility/qualification expansion, compound supported-plus-unsupported wording, team versus personal work, coursework versus professional delivery, planned versus completed work and wrong-employer attribution. Three additional pairs omit explicit negative qualifications to test missing evidence rather than known absence. Expectations/rubrics are not sent to the model. `CvScopeControlsTest` checks the real one-call request/parse path using a controlled mixed reply, retaining complete linked source text and valid adverse siblings while context-only positives become unassessed.
+
+`CvScopeLiveTest` is skipped by default. With a backend key already exported, explicitly choose one supported OpenAI model and enable one fictional source-opinion request:
+
+```bash
+CV_SCOPE_LIVE_TEST=true CV_SCOPE_MODEL=gpt-6.1-sol CV_SCOPE_REASONING=medium \
+  ./gradlew test --tests '*CvScopeLiveTest' --rerun-tasks
+```
+
+Run from `apps/backend` with JDK 21. The test requires an explicit model and an exported `CAREER_OPENAI_API_KEY` or `OPENAI_API_KEY`; it never reads uploaded originals or starts from ordinary CI. It makes at most one generation request, with medium/high reasoning, the existing count-based output limit and a maximum 300-second wait. It writes fictional request/output/rubric reports to a temporary directory printed in the test report. It fails on disagreement, missing/unassessed output or invalid positive references. Inspect the artifacts and classify semantic versus contract failures; do not change expectations merely to get a pass. Reports retain raw findings and application outcomes separately. Exact adverse finding-code agreement is not required by the coarse support rubric; inspect the highlighted phrase and missing-evidence versus explicit-negative explanation separately.
+
+Measured 2026-10-16: Sol met 15/15 baseline and 21/21 expanded controls. A restrictive prototype required every originally linked claim to be cited even after edits; Luna returned 20/21 expected raw judgments but 18/21 application outcomes (two citation rejections plus a false negative on supported team contribution). That rule was discarded in favor of statement references for claims actually cited. With identical final input/prompt, Sol and Luna each met 21/21 raw/application expectations, including correct problematic phrases and application-localized explanations. This is a small synthetic sample with one final call per model, not stability evidence or proof the wording generator/matcher is correct. Earlier Luna disagreement remains a limitation.
+
+Five completed calls used an estimated USD 0.05043 at the repository's dated standard rates; final Sol/Luna estimates were USD 0.018321/USD 0.00119405. Usage estimates are not confirmed charges. Detailed reports remain outside Git. Keep held-out semantic evaluation, useful group reasons, complete live journey and actual DOCX/PDF readiness separate from this provenance correction.
