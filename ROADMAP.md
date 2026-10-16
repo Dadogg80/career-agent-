@@ -1,5 +1,11 @@
 # Career Agent roadmap
 
+## 2026-10-16 — Explain source-review counts and reduce false flags
+
+Implemented for review on `fix/document-coverage-explanation`: bilingual explanations distinguish excerpts without clear links to the current analysis from missing competencies or whole-profile gaps. The panel explains selective import and unchanged historical counts after saving. New inventory evaluations retain complete-row list occurrences rather than matching labels inside compound words or prose; real repeated rows retain independent employer context. Existing saved reports are not recalculated.
+
+Next quality work should measure relevant omissions and false flags separately across professions/layouts, using the existing expected-fact evaluator. A lower displayed count or zero is not a completeness target by itself. Semantic equivalence, saved-profile reconciliation and resumable review/dismissal decisions remain separate future work; extra calls, unbounded repair and factual promotion are not introduced.
+
 ## Saved-opportunity UI refresh — 2026-10-12
 
 Implemented for review: readable primary action contrast; source-aware responsive cards; search and deterministic sorting; clear saved/provisional/stale/unmatched assessment panels and saved model identity. Existing weighted score and matching refresh rules remain unchanged. No backend/schema/default-model change. CV artifact integration and independent final document review remain the next substantive roadmap stage.

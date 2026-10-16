@@ -1,5 +1,9 @@
 # Åpne spørsmål
 
+## 2026-10-16 — Source-review precision and recall
+
+How should future source review distinguish relevant semantic omissions from repetitions or information already present in the saved profile, while preserving employer/project scope and original analysis history? Current counts only audit quotation linkage within one analysis; profile-aware equivalence, durable dismissals and automatic re-auditing are not implemented by the wording/row-boundary correction. Evaluate missed relevant facts and false flags independently before changing follow-up policy.
+
 | ID | Spørsmål | Hva påvirkes? | Status |
 | --- | --- | --- | --- |
 | Q-001 | Hvilket operativsystem, RAM og eventuelt skjermkort har pilotmaskinen? | Lokal drift, Docker og mulighet for lokal AI. | Avklart: Apple M1, 16 GB, macOS; se LOCAL_DEVELOPMENT.md |

@@ -1,5 +1,15 @@
 # Utviklingslogg
 
+## 2026-10-16 — Explain document source review and correct substring flags
+
+The owner asked what potentially overlooked passages mean and requested a clearer explanation with fewer real omissions. Reproduced two inventory regressions: a recovered single-word list label also matched inside longer words/prose, and those extra matches made the real list row falsely ambiguous. Limit list occurrences to complete rows, preserving indentation, source offsets, wrapped CRLF language evidence and separate employer coverage for genuine repeats. Other prose ambiguity remains conservative.
+
+The Norwegian/English panel now explains current-analysis quotation linkage, possible repetition/alternative wording, selective profile import and historical count retention. New-analysis follow-up remains explicitly disclosed and bounded; opening saved reports sends nothing and does not recalculate them. No private source content, provider calls, defaults, schema or confirmation behavior changed.
+
+Validation: both defect regressions failed before correction. Final four affected backend suites passed 40 tests with zero failures/skips; executable JAR passed. Production webpack build and standalone TypeScript passed with the installed Node 20 runtime after local Homebrew Node failures (Node 25 missing library; Node 24 generated-file/lock EPERM). Three focused browser flows passed with live AI disabled: bilingual mobile explanation/no automatic calls, bounded follow-up/consent/reopening/keyboard help, and sourced claim/history import with unchanged audit counts. Desktop and mobile captures were inspected. Full Foundation CI remains the PR delivery gate.
+
+Next: measure semantic omissions separately from false flags across professions/layouts; do not optimize merely for a zero counter. Existing completed reports stay unchanged; profile-aware equivalence and durable dismissal/review state need a later scoped design.
+
 ## 2026-10-12 — Saved-job overview redesign
 
 Initially implemented from main d9197dc; rebased on document-feedback PR #46 (including its scrolling repair) to resolve shared stylesheet changes before handoff. Corrected dark primary-button text; refreshed responsive card layout, search/sort controls, metadata icons, source excerpt labels for both providers and unknown fact labels. Added distinct current/provisional/stale/unmatched saved-assessment panels, existing weighted scores, provider/model identity and score help. Existing full-profile matching, clarification refresh, score computation and application preparation remain unchanged. Fixed ineffective header/content CSS selectors by assigning explicit classes matching the local Card component API.

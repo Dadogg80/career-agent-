@@ -1,5 +1,11 @@
 # Beslutningsregister
 
+## 2026-10-16 — Source-review counts describe analysis linkage
+
+Accepted within the owner-requested coverage explanation correction: describe the panel as a local source-usage audit of the current analysis. A flagged excerpt may be relevant and omitted, repeated or already expressed differently; it does not prove missing competency or absence from the saved profile. Keep literal evidence and selective explicit import. Importing does not rewrite the historical source report.
+
+Correct recovered-list occurrence counting at full-row boundaries so a short label is not counted inside compound words or prose. Preserve indentation, source offsets, true repeated rows and separate employer evidence; do not hide short valid skills through a minimum-length rule. Keep the existing bounded follow-up, consent and saved-run behavior (ADR 0028). No schema, provider/default, new call or automatic semantic reconciliation is added.
+
 ## Task-specific AI model choices — 2026-10-14
 
 Accepted: use the owner's existing full selector as the canonical catalogue in every AI-call model menu: Groq `openai/gpt-oss-20b` and `openai/gpt-oss-120b`; Gemini `gemini-3.1-flash-lite`, `gemini-3.5-flash-lite`, `gemini-3.5-flash`, `gemini-3.6-flash`, `gemini-3.7-flash` and `gemini-3.8-flash`. Route choices through their provider-specific protocols; do not silently omit these models from structured-generation tasks. The resumable document workflow remains one approved provider/model plan for both extraction and profile synthesis, so choices must work for both stages. Configured-key status is not a promise of live model access, quota, quality or availability. Preserve defaults, per-recipient approval, budgets, saved work and explicit recovery; never rotate models automatically. Show safe task-specific failure categories and downstream document-validation outcomes without exposing provider payloads.

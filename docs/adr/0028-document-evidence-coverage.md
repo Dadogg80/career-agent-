@@ -21,3 +21,9 @@ Show a compact content-check panel: source passages represented in results and p
 ## Limits
 
 The inventory uses conservative lexical/heading signals, not a semantic completeness score. A cited passage does not prove every fact in it was extracted correctly. Unrecognized wording, complex dates and implicit experience may remain unflagged; counts must not be presented as verified knowledge or hiring scores. Follow-up can still omit facts and hit project-level quotas. Full alias/conflict reconciliation, normalized knowledge relationships, semantic benchmarking and automatic presentation refresh after every edit remain future work. No private originals/manifests or extracted text enter Git.
+
+## 2026-10-16 refinement — Explain linkage and preserve source-row identity
+
+The review count describes excerpts without a clear link to the current analysis's proposals, not unique missing competencies or gaps against the whole saved profile. The bilingual panel explains repetitions, alternative wording, selective import and the unchanged original report after a profile save. Zero flags is not proof of complete extraction.
+
+Recovered list quotations match complete source rows (including supported multiline language excerpts), preserving whitespace/offsets and genuine repeated employer rows. Occurrences inside longer words or ordinary prose cannot inflate counts or make a unique list row falsely ambiguous. Other prose ambiguity remains conservative. The correction applies when inventory is evaluated; completed saved reports are not migrated or recalculated on opening. Existing limits, repair scheduling, source checks and confirmation rules remain unchanged.
