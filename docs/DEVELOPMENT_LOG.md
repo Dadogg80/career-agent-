@@ -877,3 +877,15 @@ Validation: 125 focused backend tests passed, zero failures/skips; executable JA
 The owner authorized medium/high reasoning, larger configurable output budgets and a fresh private OpenAI comparison. Default reasoning is medium; output defaults are 32,768 tokens except 16,384 for profile summaries, with global/task overrides up to 65,536. Explicit smaller per-call bounds remain authoritative. The owner limited provider waits to five minutes: configurable 30–300 seconds, default 300. AI proxy requests allow five seconds of transport margin, while ordinary reads retain their short bounds. Sequential document workflows may take longer overall. No automatic retry, model fallback, provider-default change or evidence/consent relaxation is introduced.
 
 Focused verification: 11 backend OpenAI adapter tests, two frontend OpenAI contracts and TypeScript checking passed. The fresh private benchmark uses equal medium reasoning and token/time budgets; earlier attempts are retained separately for cost accounting. Quality conclusions remain fixture-specific until held-out professions/layouts are tested.
+
+## 2026-10-16 — Frozen OpenAI comparison and criterion-scope correction
+
+Completed 30/30 owner-authorized private OpenAI generations across five models with identical medium reasoning, expanded token budgets and 300-second limits. Production source hashes remained unchanged during the matrix. All responses completed with HTTP 200; no new default/model-catalog decision is adopted from one source pair. Detailed source/result artifacts remain outside Git.
+
+After the matrix, clarified selected criterion scope within broader source quotes, retaining actual conjunctions/alternatives, and corrected preference handling for multiline context and explanatory preference labels. A separate synthetic non-technology before/after control improved from three to six expected classifications out of six, preserving formal-qualification uncertainty and sufficient interest alternatives. Frozen-output local preference rechecks confirmed the scoped correction without new AI calls.
+
+Validation: 26 focused OpenAI/importance/match tests passed, followed by advertisement-extractor regression and executable JAR build. TypeScript and two OpenAI frontend contracts passed. Full database/browser regression and remote CI remain unrun. Next: held-out cross-profession/layout evaluation, repeated semantic checks and source-backed employer/project linkage before any default change or rollout.
+
+## 2026-10-16 — Analysis quality PR preparation
+
+Rechecked the current remote main and published feature branch before preparing the owner-requested PR. Final affected backend regression and executable JAR build passed; all 11 frontend contract tests and TypeScript checking passed. No new provider calls were made during PR preparation. Private source/results remain outside Git. Required Foundation CI will provide the full backend, production build and browser regression before the owner merges.

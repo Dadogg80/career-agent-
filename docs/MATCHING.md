@@ -27,3 +27,7 @@ New advertisement extraction keeps short, simple source alternatives together in
 Matching instructions evaluate the actual alternatives: explicitly accepted interest does not acquire an extra professional-delivery condition. This is an instruction to the model, not a guarantee that every judgment is correct. A missing document statement is still unknown rather than a proven gap, and a high coverage percentage does not validate the underlying extraction. Existing saved snapshots remain readable; the correction applies to newly requested analyses without changing consent or factual confirmation.
 
 Recognized explicit duty sections also receive bounded source-only recovery when the model omits their rows. Existing source-backed rows are retained without duplicates; the 128-criterion bound and omission reporting still apply. Arbitrary headings, ambiguous wrapping and semantic completeness are not guaranteed. This recovery runs locally after a structurally valid extraction and adds no provider request.
+
+### Criterion scope within contextual quotes
+
+The selected label locates one explicit source-backed criterion; a broader source quote may retain neighboring criteria as context. Matching must preserve the selected criterion's material qualifiers without importing separately assessed neighbors. A genuinely combined criterion still retains its AND conditions and explicitly sufficient OR alternatives. Unreconciled source scope requires clarification. This is a profession-independent interpretation rule, not a fixture-specific skill decision.
