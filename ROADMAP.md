@@ -384,3 +384,11 @@ Proposed next PR, for owner review: **joined evidence-to-wording quality control
 3. Publish captured/unknown/incorrect-context/unsupported-proposal findings separately from count or quotation coverage. Use explicitly authorized bounded live calls only if needed to establish semantic behavior. Broader employer/project reconciliation, Groq capacity work and independent semantic/structural/visual review of actual DOCX/PDF remain distinct later slices.
 
 This is a proposal, not authorization to implement the full semantic or final-file review architecture.
+
+## 2026-10-16 — First evidence-to-wording quality increment
+
+The owner confirmed PR #74 merged at `c0f58ad` and resumed the proposed quality slice. Its full CI later exposed one stale browser catalog-limit assertion (169 other browser tests passed); PR #75 isolates that test-only correction.
+
+Implemented for review on `fix/cv-statement-evidence`: independently specified non-technology source controls (healthcare TXT, retail DOCX table, trades PDF page continuation) and a demonstrated context-only citation correction. New CV proposals require a statement excerpt per referenced claim and retain incomplete review after omitted proposals. The v9 contract preserves full confirmed inputs, one-call consent/revision rules and old snapshots. These automated controls use frozen matching and mocked provider output; they do not complete semantic model evaluation or the whole live login-to-export journey.
+
+Next: use the independent scope rubrics for bounded, explicitly approved generation/matching evaluations, inspect whether responsibility, qualification and own/team contribution are actually entailed, and correct measured defects with useful section/group explanations. Employer/project reconciliation and independent actual-file semantic/structural/visual review remain separate later increments.

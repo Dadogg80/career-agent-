@@ -899,3 +899,11 @@ Validation: 40 focused routing/adapter/configuration/budget tests passed; final 
 ## 2026-10-16 — Catalog-bound CI fixture correction
 
 After the owner merged PR #74, Foundation CI reported one failed browser assertion and 169 passes. An older configuration-bound test still rejected eleven structured options despite the intentional sixteen-option ceiling. Updated its accepted/overflow cases to sixteen/seventeen, matching the independently passing twelve-model selection/consent controls. Product validators and supported models are unchanged. CV evidence-quality work remains a separate branch.
+
+## 2026-10-16 — CV statement-evidence quality controls
+
+Continued from owner-merged PR #74/main `c0f58ad`, carrying the isolated CI assertion repair from PR #75. Its full Foundation run is verified successful. A focused regression first demonstrated acceptance of a new proposal citing only a claim's context. New v9 generations now require a literal statement excerpt for each referenced claim; context citations remain valid supplementary evidence. Valid sibling proposals survive, incomplete review stays visible, full confirmed evidence remains in the one-call input and stored v8 snapshots retain their original content/version.
+
+Added independently chosen fictional healthcare/TXT, retail/table-DOCX and trades/two-page-PDF controls. Native extraction/source units, PDF entry context, complete frozen matching evidence, qualifying statements, per-claim citations, one-call generation and partial recovery are exercised without provider requests. These tests do not establish live provider semantic accuracy or the full login-to-export journey.
+
+Validation: 52 focused CV tests passed with zero failures/skips; executable JAR built. Two frontend wording-source contracts and TypeScript checking passed. Source formatting/whitespace checks passed. No new dependency, migration, original-file rewrite, provider/default change, extra advisory call or factual promotion. Next: independently evaluate factual assertion scope and per-group writing reasons before broader final-file readiness work.

@@ -432,3 +432,9 @@ Validation: 26 focused OpenAI/importance/match tests passed, followed by adverti
 ## 2026-10-16 — Explicit Sol and Luna options
 
 The owner confirmed PR #73 merged and authorized adding `gpt-6.1-sol` and `gpt-6-luna` as selectable structured-generation models. Reuse the existing routing, model-bound approval, Responses transport and budgets without changing defaults or source retrieval. Expand the bounded frontend catalog capacity to 16 so the complete twelve-model catalog is accepted. Extend non-content standard-rate estimates for the new models, including reported cache writes and the documented long-context tier; estimates are not billing evidence. No new provider calls are required for this catalog delivery.
+
+## 2026-10-16 — Statement excerpts in new CV proposals
+
+Within the owner-approved evidence-to-wording quality continuation, a failing regression demonstrated that a proposal could cite only a linked claim's employer/project context, without citing the contribution statement. Refine ADR 0048 for new runs: every referenced claim requires at least one literal statement excerpt. Existing exact-ID/quote validation remains; context excerpts can supplement statement excerpts. Keep all confirmed source text, one generation call and original approval/revision rules. New generations and saved snapshots record v9; old records are not migrated or revalidated through the new parser.
+
+Synthetic healthcare/TXT, retail/DOCX-table and trades/two-page-PDF controls cover source preservation, page context, the complete confirmed generation input, per-claim evidence and partial-result recovery. Matching is supplied as a frozen synthetic snapshot and model output is mocked. This does not establish cross-profession provider accuracy or full live journey quality. Semantic scope, useful group reasoning and independent final-file review remain unfinished.

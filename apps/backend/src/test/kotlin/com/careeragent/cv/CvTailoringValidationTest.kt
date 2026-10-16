@@ -46,7 +46,7 @@ class CvTailoringValidationTest {
    RequirementMatch(0,MatchKind.STRONG,"Optimistic judgment must not become candidate proof",listOf(MatchEvidence(claims[0].id,"Fictional contribution 0.")),"A leading question is not proof",evidenceRelation=EvidenceRelation.TRANSFERABLE,requirementNature=RequirementNature.PRACTICAL))))
   `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING)).thenAnswer { call ->
    val input=mapper.readTree(call.getArgument<String>(1))
-   assertThat(input.path("contract").asText()).isEqualTo("cv-section-wording-v8")
+   assertThat(input.path("contract").asText()).isEqualTo("cv-section-wording-v9")
    assertThat(input.path("confirmedEvidence").size()).isEqualTo(35)
    claims.forEachIndexed { index,claim ->
     val supplied=input.path("confirmedEvidence")[index]
@@ -90,6 +90,27 @@ class CvTailoringValidationTest {
    assertThat(result.first.single().sourceEvidence).containsExactly(MatchEvidence(claimId,"Built Kotlin APIs"))
    assertThat(result.second).isEqualTo(1)
   }
+ }
+ @Test fun `context-only quotations cannot serve as the sole proof for a new CV proposal`() {
+  setup()
+  val invalid=proposal()+("sourceEvidence" to listOf(mapOf("claimId" to claimId.toString(),"quote" to sourceClaims.single().context)))
+  val result=service.parse(mapper.writeValueAsString(mapOf("proposals" to listOf(invalid))),
+   service.paragraphs(text),sourceClaims,1)
+  assertThat(result.first).isEmpty()
+  assertThat(result.second).isEqualTo(1)
+ }
+ @Test fun `stored v8 context citations retain their snapshot and remain readable without reanalysis`() {
+  val source="Built Kotlin APIs for the service."
+  val oldProposal=CvTextProposal(0,source,"Developed Kotlin APIs for the service.","Source wording",listOf(claimId),listOf(0),
+   listOf(MatchEvidence(claimId,"Fictional employer")))
+  val result=CvTailoringResult(documentId,matchId,"OpenAI","gpt-5.4-mini",listOf(oldProposal),0,sourceUnits=CvSourceUnits.create(source))
+  val snapshot=TailoringSnapshot(result,source,sourceClaims,listOf("API work"),"en",promptVersion="cv-section-wording-v8")
+  val codec=com.fasterxml.jackson.module.kotlin.jacksonObjectMapper().findAndRegisterModules()
+  val restored=codec.readValue(codec.writeValueAsString(snapshot),TailoringSnapshot::class.java)
+  assertThat(restored.promptVersion).isEqualTo("cv-section-wording-v8")
+  assertThat(restored.result.proposals.single().sourceEvidence).containsExactly(MatchEvidence(claimId,"Fictional employer"))
+  assertThat(restored.text).isEqualTo(source)
+  TailoringReviewPolicy.validate(restored,emptyList())
  }
  @Test fun `malformed source links leave generation review unfinished and never rewrite the source`() {
   setup()
@@ -141,7 +162,7 @@ class CvTailoringValidationTest {
   `when`(repository.create(eq(identity) ?: identity,eq(jobId) ?: jobId,any(TailoringSnapshot::class.java) ?: TailoringSnapshot(generated,text,match.claims,emptyList(),"en")))
    .thenAnswer {call ->
     val snapshot=call.getArgument<TailoringSnapshot>(2)
-    assertThat(snapshot.promptVersion).isEqualTo("cv-section-wording-v8")
+    assertThat(snapshot.promptVersion).isEqualTo("cv-section-wording-v9")
     assertThat(snapshot.result.sourceUnits).containsExactly(unit)
     CvTailoringSession(sessionId,jobId,1,snapshot,emptyList(),OffsetDateTime.now())
    }

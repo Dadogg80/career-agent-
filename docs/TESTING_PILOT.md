@@ -107,3 +107,23 @@ Open an owned saved job's **Apply for this job** action (not an external submiss
 Compare original/proposed wording and cited criteria/confirmed contributions. Edit and approve/reject; pending counts must decrease and processed wording remain inspectable. Changing source/claims/match invalidates current suggestions, whose original references remain available. On quota failure, retain previous proposals; changing model requires renewed consent and must never auto-send. Try English and 390px layouts. Reload/navigation clears page-session-only proposals and decisions. Original text/files, profile facts and existing CV versions must remain unchanged.
 
 The new browser tests use fictional endpoint fixtures. Backend tests exercise real PostgreSQL, authenticated MockMvc principals, original storage and CSRF, with a mocked model. They do not certify live provider prose or a real interactive OIDC sign-in. Normal tests make no provider calls or transmit owner documents.
+
+## Cross-profession CV statement-evidence controls
+
+`CvCareerQualityTest` uses only fictional originals generated in memory:
+
+| Control | Format/layout | Independently expected scope limitation |
+| --- | --- | --- |
+| Healthcare reception | UTF-8 text | A first-aid course and reception work do not establish nursing authorization. |
+| Retail customer service | DOCX with a skills table | Order registration does not establish staff/budget responsibility; the source explicitly limits it. |
+| Trades assistance | Two-page PDF | Supervised inspection assistance does not establish independent qualified or certification work. |
+
+The controls check native source reading, exact source-unit preservation, PDF entry continuity, every confirmed statement/context in the generation input, per-claim statement excerpts, one call and retained valid siblings after invalid output. The matching snapshot and generated responses are controlled test data. The human scope rubrics are not semantic classifiers; these tests do not demonstrate that a provider will detect every unsupported expansion.
+
+Run affected controls from `apps/backend` with JDK 21:
+
+```bash
+./gradlew test --tests '*CvCareerQualityTest' --tests '*CvTailoringValidationTest' --tests '*CvWordingGuardTest'
+```
+
+A separate regression first failed on context-only citation acceptance, then passed after the v9 statement-excerpt correction. The legacy-snapshot case retains v8 context citations without a new analysis or destructive migration. No private originals, OCR service or live provider request is used. Full semantic/model repeatability and actual exported-file review remain separate checks.

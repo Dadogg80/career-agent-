@@ -692,3 +692,7 @@ OpenAI analysis now waits up to five minutes per generation call without automat
 ## Sol and Luna task selection — 2026-10-16
 
 The existing structured-task menus also offer OpenAI `gpt-6.1-sol` and `gpt-6-luna`. Users choose before approving a run; changing from Sol to Luna clears private consent even though the provider stays OpenAI. Combined document review applies the approved model to both extraction and profile synthesis. Choosing a model alone sends nothing. Prior saved results keep their identity; defaults and the separate Groq/Gemini retrieval menu remain unchanged.
+
+## CV proposal statement excerpts — 2026-10-16
+
+New wording runs use contract v9. Each referenced confirmed contribution needs its own literal statement excerpt; context quotations may accompany it. A context-only source link omits that proposal and keeps review coverage incomplete. Valid sibling proposals, full input evidence and original documents remain available. Existing v8 and older sessions stay readable with their original versions and decisions. Human wording review and the separately approved optional source opinion are unchanged; a valid quotation does not certify the complete proposed assertion.

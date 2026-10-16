@@ -665,3 +665,7 @@ As a user, I can explicitly choose OpenAI alongside existing structured-generati
 ## Explicit Sol and Luna choices — 2026-10-16
 
 As a user, I can explicitly choose OpenAI GPT-6.1 Sol or GPT-6 Luna for structured advertisement, document/profile, matching and CV wording tasks. Acceptance: both appear in the complete shared catalog; existing defaults remain; selecting a model starts no analysis; model changes clear private consent even within OpenAI; actual saved result identity remains visible. Neither is offered as a source-retrieval model. Usage estimates remain distinct from actual billing.
+
+## Statement-backed CV proposal citations — 2026-10-16
+
+As a candidate, each newly generated CV proposal must cite at least one literal statement excerpt for every referenced confirmed claim. Employer/project/context text may supplement that statement, but cannot be its sole cited evidence. Invalid proposals leave review incomplete while valid siblings remain editable. Existing saved proposals retain their original source snapshots and version. These checks establish citation provenance, not semantic truth or factual confirmation.
