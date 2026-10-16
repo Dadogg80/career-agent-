@@ -34,7 +34,7 @@ class CvWordingSourceReviewTest {
         `when`(sessions.latest(identity,jobId)).thenReturn(session)
         `when`(ai.generateJson(anyString(),anyString(),anyMap(),eq(AiTask.CV_TAILORING) ?: AiTask.CV_TAILORING,any(AiSelection::class.java) ?: AiSelection("Groq","openai/gpt-oss-20b"),anyInt())).thenAnswer { call ->
             val prompt=call.getArgument<String>(0);val input=call.getArgument<String>(1)
-            assertThat(prompt).contains("cv-wording-sources-v2","Review EVERY factual assertion","No advertisement requirements","never final CV approval")
+            assertThat(prompt).contains("cv-wording-sources-v3","Review EVERY factual assertion","No advertisement requirements","never final CV approval")
             assertThat(input).doesNotContain("GENERATION_REASON_IS_NOT_PROOF","OTHER_EMPLOYER_NOT_REFERENCED","classification","Autonomous agent delivery","jobCriteria","original","Worked on API integrations.")
             val draft=mapper.readTree(input).path("drafts")[0]
             assertThat(draft.path("draft").asText()).isEqualTo("Developed API integrations.")
@@ -70,6 +70,24 @@ class CvWordingSourceReviewTest {
         val mixed=service.parse(root.toString(),session,listOf(proposal,second),mapOf(2 to proposal.newText,3 to second.newText),"en")
         assertThat(mixed.map {it.status}).containsExactly(WordingSourceStatus.SUPPORTED,WordingSourceStatus.UNASSESSED)
         assertThat(mixed[1].reason).contains("No valid source assessment")
+    }
+    @Test fun `a supported opinion needs statements for cited claims while an edited draft may use fewer linked claims`() {
+        val texts=mapOf(2 to proposal.newText)
+        assertThat(service.parse(output(ids=listOf(1)),session,listOf(proposal),texts,"en").single().status)
+            .isEqualTo(WordingSourceStatus.UNASSESSED)
+        val second=claim.copy(id=UUID.randomUUID(),statement="Assisted colleagues under supervision.")
+        val linked=proposal.copy(claimIds=listOf(claim.id,second.id))
+        val saved=session.copy(snapshot=session.snapshot.copy(claims=listOf(claim,second)))
+        assertThat(service.parse(output(ids=listOf(0,3)),saved,listOf(linked),texts,"en").single().status)
+            .isEqualTo(WordingSourceStatus.UNASSESSED)
+        assertThat(service.parse(output(ids=listOf(0)),saved,listOf(linked),texts,"en").single().status)
+            .isEqualTo(WordingSourceStatus.SUPPORTED)
+        val complete=service.parse(output(ids=listOf(0,1,2)),saved,listOf(linked),texts,"en").single()
+        assertThat(complete.status).isEqualTo(WordingSourceStatus.SUPPORTED)
+        assertThat(complete.evidence.map {it.quote}).containsExactly(claim.statement,claim.context,second.statement)
+        // Context remains useful for an adverse employer/role finding, without claiming factual support.
+        assertThat(service.parse(output("CONTEXT_UNCLEAR",listOf(1)),session,listOf(proposal),texts,"en").single().status)
+            .isEqualTo(WordingSourceStatus.NEEDS_REVIEW)
     }
     @Test fun `numbered sources retain long qualifiers unicode claim identity and exact quotations without sampling`() {
         val statement="x".repeat(999)+"😀"+"y".repeat(1100)+" Work may be planned; personal delivery remains unclear."

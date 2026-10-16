@@ -669,3 +669,7 @@ As a user, I can explicitly choose OpenAI GPT-6.1 Sol or GPT-6 Luna for structur
 ## Statement-backed CV proposal citations — 2026-10-16
 
 As a candidate, each newly generated CV proposal must cite at least one literal statement excerpt for every referenced confirmed claim. Employer/project/context text may supplement that statement, but cannot be its sole cited evidence. Invalid proposals leave review incomplete while valid siblings remain editable. Existing saved proposals retain their original source snapshots and version. These checks establish citation provenance, not semantic truth or factual confirmation.
+
+## Statement-backed optional source opinions — 2026-10-16
+
+As a candidate, an AI-found-support opinion should cite the actual statements linked to my saved draft, including when I edited an older proposal. Acceptance: each cited claim needs a statement reference for a positive opinion; context-only citations become unassessed without discarding valid siblings. Adverse context findings can still cite employer/role context. Full sources, explicit selected-model approval, revision checks and human decisions remain. Independently selected synthetic scope controls measure model behavior separately from parser validity and do not establish universal semantic accuracy.

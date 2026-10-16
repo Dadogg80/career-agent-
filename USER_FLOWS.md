@@ -696,3 +696,7 @@ The existing structured-task menus also offer OpenAI `gpt-6.1-sol` and `gpt-6-lu
 ## CV proposal statement excerpts — 2026-10-16
 
 New wording runs use contract v9. Each referenced confirmed contribution needs its own literal statement excerpt; context quotations may accompany it. A context-only source link omits that proposal and keeps review coverage incomplete. Valid sibling proposals, full input evidence and original documents remain available. Existing v8 and older sessions stay readable with their original versions and decisions. Human wording review and the separately approved optional source opinion are unchanged; a valid quotation does not certify the complete proposed assertion.
+
+## Statement-backed optional wording opinions — 2026-10-16
+
+A newly requested optional source opinion uses contract v3. To display AI-found support, the opinion must cite a statement passage from every contribution cited by that opinion. Context-only or missing statement references show an unassessed result, preserving valid sibling findings. Users can still inspect context when an employer/role association is unclear. This remains a separately approved, read-only opinion; stored proposals, wording decisions and profile facts are unchanged. Literal statement references do not prove semantic support or final-file readiness.
