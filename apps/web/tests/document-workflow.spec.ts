@@ -129,12 +129,16 @@ test("language source coverage has readable bilingual labels and no automatic AI
  await page.setViewportSize({width:390,height:844});await open(page);
  const outer=page.locator(".document-workspace-sheet");
  await outer.locator(".document-processing-disclosure > summary").click();
+ await expect(outer.locator(".document-coverage")).toContainText("ikke manglende kompetanser");
+ await expect(outer.locator(".document-coverage summary")).toContainText("Kontroller tekst som ikke er tydelig brukt i analysen");
  await outer.locator(".document-coverage summary").click();
  await expect(outer.locator(".coverage-passage-card")).toContainText("Språk");
  await expect(outer.locator(".coverage-passage-card")).toContainText("Norsk – morsmål");
  expect(await outer.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);
  await outer.getByRole("button",{name:"Lukk",exact:true}).click();await page.getByRole("combobox",{name:"Språk",exact:true}).selectOption("en");await page.getByRole("button",{name:"Analyze document",exact:true}).click();
  await outer.locator(".document-processing-disclosure > summary").click();
+ await expect(outer.locator(".document-coverage")).toContainText("not missing skills");
+ await expect(outer.locator(".document-coverage summary")).toContainText("Review text not clearly used in this analysis");
  await outer.locator(".document-coverage summary").click();await expect(outer.locator(".coverage-passage-card")).toContainText("Languages");expect(calls).toBe(0);
 });
 
@@ -300,14 +304,14 @@ test("source coverage shows bounded follow-up and literal missing passages witho
  await open(page);const sheet=page.locator(".document-workspace-sheet");
  await expect(sheet).toContainText("opptil fire ekstra AI-kall");
  await sheet.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Gemini for denne analysen"}).check();
- await sheet.getByRole("checkbox",{name:"Kontroller passasjer som kan være oversett"}).uncheck();
+ await sheet.getByRole("checkbox",{name:"Ekstra kontroll av dokumentinnhold"}).uncheck();
  await expect(sheet.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Gemini for denne analysen"})).not.toBeChecked();
- await sheet.getByRole("checkbox",{name:"Kontroller passasjer som kan være oversett"}).check();
+ await sheet.getByRole("checkbox",{name:"Ekstra kontroll av dokumentinnhold"}).check();
  await sheet.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til Gemini for denne analysen"}).check();
  await sheet.getByRole("button",{name:"Bygg profil fra dokumentene",exact:true}).click();
  try{
-  await expect(sheet).toContainText("Går gjennom mulige mangler");
-  const check=sheet.locator(".document-coverage");await expect(check).toContainText("1 kan trenge gjennomgang");
+  await expect(sheet).toContainText("Kontrollerer flere tekstutdrag");
+  const check=sheet.locator(".document-coverage");await expect(check).toContainText("1 utdrag uten tydelig kobling");
   await check.locator("summary").click();await expect(check).toContainText("Mentored two developers and coordinated releases.");
   await check.getByRole("button",{name:"Om kildekontrollen"}).focus();
   await expect(check.getByRole("tooltip")).toBeVisible();await expect(check.getByRole("tooltip")).toContainText("ikke om all kompetanse er funnet");
@@ -317,10 +321,10 @@ test("source coverage shows bounded follow-up and literal missing passages witho
   await check.scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/career-coverage-desktop.png"});
  }finally{finishRepair();}
  await expect(sheet.getByText("Gjennomgangen er klar",{exact:true})).toBeVisible();
- await expect(sheet.locator(".document-coverage")).toContainText("0 kan trenge gjennomgang");
+ await expect(sheet.locator(".document-coverage")).toContainText("0 utdrag uten tydelig kobling");
  await expect(sheet).toContainText("Gemini · gemini-3.5-flash-lite");expect(calls).toBe(3);
  await sheet.getByRole("button",{name:"Lukk",exact:true}).click();await open(page);
- await expect(sheet.locator(".document-coverage")).toContainText("2 passasjer med kilde i resultatet");expect(calls).toBe(3);
+ await expect(sheet.locator(".document-coverage")).toContainText("2 utdrag koblet til forslagene");expect(calls).toBe(3);
  await page.setViewportSize({width:390,height:844});
  await sheet.locator(".document-processing-disclosure > summary").click();
  await sheet.locator(".document-coverage").scrollIntoViewIfNeeded();await page.screenshot({path:"/tmp/career-coverage-mobile.png"});
@@ -365,6 +369,8 @@ test("missed passages can become sourced profile claims and career entries",asyn
  await open(page);const sheet=page.locator(".document-workspace-sheet");const coverage=sheet.locator(".document-coverage");
  await sheet.locator(".document-processing-disclosure > summary").click();
  await coverage.locator("summary").click();
+ await expect(coverage).toContainText("Du trenger ikke legge til alt som vises");
+ await expect(coverage).toContainText("Lagring i profilen endrer ikke denne analysens kildekontroll automatisk");
  await coverage.getByRole("textbox",{name:"Søk i kildepassasjer"}).fill("Interested");
  await coverage.getByRole("button",{name:"Behandle som profilutkast",exact:true}).click();
  const editor=page.locator(".coverage-review-sheet");
@@ -379,6 +385,7 @@ test("missed passages can become sourced profile claims and career entries",asyn
  await editor.getByLabel("Arbeidsgiver / organisasjon",{exact:true}).fill("Example AS");
  await editor.getByRole("button",{name:"Lagre som ubekreftet",exact:true}).click();
  await expect(coverage).toContainText("Lagt til i profilen");expect(entryCalls).toBe(1);
+ await expect(coverage).toContainText("2 utdrag uten tydelig kobling");
  await page.setViewportSize({width:390,height:844});
  await coverage.scrollIntoViewIfNeeded();
  expect(await sheet.evaluate(e=>e.scrollWidth<=e.clientWidth)).toBe(true);

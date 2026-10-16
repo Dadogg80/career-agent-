@@ -12,6 +12,39 @@ class DocumentEvidenceInventoryTest {
     private fun analysis(suggestions:List<CompetencySuggestion> = emptyList(), profile:List<ProfileSummaryDraft> = emptyList()) =
         DocumentAnalysis(UUID.randomUUID(),"en","Gemini",emptyList(),suggestions,0,0,true,0,OffsetDateTime.now(),profile=profile)
 
+    @Test fun `a list item does not flag substrings of compound words elsewhere in the document`() {
+        val text="Kjernekompetanse\n  utvikling  \n\nProfil\nErfaring med produktutvikling og systemutvikling."
+        val result=DocumentEvidenceInventory.inventory(id,text)
+        assertThat(result).hasSize(1)
+        assertThat(result.single().quote).isEqualTo("utvikling")
+        assertThat(result.single().start).isEqualTo(text.indexOf("utvikling"))
+        assertThat(result.single().ambiguous).isFalse()
+        val represented=analysis(listOf(CompetencySuggestion("utvikling","Listed","Context not stated","utvikling",id)))
+        assertThat(DocumentEvidenceInventory.assess(mapOf(id to text),represented).missing).isEmpty()
+    }
+
+    @Test fun `whole-row duplicates retain independent employer evidence without matching parts of prose`() {
+        val text="## First AS\nTechnologies\nGo\n## Second AS\nTechnologies\n  Go  \nProfile\nWorked with Google services."
+        val result=DocumentEvidenceInventory.inventory(id,text)
+        assertThat(result.filter {it.kind=="TECHNOLOGY"}).hasSize(2)
+        val first=analysis(listOf(CompetencySuggestion("Go","Listed","First AS","Go",id,contextQuote="## First AS")))
+        val missing=DocumentEvidenceInventory.assess(mapOf(id to text),first).missing.filter {it.kind=="TECHNOLOGY"}
+        assertThat(missing).hasSize(1)
+        assertThat(missing.single().contextQuote).isEqualTo("## Second AS")
+    }
+
+    @Test fun `wrapped language evidence retains complete rows and exact CRLF offsets`() {
+        val quote="Engelsk – flytende, muntlig og\r\n  skriftlig"
+        val text="Språk\r\n  $quote  \r\nInteresser\r\nFotturer"
+        val result=DocumentEvidenceInventory.inventory(id,text)
+        assertThat(result).hasSize(1)
+        assertThat(result.single().kind).isEqualTo("LANGUAGE")
+        assertThat(result.single().quote).isEqualTo(quote)
+        assertThat(result.single().start).isEqualTo(text.indexOf(quote))
+        val represented=analysis(listOf(CompetencySuggestion("Engelsk",quote,"Context not stated",quote,id,category="OTHER")))
+        assertThat(DocumentEvidenceInventory.assess(mapOf(id to text),represented).missing).isEmpty()
+    }
+
     @Test fun `inventory distinguishes named technology coverage from represented responsibility education and interests`() {
         val text="""## Example AS
 Senior Developer

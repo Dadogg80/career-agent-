@@ -45,9 +45,16 @@ internal object DocumentEvidenceInventory {
         var section = ""
         var searchAt = 0
         listFacts.forEach { (quote,items) ->
-            // Keep every repeated occurrence, so evidence from one employer cannot cover another.
-            Regex(Regex.escape(quote)).findAll(text).forEach { occurrence ->
-                candidates.add(Candidate(id,if(items.all { it.category=="OTHER" })"LANGUAGE" else "TECHNOLOGY",occurrence.range.first,quote,items.map { it.skill }.distinct()))
+            // Recovered lists quote complete rows, never substrings inside other words or prose.
+            val occurrences=Regex(Regex.escape(quote)).findAll(text).filter { occurrence ->
+                val start=occurrence.range.first;val end=occurrence.range.last+1
+                val lineStart=text.lastIndexOf('\n',start-1)+1
+                val lineEnd=text.indexOf('\n',end).takeIf {it>=0} ?: text.length
+                text.substring(lineStart,start).isBlank() && text.substring(end,lineEnd).isBlank()
+            }.toList()
+            // Keep genuine repeated rows, so one employer's evidence cannot cover another.
+            occurrences.forEach { occurrence ->
+                candidates.add(Candidate(id,if(items.all { it.category=="OTHER" })"LANGUAGE" else "TECHNOLOGY",occurrence.range.first,quote,items.map { it.skill }.distinct(),ambiguous=occurrences.size>1))
             }
         }
         val lines = Regex("[^\\r\\n]+").findAll(text).toList()
@@ -89,7 +96,7 @@ internal object DocumentEvidenceInventory {
         }
         return candidates.distinctBy { listOf(it.documentId,it.start,it.kind) }.sortedBy { it.start }.map {
             it.copy(contextQuote=DocumentAnalysisPlanner.contextHeader(sourceHeaders,it.start)?.second,
-                ambiguous=text.indexOf(it.quote)!=text.lastIndexOf(it.quote))
+                ambiguous=if(it.skills.isNotEmpty())it.ambiguous else text.indexOf(it.quote)!=text.lastIndexOf(it.quote))
         }
     }
     fun repairBatches(assessment: Assessment, approved: Map<UUID,String>): List<AnalysisBatch> {
