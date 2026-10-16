@@ -15,3 +15,7 @@ Read `OPENAI_API_KEY`, with `CAREER_OPENAI_API_KEY` as a managed-cloud fallback 
 ## Consequences and verification
 
 No migration, automatic fallback/retry, source-parser/prompt change, official release or six-point pipeline implementation is included. Existing saved Groq/Gemini results remain readable. Offline checks verify protocol/routing/UI compatibility; live tests are manual, owner-approved and budgeted. The initial experiment is blocked by Responses `invalid_api_key`, so no OpenAI model-quality recommendation is justified yet. See [OpenAI provider operations](../OPENAI_PROVIDER.md) for configuration, rates and current limits.
+
+## 2026-10-16 refinements
+
+PR #73 introduced owner-approved configurable output budgets, medium/high reasoning and a maximum five-minute provider timeout, superseding the initial low-reasoning/budget defaults above. The owner subsequently approved Sol (`gpt-6.1-sol`) and Luna (`gpt-6-luna`) as explicit structured-task options. Existing default models, standard service tier, source retrieval, private approval and factual confirmation remain unchanged. Catalog expansion is not a universal quality claim or automatic fallback.

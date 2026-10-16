@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { isClaim } from "../lib/claims";
 import { isEntry } from "../lib/career-entries";
 import { isDocumentRun } from "../lib/document-workflow";
-import { mockAiConfiguration } from "./helpers/mock-ai-configuration";
+import { mockAiConfiguration, syntheticStructuredConfiguration } from "./helpers/mock-ai-configuration";
 
 test.beforeEach(async ({ page }) => { await mockAiConfiguration(page); });
 
@@ -565,4 +565,31 @@ test("combined document selector offers supported models and failed validation k
  expect(providerCalls).toBe(1);
  expect(await sheet.innerText()).not.toContain(rawResponse);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+
+test("switching from Sol to Luna clears private consent before any document run",async({page})=>{
+ await profile(page);let starts=0;
+ const config=syntheticStructuredConfiguration();
+ const luna=config.options!.documents!.find(option=>option.approval.selections[0].model==="gpt-6-luna")!.approval;
+ await page.route("**/api/ai/config",r=>r.fulfill({json:config}));
+ await page.route("**/api/profile/me/documents**",r=>{
+  if(r.request().url().includes("/workflow")) {
+   if(r.request().method()==="POST") {
+    starts++;expect(r.request().postDataJSON()).toMatchObject({aiApproval:luna.token,consent:true});
+   }
+   return r.fulfill({json:run()});
+  }
+  return r.fulfill({json:r.request().url().endsWith(id)?{document:doc,text}:[doc]});
+ });
+ await open(page);const sheet=page.locator(".document-workspace-sheet");
+ await sheet.getByRole("button",{name:"Analyser på nytt med annen modell",exact:true}).click();
+ const choice=sheet.locator(".ai-choice");await choice.locator("summary").click();
+ await choice.getByRole("button",{name:/^OpenAI · gpt-6[.]1-sol /}).click();
+ const consent=sheet.getByRole("checkbox",{name:"Jeg godkjenner at valgt tekst sendes til OpenAI for denne analysen",exact:true});
+ await expect(consent).not.toBeChecked();await consent.check();expect(starts).toBe(0);
+ await choice.locator("summary").click();await choice.getByRole("button",{name:/^OpenAI · gpt-6-luna /}).click();
+ await expect(consent).not.toBeChecked();
+ const start=sheet.getByRole("button",{name:"Start ny analyse",exact:true});await expect(start).toBeDisabled();expect(starts).toBe(0);
+ await consent.check();await start.click();await expect.poll(()=>starts).toBe(1);
 });

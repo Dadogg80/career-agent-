@@ -6,7 +6,7 @@ OpenAI is an explicit third provider for structured generation through the exist
 
 - Ordinary local backend: set `OPENAI_API_KEY` in the ignored `apps/backend/.env` or a secret manager. Never commit it or use a `NEXT_PUBLIC_*` variable.
 - Managed cloud environments that reserve `OPENAI_` names: configure the personal secret `CAREER_OPENAI_API_KEY`, sent only to `api.openai.com`. The backend accepts it when `OPENAI_API_KEY` is absent/blank. Never print either value. Preserve the session proxy and verified CA trust.
-- Default **within OpenAI**: `gpt-5.4-mini`. Optional reference: `gpt-5.4`. Adding credentials does not change existing task defaults or authorize a call.
+- Default **within OpenAI**: `gpt-5.4-mini`. Selectable alternatives: `gpt-5.4`, `gpt-6.1-sol` and `gpt-6-luna`. Adding credentials does not change existing task defaults or authorize a call.
 - Choose OpenAI in the existing task selector. Optional local overrides are `AI_JOB_PROVIDER=openai` and `OPENAI_JOB_MODEL=gpt-5.4-mini`; equivalent DOCUMENT, PROFILE, MATCH and TAILORING task overrides exist. `OPENAI_MODEL` is the OpenAI fallback. Unsupported models are not silently substituted.
 - OpenAI is not a `JOB_SOURCE_RETRIEVAL` capability. If the global `AI_PROVIDER` is explicitly OpenAI, source retrieval remains separately configured and otherwise uses the existing Groq browser default. Select a supported Groq/Gemini source option independently.
 - Every private run retains provider/model-bound approval. Changing the selection invalidates prior approval. Owned endpoints and existing downstream source/revision checks remain responsible for private data.
@@ -23,14 +23,16 @@ Only completed assistant `output_text` containing a JSON object is accepted. Rea
 
 Logs include selected/returned model, duration, input/cached/output/reasoning/total tokens and estimated USD. Reasoning is already included in output tokens and must not be charged twice. Invalid/missing usage is unknown, not a fabricated zero. Usage from a successful exchange is recorded before application validation, including subsequently rejected output.
 
-Standard text prices checked against official documentation on 2026-10-15, USD per million tokens:
+Standard text prices checked against official documentation on 2026-10-16, USD per million tokens:
 
-| Model | Uncached input | Cached input | Output including reasoning |
-| --- | ---: | ---: | ---: |
-| gpt-5.4-mini | 0.75 | 0.075 | 4.50 |
-| gpt-5.4 | 2.50 | 0.25 | 15.00 |
+| Model | Uncached input | Cached input | Cache writes | Output including reasoning |
+| --- | ---: | ---: | ---: | ---: |
+| gpt-5.4-mini | 0.75 | 0.075 | Not estimated | 4.50 |
+| gpt-5.4 | 2.50 | 0.25 | Not estimated | 15.00 |
+| gpt-6.1-sol | 2.00 | 0.10 | 2.50 | 10.00 |
+| gpt-6-luna | 0.10 | 0.01 | 0.125 | 0.50 |
 
-Estimate = `(input - cached) × input rate + cached × cache rate + output × output rate`, divided by 1,000,000. This estimate excludes taxes and account-specific/regional/service-tier differences. It is not an invoice, an account budget or a durable spending ledger. Recheck rates before later experiments; update the dated rate table explicitly if required.
+Estimate = `(input - cached - writes) × input rate + cached × cache rate + writes × write rate + output × output rate`, divided by 1,000,000. Missing cache-write counts mean zero; inconsistent counts mean unknown usage. For Sol/Luna above 272,000 input tokens, input/cache rates double and output rates increase by 1.5. If cache writes are reported for a model without a verified write rate here, the estimate remains unknown. This estimate excludes taxes and account-specific/regional/service-tier differences. It is not an invoice, an account budget or a durable spending ledger. Recheck rates before later experiments; update the dated rate table explicitly if required.
 
 ## Verification and controlled comparison
 
@@ -40,7 +42,7 @@ The owner approved a separate manual experiment capped at USD 0.50: three Mini a
 
 Historical 2026-10-15 live status (superseded by the 2026-10-16 check below): authenticated analysis had **not** completed. Two generation attempts returned provider HTTP 401, mapped to `AI_ACCESS_DENIED`; a fresh-process retry after environment activation did not resolve it. An independent Responses authentication/schema diagnostic also returned `invalid_api_key`. Read-only model metadata returned HTTP 200 but is insufficient to establish Responses access. No OpenAI quality, latency, token or cost benchmark can be inferred from these failures. Further generation is paused pending a corrected secret binding; no automatic retry is scheduled.
 
-Sources: [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create), [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs), [Mini](https://developers.openai.com/api/docs/models/gpt-5.4-mini), [GPT-5.4](https://developers.openai.com/api/docs/models/gpt-5.4), [pricing](https://developers.openai.com/api/docs/pricing), [data controls](https://developers.openai.com/api/docs/guides/your-data).
+Sources: [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create), [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs), [Mini](https://developers.openai.com/api/docs/models/gpt-5.4-mini), [GPT-5.4](https://developers.openai.com/api/docs/models/gpt-5.4), [Sol](https://developers.openai.com/api/docs/models/gpt-6.1-sol), [Luna](https://developers.openai.com/api/docs/models/gpt-6-luna), [pricing](https://developers.openai.com/api/docs/pricing), [data controls](https://developers.openai.com/api/docs/guides/your-data).
 
 
 ## 2026-10-16 authentication and approved quality comparison
@@ -52,3 +54,7 @@ Direct local checks returned HTTP 200 for model metadata and for actual Mini Res
 OpenAI defaults to 32,768 output tokens for advertisement analysis, document extraction, matching and CV proposals; profile summaries default to 16,384. These budgets include reasoning tokens. `OPENAI_MAX_OUTPUT_TOKENS` overrides the task defaults, and `OPENAI_{JOB,DOCUMENT,PROFILE,MATCH,TAILORING}_MAX_OUTPUT_TOKENS` overrides the global value. Values must be integers from 1 through 65,536. Explicit smaller call budgets remain enforced.
 
 `OPENAI_REQUEST_TIMEOUT_SECONDS` defaults to 300 and accepts 30–300 seconds. Each provider call has a maximum five-minute wait, without automatic retries or provider switching. A workflow containing several sequential calls can take longer overall. Invalid configuration fails before generation. Larger limits are ceilings, not requested answer lengths or account spending limits. Groq and Gemini budgets are unchanged.
+
+## Sol and Luna selection — 2026-10-16
+
+The owner authorized `gpt-6.1-sol` and `gpt-6-luna` as explicit options for all five structured tasks, including the combined extraction/profile plan and existing optional wording opinion. They reuse the Responses contract, medium/high reasoning and five-minute limits. Existing model-bound approvals remain distinct; changing only the model still clears private consent. Configured keys do not guarantee availability, quota or semantic quality. Retrieval stays on its independent Groq/Gemini catalog. These additions do not change any default or start a request automatically.
