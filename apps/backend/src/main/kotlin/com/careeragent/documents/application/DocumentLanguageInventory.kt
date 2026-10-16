@@ -26,7 +26,7 @@ internal object DocumentLanguageInventory {
     private val language = "(?:$namePattern)(?=$|[\\s,:;–—/()&-])"
     private val row = Regex("(?iu)^[-*•]?\\s*($language(?:\\s*(?:,|/|&|\\bog\\b|\\band\\b)\\s*$language)*)(.*)$")
     private val name = Regex("(?iu)(?<![\\p{L}\\p{N}])$language")
-    private val section = Regex("(?iu)^(?:språk|språkkunnskaper|språkferdigheter|languages|language skills|language proficiency|spoken languages)(?:\\s*:\\s*(.*))?$")
+    private val section = Regex("(?iu)^(?:språk|språkkunnskaper|språkferdigheter|languages|language skills|language proficiency|spoken languages)(?:\\s*:\\s*(.*)|\\s+(.+))?$")
     private val proficiency = Regex("(?iu)^(?:morsmål|mother tongue|first language|native(?: speaker| language)?|flytende|fluent|" +
         "grunnleggende|basic|elementary|nybegynner|beginner|middels|intermediate|avansert|advanced|" +
         "conversational|proficient|working proficiency|professional(?: working proficiency)?|profesjonelt(?: nivå)?|gode?(?: kunnskaper)?|" +
@@ -48,8 +48,10 @@ internal object DocumentLanguageInventory {
             if (index <= consumed) return@forEachIndexed
             val text = line.value.trim()
             val heading = section.matchEntire(text.trimStart('#', ' ').trimEnd(':').trim())
-            if (heading != null) inSection = true
-            val contents = if (heading != null) heading.groupValues[1].trim().takeIf { it.isNotEmpty() } else text
+            val inline = heading?.groupValues?.get(2)?.trim().orEmpty()
+            val validHeading = heading?.takeIf { inline.isEmpty() || row.matches(inline) }
+            if (validHeading != null) inSection = true
+            val contents = if (validHeading != null) (validHeading.groupValues[1].ifBlank { inline }).trim().takeIf { it.isNotEmpty() } else text
             if (contents == null) return@forEachIndexed
             val matched = row.matchEntire(contents)
             if (matched == null) {

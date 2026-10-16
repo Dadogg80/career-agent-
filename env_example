@@ -56,3 +56,14 @@ DATABASE_PASSWORD=""
 # OPENAI_TAILORING_MODEL=
 # Explicit per-task selection uses AI_JOB_PROVIDER=openai, etc.
 # OpenAI does not support JOB_SOURCE_RETRIEVAL in this adapter.
+
+# OpenAI output budgets include reasoning tokens. Task values override the global value.
+# OPENAI_MAX_OUTPUT_TOKENS=32768
+# OPENAI_JOB_MAX_OUTPUT_TOKENS=32768
+# OPENAI_DOCUMENT_MAX_OUTPUT_TOKENS=32768
+# OPENAI_PROFILE_MAX_OUTPUT_TOKENS=16384
+# OPENAI_MATCH_MAX_OUTPUT_TOKENS=32768
+# OPENAI_TAILORING_MAX_OUTPUT_TOKENS=32768
+# Allowed reasoning: medium (default) or high. Timeout range: 30–300 seconds.
+# OPENAI_REASONING_EFFORT=medium
+# OPENAI_REQUEST_TIMEOUT_SECONDS=300

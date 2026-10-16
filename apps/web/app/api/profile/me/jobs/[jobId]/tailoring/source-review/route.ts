@@ -14,7 +14,7 @@ export async function POST(request:Request,context:{params:Promise<{jobId:string
  }catch{return privateResponse({code:"CV_INVALID"},undefined,400);}
  try {
   const headers=sessionHeaders(request);headers.set("Content-Type","application/json");
-  const r=await fetch(`${privateBase()}/api/profile/me/jobs/${jobId}/tailoring/source-review`,{method:"POST",headers,body:JSON.stringify(body),cache:"no-store",redirect:"manual",signal:AbortSignal.timeout(90000)});
+  const r=await fetch(`${privateBase()}/api/profile/me/jobs/${jobId}/tailoring/source-review`,{method:"POST",headers,body:JSON.stringify(body),cache:"no-store",redirect:"manual",signal:AbortSignal.timeout(305000)});
   const v:unknown=await r.json();
   if(!r.ok){const response=privateResponse(mappedPrivateError(v),r,[400,401,403,404,409,413,429,502,503].includes(r.status)?r.status:503);const retry=retryAfterSeconds(r.headers.get("retry-after"));if(r.status===429&&retry)response.headers.set("Retry-After",String(retry));return response;}
   if(!isWordingSourceResult(v)||v.sessionId!==body.sessionId||v.revision!==body.revision||v.locale!==body.locale||v.items.length!==(body.paragraphIndexes as number[]).length||v.items.some(i=>!(body.paragraphIndexes as number[]).includes(i.paragraphIndex)))throw new Error("Invalid response");

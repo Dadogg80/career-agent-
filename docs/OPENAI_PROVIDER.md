@@ -15,7 +15,7 @@ OpenAI is an explicit third provider for structured generation through the exist
 
 ## Transport and structured output
 
-The adapter uses the existing JDK HTTP/proxy pattern at `POST https://api.openai.com/v1/responses`. Original system instructions are passed unchanged as `instructions`; original source text is a user `input_text`. The existing logical JSON Schema is sent unchanged under `text.format` with `type: json_schema` and `strict: true`. Service tier is explicitly `default` for standard-rate estimates. Reasoning effort is `low`; unsupported temperature/seed assumptions are avoided.
+The adapter uses the existing JDK HTTP/proxy pattern at `POST https://api.openai.com/v1/responses`. Original system instructions are passed unchanged as `instructions`; original source text is a user `input_text`. The existing logical JSON Schema is sent unchanged under `text.format` with `type: json_schema` and `strict: true`. Service tier is explicitly `default` for standard-rate estimates. Reasoning effort defaults to `medium` (`OPENAI_REASONING_EFFORT=high` is also supported); unsupported temperature/seed assumptions are avoided.
 
 Only completed assistant `output_text` containing a JSON object is accepted. Reasoning items are not treated as facts. Refusals, incomplete outputs and malformed JSON produce bounded errors. Existing task parsers still validate the returned JSON; strict syntax alone does not establish factual correctness or completeness. Errors and usage logs do not include keys, provider error messages, source text or model output.
 
@@ -38,6 +38,17 @@ Offline adapter tests exercise request fidelity, output budgets, response/error 
 
 The owner approved a separate manual experiment capped at USD 0.50: three Mini analyses and one GPT-5.4 reference, using the frozen FINN source, original prompt/schema and existing validation. Private evidence and harnesses remain outside Git under `/workspace/reports`. Evaluate the pre-existing 17 semantic criteria, not just output item counts. Separate raw-model errors from retrieval omissions and local importance/source-validation effects. Do not implement the six proposed pipeline improvements during this baseline experiment.
 
-Current live status: authenticated analysis has **not** completed. Two generation attempts returned provider HTTP 401, mapped to `AI_ACCESS_DENIED`; a fresh-process retry after environment activation did not resolve it. An independent Responses authentication/schema diagnostic also returned `invalid_api_key`. Read-only model metadata returned HTTP 200 but is insufficient to establish Responses access. No OpenAI quality, latency, token or cost benchmark can be inferred from these failures. Further generation is paused pending a corrected secret binding; no automatic retry is scheduled.
+Historical 2026-10-15 live status (superseded by the 2026-10-16 check below): authenticated analysis had **not** completed. Two generation attempts returned provider HTTP 401, mapped to `AI_ACCESS_DENIED`; a fresh-process retry after environment activation did not resolve it. An independent Responses authentication/schema diagnostic also returned `invalid_api_key`. Read-only model metadata returned HTTP 200 but is insufficient to establish Responses access. No OpenAI quality, latency, token or cost benchmark can be inferred from these failures. Further generation is paused pending a corrected secret binding; no automatic retry is scheduled.
 
 Sources: [Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create), [structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs), [Mini](https://developers.openai.com/api/docs/models/gpt-5.4-mini), [GPT-5.4](https://developers.openai.com/api/docs/models/gpt-5.4), [pricing](https://developers.openai.com/api/docs/pricing), [data controls](https://developers.openai.com/api/docs/guides/your-data).
+
+
+## 2026-10-16 authentication and approved quality comparison
+
+Direct local checks returned HTTP 200 for model metadata and for actual Mini Responses generation with validated JSON. The earlier 401 failure is not reproduced with the currently configured local credential. The owner subsequently approved private advertisement/document/match comparison across Groq, Gemini and OpenAI, including measured corrections, with an initial OpenAI ceiling of USD 2. This is a new experiment; it does not establish that the earlier environment/secret binding was repaired everywhere. Original private sources and output snapshots remain outside Git. No provider defaults or automatic fallback change.
+
+## Configurable generation limits — 2026-10-16
+
+OpenAI defaults to 32,768 output tokens for advertisement analysis, document extraction, matching and CV proposals; profile summaries default to 16,384. These budgets include reasoning tokens. `OPENAI_MAX_OUTPUT_TOKENS` overrides the task defaults, and `OPENAI_{JOB,DOCUMENT,PROFILE,MATCH,TAILORING}_MAX_OUTPUT_TOKENS` overrides the global value. Values must be integers from 1 through 65,536. Explicit smaller call budgets remain enforced.
+
+`OPENAI_REQUEST_TIMEOUT_SECONDS` defaults to 300 and accepts 30–300 seconds. Each provider call has a maximum five-minute wait, without automatic retries or provider switching. A workflow containing several sequential calls can take longer overall. Invalid configuration fails before generation. Larger limits are ceilings, not requested answer lengths or account spending limits. Groq and Gemini budgets are unchanged.

@@ -103,6 +103,16 @@ object RequirementSourceGuard {
         return null
     }
 
+    /** Keep a short, simple source alternative indivisible even if a model splits its branches.
+     * Compound sentences remain for semantic review; this is deliberately not an OR parser. */
+    fun preserveSimpleAlternative(requirement: ExtractedRequirement): ExtractedRequirement {
+        val quote = requirement.quote.trim()
+        val alternative = Regex("(?iu)\\b(?:eller|or)\\b")
+        val compound = Regex("(?iu)\\b(?:og|and|men|but)\\b|[,;:!?\\n]|[.]$")
+        return if (quote.length <= 200 && alternative.containsMatchIn(quote) && !compound.containsMatchIn(quote))
+            requirement.copy(label = quote) else requirement
+    }
+
     /** Formatting-equivalent repeated criteria only; different evidence or labels remain distinct. */
     fun equivalent(first: ExtractedRequirement, second: ExtractedRequirement): Boolean =
         first.kind == second.kind && labelKey(first.label) == labelKey(second.label) &&

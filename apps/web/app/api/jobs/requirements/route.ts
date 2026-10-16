@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     const base = process.env.CAREER_API_BASE_URL ?? "http://127.0.0.1:8080";
     const response = await fetch(`${base}/api/jobs/requirements`, {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(input), cache: "no-store", signal: AbortSignal.timeout(30000),
+      body: JSON.stringify(input), cache: "no-store", signal: AbortSignal.timeout(305000),
     });
     const value: unknown = await response.json();
     if (!response.ok) {
